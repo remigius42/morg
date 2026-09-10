@@ -97,8 +97,12 @@ TODO keywords, priorities, tags and planning lines, unknown keys become
 property drawer entries. `preserveOrgisms` accepts `false` or a
 per-key record to drop them instead.
 
-Not yet handled: md-isms preservation (raw HTML, frontmatter), GFM
-strikethrough and footnotes.
+Md-isms: raw HTML is preserved as org `#+begin_export html` blocks
+(block level) and `@@html:...@@` export snippets (inline), restored
+verbatim on the way back; `preserveMdisms` accepts `false` or a
+per-key record (e.g. `{ html: false }`) to drop them instead.
+
+Not yet handled: frontmatter, GFM strikethrough and footnotes.
 
 ## Development
 

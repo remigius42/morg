@@ -97,6 +97,10 @@ function transformUniorgObjectToMdastPhrasingContent(
     case "code":
     case "verbatim":
       return { type: "inlineCode", value: node.value }
+    case "export-snippet":
+      return node.backEnd === "html"
+        ? { type: "html", value: node.value }
+        : null
     // TODO: Add handlers for other uniorg object types
     default:
       return null
@@ -259,6 +263,10 @@ function transformUniorgNodeToMdastNode(
           }))
       } as unknown as RootContent
     }
+    case "export-block":
+      return node.backend === "html"
+        ? { type: "html", value: trimTrailingNewline(node.value) }
+        : null
     case "quote-block":
       return {
         type: "blockquote",

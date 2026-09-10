@@ -29,7 +29,11 @@ export function convertMarkdownToOrg(
   const mdast = unified().use(remarkParse).use(remarkGfm).parse(markdown)
 
   // Phase 2: Generic mdast to uniorg-ast transformation
-  let uniorgAst = transformMdastToUniorgAst(mdast)
+  let uniorgAst = transformMdastToUniorgAst(mdast, {
+    ...(options.preserveMdisms !== undefined && {
+      preserveMdisms: options.preserveMdisms
+    })
+  })
 
   // Phase 2b: restore key:: value lines below headings to native org
   // syntax (see ADR 0002): known keys become TODO keywords, priorities,

@@ -89,6 +89,15 @@ describe("convertOrgToMarkdown", () => {
     )
   })
 
+  it("should restore html export blocks and snippets to raw html", () => {
+    const org =
+      '#+begin_export html\n<div class="note">\nRaw html\n</div>\n#+end_export\n\nPress @@html:<kbd>@@x@@html:</kbd>@@ now.\n'
+
+    expect(convertOrgToMarkdown(org)).toBe(
+      '<div class="note">\nRaw html\n</div>\n\nPress <kbd>x</kbd> now.\n'
+    )
+  })
+
   it("should convert inline markup inside list items", () => {
     const org = "- some *bold* item\n- a [[https://example.com][link]] item\n"
 

@@ -84,6 +84,30 @@ This is a paragraph.
     )
   })
 
+  it("should preserve block html as an export block", () => {
+    const markdown = '<div class="note">\nRaw html\n</div>\n'
+
+    expect(convertMarkdownToOrg(markdown)).toBe(
+      '#+begin_export html\n<div class="note">\nRaw html\n</div>\n#+end_export\n'
+    )
+  })
+
+  it("should preserve inline html as export snippets", () => {
+    const markdown = "Press <kbd>x</kbd> now.\n"
+
+    expect(convertMarkdownToOrg(markdown)).toBe(
+      "Press @@html:<kbd>@@x@@html:</kbd>@@ now.\n"
+    )
+  })
+
+  it("should drop html when preserveMdisms.html is false", () => {
+    const markdown = "Press <kbd>x</kbd> now.\n\n<div>\nblock\n</div>\n"
+
+    expect(
+      convertMarkdownToOrg(markdown, { preserveMdisms: { html: false } })
+    ).toBe("Press x now.\n")
+  })
+
   it("should add heading:: property drawers with the logseq preset", () => {
     const markdown = "# Hello World\n\nThis is a paragraph."
     const expectedOrgMode = `* Hello World

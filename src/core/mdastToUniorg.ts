@@ -17,13 +17,32 @@ import type {
   ListItem
 } from "uniorg"
 import { toString } from "orgast-util-to-string"
+import { toggleEnabled, type Toggle } from "../options.js"
+
+export interface MdastToUniorgOptions {
+  preserveMdisms?: Toggle
+}
+
+// options for the current transformMdastToUniorgAst run; the transform is
+// synchronous, so module state is safe and avoids threading the options
+// through every recursive call site
+let currentOptions: MdastToUniorgOptions = {}
+
+function mdismEnabled(key: string): boolean {
+  return toggleEnabled(currentOptions.preserveMdisms, key)
+}
 
 /**
  * Transforms a mdast (Markdown AST) to a uniorg AST.
  * @param mdast The mdast tree to transform.
+ * @param options Controls md-ism preservation (e.g. raw HTML).
  * @returns The transformed uniorg AST.
  */
-export function transformMdastToUniorgAst(mdast: MdastRoot): OrgData {
+export function transformMdastToUniorgAst(
+  mdast: MdastRoot,
+  options: MdastToUniorgOptions = {}
+): OrgData {
+  currentOptions = options
   const children: (GreaterElementType | ElementType)[] = mdast.children
     .map(transformMdastNodeToUniorgNode)
     .filter(Boolean) as (GreaterElementType | ElementType)[]
@@ -75,6 +94,15 @@ function transformMdastPhrasingContentToUniorgObject(
     }
     case "inlineCode":
       return { type: "code", value: node.value }
+    case "html":
+      // inline raw html is a md-ism: preserved as an org export snippet
+      return mdismEnabled("html")
+        ? {
+            type: "export-snippet",
+            backEnd: "html",
+            value: node.value
+          }
+        : null
     case "image":
       // org has no dedicated image syntax: a plain file link renders
       // inline, alt text becomes the link description
@@ -153,6 +181,15 @@ function transformMdastNodeToUniorgNode(
         children: rows
       } as unknown as ElementType
     }
+    case "html":
+      // block raw html is a md-ism: preserved as an org export block
+      return mdismEnabled("html")
+        ? ({
+            type: "export-block",
+            backend: "html",
+            value: node.value
+          } as unknown as ElementType)
+        : null
     case "blockquote":
       return {
         type: "quote-block",
