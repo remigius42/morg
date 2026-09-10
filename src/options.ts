@@ -27,6 +27,12 @@ export interface MarkdownToOrgOptions {
    * raw HTML as export blocks/snippets, see ADR 0002). Default: `true`.
    */
   preserveMdisms?: Toggle
+  /**
+   * Custom names for org-ism `key::` lines, canonical → custom (e.g.
+   * `{ todo: "state" }`). Must match the mapping the file was written
+   * with — Convergence is per-config (ADR 0002).
+   */
+  orgismKeys?: Record<string, string>
   /** Called for each construct dropped without an equivalent. */
   onWarning?: (message: string) => void
   /** Dialect preset applied on top of the generic conversion. */
@@ -78,6 +84,8 @@ export interface OrgToMarkdownOptions {
   taskCheckboxes?: boolean
   /** Markdown output style; canonical form is per-config (ADR 0001). */
   markdownStyle?: MarkdownStyleOptions
+  /** Custom names for org-ism `key::` lines, canonical → custom. */
+  orgismKeys?: Record<string, string>
   /** Called for each construct dropped without an equivalent. */
   onWarning?: (message: string) => void
   /** Dialect preset extracted before the generic conversion. */

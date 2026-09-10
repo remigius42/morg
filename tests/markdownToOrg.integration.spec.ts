@@ -89,6 +89,17 @@ This is a paragraph.
     )
   })
 
+  it("should restore remapped org-ism key names", () => {
+    const markdown =
+      "# Ship it\n\nstate:: TODO\npriority:: A\n\nwhen:: <2026-09-15 Tue>\n"
+
+    expect(
+      convertMarkdownToOrg(markdown, {
+        orgismKeys: { todo: "state", scheduled: "when" }
+      })
+    ).toBe("* TODO [#A] Ship it\nSCHEDULED: <2026-09-15 Tue>\n")
+  })
+
   it("should restore known key:: values to native org syntax", () => {
     const markdown =
       "# Ship it\n\ntodo:: TODO\npriority:: A\ntags:: work, urgent\n\nBody text.\n"

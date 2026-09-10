@@ -28,6 +28,7 @@ export interface UniorgToMdastOptions {
   preserveOrgisms?: Toggle
   useHtml?: Toggle
   taskCheckboxes?: boolean
+  orgismKeys?: Record<string, string>
   onWarning?: (message: string) => void
 }
 
@@ -46,6 +47,11 @@ function htmlEnabled(key: string): boolean {
 
 function warn(message: string): void {
   currentOptions.onWarning?.(message)
+}
+
+// org-ism key:: names are user-configurable (ADR 0002 point 5)
+function keyName(key: string): string {
+  return currentOptions.orgismKeys?.[key] ?? key
 }
 
 // inline footnotes ([fn:: text], [fn:label: text]) of the current run;
@@ -433,26 +439,26 @@ function transformUniorgNodeToMdastNode(
       // org-isms serialize as key:: value lines directly below the heading
       const isms: string[] = []
       if (node.todoKeyword && orgismEnabled("todo")) {
-        isms.push(`todo:: ${node.todoKeyword}`)
+        isms.push(`${keyName("todo")}:: ${node.todoKeyword}`)
       }
       if (node.priority && orgismEnabled("priority")) {
-        isms.push(`priority:: ${node.priority}`)
+        isms.push(`${keyName("priority")}:: ${node.priority}`)
       }
       if (node.tags.length && orgismEnabled("tags")) {
-        isms.push(`tags:: ${node.tags.join(", ")}`)
+        isms.push(`${keyName("tags")}:: ${node.tags.join(", ")}`)
       }
       return isms.length ? [heading, keyValueParagraph(isms)] : heading
     }
     case "planning": {
       const isms: string[] = []
       if (node.scheduled && orgismEnabled("scheduled")) {
-        isms.push(`scheduled:: ${node.scheduled.rawValue}`)
+        isms.push(`${keyName("scheduled")}:: ${node.scheduled.rawValue}`)
       }
       if (node.deadline && orgismEnabled("deadline")) {
-        isms.push(`deadline:: ${node.deadline.rawValue}`)
+        isms.push(`${keyName("deadline")}:: ${node.deadline.rawValue}`)
       }
       if (node.closed && orgismEnabled("closed")) {
-        isms.push(`closed:: ${node.closed.rawValue}`)
+        isms.push(`${keyName("closed")}:: ${node.closed.rawValue}`)
       }
       return isms.length ? keyValueParagraph(isms) : null
     }

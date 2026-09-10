@@ -106,6 +106,18 @@ describe("convertOrgToMarkdown", () => {
     )
   })
 
+  it("should emit remapped org-ism key names", () => {
+    const org = "* TODO [#A] Ship it\nSCHEDULED: <2026-09-15 Tue>\n"
+
+    expect(
+      convertOrgToMarkdown(org, {
+        orgismKeys: { todo: "state", scheduled: "when" }
+      })
+    ).toBe(
+      "# Ship it\n\nstate:: TODO\npriority:: A\n\nwhen:: <2026-09-15 Tue>\n"
+    )
+  })
+
   it("should drop org-isms when preserveOrgisms is false", () => {
     const org = "* TODO [#A] Ship it :work:urgent:\nBody text.\n"
 

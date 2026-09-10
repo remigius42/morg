@@ -18,6 +18,7 @@ orgisms
 outliner
 passthroughs
 sexp
+smol
 sexps
 wikilink
 remigius

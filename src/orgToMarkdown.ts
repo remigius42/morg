@@ -34,6 +34,9 @@ export function convertOrgToMarkdown(
     ...(options.taskCheckboxes !== undefined && {
       taskCheckboxes: options.taskCheckboxes
     }),
+    ...(options.orgismKeys !== undefined && {
+      orgismKeys: options.orgismKeys
+    }),
     ...(options.onWarning !== undefined && { onWarning: options.onWarning })
   })
 

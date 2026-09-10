@@ -46,7 +46,14 @@ export function convertMarkdownToOrg(
   // Phase 2b: restore key:: value lines below headings to native org
   // syntax (see ADR 0002): known keys become TODO keywords, priorities,
   // tags and planning; unknown keys become property drawer entries.
-  restoreOrgisms(uniorgAst)
+  // orgismKeys maps custom names back to canonical (per-config).
+  const canonicalKeys = new Map(
+    Object.entries(options.orgismKeys ?? {}).map(([canonical, custom]) => [
+      custom,
+      canonical
+    ])
+  )
+  restoreOrgisms(uniorgAst, canonicalKeys)
 
   // Phase 2c: formatting-as-structure — adjacent lists need two blank
   // lines between them, or org's parser merges them into one list.
@@ -95,7 +102,10 @@ function makeTimestamp(rawValue: string): Timestamp {
   return { type: "timestamp", rawValue } as Timestamp
 }
 
-function restoreOrgisms(uniorgAst: OrgData): void {
+function restoreOrgisms(
+  uniorgAst: OrgData,
+  canonicalKeys: Map<string, string>
+): void {
   const children = uniorgAst.children as { type: string }[]
   for (let i = 0; i < children.length; i++) {
     const headline = children[i]
@@ -109,7 +119,8 @@ function restoreOrgisms(uniorgAst: OrgData): void {
     let consumed = 0
     let entries
     while ((entries = parseKeyValueParagraph(children[i + 1 + consumed]))) {
-      for (const [key, value] of entries) {
+      for (const [rawKey, value] of entries) {
+        const key = canonicalKeys.get(rawKey) ?? rawKey
         switch (key) {
           case "todo":
             ;(headline as Headline).todoKeyword = value

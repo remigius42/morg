@@ -57,6 +57,7 @@
     "remark-math": "^6.0.0",
     "remark-parse": "^11.0.0",
     "remark-stringify": "^11.0.0",
+    "smol-toml": "^1.8.0",
     "unified": "^11.0.5",
     "uniorg": "^1.4.0",
     "uniorg-parse": "^3.2.2",
