@@ -1,4 +1,10 @@
-# morg
+# [morg](https://github.com/remigius42/morg)
+
+Copyright 2026 [Andreas Remigius Schmidt](https://github.com/remigius42)
+
+[![License](https://img.shields.io/badge/license-GPL--3.0--or--later-blue.svg)](LICENSE)
+[![CI](https://github.com/remigius42/morg/actions/workflows/ci.yml/badge.svg)](https://github.com/remigius42/morg/actions/workflows/ci.yml)
+![Node](https://img.shields.io/badge/node-%3E%3D20-lightgrey.svg)
 
 Bidirectional **Markdown ↔ Org-mode** converter, built on the
 [unified](https://unifiedjs.com/) ecosystem
