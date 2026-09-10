@@ -102,6 +102,12 @@ function transformUniorgObjectToMdastPhrasingContent(
     case "code":
     case "verbatim":
       return { type: "inlineCode", value: node.value }
+    case "footnote-reference":
+      return {
+        type: "footnoteReference",
+        identifier: node.label,
+        label: node.label
+      }
     case "export-snippet":
       return node.backEnd === "html"
         ? { type: "html", value: node.value }
@@ -268,6 +274,15 @@ function transformUniorgNodeToMdastNode(
           }))
       } as unknown as RootContent
     }
+    case "footnote-definition":
+      return {
+        type: "footnoteDefinition",
+        identifier: node.label,
+        label: node.label,
+        children: (node.children || [])
+          .flatMap(transformUniorgNodeToMdastNode)
+          .filter(Boolean) as BlockContent[]
+      }
     case "export-block":
       return node.backend === "html"
         ? { type: "html", value: trimTrailingNewline(node.value) }

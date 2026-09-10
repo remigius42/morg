@@ -114,6 +114,14 @@ This is a paragraph.
     expect(convertMarkdownToOrg(markdown)).toBe("This is +gone+ now.\n")
   })
 
+  it("should convert footnotes to org footnotes", () => {
+    const markdown = "A claim.[^1]\n\n[^1]: The evidence.\n"
+
+    expect(convertMarkdownToOrg(markdown)).toBe(
+      "A claim.[fn:1]\n\n[fn:1] The evidence.\n"
+    )
+  })
+
   it("should add heading:: property drawers with the logseq preset", () => {
     const markdown = "# Hello World\n\nThis is a paragraph."
     const expectedOrgMode = `* Hello World

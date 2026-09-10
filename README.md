@@ -103,7 +103,11 @@ Md-isms: raw HTML is preserved as org `#+begin_export html` blocks
 verbatim on the way back; `preserveMdisms` accepts `false` or a
 per-key record (e.g. `{ html: false }`) to drop them instead.
 
-Not yet handled: frontmatter, GFM footnotes.
+Footnotes convert between GFM (`[^label]` / `[^label]: …`) and org
+(`[fn:label]` / `[fn:label] …`) in both directions.
+
+Not yet handled: frontmatter and Obsidian wikilinks (preset/md-ism
+territory rather than core).
 
 ## Development
 

@@ -24,3 +24,4 @@ tblfm
 tseslint
 uniorg
 unist
+wikilinks

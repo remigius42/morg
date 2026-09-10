@@ -104,6 +104,14 @@ describe("convertOrgToMarkdown", () => {
     expect(convertOrgToMarkdown(org)).toBe("This is ~~gone~~ now.\n")
   })
 
+  it("should convert org footnotes to gfm footnotes", () => {
+    const org = "A claim.[fn:1]\n\n[fn:1] The evidence.\n"
+
+    expect(convertOrgToMarkdown(org)).toBe(
+      "A claim.[^1]\n\n[^1]: The evidence.\n"
+    )
+  })
+
   it("should convert inline markup inside list items", () => {
     const org = "- some *bold* item\n- a [[https://example.com][link]] item\n"
 

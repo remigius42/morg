@@ -101,6 +101,13 @@ function transformMdastPhrasingContentToUniorgObject(
     }
     case "inlineCode":
       return { type: "code", value: node.value }
+    case "footnoteReference":
+      return {
+        type: "footnote-reference",
+        label: node.identifier,
+        footnoteType: "standard",
+        children: []
+      } as unknown as ObjectType
     case "html":
       // inline raw html is a md-ism: preserved as an org export snippet
       return mdismEnabled("html")
@@ -197,6 +204,15 @@ function transformMdastNodeToUniorgNode(
             value: node.value
           } as unknown as ElementType)
         : null
+    case "footnoteDefinition":
+      return {
+        type: "footnote-definition",
+        label: node.identifier,
+        affiliated: {},
+        children: node.children
+          .map(transformMdastNodeToUniorgNode)
+          .filter(Boolean)
+      } as unknown as ElementType
     case "blockquote":
       return {
         type: "quote-block",
