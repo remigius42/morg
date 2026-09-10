@@ -50,6 +50,34 @@ morg --input notes.md --output notes.org --silent
 morg normalize --input notes.org --output notes.org
 ```
 
+### Configuration file
+
+Options can live in a `morg.toml` (auto-discovered in the working
+directory, or passed via `--config path`). Precedence: CLI flags >
+config file > defaults. Sections mirror the library options objects:
+
+```toml
+preset = "logseq"
+silent = false
+
+# custom names for org-ism key:: lines (canonical = custom);
+# convergence is per-config — convert with the mapping a file
+# was written with (ADR 0002)
+[orgismKeys]
+todo = "state"
+scheduled = "when"
+
+[markdownToOrg.preserveMdisms]
+html = false
+
+[orgToMarkdown]
+useHtml = false
+taskCheckboxes = false
+
+[orgToMarkdown.markdownStyle]
+emphasis = "_"   # align with prettier
+```
+
 ### Library
 
 ```ts

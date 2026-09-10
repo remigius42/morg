@@ -1,22 +1,14 @@
 import { convertMarkdownToOrg } from "./markdownToOrg.js"
 import { convertOrgToMarkdown } from "./orgToMarkdown.js"
-import type { MarkdownStyleOptions } from "./options.js"
-import type { Preset } from "./presets/types.js"
+import type { MarkdownToOrgOptions, OrgToMarkdownOptions } from "./options.js"
 
 /**
- * Options shared by both normalize directions. Normalization uses the
- * same configuration as conversion — Convergence is per-config (see ADR
- * 0002), so a file must be normalized with the preset it will be
- * converted with.
+ * The full option set of both directions: normalization uses the same
+ * configuration as conversion — Convergence is per-config (see ADR
+ * 0002), so a file must be normalized with the exact config (preset,
+ * style, key names, toggles) it will be converted with.
  */
-export interface NormalizeOptions {
-  /** Markdown output style; canonical form is per-config (ADR 0001). */
-  markdownStyle?: MarkdownStyleOptions
-  /** Called for each construct dropped without an equivalent. */
-  onWarning?: (message: string) => void
-  /** Dialect preset, applied on both legs of the round trip. */
-  preset?: Preset
-}
+export type NormalizeOptions = MarkdownToOrgOptions & OrgToMarkdownOptions
 
 /**
  * Normalizes a Markdown string to morg's canonical form: one full round

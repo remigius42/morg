@@ -5,6 +5,7 @@ import * as path from "node:path"
 import { convertMarkdownToOrg } from "./markdownToOrg.js"
 import { convertOrgToMarkdown } from "./orgToMarkdown.js"
 import { normalizeMarkdown, normalizeOrg } from "./normalize.js"
+import { parseConfig, type MorgConfig } from "./config.js"
 import type { MarkdownStyleOptions } from "./options.js"
 import { logseq } from "./presets/logseq.js"
 import { obsidian } from "./presets/obsidian.js"
@@ -30,6 +31,7 @@ async function main() {
   let presetName: string | undefined
   let silent = false
   let taskCheckboxes = false
+  let configPath: string | undefined
   const markdownStyle: Record<string, string> = {}
 
   for (let i = 0; i < args.length; i++) {
@@ -41,6 +43,9 @@ async function main() {
         break
       case "--task-checkboxes":
         taskCheckboxes = true
+        break
+      case "--config":
+        configPath = args[++i]
         break
       case "--bullet":
       case "--emphasis":
@@ -69,6 +74,23 @@ async function main() {
         process.exit(1)
     }
   }
+
+  // morg.toml: precedence is CLI > config > defaults
+  let config: MorgConfig = {}
+  const resolvedConfigPath =
+    configPath ?? (fs.existsSync("morg.toml") ? "morg.toml" : undefined)
+  if (resolvedConfigPath) {
+    try {
+      config = parseConfig(fs.readFileSync(resolvedConfigPath, "utf8"))
+    } catch (error) {
+      console.error(`Error reading ${resolvedConfigPath}:`, error)
+      process.exit(1)
+    }
+  }
+  presetName = presetName ?? config.preset
+  silent = silent || config.silent === true
+  taskCheckboxes =
+    taskCheckboxes || config.orgToMarkdown?.taskCheckboxes === true
 
   let preset: Preset | undefined
   if (presetName) {
@@ -158,25 +180,35 @@ async function main() {
 
   let outputContent: string
   try {
-    const style = markdownStyle as MarkdownStyleOptions
+    // config values first, CLI flags layered on top
+    const style: MarkdownStyleOptions = {
+      ...config.orgToMarkdown?.markdownStyle,
+      ...(markdownStyle as MarkdownStyleOptions)
+    }
+    const shared = {
+      preset,
+      onWarning,
+      ...(config.orgismKeys && { orgismKeys: config.orgismKeys })
+    }
+    const mdToOrgOptions = { ...config.markdownToOrg, ...shared }
+    const orgToMdOptions = {
+      ...config.orgToMarkdown,
+      ...shared,
+      taskCheckboxes,
+      markdownStyle: style
+    }
     if (normalize) {
       outputContent =
         fromFormat === "markdown"
           ? normalizeMarkdown(inputContent, {
-              preset,
-              onWarning,
-              markdownStyle: style
+              ...mdToOrgOptions,
+              ...orgToMdOptions
             })
-          : normalizeOrg(inputContent, { preset, onWarning })
+          : normalizeOrg(inputContent, { ...mdToOrgOptions, ...orgToMdOptions })
     } else if (fromFormat === "markdown") {
-      outputContent = convertMarkdownToOrg(inputContent, { preset, onWarning })
+      outputContent = convertMarkdownToOrg(inputContent, mdToOrgOptions)
     } else {
-      outputContent = convertOrgToMarkdown(inputContent, {
-        preset,
-        onWarning,
-        taskCheckboxes,
-        markdownStyle: style
-      })
+      outputContent = convertOrgToMarkdown(inputContent, orgToMdOptions)
     }
   } catch (error) {
     console.error("Conversion error:", error)
