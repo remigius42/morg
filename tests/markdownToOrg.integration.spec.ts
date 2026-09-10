@@ -66,6 +66,14 @@ This is a paragraph.
     )
   })
 
+  it("should restore table.el fenced blocks to table.el tables", () => {
+    const markdown = "```table.el\n+---+---+\n| a | b |\n+---+---+\n```\n"
+
+    expect(convertMarkdownToOrg(markdown)).toBe(
+      "+---+---+\n| a | b |\n+---+---+\n"
+    )
+  })
+
   it("should restore known key:: values to native org syntax", () => {
     const markdown =
       "# Ship it\n\ntodo:: TODO\npriority:: A\ntags:: work, urgent\n\nBody text.\n"

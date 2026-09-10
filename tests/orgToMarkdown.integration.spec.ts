@@ -64,6 +64,14 @@ describe("convertOrgToMarkdown", () => {
     )
   })
 
+  it("should serialize table.el tables as table.el fenced blocks", () => {
+    const org = "+---+---+\n| a | b |\n+---+---+\n"
+
+    expect(convertOrgToMarkdown(org)).toBe(
+      "```table.el\n+---+---+\n| a | b |\n+---+---+\n```\n"
+    )
+  })
+
   it("should serialize headline org-isms as key:: value lines", () => {
     const org = "* TODO [#A] Ship it :work:urgent:\nBody text.\n"
 

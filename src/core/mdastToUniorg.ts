@@ -289,6 +289,16 @@ function transformMdastNodeToUniorgNode(
           .filter(Boolean)
       } as unknown as ElementType
     case "code":
+      // a table.el-tagged fence restores the verbatim table.el table it
+      // was serialized from
+      if (node.lang === "table.el") {
+        return {
+          type: "table",
+          tableType: "table.el",
+          tblfm: "",
+          value: `${node.value}\n`
+        } as unknown as ElementType
+      }
       return (node.lang
         ? { type: "src-block", language: node.lang, value: node.value }
         : {

@@ -363,8 +363,16 @@ function transformUniorgNodeToMdastNode(
       return transformUniorgList(node)
     case "table": {
       if (node.tableType === "table.el") {
-        // TODO: table.el tables (verbatim value, no cell structure)
-        return null
+        // table.el tables have no cell structure, only a verbatim value;
+        // a table.el-tagged fenced block carries it so the return trip
+        // can restore the table
+        return {
+          type: "code",
+          lang: "table.el",
+          value: trimTrailingNewline(
+            (node as unknown as { value: string }).value
+          )
+        }
       }
       const standardRows = (node.children || []).filter(
         (row): row is TableRow =>

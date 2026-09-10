@@ -92,7 +92,7 @@ image files, alt text as description), horizontal rules (md `---` ↔ org
 `-----`), hard line breaks (md `\` or two spaces ↔ org `\\`), and tables
 (GFM ↔ org, incl.
 column alignment via org `<l>/<r>/<c>` cookie rows; `table.el` tables
-are TODO). Markdown is parsed and serialized with GFM enabled.
+travel as `table.el`-tagged fenced blocks and are restored verbatim). Markdown is parsed and serialized with GFM enabled.
 
 Org-isms serialize to `key:: value` lines directly below the heading
 (`todo::`, `priority::`, `tags::`, `scheduled::`, `deadline::`,

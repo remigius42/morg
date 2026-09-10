@@ -1,0 +1,10 @@
+A table.el table:
+
++-------+-------+
+| left  | right |
++-------+-------+
+| one   | two   |
+| three | four  |
++-------+-------+
+
+Text after.
