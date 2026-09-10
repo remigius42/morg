@@ -27,6 +27,7 @@ import { toggleEnabled, type Toggle } from "../options.js"
 export interface UniorgToMdastOptions {
   preserveOrgisms?: Toggle
   useHtml?: Toggle
+  taskCheckboxes?: boolean
   onWarning?: (message: string) => void
 }
 
@@ -112,6 +113,11 @@ export function transformUniorgAstToMdast(
     .slice(first)
     .flatMap(transformUniorgNodeToMdastNode)
     .filter(Boolean) as RootContent[]
+  // adjacent single-item task lists (one per converted TODO section)
+  // merge into one list, or the output would not be a fixed point
+  if (options.taskCheckboxes) {
+    mergeAdjacentTaskLists(children)
+  }
   if (first > 0) {
     children.unshift({
       type: "yaml",
@@ -141,6 +147,76 @@ function parseKeywordValue(value: string): unknown {
 // keys like custom_id are not markdown-escaped to custom\_id
 function keyValueParagraph(lines: string[]): RootContent {
   return { type: "keyValue", value: lines.join("\n") } as unknown as RootContent
+}
+
+function isTaskList(node: RootContent | undefined): node is MdastList {
+  return (
+    node?.type === "list" &&
+    !node.ordered &&
+    node.children.every(item => item.checked !== null)
+  )
+}
+
+function mergeAdjacentTaskLists(children: RootContent[]): void {
+  for (let i = 0; i < children.length - 1;) {
+    const current = children[i]
+    const next = children[i + 1]
+    if (isTaskList(current) && isTaskList(next)) {
+      current.children.push(...next.children)
+      children.splice(i + 1, 1)
+    } else {
+      i++
+    }
+  }
+}
+
+// with taskCheckboxes, a section holding just a bare TODO/DONE headline
+// (no priority, tags or content) becomes a GFM task item; anything
+// richer keeps the heading (with a warning) so no metadata is lost
+function sectionAsTaskItem(
+  children: (GreaterElementType | ElementType | Text)[]
+): RootContent | null {
+  const headline = children[0]
+  if (headline?.type !== "headline" || !headline.todoKeyword) {
+    return null
+  }
+  const rest = children.slice(1)
+  const reason =
+    headline.todoKeyword !== "TODO" && headline.todoKeyword !== "DONE"
+      ? `keyword ${headline.todoKeyword}`
+      : headline.priority
+        ? "has priority"
+        : headline.tags.length
+          ? "has tags"
+          : rest.some(
+                child => !(child.type === "text" && child.value.trim() === "")
+              )
+            ? "has content"
+            : null
+  if (reason) {
+    warn(
+      `taskCheckboxes: kept heading "${orgastToString(headline).trim()}" (${reason})`
+    )
+    return null
+  }
+  return {
+    type: "list",
+    ordered: false,
+    spread: false,
+    children: [
+      {
+        type: "listItem",
+        spread: false,
+        checked: headline.todoKeyword === "DONE",
+        children: [
+          {
+            type: "paragraph",
+            children: transformUniorgObjects(headline.children)
+          }
+        ]
+      }
+    ]
+  }
 }
 
 // renders a single uniorg node back to its org text (without the
@@ -337,10 +413,17 @@ function transformUniorgNodeToMdastNode(
   node: GreaterElementType | ElementType | Text
 ): RootContent | RootContent[] | null {
   switch (node.type) {
-    case "section":
+    case "section": {
+      if (currentOptions.taskCheckboxes) {
+        const task = sectionAsTaskItem(node.children || [])
+        if (task) {
+          return task
+        }
+      }
       return (node.children || [])
         .flatMap(transformUniorgNodeToMdastNode)
         .filter(Boolean) as RootContent[]
+    }
     case "headline": {
       const heading: RootContent = {
         type: "heading",

@@ -58,6 +58,18 @@ describe("useHtml", () => {
   })
 })
 
+describe("taskCheckboxes", () => {
+  it("task checkbox output is a fixed point", () => {
+    const org = "* TODO Buy milk\n* DONE Call mom\n\nAfter.\n"
+    const md = convertOrgToMarkdown(org, { taskCheckboxes: true })
+    const roundTrip = (input: string): string =>
+      convertOrgToMarkdown(convertMarkdownToOrg(input), {
+        taskCheckboxes: true
+      })
+    expect(roundTrip(md)).toBe(md)
+  })
+})
+
 describe("lists", () => {
   it("nested list survives a round trip", () => {
     const input = "- parent\n  - child\n"

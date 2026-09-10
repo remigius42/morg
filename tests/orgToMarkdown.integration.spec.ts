@@ -72,6 +72,32 @@ describe("convertOrgToMarkdown", () => {
     )
   })
 
+  it("should map bare TODO/DONE headlines to task items with taskCheckboxes", () => {
+    const org = "* TODO Buy milk\n* DONE Call mom\n"
+
+    expect(convertOrgToMarkdown(org, { taskCheckboxes: true })).toBe(
+      "- [ ] Buy milk\n- [x] Call mom\n"
+    )
+  })
+
+  it("should keep unmappable TODO headlines as headings and warn", () => {
+    const warnings: string[] = []
+    const org = "* TODO [#A] Ship it\n\n* TODO With body\nBody text.\n"
+
+    expect(
+      convertOrgToMarkdown(org, {
+        taskCheckboxes: true,
+        onWarning: m => warnings.push(m)
+      })
+    ).toBe(
+      "# Ship it\n\ntodo:: TODO\npriority:: A\n\n# With body\n\ntodo:: TODO\n\nBody text.\n"
+    )
+    expect(warnings).toEqual([
+      'taskCheckboxes: kept heading "Ship it" (has priority)',
+      'taskCheckboxes: kept heading "With body" (has content)'
+    ])
+  })
+
   it("should serialize headline org-isms as key:: value lines", () => {
     const org = "* TODO [#A] Ship it :work:urgent:\nBody text.\n"
 

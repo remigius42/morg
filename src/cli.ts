@@ -21,6 +21,7 @@ async function main() {
   let outputFile: string | undefined
   let presetName: string | undefined
   let silent = false
+  let taskCheckboxes = false
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i]
@@ -28,6 +29,9 @@ async function main() {
       case "-s":
       case "--silent":
         silent = true
+        break
+      case "--task-checkboxes":
+        taskCheckboxes = true
         break
       case "--from":
         fromFormat = args[++i]
@@ -138,7 +142,11 @@ async function main() {
     if (fromFormat === "markdown") {
       outputContent = convertMarkdownToOrg(inputContent, { preset, onWarning })
     } else {
-      outputContent = convertOrgToMarkdown(inputContent, { preset, onWarning })
+      outputContent = convertOrgToMarkdown(inputContent, {
+        preset,
+        onWarning,
+        taskCheckboxes
+      })
     }
   } catch (error) {
     console.error("Conversion error:", error)

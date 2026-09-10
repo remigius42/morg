@@ -27,6 +27,7 @@ stringifiers
 stringify
 tblfm
 tseslint
+unmappable
 uniorg
 unist
 wikilinks

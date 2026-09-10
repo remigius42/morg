@@ -61,10 +61,15 @@ Options (flags accept `boolean` or a per-construct `Record<string, boolean>`):
 
 - `convertMarkdownToOrg(md, { preserveMdisms, preset })` — `preserveMdisms`
   default `true`
-- `convertOrgToMarkdown(org, { preserveOrgisms, useHtml, preset })` —
-  `preserveOrgisms` default `true`; `useHtml` (default `false`) renders
-  org-only markup as raw HTML (`<u>`, `<sup>`, `<sub>`, `<dl>`) instead
-  of keeping it verbatim
+- `convertOrgToMarkdown(org, { preserveOrgisms, useHtml, taskCheckboxes,
+preset })` — `preserveOrgisms` default `true`; `useHtml` (default
+  `false`) renders org-only markup as raw HTML (`<u>`, `<sup>`, `<sub>`,
+  `<dl>`) instead of keeping it verbatim; `taskCheckboxes` (default
+  `false`, CLI `--task-checkboxes`) is a lossy export mode that maps
+  bare `TODO`/`DONE` leaf headlines to GFM task items (`- [ ]` /
+  `- [x]`) — headings become list items and do not restore on the
+  return trip; anything with priority, tags or content keeps its
+  heading and reports via `onWarning`
 - `logseq({ nestUnderHeadings })` — default `true`; content following a
   heading nests as child blocks of that heading: paragraphs become child
   headlines one level deeper (in Logseq org every outline block is a

@@ -47,6 +47,14 @@ export interface OrgToMarkdownOptions {
    * snippets), not back to native org markup. Default: `false`.
    */
   useHtml?: Toggle
+  /**
+   * Map bare `TODO`/`DONE` leaf headlines (no priority, tags or content)
+   * to GFM task items (`- [ ]` / `- [x]`). Documented lossy export mode:
+   * headings become list items and do not restore to TODO headlines on
+   * the return trip; unmappable states keep the heading and warn.
+   * Default: `false`.
+   */
+  taskCheckboxes?: boolean
   /** Called for each construct dropped without an equivalent. */
   onWarning?: (message: string) => void
   /** Dialect preset extracted before the generic conversion. */
