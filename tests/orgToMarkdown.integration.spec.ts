@@ -99,11 +99,11 @@ describe("convertOrgToMarkdown", () => {
 
   it("should report dropped org constructs via onWarning", () => {
     const warnings: string[] = []
-    const org = "An entity \\alpha here.\n"
+    const org = "# a comment line\n"
 
     convertOrgToMarkdown(org, { onWarning: m => warnings.push(m) })
 
-    expect(warnings).toEqual(["dropped org entity"])
+    expect(warnings).toEqual(["dropped org comment"])
   })
 
   it("should keep generic drawers verbatim", () => {
@@ -159,6 +159,27 @@ describe("convertOrgToMarkdown", () => {
     expect(convertOrgToMarkdown(org)).toBe(
       "Meet on <2026-09-15 Tue> or logged \\[2026-09-01 Tue] instead.\n"
     )
+  })
+
+  it("should convert latex fragments to markdown math", () => {
+    const org = "Inline $x^2$ and \\(y\\) here.\n"
+
+    expect(convertOrgToMarkdown(org)).toBe("Inline $x^2$ and $y$ here.\n")
+  })
+
+  it("should convert display math and environments to math blocks", () => {
+    const org =
+      "$$\na + b\n$$\n\n\\begin{equation}\nE = mc^2\n\\end{equation}\n"
+
+    expect(convertOrgToMarkdown(org)).toBe(
+      "$$\na + b\n$$\n\n$$\n\\begin{equation}\nE = mc^2\n\\end{equation}\n$$\n"
+    )
+  })
+
+  it("should convert entities to their utf8 character", () => {
+    const org = "An \\alpha and \\rarr here.\n"
+
+    expect(convertOrgToMarkdown(org)).toBe("An α and → here.\n")
   })
 
   it("should convert org strike-through to gfm strikethrough", () => {

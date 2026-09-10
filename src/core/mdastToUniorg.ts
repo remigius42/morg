@@ -170,6 +170,14 @@ function transformMdastPhrasingContentToUniorgObject(
     }
     case "inlineCode":
       return { type: "code", value: node.value }
+    case "inlineMath" as PhrasingContent["type"]: {
+      const value = (node as unknown as { value: string }).value
+      return {
+        type: "latex-fragment",
+        value: `$${value}$`,
+        contents: value
+      } as unknown as ObjectType
+    }
     case "break":
       return { type: "line-break" } as unknown as ObjectType
     case "footnoteReference":
@@ -315,6 +323,30 @@ function transformMdastNodeToUniorgNode(
             type: "example-block",
             value: node.value
           }) as unknown as ElementType
+    case "math" as RootContent["type"]: {
+      // \begin… blocks restore to latex environments; plain display math
+      // becomes a $$…$$ fragment (org's display form)
+      const value = (node as unknown as { value: string }).value
+      if (value.startsWith("\\begin{")) {
+        return {
+          type: "latex-environment",
+          affiliated: {},
+          value
+        } as unknown as ElementType
+      }
+      return {
+        type: "paragraph",
+        children: [
+          {
+            type: "latex-fragment",
+            value: `$$\n${value}\n$$`,
+            contents: `\n${value}\n`
+          }
+        ],
+        contentsBegin: 0,
+        contentsEnd: 0
+      } as unknown as ElementType
+    }
     case "definition":
       // consumed by reference-style link resolution
       return null

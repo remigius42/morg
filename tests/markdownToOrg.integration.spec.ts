@@ -166,6 +166,22 @@ This is a paragraph.
     )
   })
 
+  it("should convert markdown math to latex fragments", () => {
+    const markdown = "Inline $x^2$ here.\n\n$$\na + b\n$$\n"
+
+    expect(convertMarkdownToOrg(markdown)).toBe(
+      "Inline $x^2$ here.\n\n$$\na + b\n$$\n"
+    )
+  })
+
+  it("should restore math blocks with begin to latex environments", () => {
+    const markdown = "$$\n\\begin{equation}\nE = mc^2\n\\end{equation}\n$$\n"
+
+    expect(convertMarkdownToOrg(markdown)).toBe(
+      "\\begin{equation}\nE = mc^2\n\\end{equation}\n"
+    )
+  })
+
   it("should convert strikethrough to org strike-through", () => {
     const markdown = "This is ~~gone~~ now.\n"
 

@@ -239,6 +239,16 @@ function transformUniorgObjectToMdastPhrasingContent(
               : `_{${content}}`
       }
     }
+    case "latex-fragment":
+      // display-only paragraphs become math blocks (see the paragraph
+      // handler); a fragment inside running text is inline math
+      return {
+        type: "inlineMath",
+        value: node.contents.trim()
+      } as unknown as PhrasingContent
+    case "entity":
+      // org export renders entities as their character; \alpha → α
+      return { type: "text", value: node.utf8 }
     case "timestamp":
       // md has no timestamps; keep the raw org value as text so the
       // return trip re-parses it natively
@@ -370,6 +380,22 @@ function transformUniorgNodeToMdastNode(
       return isms.length ? keyValueParagraph(isms) : null
     }
     case "paragraph": {
+      // a paragraph holding only a display fragment ($$…$$ or \[…\]) is
+      // display math and becomes a math block
+      const substantial = (node.children || []).filter(
+        child => !(child.type === "text" && child.value.trim() === "")
+      )
+      const only = substantial[0]
+      if (
+        substantial.length === 1 &&
+        only?.type === "latex-fragment" &&
+        (only.value.startsWith("$$") || only.value.startsWith("\\["))
+      ) {
+        return {
+          type: "math",
+          value: only.contents.replace(/^\n/, "").replace(/\n$/, "")
+        } as unknown as RootContent
+      }
       const children = transformUniorgObjects(node.children)
       // uniorg keeps trailing blank lines inside the paragraph node; strip
       // them so remark-stringify produces canonical spacing.
@@ -475,6 +501,8 @@ function transformUniorgNodeToMdastNode(
         lang: null,
         value: trimTrailingNewline(node.value)
       }
+    case "latex-environment":
+      return { type: "math", value: node.value } as unknown as RootContent
     // TODO: Add handlers for other uniorg node types
     default:
       warn(`dropped org ${node.type}`)

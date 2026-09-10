@@ -2,6 +2,7 @@ import { unified } from "unified"
 import remarkParse from "remark-parse"
 import remarkGfm from "remark-gfm"
 import remarkFrontmatter from "remark-frontmatter"
+import remarkMath from "remark-math"
 import { uniorgStringify } from "uniorg-stringify"
 import { visit } from "unist-util-visit"
 import type { Parent } from "unist"
@@ -31,6 +32,7 @@ export function convertMarkdownToOrg(
     .use(remarkParse)
     .use(remarkGfm)
     .use(remarkFrontmatter)
+    .use(remarkMath)
     .parse(markdown)
 
   // Phase 2: Generic mdast to uniorg-ast transformation

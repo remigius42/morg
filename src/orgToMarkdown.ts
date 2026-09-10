@@ -3,6 +3,7 @@ import uniorgParse from "uniorg-parse"
 import remarkStringify from "remark-stringify"
 import remarkGfm from "remark-gfm"
 import remarkFrontmatter from "remark-frontmatter"
+import remarkMath from "remark-math"
 import { transformUniorgAstToMdast } from "./core/uniorgToMdast.js"
 import type { OrgToMarkdownOptions } from "./options.js"
 
@@ -49,6 +50,7 @@ export function convertOrgToMarkdown(
     } as Parameters<typeof remarkStringify>[0])
     .use(remarkGfm)
     .use(remarkFrontmatter)
+    .use(remarkMath)
     .stringify(mdast)
 
   return markdownContent

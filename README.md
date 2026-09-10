@@ -137,6 +137,12 @@ Markdown links and images resolve to inline form during `md → org`.
 Inline org timestamps in body text (active, inactive, ranges) are kept
 verbatim as text in Markdown and re-parsed natively on the way back.
 
+LaTeX math maps natively (via remark-math): inline fragments (`$x$`,
+`\(x\)`) ↔ `$x$`, display fragments (`$$…$$`, `\[…\]`) and
+`\begin{…}` environments ↔ `$$…$$` math blocks — delimiters MathJax,
+KaTeX, Obsidian and GitHub all understand. Org entities render as
+their character (`\alpha` → `α`), matching org's own export.
+
 Org underline, superscript and subscript have no Markdown equivalent;
 their raw org markup (`_text_`, `^{2}`, `_{2}`) is kept verbatim as
 escaped text on `org → md` and re-parsed natively on the way back
