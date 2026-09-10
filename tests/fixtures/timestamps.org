@@ -1,0 +1,5 @@
+Meet on <2026-09-15 Tue> or maybe <2026-09-16 Wed 10:00-11:00>.
+
+Logged [2026-09-01 Tue] as an inactive date.
+
+A range <2026-09-15 Tue>--<2026-09-20 Sun> in body text.

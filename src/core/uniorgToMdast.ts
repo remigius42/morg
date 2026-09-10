@@ -173,6 +173,10 @@ function transformUniorgObjectToMdastPhrasingContent(
               : `_{${content}}`
       }
     }
+    case "timestamp":
+      // md has no timestamps; keep the raw org value as text so the
+      // return trip re-parses it natively
+      return { type: "text", value: node.rawValue }
     case "export-snippet":
       return node.backEnd === "html"
         ? { type: "html", value: node.value }

@@ -128,6 +128,14 @@ describe("convertOrgToMarkdown", () => {
     )
   })
 
+  it("should keep inline timestamps verbatim", () => {
+    const org = "Meet on <2026-09-15 Tue> or logged [2026-09-01 Tue] instead.\n"
+
+    expect(convertOrgToMarkdown(org)).toBe(
+      "Meet on <2026-09-15 Tue> or logged \\[2026-09-01 Tue] instead.\n"
+    )
+  })
+
   it("should convert org strike-through to gfm strikethrough", () => {
     const org = "This is +gone+ now.\n"
 
