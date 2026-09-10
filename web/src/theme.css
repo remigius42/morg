@@ -49,6 +49,11 @@ textarea[readonly] {
   color: var(--pico-del-color);
 }
 
+body > footer,
+.privacy-note {
+  text-align: center;
+}
+
 .site-frame {
   width: 100%;
   height: 75vh;
