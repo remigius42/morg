@@ -72,7 +72,9 @@ function transformMdastPhrasingContentToUniorgObject(
         children: linkChildren
       }
     }
-    // TODO: Add handlers for other mdast phrasing content types (image, inlineCode, etc.)
+    case "inlineCode":
+      return { type: "code", value: node.value }
+    // TODO: Add handlers for other mdast phrasing content types (image, etc.)
     default:
       return null
   }
@@ -108,6 +110,13 @@ function transformMdastNodeToUniorgNode(
       return { type: "text", value: node.value }
     case "list":
       return transformMdastList(node, 0)
+    case "code":
+      return (node.lang
+        ? { type: "src-block", language: node.lang, value: node.value }
+        : {
+            type: "example-block",
+            value: node.value
+          }) as unknown as ElementType
     // TODO: Add handlers for other mdast node types (blockquote, code, thematicBreak, etc.)
     default:
       return null

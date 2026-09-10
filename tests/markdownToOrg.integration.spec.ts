@@ -14,6 +14,28 @@ This is a paragraph.
     expect(orgOutput).toBe(expectedOrgMode)
   })
 
+  it("should convert inline code to org verbatim markup", () => {
+    const markdown = "Use `foo` here.\n"
+
+    expect(convertMarkdownToOrg(markdown)).toBe("Use ~foo~ here.\n")
+  })
+
+  it("should convert fenced code blocks to src blocks", () => {
+    const markdown = '```js\nconsole.log("hi")\n```\n'
+
+    expect(convertMarkdownToOrg(markdown)).toBe(
+      '#+begin_src js\nconsole.log("hi")\n#+end_src\n'
+    )
+  })
+
+  it("should convert fenced code blocks without language to example blocks", () => {
+    const markdown = "```\nplain text\n```\n"
+
+    expect(convertMarkdownToOrg(markdown)).toBe(
+      "#+begin_example\nplain text\n#+end_example\n"
+    )
+  })
+
   it("should add heading:: property drawers with the logseq preset", () => {
     const markdown = "# Hello World\n\nThis is a paragraph."
     const expectedOrgMode = `* Hello World

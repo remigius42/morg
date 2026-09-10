@@ -1,0 +1,10 @@
+* Code
+Inline ~code~ and =verbatim= in a sentence.
+
+#+begin_src js
+console.log("hi")
+#+end_src
+
+#+begin_example
+no language here
+#+end_example

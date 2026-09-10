@@ -13,6 +13,21 @@ describe("convertOrgToMarkdown", () => {
     )
   })
 
+  it("should convert org code and verbatim to inline code", () => {
+    const org = "Use ~foo~ or =bar= here.\n"
+
+    expect(convertOrgToMarkdown(org)).toBe("Use `foo` or `bar` here.\n")
+  })
+
+  it("should convert src and example blocks to fenced code", () => {
+    const org =
+      '#+begin_src js\nconsole.log("hi")\n#+end_src\n\n#+begin_example\nplain\n#+end_example\n'
+
+    expect(convertOrgToMarkdown(org)).toBe(
+      '```js\nconsole.log("hi")\n```\n\n```\nplain\n```\n'
+    )
+  })
+
   it("should convert inline markup inside list items", () => {
     const org = "- some *bold* item\n- a [[https://example.com][link]] item\n"
 

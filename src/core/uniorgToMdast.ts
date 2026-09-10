@@ -58,10 +58,19 @@ function transformUniorgObjectToMdastPhrasingContent(
           : [{ type: "text", value: node.rawLink }]
       }
     }
-    // TODO: Add handlers for other uniorg object types (code, verbatim, etc.)
+    case "code":
+    case "verbatim":
+      return { type: "inlineCode", value: node.value }
+    // TODO: Add handlers for other uniorg object types
     default:
       return null
   }
+}
+
+// uniorg block values keep the newline before the #+end_ line; mdast
+// code values do not include it
+function trimTrailingNewline(value: string): string {
+  return value.replace(/\n$/, "")
 }
 
 function transformUniorgObjects(
@@ -111,6 +120,18 @@ function transformUniorgNodeToMdastNode(
       return { type: "text", value: node.value }
     case "plain-list":
       return transformUniorgList(node)
+    case "src-block":
+      return {
+        type: "code",
+        lang: node.language || null,
+        value: trimTrailingNewline(node.value)
+      }
+    case "example-block":
+      return {
+        type: "code",
+        lang: null,
+        value: trimTrailingNewline(node.value)
+      }
     // TODO: Add handlers for other uniorg node types
     default:
       return null
