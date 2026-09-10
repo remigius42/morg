@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-09-10
+
 ### Added
 
 - Bidirectional Markdown ↔ Org conversion with round-trip convergence
@@ -43,3 +45,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   GitHub Pages from `main` (ADR 0003): converter with presets, options,
   normalize modes, `morg.toml` paste and a preloaded demo, iframable
   embed page with `?theme` override, light/dark switcher
+
+[unreleased]: https://github.com/remigius42/morg/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/remigius42/morg/releases/tag/v0.1.0
