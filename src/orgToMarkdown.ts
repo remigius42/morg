@@ -31,10 +31,12 @@ export function convertOrgToMarkdown(
   })
 
   // Phase 4: Render mdast to Markdown string
-  // bullet "-" (not remark's default "*") is morg's canonical Markdown form
+  // bullet and rule "-" (not remark's default "*") are morg's canonical
+  // Markdown form
   const markdownContent = unified()
     .use(remarkStringify, {
       bullet: "-",
+      rule: "-",
       handlers: {
         // key:: value blocks are emitted verbatim, unescaped
         keyValue: (node: { value: string }) => node.value

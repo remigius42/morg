@@ -274,6 +274,8 @@ function transformUniorgNodeToMdastNode(
           }))
       } as unknown as RootContent
     }
+    case "horizontal-rule":
+      return { type: "thematicBreak" }
     case "footnote-definition":
       return {
         type: "footnoteDefinition",

@@ -98,6 +98,12 @@ describe("convertOrgToMarkdown", () => {
     )
   })
 
+  it("should convert org horizontal rules to thematic breaks", () => {
+    const org = "before\n\n-----\nafter\n"
+
+    expect(convertOrgToMarkdown(org)).toBe("before\n\n---\n\nafter\n")
+  })
+
   it("should convert org strike-through to gfm strikethrough", () => {
     const org = "This is +gone+ now.\n"
 

@@ -204,6 +204,8 @@ function transformMdastNodeToUniorgNode(
             value: node.value
           } as unknown as ElementType)
         : null
+    case "thematicBreak":
+      return { type: "horizontal-rule" } as unknown as ElementType
     case "footnoteDefinition":
       return {
         type: "footnote-definition",

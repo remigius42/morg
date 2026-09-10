@@ -108,6 +108,12 @@ This is a paragraph.
     ).toBe("Press x now.\n")
   })
 
+  it("should convert thematic breaks to org horizontal rules", () => {
+    const markdown = "before\n\n---\n\nafter\n"
+
+    expect(convertMarkdownToOrg(markdown)).toBe("before\n\n-----\nafter\n")
+  })
+
   it("should convert strikethrough to org strike-through", () => {
     const markdown = "This is ~~gone~~ now.\n"
 
