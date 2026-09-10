@@ -70,6 +70,24 @@ describe("logseq outline nesting", () => {
     expect(roundTrip(once)).toBe(once)
   })
 
+  it("emits hiccup blocks unescaped in markdown", () => {
+    const org =
+      '* foo\n:PROPERTIES:\n:heading: 1\n:END:\n** [:div {:class "note"} "hi"]\n'
+
+    expect(convertOrgToMarkdown(org, { preset: logseq() })).toBe(
+      '# foo\n\n[:div {:class "note"} "hi"]\n'
+    )
+  })
+
+  it("hiccup blocks survive a logseq round trip", () => {
+    const markdown = '# foo\n\n[:div {:class "note"} "hi"]\n'
+    const roundTrip = (md: string): string =>
+      convertOrgToMarkdown(convertMarkdownToOrg(md, { preset: logseq() }), {
+        preset: logseq()
+      })
+    expect(roundTrip(markdown)).toBe(markdown)
+  })
+
   it("keeps flat body content with nestUnderHeadings false", () => {
     expect(
       convertMarkdownToOrg("# foo\n\nabc\n", {

@@ -7,6 +7,8 @@ import type {
   Text
 } from "uniorg"
 import type { Parent } from "unist"
+import { visit } from "unist-util-visit"
+import { toString } from "orgast-util-to-string"
 import type { Preset } from "./types.js"
 
 export interface LogseqPresetOptions {
@@ -101,7 +103,21 @@ export function extractLogseqSpecificsFromUniorgAst(
   uniorgAst: OrgData
 ): OrgData {
   extractInParent(uniorgAst)
+  markHiccupParagraphs(uniorgAst)
   return uniorgAst
+}
+
+// hiccup blocks ([:tag …]) are Logseq markup, not links or footnotes; a
+// verbatim-inline node keeps the brackets unescaped in Markdown output
+function markHiccupParagraphs(uniorgAst: OrgData): void {
+  visit(uniorgAst as Parent, "paragraph", (node: Paragraph) => {
+    const text = toString(node)
+    if (text.startsWith("[:")) {
+      node.children = [
+        { type: "verbatim-inline", value: text.replace(/\n$/, "") }
+      ] as unknown as Paragraph["children"]
+    }
+  })
 }
 
 function extractInParent(parent: Parent): void {

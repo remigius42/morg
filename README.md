@@ -70,7 +70,9 @@ Options (flags accept `boolean` or a per-construct `Record<string, boolean>`):
   headlines one level deeper (in Logseq org every outline block is a
   headline), other constructs stay in the preceding block's body. The
   reverse direction restores headings from `:heading:` properties and
-  turns plain block headlines back into paragraphs.
+  turns plain block headlines back into paragraphs. Hiccup blocks
+  (`[:div …]`) pass through as plain text and are emitted unescaped in
+  Markdown.
 - `obsidian()` — wikilinks `[[Page]]` / `[[Page|alias]]` ↔ org fuzzy links
 
 Both convert functions also accept `onWarning: message => …`, called for
