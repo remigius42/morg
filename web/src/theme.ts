@@ -44,25 +44,32 @@ function effectiveTheme(): Theme {
   return matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
 }
 
-export function initThemeToggle(button: HTMLElement | null): void {
-  if (!button) {
+export function initThemeToggle(
+  light: HTMLButtonElement | null,
+  dark: HTMLButtonElement | null
+): void {
+  if (!light || !dark) {
     return
   }
-  const updateLabel = () => {
-    // text-presentation glyphs (not emoji) so CSS can tint them
-    button.textContent = effectiveTheme() === "dark" ? "☀︎" : "☾"
+  const update = () => {
+    const current = effectiveTheme()
+    light.disabled = current === "light"
+    dark.disabled = current === "dark"
+    light.classList.toggle("active", current === "light")
+    dark.classList.toggle("active", current === "dark")
   }
-  button.addEventListener("click", () => {
-    const next: Theme = effectiveTheme() === "dark" ? "light" : "dark"
+  const choose = (theme: Theme) => {
     try {
-      localStorage.setItem(THEME_KEY, next)
+      localStorage.setItem(THEME_KEY, theme)
     } catch {
       // storage may be unavailable; theme still applies for this page
     }
-    document.documentElement.dataset.theme = next
-    updateLabel()
-  })
-  updateLabel()
+    document.documentElement.dataset.theme = theme
+    update()
+  }
+  light.addEventListener("click", () => choose("light"))
+  dark.addEventListener("click", () => choose("dark"))
+  update()
 }
 
 /** Follow theme toggles made in other same-origin frames/tabs. */

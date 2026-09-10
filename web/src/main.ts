@@ -1,5 +1,3 @@
-import "@picocss/pico/css/pico.min.css"
-import "./theme.css"
 import { parseConfig } from "../../src/config.js"
 import { applyTheme, watchThemeChanges } from "./theme.js"
 import {

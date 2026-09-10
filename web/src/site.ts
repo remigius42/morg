@@ -1,7 +1,9 @@
-// Shared chrome entry for the non-embedded pages.
-import "@picocss/pico/css/pico.min.css"
-import "./theme.css"
+// Shared chrome entry for the non-embedded pages; the stylesheet is
+// linked in the HTML head so styles apply before first paint.
 import { applyTheme, initThemeToggle } from "./theme.js"
 
 applyTheme()
-initThemeToggle(document.getElementById("themeToggle"))
+initThemeToggle(
+  document.getElementById("themeLight") as HTMLButtonElement | null,
+  document.getElementById("themeDark") as HTMLButtonElement | null
+)
