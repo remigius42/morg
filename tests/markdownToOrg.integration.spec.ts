@@ -44,6 +44,14 @@ This is a paragraph.
     )
   })
 
+  it("should convert images to org links", () => {
+    const markdown = "![](image.png)\n\n![A diagram](diagram.svg)\n"
+
+    expect(convertMarkdownToOrg(markdown)).toBe(
+      "[[image.png]]\n\n[[diagram.svg][A diagram]]\n"
+    )
+  })
+
   it("should add heading:: property drawers with the logseq preset", () => {
     const markdown = "# Hello World\n\nThis is a paragraph."
     const expectedOrgMode = `* Hello World

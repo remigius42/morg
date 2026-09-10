@@ -84,8 +84,9 @@ Project vocabulary lives in [CONTEXT.md](CONTEXT.md); design decisions in
 
 Early scaffold. Working both directions: headings, paragraphs, bold/italic,
 links, lists (nested, ordered, mixed), and code (inline, fenced/src and
-example blocks), and blockquotes/quote blocks. Not yet handled: tables,
-images, org-isms/md-isms preservation.
+example blocks), blockquotes/quote blocks, and images (org side: links to
+image files, alt text as description). Not yet handled: tables,
+org-isms/md-isms preservation.
 
 ## Development
 

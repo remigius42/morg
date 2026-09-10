@@ -34,6 +34,15 @@ describe("convertOrgToMarkdown", () => {
     expect(convertOrgToMarkdown(org)).toBe("> Quoted *wisdom* here.\n")
   })
 
+  it("should convert image links to markdown images", () => {
+    const org =
+      "[[image.png]]\n\n[[diagram.svg][A diagram]]\n\n[[https://example.com/page][not an image]]\n"
+
+    expect(convertOrgToMarkdown(org)).toBe(
+      "![](image.png)\n\n![A diagram](diagram.svg)\n\n[not an image](https://example.com/page)\n"
+    )
+  })
+
   it("should convert inline markup inside list items", () => {
     const org = "- some *bold* item\n- a [[https://example.com][link]] item\n"
 

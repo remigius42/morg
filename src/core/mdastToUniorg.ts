@@ -74,7 +74,18 @@ function transformMdastPhrasingContentToUniorgObject(
     }
     case "inlineCode":
       return { type: "code", value: node.value }
-    // TODO: Add handlers for other mdast phrasing content types (image, etc.)
+    case "image":
+      // org has no dedicated image syntax: a plain file link renders
+      // inline, alt text becomes the link description
+      return {
+        type: "link",
+        format: "bracket",
+        linkType: "file",
+        rawLink: node.url,
+        path: node.url,
+        children: node.alt ? [{ type: "text", value: node.alt }] : []
+      } as unknown as ObjectType
+    // TODO: Add handlers for other mdast phrasing content types
     default:
       return null
   }

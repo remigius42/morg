@@ -1,0 +1,4 @@
+* Images
+[[plain.png]]
+
+[[docs/diagram.svg][A diagram]] inline with text.

@@ -30,6 +30,8 @@ export function transformUniorgAstToMdast(uniorgAst: OrgData): MdastRoot {
   return { type: "root", children: children }
 }
 
+const IMAGE_EXTENSION_RE = /\.(png|jpe?g|gif|svg|webp|avif|bmp|ico)$/i
+
 function transformUniorgObjectToMdastPhrasingContent(
   node: ObjectType
 ): PhrasingContent | null {
@@ -48,6 +50,14 @@ function transformUniorgObjectToMdastPhrasingContent(
       }
     case "link": {
       const children = transformUniorgObjects(node.children)
+      // org has no dedicated image syntax; the common convention is a
+      // link to an image file, so map those to markdown images
+      if (IMAGE_EXTENSION_RE.test(node.rawLink)) {
+        const description = children
+          .map(child => ("value" in child ? child.value : ""))
+          .join("")
+        return { type: "image", url: node.rawLink, alt: description }
+      }
       return {
         type: "link",
         url: node.rawLink,
