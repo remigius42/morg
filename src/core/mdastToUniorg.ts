@@ -110,6 +110,13 @@ function transformMdastNodeToUniorgNode(
       return { type: "text", value: node.value }
     case "list":
       return transformMdastList(node, 0)
+    case "blockquote":
+      return {
+        type: "quote-block",
+        children: node.children
+          .map(transformMdastNodeToUniorgNode)
+          .filter(Boolean)
+      } as unknown as ElementType
     case "code":
       return (node.lang
         ? { type: "src-block", language: node.lang, value: node.value }

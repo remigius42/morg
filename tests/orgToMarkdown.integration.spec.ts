@@ -28,6 +28,12 @@ describe("convertOrgToMarkdown", () => {
     )
   })
 
+  it("should convert quote blocks to blockquotes", () => {
+    const org = "#+begin_quote\nQuoted /wisdom/ here.\n#+end_quote\n"
+
+    expect(convertOrgToMarkdown(org)).toBe("> Quoted *wisdom* here.\n")
+  })
+
   it("should convert inline markup inside list items", () => {
     const org = "- some *bold* item\n- a [[https://example.com][link]] item\n"
 

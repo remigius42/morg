@@ -120,6 +120,13 @@ function transformUniorgNodeToMdastNode(
       return { type: "text", value: node.value }
     case "plain-list":
       return transformUniorgList(node)
+    case "quote-block":
+      return {
+        type: "blockquote",
+        children: (node.children || [])
+          .flatMap(transformUniorgNodeToMdastNode)
+          .filter(Boolean) as BlockContent[]
+      }
     case "src-block":
       return {
         type: "code",

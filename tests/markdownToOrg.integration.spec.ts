@@ -36,6 +36,14 @@ This is a paragraph.
     )
   })
 
+  it("should convert blockquotes to quote blocks", () => {
+    const markdown = "> Quoted *wisdom* here.\n"
+
+    expect(convertMarkdownToOrg(markdown)).toBe(
+      "#+begin_quote\nQuoted /wisdom/ here.\n#+end_quote\n"
+    )
+  })
+
   it("should add heading:: property drawers with the logseq preset", () => {
     const markdown = "# Hello World\n\nThis is a paragraph."
     const expectedOrgMode = `* Hello World
