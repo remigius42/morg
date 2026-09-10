@@ -153,7 +153,9 @@ Project vocabulary lives in [CONTEXT.md](CONTEXT.md); design decisions in
 
 ## Status
 
-Early scaffold. Working both directions: headings, paragraphs,
+The core conversion surface is feature-complete; not yet published to
+npm and not yet battle-tested against large real-world vaults — expect
+edge cases. Working both directions: headings, paragraphs,
 bold/italic/strikethrough, links, lists (nested, ordered, mixed), and code
 (inline, fenced/src and
 example blocks), blockquotes/quote blocks, images (org side: links to
