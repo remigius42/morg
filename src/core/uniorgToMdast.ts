@@ -18,17 +18,42 @@ import type {
   ListItem,
   TableRow
 } from "uniorg"
+import { toggleEnabled, type Toggle } from "../options.js"
+
+export interface UniorgToMdastOptions {
+  preserveOrgisms?: Toggle
+}
+
+// options for the current transformUniorgAstToMdast run; the transform is
+// synchronous, so module state is safe and avoids threading the options
+// through every recursive call site
+let currentOptions: UniorgToMdastOptions = {}
+
+function orgismEnabled(key: string): boolean {
+  return toggleEnabled(currentOptions.preserveOrgisms, key)
+}
 
 /**
  * Transforms a uniorg AST to a mdast (Markdown AST).
  * @param uniorgAst The uniorg AST to transform.
+ * @param options Controls org-ism serialization (`key:: value` lines).
  * @returns The transformed mdast.
  */
-export function transformUniorgAstToMdast(uniorgAst: OrgData): MdastRoot {
+export function transformUniorgAstToMdast(
+  uniorgAst: OrgData,
+  options: UniorgToMdastOptions = {}
+): MdastRoot {
+  currentOptions = options
   const children: RootContent[] = (uniorgAst.children || [])
     .flatMap(transformUniorgNodeToMdastNode)
     .filter(Boolean) as RootContent[]
   return { type: "root", children: children }
+}
+
+// custom mdast node stringified verbatim (see orgToMarkdown handlers) so
+// keys like custom_id are not markdown-escaped to custom\_id
+function keyValueParagraph(lines: string[]): RootContent {
+  return { type: "keyValue", value: lines.join("\n") } as unknown as RootContent
 }
 
 const IMAGE_EXTENSION_RE = /\.(png|jpe?g|gif|svg|webp|avif|bmp|ico)$/i
@@ -128,14 +153,49 @@ function transformUniorgNodeToMdastNode(
       return (node.children || [])
         .flatMap(transformUniorgNodeToMdastNode)
         .filter(Boolean) as RootContent[]
-    case "headline":
-      return {
+    case "headline": {
+      const heading: RootContent = {
         type: "heading",
         depth: node.level as Heading["depth"],
         children: (node.children || [])
           .map(transformUniorgObjectToMdastPhrasingContent)
           .filter(Boolean) as PhrasingContent[]
       }
+      // org-isms serialize as key:: value lines directly below the heading
+      const isms: string[] = []
+      if (node.todoKeyword && orgismEnabled("todo")) {
+        isms.push(`todo:: ${node.todoKeyword}`)
+      }
+      if (node.priority && orgismEnabled("priority")) {
+        isms.push(`priority:: ${node.priority}`)
+      }
+      if (node.tags.length && orgismEnabled("tags")) {
+        isms.push(`tags:: ${node.tags.join(", ")}`)
+      }
+      return isms.length ? [heading, keyValueParagraph(isms)] : heading
+    }
+    case "planning": {
+      const isms: string[] = []
+      if (node.scheduled && orgismEnabled("scheduled")) {
+        isms.push(`scheduled:: ${node.scheduled.rawValue}`)
+      }
+      if (node.deadline && orgismEnabled("deadline")) {
+        isms.push(`deadline:: ${node.deadline.rawValue}`)
+      }
+      if (node.closed && orgismEnabled("closed")) {
+        isms.push(`closed:: ${node.closed.rawValue}`)
+      }
+      return isms.length ? keyValueParagraph(isms) : null
+    }
+    case "property-drawer": {
+      if (!orgismEnabled("properties")) {
+        return null
+      }
+      const isms = (node.children || [])
+        .filter(child => child.type === "node-property")
+        .map(property => `${property.key}:: ${property.value}`)
+      return isms.length ? keyValueParagraph(isms) : null
+    }
     case "paragraph": {
       const children = (node.children || [])
         .map(transformUniorgObjectToMdastPhrasingContent)

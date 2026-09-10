@@ -1,0 +1,9 @@
+* TODO [#A] Ship the feature :work:urgent:
+SCHEDULED: <2026-09-15 Tue>
+:PROPERTIES:
+:custom_id: ship-it
+:END:
+Body text.
+
+** DONE Subtask
+Details.

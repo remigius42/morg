@@ -66,6 +66,24 @@ This is a paragraph.
     )
   })
 
+  it("should restore known key:: values to native org syntax", () => {
+    const markdown =
+      "# Ship it\n\ntodo:: TODO\npriority:: A\ntags:: work, urgent\n\nBody text.\n"
+
+    expect(convertMarkdownToOrg(markdown)).toBe(
+      "* TODO [#A] Ship it :work:urgent:\nBody text.\n"
+    )
+  })
+
+  it("should restore planning keys and unknown keys as drawer properties", () => {
+    const markdown =
+      "# Meeting\n\nscheduled:: <2026-09-15 Tue>\ndeadline:: <2026-09-20 Sun>\n\ncustom_id:: mtg\n\nNotes.\n"
+
+    expect(convertMarkdownToOrg(markdown)).toBe(
+      "* Meeting\nSCHEDULED: <2026-09-15 Tue> DEADLINE: <2026-09-20 Sun>\n:PROPERTIES:\n:custom_id: mtg\n:END:\nNotes.\n"
+    )
+  })
+
   it("should add heading:: property drawers with the logseq preset", () => {
     const markdown = "# Hello World\n\nThis is a paragraph."
     const expectedOrgMode = `* Hello World

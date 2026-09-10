@@ -64,6 +64,31 @@ describe("convertOrgToMarkdown", () => {
     )
   })
 
+  it("should serialize headline org-isms as key:: value lines", () => {
+    const org = "* TODO [#A] Ship it :work:urgent:\nBody text.\n"
+
+    expect(convertOrgToMarkdown(org)).toBe(
+      "# Ship it\n\ntodo:: TODO\npriority:: A\ntags:: work, urgent\n\nBody text.\n"
+    )
+  })
+
+  it("should drop org-isms when preserveOrgisms is false", () => {
+    const org = "* TODO [#A] Ship it :work:urgent:\nBody text.\n"
+
+    expect(convertOrgToMarkdown(org, { preserveOrgisms: false })).toBe(
+      "# Ship it\n\nBody text.\n"
+    )
+  })
+
+  it("should serialize planning and property drawers as key:: values", () => {
+    const org =
+      "* Meeting\nSCHEDULED: <2026-09-15 Tue> DEADLINE: <2026-09-20 Sun>\n:PROPERTIES:\n:custom_id: mtg\n:END:\nNotes.\n"
+
+    expect(convertOrgToMarkdown(org)).toBe(
+      "# Meeting\n\nscheduled:: <2026-09-15 Tue>\ndeadline:: <2026-09-20 Sun>\n\ncustom_id:: mtg\n\nNotes.\n"
+    )
+  })
+
   it("should convert inline markup inside list items", () => {
     const org = "- some *bold* item\n- a [[https://example.com][link]] item\n"
 

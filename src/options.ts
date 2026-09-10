@@ -7,6 +7,19 @@ import type { Preset } from "./presets/types.js"
  */
 export type Toggle = boolean | Record<string, boolean>
 
+export function toggleEnabled(
+  toggle: Toggle | undefined,
+  key: string
+): boolean {
+  if (toggle === undefined) {
+    return true
+  }
+  if (typeof toggle === "boolean") {
+    return toggle
+  }
+  return toggle[key] ?? true
+}
+
 export interface MarkdownToOrgOptions {
   /**
    * Preserve Markdown constructs without a native Org equivalent as

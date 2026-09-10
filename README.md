@@ -87,9 +87,18 @@ links, lists (nested, ordered, mixed), and code (inline, fenced/src and
 example blocks), blockquotes/quote blocks, images (org side: links to
 image files, alt text as description), and tables (GFM ↔ org, incl.
 column alignment via org `<l>/<r>/<c>` cookie rows; `table.el` tables
-are TODO). Markdown is parsed and serialized with GFM enabled. Not yet
-handled: org-isms/md-isms preservation, GFM strikethrough and
-footnotes.
+are TODO). Markdown is parsed and serialized with GFM enabled.
+
+Org-isms serialize to `key:: value` lines directly below the heading
+(`todo::`, `priority::`, `tags::`, `scheduled::`, `deadline::`,
+`closed::`; property drawer entries keep their own keys) and are
+restored to native org syntax on the way back — known keys become
+TODO keywords, priorities, tags and planning lines, unknown keys become
+property drawer entries. `preserveOrgisms` accepts `false` or a
+per-key record to drop them instead.
+
+Not yet handled: md-isms preservation (raw HTML, frontmatter), GFM
+strikethrough and footnotes.
 
 ## Development
 

@@ -24,12 +24,22 @@ export function convertOrgToMarkdown(
   }
 
   // Phase 3: Generic uniorg-ast to mdast transformation
-  const mdast = transformUniorgAstToMdast(uniorgAst)
+  const mdast = transformUniorgAstToMdast(uniorgAst, {
+    ...(options.preserveOrgisms !== undefined && {
+      preserveOrgisms: options.preserveOrgisms
+    })
+  })
 
   // Phase 4: Render mdast to Markdown string
   // bullet "-" (not remark's default "*") is morg's canonical Markdown form
   const markdownContent = unified()
-    .use(remarkStringify, { bullet: "-" })
+    .use(remarkStringify, {
+      bullet: "-",
+      handlers: {
+        // key:: value blocks are emitted verbatim, unescaped
+        keyValue: (node: { value: string }) => node.value
+      }
+    } as Parameters<typeof remarkStringify>[0])
     .use(remarkGfm)
     .stringify(mdast)
 
