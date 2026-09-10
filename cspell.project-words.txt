@@ -32,3 +32,5 @@ unmappable
 uniorg
 unist
 wikilinks
+autolink
+autolinks

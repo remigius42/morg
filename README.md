@@ -153,9 +153,16 @@ Project vocabulary lives in [CONTEXT.md](CONTEXT.md); design decisions in
 
 ## Status
 
-The core conversion surface is feature-complete; not yet published to
-npm and not yet battle-tested against large real-world vaults — expect
-edge cases. Working both directions: headings, paragraphs,
+The core conversion surface is feature-complete and validated against
+real-world Logseq org vaults (edge cases found there live on as
+anonymized fixtures, e.g. `tests/fixtures/logseq-vault.org`); not yet
+published to npm.
+
+Normalizations worth knowing: a link description equal to its url
+(a common Logseq pattern) becomes an autolink and restores as a plain
+`[[url]]`; per-line leading whitespace inside paragraphs is collapsed
+(it is insignificant in org and rendered md, but structurally
+meaningful to md parsers). Working both directions: headings, paragraphs,
 bold/italic/strikethrough, links, lists (nested, ordered, mixed), and code
 (inline, fenced/src and
 example blocks), blockquotes/quote blocks, images (org side: links to

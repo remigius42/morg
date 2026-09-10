@@ -132,9 +132,17 @@ function transformMdastPhrasingContentToUniorgObject(
       }
     case "link": {
       const linkNode = node
-      const linkChildren = linkNode.children
-        .map(transformMdastPhrasingContentToUniorgObject)
-        .filter(Boolean) as ObjectType[]
+      const [only] = linkNode.children
+      // text equal to the url (autolinks) is no description; a plain
+      // [[url]] keeps the org side canonical
+      const linkChildren =
+        linkNode.children.length === 1 &&
+        only?.type === "text" &&
+        only.value === linkNode.url
+          ? []
+          : (linkNode.children
+              .map(transformMdastPhrasingContentToUniorgObject)
+              .filter(Boolean) as ObjectType[])
       // rawLink should just be the URL, uniorg-stringify adds the brackets
       return {
         type: "link",

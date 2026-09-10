@@ -318,6 +318,32 @@ describe("convertOrgToMarkdown", () => {
     )
   })
 
+  it("should autolink links whose description equals the url", () => {
+    const org =
+      "[[https://example.com/a_b/][https://example.com/a_b/]] and [[https://example.com/plain/]]\n"
+
+    expect(convertOrgToMarkdown(org)).toBe(
+      "<https://example.com/a_b/> and <https://example.com/plain/>\n"
+    )
+  })
+
+  it("should flatten nested links inside descriptions to text", () => {
+    const org =
+      "[[https://example.com/page][see https://other.example.com here]]\n"
+
+    expect(convertOrgToMarkdown(org)).toBe(
+      "[see https://other.example.com here](https://example.com/page)\n"
+    )
+  })
+
+  it("should collapse leading indentation inside paragraphs", () => {
+    const org = "some code-ish text\n      indented continuation\n"
+
+    expect(convertOrgToMarkdown(org)).toBe(
+      "some code-ish text\nindented continuation\n"
+    )
+  })
+
   it("should convert inline markup inside list items", () => {
     const org = "- some *bold* item\n- a [[https://example.com][link]] item\n"
 

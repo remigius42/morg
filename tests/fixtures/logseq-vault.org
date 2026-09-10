@@ -1,0 +1,17 @@
+* Bookmarks
+:PROPERTIES:
+:heading: 1
+:END:
+** [[https://example.com/library/][https://example.com/library/]]
+** [[https://example.com/posts/42-a_very_fine-title][https://example.com/posts/42-a_very_fine-title]]
+** See also: [[https://example.com/snake_case_path/][https://example.com/snake_case_path/]]
+** [[https://example.com/clip?id=Ab_cD][https://example.com/clip?id=Ab_cD]]
+* Macros
+{{video [[https://example.com/clip?id=q_R][https://example.com/clip?id=q_R]]}}
+* Code pasted as plain text
+(define (halve n)
+   (if (even? n)
+        (/ n 2)
+       2)
+   ;(step n)
+   (add1 n))

@@ -263,24 +263,47 @@ function transformUniorgObjectToMdastPhrasingContent(
         children: transformUniorgObjects(node.children)
       }
     case "link": {
-      const children = transformUniorgObjects(node.children)
+      const descriptionText = orgastToString(node)
       // org has no dedicated image syntax; the common convention is a
       // link to an image file, so map those to markdown images
       if (IMAGE_EXTENSION_RE.test(node.rawLink)) {
-        const description = children
-          .map(child => ("value" in child ? child.value : ""))
-          .join("")
-        return { type: "image", url: node.rawLink, alt: description }
+        return { type: "image", url: node.rawLink, alt: descriptionText }
       }
-      return {
-        type: "link",
-        url: node.rawLink,
-        // a plain org link has no description; mdast needs children, and
-        // text === url makes remark-stringify emit an autolink (<url>)
-        children: children.length
-          ? children
-          : [{ type: "text", value: node.rawLink }]
+      // a description equal to the url (a common Logseq pattern) is no
+      // description: text === url makes remark-stringify emit an
+      // autolink (<url>), which restores to a plain org link. Urls full
+      // of / and _ re-parse as italic/subscript inside the description
+      // (and even uniorg-stringify garbles them back), so compare with
+      // org's emphasis-marker characters stripped from both sides
+      const withoutMarkers = (value: string): string =>
+        value.replace(/[/*_+~={}]/g, "")
+      const serializedDescription = node.children.length
+        ? orgNodeToText({
+            type: "paragraph",
+            children: node.children,
+            contentsBegin: 0,
+            contentsEnd: 0
+          }).trim()
+        : ""
+      if (
+        !node.children.length ||
+        withoutMarkers(serializedDescription) === withoutMarkers(node.rawLink)
+      ) {
+        return {
+          type: "link",
+          url: node.rawLink,
+          children: [{ type: "text", value: node.rawLink }]
+        }
       }
+      const children = transformUniorgObjects(node.children)
+      // md cannot nest links; flatten a description that contains one
+      // (org parses bare urls inside descriptions as links)
+      const flattened = children.some(
+        child => child.type === "link" || child.type === "image"
+      )
+        ? [{ type: "text", value: descriptionText } as PhrasingContent]
+        : children
+      return { type: "link", url: node.rawLink, children: flattened }
     }
     case "code":
     case "verbatim":
@@ -552,6 +575,17 @@ function transformUniorgElement(
         } as unknown as RootContent
       }
       const children = transformUniorgObjects(node.children)
+      // md gives leading whitespace structural meaning (list
+      // continuation, code); collapse per-line indentation inside
+      // paragraphs — insignificant in org and in rendered md alike
+      children.forEach((child, index) => {
+        if (child.type === "text") {
+          child.value = child.value.replace(/\n[ \t]+/g, "\n")
+          if (index === 0) {
+            child.value = child.value.replace(/^[ \t]+/, "")
+          }
+        }
+      })
       // uniorg keeps surrounding blank lines inside the paragraph node;
       // strip them so remark-stringify produces canonical spacing.
       const last = children[children.length - 1]
