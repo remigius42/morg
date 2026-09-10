@@ -421,8 +421,8 @@ function transformUniorgNodeToMdastNode(
         } as unknown as RootContent
       }
       const children = transformUniorgObjects(node.children)
-      // uniorg keeps trailing blank lines inside the paragraph node; strip
-      // them so remark-stringify produces canonical spacing.
+      // uniorg keeps surrounding blank lines inside the paragraph node;
+      // strip them so remark-stringify produces canonical spacing.
       const last = children[children.length - 1]
       if (last?.type === "text") {
         last.value = last.value.replace(/\n+$/, "")
@@ -430,7 +430,16 @@ function transformUniorgNodeToMdastNode(
           children.pop()
         }
       }
-      return { type: "paragraph", children }
+      const head = children[0]
+      if (head?.type === "text") {
+        head.value = head.value.replace(/^\n+/, "")
+        if (head.value === "") {
+          children.shift()
+        }
+      }
+      // a paragraph emptied by the cleanup (whitespace-only) would
+      // stringify as stray blank lines
+      return children.length ? { type: "paragraph", children } : null
     }
     case "text":
       // Whitespace-only text at block level is a formatting artifact.
@@ -503,9 +512,11 @@ function transformUniorgNodeToMdastNode(
           .filter(Boolean) as BlockContent[]
       }
     case "export-block":
-      return node.backend === "html"
-        ? { type: "html", value: trimTrailingNewline(node.value) }
-        : null
+      if (node.backend !== "html") {
+        warn(`dropped org export-block (${node.backend ?? "?"})`)
+        return null
+      }
+      return { type: "html", value: trimTrailingNewline(node.value) }
     case "quote-block":
       return {
         type: "blockquote",
@@ -524,6 +535,15 @@ function transformUniorgNodeToMdastNode(
         type: "code",
         lang: null,
         value: trimTrailingNewline(node.value)
+      }
+    case "comment":
+      // html comments are markdown's comment idiom (hidden by every
+      // renderer) and restore to org comments on the return trip
+      return {
+        type: "html",
+        value: node.value.includes("\n")
+          ? `<!--\n${node.value}\n-->`
+          : `<!-- ${node.value} -->`
       }
     case "latex-environment":
       return { type: "math", value: node.value } as unknown as RootContent

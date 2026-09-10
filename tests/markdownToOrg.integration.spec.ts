@@ -107,6 +107,14 @@ This is a paragraph.
     )
   })
 
+  it("should convert html comments to org comments", () => {
+    const markdown = "<!-- a note -->\n\n<!--\nfirst\nsecond\n-->\n\nText.\n"
+
+    expect(convertMarkdownToOrg(markdown)).toBe(
+      "# a note\n# first\n# second\nText.\n"
+    )
+  })
+
   it("should preserve block html as an export block", () => {
     const markdown = '<div class="note">\nRaw html\n</div>\n'
 

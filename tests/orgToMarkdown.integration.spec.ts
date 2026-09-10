@@ -99,11 +99,11 @@ describe("convertOrgToMarkdown", () => {
 
   it("should report dropped org constructs via onWarning", () => {
     const warnings: string[] = []
-    const org = "# a comment line\n"
+    const org = "#+begin_export latex\n\\sloppy\n#+end_export\n"
 
     convertOrgToMarkdown(org, { onWarning: m => warnings.push(m) })
 
-    expect(warnings).toEqual(["dropped org comment"])
+    expect(warnings).toEqual(["dropped org export-block (latex)"])
   })
 
   it("should keep special, verse and fixed-width blocks verbatim", () => {
@@ -118,6 +118,14 @@ describe("convertOrgToMarkdown", () => {
 
     expect(convertOrgToMarkdown(org)).toBe(
       "# Tasks \\[1/2]\n\n\\[cite:@key2026] backs this.\n"
+    )
+  })
+
+  it("should convert org comments to html comments", () => {
+    const org = "# a note\n\n# first\n# second\n\nText.\n"
+
+    expect(convertOrgToMarkdown(org)).toBe(
+      "<!-- a note -->\n\n<!--\nfirst\nsecond\n-->\n\nText.\n"
     )
   })
 

@@ -119,8 +119,10 @@ center / verse / comment blocks, fixed-width blocks, mid-file
 keywords, babel calls, clocks and diary sexps keep their org text
 verbatim in Markdown and are re-parsed natively on the way back;
 statistics cookies (`[1/2]`) and `[cite:…]` citations travel as plain
-text the same way. Org comments are dropped (reported via
-`onWarning`). `preserveOrgisms` accepts `false` or a per-key record to drop
+text the same way. Org comments (`# …`) map to HTML comments
+(`<!-- … -->`) and back — both are invisible in rendered output, so
+the mapping is lossless in both directions. Non-HTML org export
+blocks are dropped (reported via `onWarning`). `preserveOrgisms` accepts `false` or a per-key record to drop
 them instead.
 
 Md-isms: raw HTML is preserved as org `#+begin_export html` blocks

@@ -58,11 +58,7 @@ export function convertMarkdownToOrg(
   }
 
   // Phase 4: Render uniorg-ast to Org-mode string
-  const processor = unified().use(uniorgStringify, {
-    handlers: {
-      comment: () => ""
-    }
-  })
+  const processor = unified().use(uniorgStringify)
   const orgContent = processor.stringify(uniorgAst)
 
   return orgContent

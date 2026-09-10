@@ -279,7 +279,16 @@ function transformMdastNodeToUniorgNode(
         children: rows
       } as unknown as ElementType
     }
-    case "html":
+    case "html": {
+      // html comments are markdown's comment idiom and map natively to
+      // org comments (not an md-ism)
+      const comment = /^<!--([\s\S]*?)-->\s*$/.exec(node.value)
+      if (comment) {
+        return {
+          type: "comment",
+          value: (comment[1] ?? "").trim()
+        } as unknown as ElementType
+      }
       // block raw html is a md-ism: preserved as an org export block
       return mdismEnabled("html")
         ? ({
@@ -288,6 +297,7 @@ function transformMdastNodeToUniorgNode(
             value: node.value
           } as unknown as ElementType)
         : null
+    }
     case "thematicBreak":
       return { type: "horizontal-rule" } as unknown as ElementType
     case "footnoteDefinition":
