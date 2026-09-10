@@ -97,6 +97,53 @@ describe("logseq outline nesting", () => {
     expect(convertOrgToMarkdown(logseqOrg, { preset: logseq() })).toBe(markdown)
   })
 
+  it("keeps ^^highlight^^ markup intact", () => {
+    const org =
+      "* Head\n:PROPERTIES:\n:heading: 1\n:END:\n** Some ^^bright words^^ here.\n"
+
+    expect(convertOrgToMarkdown(org, { preset: logseq() })).toBe(
+      "# Head\n\nSome ^^bright words^^ here.\n"
+    )
+  })
+
+  it("maps page references to wikilinks and labeled forms", () => {
+    const org =
+      "** See [[my page name]] and [[other page][a label]]\n** [[((60ab-uuid))][a block ref]]\n"
+
+    expect(convertOrgToMarkdown(org, { preset: logseq() })).toBe(
+      "See [[my page name]] and [a label]([[other page]])\n\n[a block ref](((60ab-uuid)))\n"
+    )
+  })
+
+  it("restores labeled page references from markdown", () => {
+    const markdown = "See [a label]([[other page]]) here.\n"
+
+    expect(convertMarkdownToOrg(markdown, { preset: logseq() })).toBe(
+      "* See [[other page][a label]] here.\n"
+    )
+  })
+
+  it("maps priorities to [#A] text markers and back", () => {
+    const org = "** TODO [#A] urgent thing\n"
+
+    expect(convertOrgToMarkdown(org, { preset: logseq() })).toBe(
+      "TODO [#A] urgent thing\n"
+    )
+    expect(
+      convertMarkdownToOrg("TODO [#A] urgent thing\n", { preset: logseq() })
+    ).toBe("* TODO [#A] urgent thing\n")
+  })
+
+  it("logseq syntax survives a full round trip", () => {
+    const markdown =
+      "# TODO [#B] Plan garden\n\nSee [[seed catalog]] and [notes]([[soil types]]).\n\nRefs: [context](((abc-123))) and ((abc-123)) inline.\n\nSome ^^bright words^^ here.\n\n{{embed [[seed catalog]]}}\n"
+    const roundTrip = (md: string): string =>
+      convertOrgToMarkdown(convertMarkdownToOrg(md, { preset: logseq() }), {
+        preset: logseq()
+      })
+    expect(roundTrip(markdown)).toBe(markdown)
+  })
+
   it("keeps flat body content with nestUnderHeadings false", () => {
     expect(
       convertMarkdownToOrg("# foo\n\nabc\n", {

@@ -116,7 +116,12 @@ preset })` — `preserveOrgisms` default `true`; `useHtml` (default
   reverse direction restores headings from `:heading:` properties and
   turns plain block headlines back into paragraphs. Hiccup blocks
   (`[:div …]`) pass through as plain text and are emitted unescaped in
-  Markdown.
+  Markdown. Logseq's own syntax maps both directions: `TODO`/`DONE`
+  text markers and `[#A]` priorities ↔ org keywords/priorities, page
+  references `[[page]]` and labeled forms `[label]([[page]])` ↔ org
+  fuzzy links `[[page][label]]`, block refs `[label](((uuid)))` ↔
+  `[[((uuid))][label]]`, and `^^highlight^^` markup survives verbatim
+  (it would otherwise re-parse as superscripts).
 - `obsidian()` — wikilinks `[[Page]]` / `[[Page|alias]]` ↔ org fuzzy links
 
 - `normalizeMarkdown(md, { preset })` / `normalizeOrg(org, { preset })`

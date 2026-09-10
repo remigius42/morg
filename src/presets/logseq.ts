@@ -61,6 +61,14 @@ export function applyLogseqSpecificsToUniorgAst(
   uniorgAst: OrgData,
   nestUnderHeadings = true
 ): OrgData {
+  // Logseq md labeled page refs ([label]([[page]])) become org's
+  // [[page][label]] description syntax
+  visit(uniorgAst as Parent, "text", (node: Text) => {
+    node.value = node.value.replace(
+      /\[([^\]]+)\]\(\[\[([^\]]+)\]\]\)/g,
+      "[[$2][$1]]"
+    )
+  })
   const children = uniorgAst.children as unknown as { type: string }[]
   const result: { type: string }[] = []
   let currentLevel = 0
@@ -94,19 +102,23 @@ export function applyLogseqSpecificsToUniorgAst(
   return uniorgAst
 }
 
-// Logseq md keeps TODO/DONE as leading text markers in the block; in org
-// they are the headline's TODO keyword (other Logseq markers like DOING
-// are not org keywords and simply stay in the title text)
+// Logseq md keeps TODO/DONE as leading text markers and priorities as
+// [#A] text; in org they are the headline's TODO keyword and priority
+// (other Logseq markers like DOING are not org keywords and simply
+// stay in the title text)
 function takeTaskMarker(headline: Headline): void {
   const first = headline.children[0]
   if (first?.type !== "text") {
     return
   }
-  const marker = /^(TODO|DONE) /.exec(first.value)
+  const marker = /^(TODO|DONE) (?:\[#([A-Z])\] )?/.exec(first.value)
   if (!marker) {
     return
   }
   headline.todoKeyword = marker[1] as string
+  if (marker[2]) {
+    headline.priority = marker[2]
+  }
   first.value = first.value.slice((marker[0] ?? "").length)
 }
 
@@ -121,8 +133,62 @@ export function extractLogseqSpecificsFromUniorgAst(
   uniorgAst: OrgData
 ): OrgData {
   extractInParent(uniorgAst)
+  repairHighlights(uniorgAst)
+  fuzzyLinksToPageRefs(uniorgAst)
   markHiccupParagraphs(uniorgAst)
   return uniorgAst
+}
+
+// Logseq highlight markup (^^words^^) re-parses as a caret plus a
+// superscript; merge the pieces back into literal text
+function repairHighlights(uniorgAst: OrgData): void {
+  visit(uniorgAst as Parent, node => {
+    const children = (node as Partial<Parent>).children as unknown[] | undefined
+    if (!children) {
+      return
+    }
+    for (let i = 0; i + 1 < children.length; i++) {
+      const current = children[i] as { type?: string; value?: string }
+      const next = children[i + 1] as { type?: string }
+      if (
+        current?.type === "text" &&
+        current.value?.endsWith("^") &&
+        next?.type === "superscript"
+      ) {
+        current.value += `^${toString(next as Parameters<typeof toString>[0])}`
+        children.splice(i + 1, 1)
+        i--
+      }
+    }
+  })
+}
+
+// Logseq page and block references: [[page]] stays a wikilink,
+// [[page][label]] becomes [label]([[page]]), [[((uuid))][label]]
+// becomes [label](((uuid))) — emitted unescaped via verbatim-inline
+function fuzzyLinksToPageRefs(uniorgAst: OrgData): void {
+  visit(
+    uniorgAst as Parent,
+    "link",
+    (node: Parent & { linkType?: string; rawLink?: string }, index, parent) => {
+      const isBlockRef = /^\(\(.*\)\)$/.test(node.rawLink ?? "")
+      if ((node.linkType !== "fuzzy" && !isBlockRef) || !parent) {
+        return undefined
+      }
+      const label = node.children.length ? toString(node) : ""
+      const target = node.rawLink ?? ""
+      const value = !label
+        ? `[[${target}]]`
+        : /^\(\(.*\)\)$/.test(target)
+          ? `[${label}](${target})`
+          : `[${label}]([[${target}]])`
+      parent.children[index as number] = {
+        type: "verbatim-inline",
+        value
+      } as unknown as Parent["children"][number]
+      return undefined
+    }
+  )
 }
 
 // hiccup blocks ([:tag …]) are Logseq markup, not links or footnotes; a
@@ -154,12 +220,15 @@ function extractInParent(parent: Parent): void {
     }
     const headline = node as unknown as Headline
     if (headline.todoKeyword) {
-      // back to Logseq md's text-marker convention (TODO Ship it)
+      // back to Logseq md's text conventions (TODO [#A] Ship it);
+      // verbatim-inline keeps the [#A] brackets unescaped
+      const priority = headline.priority ? `[#${headline.priority}] ` : ""
       headline.children.unshift({
-        type: "text",
-        value: `${headline.todoKeyword} `
-      })
+        type: "verbatim-inline",
+        value: `${headline.todoKeyword} ${priority}`
+      } as unknown as Headline["children"][number])
       headline.todoKeyword = null
+      headline.priority = null
     }
     const heading = takeHeadingProperty(children, i + 1)
     if (heading !== null) {
