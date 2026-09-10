@@ -1,0 +1,26 @@
+name: "CI"
+on:
+  push:
+  pull_request:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: "npm"
+      - name: Install NPM packages
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Test
+        run: npm run test:unit:ci
+      - name: Build
+        run: npm run build
+      - name: Smoke-test CLI
+        run: |
+          echo "# Hello" | node dist/cli.js --from markdown | grep -q '^\* Hello'
+          printf '* Hello\n' | node dist/cli.js --from org | grep -q '^# Hello'
