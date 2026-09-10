@@ -5,10 +5,12 @@ import * as path from "node:path"
 import { convertMarkdownToOrg } from "./markdownToOrg.js"
 import { convertOrgToMarkdown } from "./orgToMarkdown.js"
 import { logseq } from "./presets/logseq.js"
+import { obsidian } from "./presets/obsidian.js"
 import type { Preset } from "./presets/types.js"
 
 const PRESETS: Record<string, () => Preset> = {
-  logseq: () => logseq()
+  logseq: () => logseq(),
+  obsidian: () => obsidian()
 }
 
 async function main() {

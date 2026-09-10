@@ -64,6 +64,7 @@ Options (flags accept `boolean` or a per-construct `Record<string, boolean>`):
   of keeping it verbatim
 - `logseq({ nestUnderHeadings })` — default `true`; content following a heading
   becomes children of that heading's block
+- `obsidian()` — wikilinks `[[Page]]` / `[[Page|alias]]` ↔ org fuzzy links
 
 ## Architecture
 
@@ -138,8 +139,9 @@ to their format. Scalar values pass through as-is; structured YAML
 values are JSON-encoded on a single line in org (per ADR 0002's value
 rule) and restored to YAML on the way back.
 
-Not yet handled: Obsidian wikilinks (preset territory rather than
-core).
+The `obsidian` preset maps org fuzzy links to Obsidian wikilinks
+(`[[Page]]` ↔ `[[Page]]`, `[[Page][alias]]` ↔ `[[Page|alias]]`) in
+both directions, emitted unescaped in Markdown.
 
 ## Development
 

@@ -40,8 +40,10 @@ export function convertOrgToMarkdown(
       bullet: "-",
       rule: "-",
       handlers: {
-        // key:: value blocks are emitted verbatim, unescaped
-        keyValue: (node: { value: string }) => node.value
+        // key:: value blocks and preset inline passthroughs (e.g.
+        // wikilinks) are emitted verbatim, unescaped
+        keyValue: (node: { value: string }) => node.value,
+        verbatimInline: (node: { value: string }) => node.value
       }
     } as Parameters<typeof remarkStringify>[0])
     .use(remarkGfm)

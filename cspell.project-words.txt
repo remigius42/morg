@@ -16,6 +16,8 @@ orgast
 orgism
 orgisms
 outliner
+passthroughs
+wikilink
 remigius
 strikethrough
 stringifier

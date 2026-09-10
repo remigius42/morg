@@ -238,6 +238,13 @@ function transformUniorgObjectToMdastPhrasingContent(
       // md has no timestamps; keep the raw org value as text so the
       // return trip re-parses it natively
       return { type: "text", value: node.rawValue }
+    case "verbatim-inline" as ObjectType["type"]:
+      // preset-emitted passthrough: rendered unescaped by a custom
+      // stringify handler (see orgToMarkdown)
+      return {
+        type: "verbatimInline",
+        value: (node as unknown as { value: string }).value
+      } as unknown as PhrasingContent
     case "export-snippet":
       return node.backEnd === "html"
         ? { type: "html", value: node.value }
