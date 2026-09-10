@@ -17,6 +17,8 @@ orgism
 orgisms
 outliner
 passthroughs
+sexp
+sexps
 wikilink
 remigius
 strikethrough

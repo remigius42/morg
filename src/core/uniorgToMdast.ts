@@ -143,6 +143,20 @@ function keyValueParagraph(lines: string[]): RootContent {
   return { type: "keyValue", value: lines.join("\n") } as unknown as RootContent
 }
 
+// renders a single uniorg node back to its org text (without the
+// trailing newline), for verbatim passthrough of org-only constructs
+function orgNodeToText(node: unknown): string {
+  const orgText = unified()
+    .use(uniorgStringify)
+    .stringify({
+      type: "org-data",
+      children: [node],
+      contentsBegin: 0,
+      contentsEnd: 0
+    } as OrgData)
+  return orgText.replace(/\n$/, "")
+}
+
 const IMAGE_EXTENSION_RE = /\.(png|jpe?g|gif|svg|webp|avif|bmp|ico)$/i
 
 function transformUniorgObjectToMdastPhrasingContent(
@@ -253,6 +267,12 @@ function transformUniorgObjectToMdastPhrasingContent(
       // md has no timestamps; keep the raw org value as text so the
       // return trip re-parses it natively
       return { type: "text", value: node.rawValue }
+    case "statistics-cookie":
+      return { type: "text", value: node.value }
+    case "citation" as ObjectType["type"]:
+      // org-cite has no md equivalent; keep the raw [cite:…] text so the
+      // return trip re-parses it natively
+      return { type: "text", value: orgNodeToText(node).trim() }
     case "verbatim-inline" as ObjectType["type"]:
       // preset-emitted passthrough: rendered unescaped by a custom
       // stringify handler (see orgToMarkdown)
@@ -353,23 +373,27 @@ function transformUniorgNodeToMdastNode(
       }
       return isms.length ? keyValueParagraph(isms) : null
     }
-    case "drawer": {
+    case "drawer":
       if (!orgismEnabled("drawers")) {
         return null
       }
       // generic drawers (:LOGBOOK: …) have no md equivalent; keep their
       // org text verbatim (unescaped) so the return trip re-parses the
       // drawer natively
-      const orgText = unified()
-        .use(uniorgStringify)
-        .stringify({
-          type: "org-data",
-          children: [node],
-          contentsBegin: 0,
-          contentsEnd: 0
-        })
-      return keyValueParagraph([orgText.replace(/\n$/, "")])
-    }
+      return keyValueParagraph([orgNodeToText(node)])
+    case "special-block":
+    case "center-block":
+    case "verse-block":
+    case "comment-block":
+    case "fixed-width":
+    case "keyword":
+    case "babel-call" as ElementType["type"]:
+    case "diary-sexp" as ElementType["type"]:
+    case "clock":
+      // org-only blocks with no md equivalent travel the same way as
+      // drawers: verbatim org text, re-parsed natively on the return trip
+      // (keywords here are mid-file ones; leading ones became frontmatter)
+      return keyValueParagraph([orgNodeToText(node)])
     case "property-drawer": {
       if (!orgismEnabled("properties")) {
         return null

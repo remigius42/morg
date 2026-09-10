@@ -106,6 +106,21 @@ describe("convertOrgToMarkdown", () => {
     expect(warnings).toEqual(["dropped org comment"])
   })
 
+  it("should keep special, verse and fixed-width blocks verbatim", () => {
+    const org =
+      "#+begin_warning\nBe careful.\n#+end_warning\n\n#+begin_verse\nroses are red\nviolets are blue\n#+end_verse\n\n: fixed one\n: fixed two\n"
+
+    expect(convertOrgToMarkdown(org)).toBe(org)
+  })
+
+  it("should keep statistics cookies and citations as text", () => {
+    const org = "* Tasks [1/2]\n[cite:@key2026] backs this.\n"
+
+    expect(convertOrgToMarkdown(org)).toBe(
+      "# Tasks \\[1/2]\n\n\\[cite:@key2026] backs this.\n"
+    )
+  })
+
   it("should keep generic drawers verbatim", () => {
     const org = "* Task\n:LOGBOOK:\nNote taken.\n:END:\nBody.\n"
 

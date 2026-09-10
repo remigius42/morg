@@ -1,0 +1,20 @@
+* Tasks [1/2]
+Progress backed by [cite:@key2026].
+
+#+begin_warning
+Be careful here.
+#+end_warning
+
+#+begin_center
+Centered words.
+#+end_center
+
+#+begin_verse
+roses are red
+violets are blue
+#+end_verse
+
+: fixed width one
+: fixed width two
+
+Text after blocks.

@@ -114,9 +114,13 @@ Org-isms serialize to `key:: value` lines directly below the heading
 `closed::`; property drawer entries keep their own keys) and are
 restored to native org syntax on the way back — known keys become
 TODO keywords, priorities, tags and planning lines, unknown keys become
-property drawer entries. Generic drawers (`:LOGBOOK:` …) keep their
-org text verbatim in Markdown and are re-parsed natively on the way
-back. `preserveOrgisms` accepts `false` or a per-key record to drop
+property drawer entries. Generic drawers (`:LOGBOOK:` …), special /
+center / verse / comment blocks, fixed-width blocks, mid-file
+keywords, babel calls, clocks and diary sexps keep their org text
+verbatim in Markdown and are re-parsed natively on the way back;
+statistics cookies (`[1/2]`) and `[cite:…]` citations travel as plain
+text the same way. Org comments are dropped (reported via
+`onWarning`). `preserveOrgisms` accepts `false` or a per-key record to drop
 them instead.
 
 Md-isms: raw HTML is preserved as org `#+begin_export html` blocks
