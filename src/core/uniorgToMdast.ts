@@ -366,13 +366,33 @@ function transformUniorgList(node: List): MdastList[] {
 }
 
 function transformUniorgListItem(item: ListItem): MdastListItem {
+  // a descriptive list item starts with a list-item-tag (the term); md has
+  // no descriptive lists, so keep the ` :: ` syntax literally in the item
+  // text — the return trip re-parses it as a descriptive list
+  const tag = (item.children || []).find(
+    child => (child as { type: string }).type === "list-item-tag"
+  )
+  const children = (item.children || [])
+    .filter(child => child !== tag)
+    .flatMap(transformUniorgNodeToMdastNode)
+    .filter(Boolean) as (BlockContent | DefinitionContent)[]
+  if (tag) {
+    const term: PhrasingContent = {
+      type: "text",
+      value: `${orgastToString(tag)} :: `
+    }
+    const first = children[0]
+    if (first?.type === "paragraph") {
+      first.children.unshift(term)
+    } else {
+      children.unshift({ type: "paragraph", children: [term] })
+    }
+  }
   return {
     type: "listItem",
     spread: false,
     checked:
       item.checkbox === "on" ? true : item.checkbox === "off" ? false : null,
-    children: (item.children || [])
-      .flatMap(transformUniorgNodeToMdastNode)
-      .filter(Boolean) as (BlockContent | DefinitionContent)[]
+    children
   }
 }

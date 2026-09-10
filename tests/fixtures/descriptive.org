@@ -1,0 +1,5 @@
+Terms and their meanings:
+
+- apple :: a fruit
+- vim :: an /editor/ with modes
+- org :: plain-text power tool

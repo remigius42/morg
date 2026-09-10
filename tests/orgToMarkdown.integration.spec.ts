@@ -134,6 +134,16 @@ describe("convertOrgToMarkdown", () => {
     )
   })
 
+  it("should keep descriptive list terms verbatim", () => {
+    const org = "- apple :: a fruit\n- vim :: an /editor/\n"
+
+    // md has no descriptive lists; the ` :: ` syntax is kept literally so
+    // the return trip re-parses it as a descriptive list
+    expect(convertOrgToMarkdown(org)).toBe(
+      "- apple :: a fruit\n- vim :: an *editor*\n"
+    )
+  })
+
   it("should convert inline markup inside list items", () => {
     const org = "- some *bold* item\n- a [[https://example.com][link]] item\n"
 
