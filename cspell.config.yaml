@@ -1,0 +1,17 @@
+version: "0.2"
+language: en
+dictionaryDefinitions:
+  - name: project-words
+    path: ./cspell.project-words.txt
+    addWords: true
+dictionaries:
+  - project-words
+ignorePaths:
+  - .git
+  - ".husky/_"
+  - node_modules
+  - dist
+  - coverage
+  - package-lock.json
+  - LICENSE
+  - cspell.project-words.txt

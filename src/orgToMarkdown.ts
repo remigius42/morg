@@ -1,0 +1,35 @@
+import { unified } from "unified"
+import uniorgParse from "uniorg-parse"
+import remarkStringify from "remark-stringify"
+import { transformUniorgAstToMdast } from "./core/uniorgToMdast.js"
+import type { OrgToMarkdownOptions } from "./options.js"
+
+/**
+ * Converts an Org-mode string to a Markdown string.
+ * @param org The Org-mode string to convert.
+ * @param options Conversion options (org-ism serialization, dialect preset).
+ * @returns The converted Markdown string.
+ */
+export function convertOrgToMarkdown(
+  org: string,
+  options: OrgToMarkdownOptions = {}
+): string {
+  // Phase 1: Parse Org-mode to uniorg-ast
+  let uniorgAst = unified().use(uniorgParse).parse(org)
+
+  // Phase 2: Extract dialect preset conventions, if any
+  if (options.preset?.extractFromUniorg) {
+    uniorgAst = options.preset.extractFromUniorg(uniorgAst)
+  }
+
+  // Phase 3: Generic uniorg-ast to mdast transformation
+  const mdast = transformUniorgAstToMdast(uniorgAst)
+
+  // Phase 4: Render mdast to Markdown string
+  // bullet "-" (not remark's default "*") is morg's canonical Markdown form
+  const markdownContent = unified()
+    .use(remarkStringify, { bullet: "-" })
+    .stringify(mdast)
+
+  return markdownContent
+}
