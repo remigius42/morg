@@ -24,6 +24,7 @@ import { toggleEnabled, type Toggle } from "../options.js"
 
 export interface MdastToUniorgOptions {
   preserveMdisms?: Toggle
+  onWarning?: (message: string) => void
 }
 
 // options for the current transformMdastToUniorgAst run; the transform is
@@ -37,6 +38,10 @@ let currentDefinitions = new Map<string, { url: string; title?: string }>()
 
 function mdismEnabled(key: string): boolean {
   return toggleEnabled(currentOptions.preserveMdisms, key)
+}
+
+function warn(message: string): void {
+  currentOptions.onWarning?.(message)
 }
 
 /**
@@ -185,7 +190,11 @@ function transformMdastPhrasingContentToUniorgObject(
         : null
     case "image":
       // org has no dedicated image syntax: a plain file link renders
-      // inline, alt text becomes the link description
+      // inline, alt text becomes the link description; the title
+      // attribute has no org slot and is dropped (see README)
+      if (node.title) {
+        warn(`dropped image title "${node.title}" (${node.url})`)
+      }
       return {
         type: "link",
         format: "bracket",
@@ -196,6 +205,7 @@ function transformMdastPhrasingContentToUniorgObject(
       } as unknown as ObjectType
     // TODO: Add handlers for other mdast phrasing content types
     default:
+      warn(`dropped md ${(node as { type: string }).type}`)
       return null
   }
 }
@@ -305,8 +315,12 @@ function transformMdastNodeToUniorgNode(
             type: "example-block",
             value: node.value
           }) as unknown as ElementType
-    // TODO: Add handlers for other mdast node types (blockquote, code, thematicBreak, etc.)
+    case "definition":
+      // consumed by reference-style link resolution
+      return null
+    // TODO: Add handlers for other mdast node types
     default:
+      warn(`dropped md ${node.type}`)
       return null
   }
 }

@@ -28,6 +28,8 @@ export interface MarkdownToOrgOptions {
    * TODO: not consumed yet — no md-ism handlers are implemented.
    */
   preserveMdisms?: Toggle
+  /** Called for each construct dropped without an equivalent. */
+  onWarning?: (message: string) => void
   /** Dialect preset applied on top of the generic conversion. */
   preset?: Preset
 }
@@ -46,6 +48,8 @@ export interface OrgToMarkdownOptions {
    * snippets), not back to native org markup. Default: `false`.
    */
   useHtml?: Toggle
+  /** Called for each construct dropped without an equivalent. */
+  onWarning?: (message: string) => void
   /** Dialect preset extracted before the generic conversion. */
   preset?: Preset
 }

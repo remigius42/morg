@@ -58,6 +58,15 @@ This is a paragraph.
     expect(convertMarkdownToOrg(markdown)).toBe("[[diagram.svg][A diagram]]\n")
   })
 
+  it("should report dropped constructs via onWarning", () => {
+    const warnings: string[] = []
+    const markdown = '![A diagram](diagram.svg "The title")\n'
+
+    convertMarkdownToOrg(markdown, { onWarning: m => warnings.push(m) })
+
+    expect(warnings).toEqual(['dropped image title "The title" (diagram.svg)'])
+  })
+
   it("should convert tables with a header rule", () => {
     const markdown = "| a | b |\n| --- | --- |\n| 1 | 2 |\n"
 

@@ -27,6 +27,7 @@ import { toggleEnabled, type Toggle } from "../options.js"
 export interface UniorgToMdastOptions {
   preserveOrgisms?: Toggle
   useHtml?: Toggle
+  onWarning?: (message: string) => void
 }
 
 // options for the current transformUniorgAstToMdast run; the transform is
@@ -40,6 +41,10 @@ function orgismEnabled(key: string): boolean {
 
 function htmlEnabled(key: string): boolean {
   return toggleEnabled(currentOptions.useHtml, key, false)
+}
+
+function warn(message: string): void {
+  currentOptions.onWarning?.(message)
 }
 
 // inline footnotes ([fn:: text], [fn:label: text]) of the current run;
@@ -251,6 +256,7 @@ function transformUniorgObjectToMdastPhrasingContent(
         : null
     // TODO: Add handlers for other uniorg object types
     default:
+      warn(`dropped org ${node.type}`)
       return null
   }
 }
@@ -471,6 +477,7 @@ function transformUniorgNodeToMdastNode(
       }
     // TODO: Add handlers for other uniorg node types
     default:
+      warn(`dropped org ${node.type}`)
       return null
   }
 }

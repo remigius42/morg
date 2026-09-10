@@ -40,6 +40,9 @@ echo "# Hello" | morg --from markdown
 
 # Apply a dialect preset
 morg --input page.md --output page.org --preset logseq
+
+# Dropped constructs are reported on stderr; -s / --silent suppresses
+morg --input notes.md --output notes.org --silent
 ```
 
 ### Library
@@ -65,6 +68,11 @@ Options (flags accept `boolean` or a per-construct `Record<string, boolean>`):
 - `logseq({ nestUnderHeadings })` — default `true`; content following a heading
   becomes children of that heading's block
 - `obsidian()` — wikilinks `[[Page]]` / `[[Page|alias]]` ↔ org fuzzy links
+
+Both convert functions also accept `onWarning: message => …`, called for
+each construct dropped without an equivalent (e.g. image titles, LaTeX
+fragments). The CLI wires this to stderr unless `-s` / `--silent` is
+given; the library is silent unless a callback is passed.
 
 ## Architecture
 

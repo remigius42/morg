@@ -37,7 +37,8 @@ export function convertMarkdownToOrg(
   let uniorgAst = transformMdastToUniorgAst(mdast, {
     ...(options.preserveMdisms !== undefined && {
       preserveMdisms: options.preserveMdisms
-    })
+    }),
+    ...(options.onWarning !== undefined && { onWarning: options.onWarning })
   })
 
   // Phase 2b: restore key:: value lines below headings to native org

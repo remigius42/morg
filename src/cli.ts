@@ -20,10 +20,15 @@ async function main() {
   let inputFile: string | undefined
   let outputFile: string | undefined
   let presetName: string | undefined
+  let silent = false
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i]
     switch (arg) {
+      case "-s":
+      case "--silent":
+        silent = true
+        break
       case "--from":
         fromFormat = args[++i]
         break
@@ -123,12 +128,17 @@ async function main() {
     })
   }
 
+  // dropped constructs are reported on stderr unless -s / --silent
+  const onWarning = silent
+    ? undefined
+    : (message: string) => console.error(`morg: ${message}`)
+
   let outputContent: string
   try {
     if (fromFormat === "markdown") {
-      outputContent = convertMarkdownToOrg(inputContent, { preset })
+      outputContent = convertMarkdownToOrg(inputContent, { preset, onWarning })
     } else {
-      outputContent = convertOrgToMarkdown(inputContent, { preset })
+      outputContent = convertOrgToMarkdown(inputContent, { preset, onWarning })
     }
   } catch (error) {
     console.error("Conversion error:", error)

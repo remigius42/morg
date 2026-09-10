@@ -29,7 +29,8 @@ export function convertOrgToMarkdown(
     ...(options.preserveOrgisms !== undefined && {
       preserveOrgisms: options.preserveOrgisms
     }),
-    ...(options.useHtml !== undefined && { useHtml: options.useHtml })
+    ...(options.useHtml !== undefined && { useHtml: options.useHtml }),
+    ...(options.onWarning !== undefined && { onWarning: options.onWarning })
   })
 
   // Phase 4: Render mdast to Markdown string

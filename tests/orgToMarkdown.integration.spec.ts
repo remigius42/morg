@@ -97,6 +97,15 @@ describe("convertOrgToMarkdown", () => {
     )
   })
 
+  it("should report dropped org constructs via onWarning", () => {
+    const warnings: string[] = []
+    const org = "An entity \\alpha here.\n"
+
+    convertOrgToMarkdown(org, { onWarning: m => warnings.push(m) })
+
+    expect(warnings).toEqual(["dropped org entity"])
+  })
+
   it("should keep generic drawers verbatim", () => {
     const org = "* Task\n:LOGBOOK:\nNote taken.\n:END:\nBody.\n"
 
