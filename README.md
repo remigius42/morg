@@ -65,8 +65,12 @@ Options (flags accept `boolean` or a per-construct `Record<string, boolean>`):
   `preserveOrgisms` default `true`; `useHtml` (default `false`) renders
   org-only markup as raw HTML (`<u>`, `<sup>`, `<sub>`, `<dl>`) instead
   of keeping it verbatim
-- `logseq({ nestUnderHeadings })` — default `true`; content following a heading
-  becomes children of that heading's block
+- `logseq({ nestUnderHeadings })` — default `true`; content following a
+  heading nests as child blocks of that heading: paragraphs become child
+  headlines one level deeper (in Logseq org every outline block is a
+  headline), other constructs stay in the preceding block's body. The
+  reverse direction restores headings from `:heading:` properties and
+  turns plain block headlines back into paragraphs.
 - `obsidian()` — wikilinks `[[Page]]` / `[[Page|alias]]` ↔ org fuzzy links
 
 Both convert functions also accept `onWarning: message => …`, called for

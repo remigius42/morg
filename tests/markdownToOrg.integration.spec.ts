@@ -186,8 +186,7 @@ This is a paragraph.
 :PROPERTIES:
 :heading: 1
 :END:
-
-This is a paragraph.
+** This is a paragraph.
 `
 
     const orgOutput = convertMarkdownToOrg(markdown, { preset: logseq() })
@@ -213,11 +212,8 @@ Visit [Example](https://example.com).
 :PROPERTIES:
 :heading: 1
 :END:
-
-This is /italic/ and *bold* text.
-
-Visit [[https://example.com][Example]].
-
+** This is /italic/ and *bold* text.
+** Visit [[https://example.com][Example]].
 - Unordered Item 1
 - Unordered Item 2
 - [ ] Todo Item
