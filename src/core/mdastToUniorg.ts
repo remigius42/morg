@@ -77,6 +77,13 @@ function transformMdastPhrasingContentToUniorgObject(
           .map(transformMdastPhrasingContentToUniorgObject)
           .filter(Boolean) as ObjectType[]
       }
+    case "delete":
+      return {
+        type: "strike-through",
+        children: node.children
+          .map(transformMdastPhrasingContentToUniorgObject)
+          .filter(Boolean) as ObjectType[]
+      }
     case "link": {
       const linkNode = node
       const linkChildren = linkNode.children

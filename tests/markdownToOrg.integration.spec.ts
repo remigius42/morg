@@ -108,6 +108,12 @@ This is a paragraph.
     ).toBe("Press x now.\n")
   })
 
+  it("should convert strikethrough to org strike-through", () => {
+    const markdown = "This is ~~gone~~ now.\n"
+
+    expect(convertMarkdownToOrg(markdown)).toBe("This is +gone+ now.\n")
+  })
+
   it("should add heading:: property drawers with the logseq preset", () => {
     const markdown = "# Hello World\n\nThis is a paragraph."
     const expectedOrgMode = `* Hello World

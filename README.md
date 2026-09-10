@@ -82,8 +82,9 @@ Project vocabulary lives in [CONTEXT.md](CONTEXT.md); design decisions in
 
 ## Status
 
-Early scaffold. Working both directions: headings, paragraphs, bold/italic,
-links, lists (nested, ordered, mixed), and code (inline, fenced/src and
+Early scaffold. Working both directions: headings, paragraphs,
+bold/italic/strikethrough, links, lists (nested, ordered, mixed), and code
+(inline, fenced/src and
 example blocks), blockquotes/quote blocks, images (org side: links to
 image files, alt text as description), and tables (GFM ↔ org, incl.
 column alignment via org `<l>/<r>/<c>` cookie rows; `table.el` tables
@@ -102,7 +103,7 @@ Md-isms: raw HTML is preserved as org `#+begin_export html` blocks
 verbatim on the way back; `preserveMdisms` accepts `false` or a
 per-key record (e.g. `{ html: false }`) to drop them instead.
 
-Not yet handled: frontmatter, GFM strikethrough and footnotes.
+Not yet handled: frontmatter, GFM footnotes.
 
 ## Development
 

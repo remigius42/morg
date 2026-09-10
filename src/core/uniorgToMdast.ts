@@ -74,6 +74,11 @@ function transformUniorgObjectToMdastPhrasingContent(
         type: "emphasis",
         children: transformUniorgObjects(node.children)
       }
+    case "strike-through":
+      return {
+        type: "delete",
+        children: transformUniorgObjects(node.children)
+      }
     case "link": {
       const children = transformUniorgObjects(node.children)
       // org has no dedicated image syntax; the common convention is a

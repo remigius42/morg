@@ -98,6 +98,12 @@ describe("convertOrgToMarkdown", () => {
     )
   })
 
+  it("should convert org strike-through to gfm strikethrough", () => {
+    const org = "This is +gone+ now.\n"
+
+    expect(convertOrgToMarkdown(org)).toBe("This is ~~gone~~ now.\n")
+  })
+
   it("should convert inline markup inside list items", () => {
     const org = "- some *bold* item\n- a [[https://example.com][link]] item\n"
 
