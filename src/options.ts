@@ -9,15 +9,16 @@ export type Toggle = boolean | Record<string, boolean>
 
 export function toggleEnabled(
   toggle: Toggle | undefined,
-  key: string
+  key: string,
+  defaultValue = true
 ): boolean {
   if (toggle === undefined) {
-    return true
+    return defaultValue
   }
   if (typeof toggle === "boolean") {
     return toggle
   }
-  return toggle[key] ?? true
+  return toggle[key] ?? defaultValue
 }
 
 export interface MarkdownToOrgOptions {
@@ -38,6 +39,13 @@ export interface OrgToMarkdownOptions {
    * TODO: not consumed yet — no org-ism handlers are implemented.
    */
   preserveOrgisms?: Toggle
+  /**
+   * Render Org constructs without a Markdown equivalent as raw HTML
+   * (`<u>`, `<sup>`, `<sub>`, `<dl>`) instead of keeping their org markup
+   * verbatim. HTML round-trips as a preserved md-ism (export blocks and
+   * snippets), not back to native org markup. Default: `false`.
+   */
+  useHtml?: Toggle
   /** Dialect preset extracted before the generic conversion. */
   preset?: Preset
 }

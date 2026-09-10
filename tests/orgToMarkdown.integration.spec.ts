@@ -144,6 +144,22 @@ describe("convertOrgToMarkdown", () => {
     )
   })
 
+  it("should render sub/superscript and underline as html when useHtml", () => {
+    const org = "Some _underlined text_ and H_{2}O or x^{2} here.\n"
+
+    expect(convertOrgToMarkdown(org, { useHtml: true })).toBe(
+      "Some <u>underlined text</u> and H<sub>2</sub>O or x<sup>2</sup> here.\n"
+    )
+  })
+
+  it("should render descriptive lists as html when useHtml", () => {
+    const org = "- apple :: a fruit\n- vim :: an editor\n"
+
+    expect(convertOrgToMarkdown(org, { useHtml: true })).toBe(
+      "<dl>\n<dt>apple</dt>\n<dd>a fruit</dd>\n<dt>vim</dt>\n<dd>an editor</dd>\n</dl>\n"
+    )
+  })
+
   it("should convert inline markup inside list items", () => {
     const org = "- some *bold* item\n- a [[https://example.com][link]] item\n"
 

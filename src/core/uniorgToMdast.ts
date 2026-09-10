@@ -23,6 +23,7 @@ import { toggleEnabled, type Toggle } from "../options.js"
 
 export interface UniorgToMdastOptions {
   preserveOrgisms?: Toggle
+  useHtml?: Toggle
 }
 
 // options for the current transformUniorgAstToMdast run; the transform is
@@ -32,6 +33,10 @@ let currentOptions: UniorgToMdastOptions = {}
 
 function orgismEnabled(key: string): boolean {
   return toggleEnabled(currentOptions.preserveOrgisms, key)
+}
+
+function htmlEnabled(key: string): boolean {
+  return toggleEnabled(currentOptions.useHtml, key, false)
 }
 
 /**
@@ -61,7 +66,7 @@ const IMAGE_EXTENSION_RE = /\.(png|jpe?g|gif|svg|webp|avif|bmp|ico)$/i
 
 function transformUniorgObjectToMdastPhrasingContent(
   node: ObjectType
-): PhrasingContent | null {
+): PhrasingContent | PhrasingContent[] | null {
   switch (node.type) {
     case "text":
       return { type: "text", value: node.value }
@@ -114,9 +119,23 @@ function transformUniorgObjectToMdastPhrasingContent(
     case "underline":
     case "superscript":
     case "subscript": {
-      // markdown has no equivalents; keep the raw org markup as text so
-      // the return trip re-parses it natively (convergent, like inline
-      // timestamps)
+      // markdown has no equivalents; with useHtml render as raw html
+      // (a preserved md-ism on the return trip), otherwise keep the raw
+      // org markup as text so the return trip re-parses it natively
+      // (convergent, like inline timestamps)
+      if (htmlEnabled(node.type)) {
+        const tagName =
+          node.type === "underline"
+            ? "u"
+            : node.type === "superscript"
+              ? "sup"
+              : "sub"
+        return [
+          { type: "html", value: `<${tagName}>` },
+          ...transformUniorgObjects(node.children),
+          { type: "html", value: `</${tagName}>` }
+        ]
+      }
       const content = orgastToString(node)
       return {
         type: "text",
@@ -176,7 +195,7 @@ function transformUniorgObjects(
   children: ObjectType[] | undefined
 ): PhrasingContent[] {
   return (children || [])
-    .map(transformUniorgObjectToMdastPhrasingContent)
+    .flatMap(transformUniorgObjectToMdastPhrasingContent)
     .filter(Boolean) as PhrasingContent[]
 }
 
@@ -192,9 +211,7 @@ function transformUniorgNodeToMdastNode(
       const heading: RootContent = {
         type: "heading",
         depth: node.level as Heading["depth"],
-        children: (node.children || [])
-          .map(transformUniorgObjectToMdastPhrasingContent)
-          .filter(Boolean) as PhrasingContent[]
+        children: transformUniorgObjects(node.children)
       }
       // org-isms serialize as key:: value lines directly below the heading
       const isms: string[] = []
@@ -232,9 +249,7 @@ function transformUniorgNodeToMdastNode(
       return isms.length ? keyValueParagraph(isms) : null
     }
     case "paragraph": {
-      const children = (node.children || [])
-        .map(transformUniorgObjectToMdastPhrasingContent)
-        .filter(Boolean) as PhrasingContent[]
+      const children = transformUniorgObjects(node.children)
       // uniorg keeps trailing blank lines inside the paragraph node; strip
       // them so remark-stringify produces canonical spacing.
       const last = children[children.length - 1]
@@ -253,6 +268,9 @@ function transformUniorgNodeToMdastNode(
       }
       return { type: "text", value: node.value }
     case "plain-list":
+      if (node.listType === "descriptive" && htmlEnabled("descriptiveList")) {
+        return descriptiveListToHtml(node)
+      }
       return transformUniorgList(node)
     case "table": {
       if (node.tableType === "table.el") {
@@ -332,6 +350,30 @@ function transformUniorgNodeToMdastNode(
     default:
       return null
   }
+}
+
+// with useHtml a descriptive list renders as a <dl> block (a preserved
+// md-ism on the return trip); terms and definitions are flattened to text
+function descriptiveListToHtml(node: List): RootContent {
+  const lines = ["<dl>"]
+  for (const item of node.children || []) {
+    if (item.type !== "list-item") {
+      continue
+    }
+    const tag = (item.children || []).find(
+      child => (child as { type: string }).type === "list-item-tag"
+    )
+    const definition = (item.children || []).filter(child => child !== tag)
+    lines.push(`<dt>${tag ? orgastToString(tag).trim() : ""}</dt>`)
+    lines.push(
+      `<dd>${definition
+        .map(child => orgastToString(child))
+        .join("")
+        .trim()}</dd>`
+    )
+  }
+  lines.push("</dl>")
+  return { type: "html", value: lines.join("\n") }
 }
 
 // A single blank line does not end a list in org, so one uniorg plain-list

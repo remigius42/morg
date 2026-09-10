@@ -58,8 +58,10 @@ Options (flags accept `boolean` or a per-construct `Record<string, boolean>`):
 
 - `convertMarkdownToOrg(md, { preserveMdisms, preset })` — `preserveMdisms`
   default `true`
-- `convertOrgToMarkdown(org, { preserveOrgisms, preset })` — `preserveOrgisms`
-  default `true`
+- `convertOrgToMarkdown(org, { preserveOrgisms, useHtml, preset })` —
+  `preserveOrgisms` default `true`; `useHtml` (default `false`) renders
+  org-only markup as raw HTML (`<u>`, `<sup>`, `<sub>`, `<dl>`) instead
+  of keeping it verbatim
 - `logseq({ nestUnderHeadings })` — default `true`; content following a heading
   becomes children of that heading's block
 
@@ -113,7 +115,10 @@ their raw org markup (`_text_`, `^{2}`, `_{2}`) is kept verbatim as
 escaped text on `org → md` and re-parsed natively on the way back
 (same approach as inline timestamps). Descriptive lists keep their
 `- term :: definition` syntax literally in Markdown list items and are
-re-parsed as descriptive lists on the return trip.
+re-parsed as descriptive lists on the return trip. With
+`useHtml: true` these constructs render as raw HTML instead (`<u>`,
+`<sup>`, `<sub>`, `<dl>`); the HTML then round-trips as a preserved
+md-ism (org export blocks/snippets), not back to native org markup.
 
 Not yet handled: frontmatter and Obsidian wikilinks (preset/md-ism
 territory rather than core).

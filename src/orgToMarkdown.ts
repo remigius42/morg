@@ -27,7 +27,8 @@ export function convertOrgToMarkdown(
   const mdast = transformUniorgAstToMdast(uniorgAst, {
     ...(options.preserveOrgisms !== undefined && {
       preserveOrgisms: options.preserveOrgisms
-    })
+    }),
+    ...(options.useHtml !== undefined && { useHtml: options.useHtml })
   })
 
   // Phase 4: Render mdast to Markdown string

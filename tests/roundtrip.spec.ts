@@ -46,6 +46,18 @@ describe("round-trip identity on canonical form", () => {
   })
 })
 
+describe("useHtml", () => {
+  it("html rendering of org-only markup converges", () => {
+    const input =
+      "Some _underlined_ H_{2}O and x^{2}.\n\n- apple :: a fruit\n- vim :: an editor\n"
+    const roundTrip = (org: string): string =>
+      convertMarkdownToOrg(convertOrgToMarkdown(org, { useHtml: true }))
+    const once = roundTrip(input)
+    expect(roundTrip(once)).toBe(once)
+    expect(convertOrgToMarkdown(input, { useHtml: true })).toContain("<sup>")
+  })
+})
+
 describe("lists", () => {
   it("nested list survives a round trip", () => {
     const input = "- parent\n  - child\n"
