@@ -22,6 +22,16 @@ A Markdown construct with no native Org equivalent. Preserved during `md → org
 
 An Org construct with no native Markdown equivalent. Serialized during `org → md` as `key:: value` conventions by default.
 
+## Web UI
+
+The client-side converter hosted on GitHub Pages. Conversions run
+entirely in the browser; no input ever leaves it.
+
+## Embed Page
+
+The chrome-less converter page of the Web UI, designed to be iframed —
+both by the Web UI's own converter page and by third-party sites.
+
 ## Preset
 
 A named bundle of dialect-specific transforms applied on top of the dialect-agnostic core (e.g. `logseq`). The core pipelines never contain dialect knowledge. Options that only have observable effect in a dialect (e.g. `nestUnderHeadings` for outline nesting) are scoped to their Preset, not the core.
