@@ -16,9 +16,11 @@ orgism
 orgisms
 outliner
 remigius
+strikethrough
 stringifier
 stringifiers
 stringify
+tblfm
 tseslint
 uniorg
 unist

@@ -52,6 +52,20 @@ This is a paragraph.
     )
   })
 
+  it("should convert tables with a header rule", () => {
+    const markdown = "| a | b |\n| --- | --- |\n| 1 | 2 |\n"
+
+    expect(convertMarkdownToOrg(markdown)).toBe("| a | b |\n|-|\n| 1 | 2 |\n")
+  })
+
+  it("should convert column alignment to an org cookie row", () => {
+    const markdown = "| a | b | c |\n| :-- | --: | :-: |\n| 1 | 2 | 3 |\n"
+
+    expect(convertMarkdownToOrg(markdown)).toBe(
+      "| a | b | c |\n|-|\n| <l> | <r> | <c> |\n| 1 | 2 | 3 |\n"
+    )
+  })
+
   it("should add heading:: property drawers with the logseq preset", () => {
     const markdown = "# Hello World\n\nThis is a paragraph."
     const expectedOrgMode = `* Hello World

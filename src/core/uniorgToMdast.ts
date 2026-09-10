@@ -15,7 +15,8 @@ import type {
   ObjectType,
   Text,
   List,
-  ListItem
+  ListItem,
+  TableRow
 } from "uniorg"
 
 /**
@@ -77,6 +78,34 @@ function transformUniorgObjectToMdastPhrasingContent(
   }
 }
 
+function cellText(cell: TableRow["children"][number]): string {
+  return (cell.children || [])
+    .map(child => (child.type === "text" ? child.value : ""))
+    .join("")
+    .trim()
+}
+
+function isAlignmentCookieRow(row: TableRow): boolean {
+  const cells = row.children || []
+  return (
+    cells.length > 0 &&
+    cells.every(cell => {
+      const text = cellText(cell)
+      return text === "" || /^<[lrc]\d*>$/.test(text)
+    }) &&
+    cells.some(cell => cellText(cell) !== "")
+  )
+}
+
+// org cell content keeps the aligning whitespace padding; markdown
+// cells are re-padded by the stringifier
+function trimCellPadding(node: PhrasingContent): PhrasingContent {
+  if (node.type === "text") {
+    node.value = node.value.trim()
+  }
+  return node
+}
+
 // uniorg block values keep the newline before the #+end_ line; mdast
 // code values do not include it
 function trimTrailingNewline(value: string): string {
@@ -130,6 +159,46 @@ function transformUniorgNodeToMdastNode(
       return { type: "text", value: node.value }
     case "plain-list":
       return transformUniorgList(node)
+    case "table": {
+      if (node.tableType === "table.el") {
+        // TODO: table.el tables (verbatim value, no cell structure)
+        return null
+      }
+      const standardRows = (node.children || []).filter(
+        (row): row is TableRow =>
+          row.type === "table-row" && row.rowType === "standard"
+      )
+      // an org alignment cookie row (| <l> | <r> | <c> |) becomes GFM
+      // column alignment instead of a content row
+      const cookieRow = standardRows.find(isAlignmentCookieRow)
+      const align = cookieRow
+        ? (cookieRow.children || []).map(cell => {
+            const cookie = /^<([lrc])\d*>$/.exec(cellText(cell))?.[1]
+            return cookie === "l"
+              ? ("left" as const)
+              : cookie === "r"
+                ? ("right" as const)
+                : cookie === "c"
+                  ? ("center" as const)
+                  : null
+          })
+        : null
+      return {
+        type: "table",
+        align,
+        children: standardRows
+          .filter(row => row !== cookieRow)
+          .map(row => ({
+            type: "tableRow",
+            children: (row.children || []).map(cell => ({
+              type: "tableCell",
+              children: transformUniorgObjects(cell.children).map(
+                trimCellPadding
+              )
+            }))
+          }))
+      } as unknown as RootContent
+    }
     case "quote-block":
       return {
         type: "blockquote",

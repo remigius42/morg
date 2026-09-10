@@ -1,6 +1,7 @@
 import { unified } from "unified"
 import uniorgParse from "uniorg-parse"
 import remarkStringify from "remark-stringify"
+import remarkGfm from "remark-gfm"
 import { transformUniorgAstToMdast } from "./core/uniorgToMdast.js"
 import type { OrgToMarkdownOptions } from "./options.js"
 
@@ -29,6 +30,7 @@ export function convertOrgToMarkdown(
   // bullet "-" (not remark's default "*") is morg's canonical Markdown form
   const markdownContent = unified()
     .use(remarkStringify, { bullet: "-" })
+    .use(remarkGfm)
     .stringify(mdast)
 
   return markdownContent

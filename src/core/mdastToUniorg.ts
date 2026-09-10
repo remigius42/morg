@@ -3,7 +3,8 @@ import type {
   RootContent,
   PhrasingContent,
   List as MdastList,
-  ListItem as MdastListItem
+  ListItem as MdastListItem,
+  TableRow as MdastTableRow
 } from "mdast"
 import type {
   OrgData,
@@ -121,6 +122,37 @@ function transformMdastNodeToUniorgNode(
       return { type: "text", value: node.value }
     case "list":
       return transformMdastList(node, 0)
+    case "table": {
+      const [headerRow, ...bodyRows] = node.children
+      // GFM column alignment maps to an org alignment cookie row
+      // (| <l> | <r> | <c> |) directly below the header rule
+      const cookieRow = (node.align || []).some(Boolean)
+        ? [
+            {
+              type: "table-row",
+              rowType: "standard",
+              children: (node.align || []).map(align => ({
+                type: "table-cell",
+                children: align
+                  ? [{ type: "text", value: `<${align.charAt(0)}>` }]
+                  : []
+              }))
+            }
+          ]
+        : []
+      const rows = [
+        ...(headerRow ? [transformMdastTableRow(headerRow)] : []),
+        { type: "table-row", rowType: "rule", children: [] },
+        ...cookieRow,
+        ...bodyRows.map(transformMdastTableRow)
+      ]
+      return {
+        type: "table",
+        tableType: "org",
+        tblfm: null,
+        children: rows
+      } as unknown as ElementType
+    }
     case "blockquote":
       return {
         type: "quote-block",
@@ -138,6 +170,19 @@ function transformMdastNodeToUniorgNode(
     // TODO: Add handlers for other mdast node types (blockquote, code, thematicBreak, etc.)
     default:
       return null
+  }
+}
+
+function transformMdastTableRow(row: MdastTableRow): unknown {
+  return {
+    type: "table-row",
+    rowType: "standard",
+    children: row.children.map(cell => ({
+      type: "table-cell",
+      children: cell.children
+        .map(transformMdastPhrasingContentToUniorgObject)
+        .filter(Boolean) as ObjectType[]
+    }))
   }
 }
 

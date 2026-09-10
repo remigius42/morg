@@ -43,6 +43,27 @@ describe("convertOrgToMarkdown", () => {
     )
   })
 
+  it("should convert org tables to gfm tables", () => {
+    const org = "| a | b |\n|-|\n| 1 | 2 |\n"
+
+    expect(convertOrgToMarkdown(org)).toBe("| a | b |\n| - | - |\n| 1 | 2 |\n")
+  })
+
+  it("should use the first row as header for rule-less org tables", () => {
+    const org = "| a | b |\n| 1 | 2 |\n"
+
+    expect(convertOrgToMarkdown(org)).toBe("| a | b |\n| - | - |\n| 1 | 2 |\n")
+  })
+
+  it("should convert org alignment cookie rows to gfm alignment", () => {
+    const org = "| a | b | c |\n|-|\n| <l> | <r> | <c> |\n| 1 | 2 | 3 |\n"
+
+    // remark-stringify pads cells to reflect the column alignment
+    expect(convertOrgToMarkdown(org)).toBe(
+      "| a  |  b |  c  |\n| :- | -: | :-: |\n| 1  |  2 |  3  |\n"
+    )
+  })
+
   it("should convert inline markup inside list items", () => {
     const org = "- some *bold* item\n- a [[https://example.com][link]] item\n"
 
