@@ -18,6 +18,7 @@ import type {
   ListItem,
   TableRow
 } from "uniorg"
+import { toString as orgastToString } from "orgast-util-to-string"
 import { toggleEnabled, type Toggle } from "../options.js"
 
 export interface UniorgToMdastOptions {
@@ -110,6 +111,23 @@ function transformUniorgObjectToMdastPhrasingContent(
         identifier: node.label,
         label: node.label
       }
+    case "underline":
+    case "superscript":
+    case "subscript": {
+      // markdown has no equivalents; keep the raw org markup as text so
+      // the return trip re-parses it natively (convergent, like inline
+      // timestamps)
+      const content = orgastToString(node)
+      return {
+        type: "text",
+        value:
+          node.type === "underline"
+            ? `_${content}_`
+            : node.type === "superscript"
+              ? `^{${content}}`
+              : `_{${content}}`
+      }
+    }
     case "export-snippet":
       return node.backEnd === "html"
         ? { type: "html", value: node.value }

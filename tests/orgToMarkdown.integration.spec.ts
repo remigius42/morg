@@ -110,6 +110,16 @@ describe("convertOrgToMarkdown", () => {
     expect(convertOrgToMarkdown(org)).toBe("line one\\\nline two\n")
   })
 
+  it("should keep underline, superscript and subscript verbatim", () => {
+    const org = "Some _underlined text_ and H_{2}O or x^{2} here.\n"
+
+    // markdown has no equivalents; the raw org markup is kept as text
+    // (escaped) so the return trip re-parses it natively
+    expect(convertOrgToMarkdown(org)).toBe(
+      "Some \\_underlined text\\_ and H\\_{2}O or x^{2} here.\n"
+    )
+  })
+
   it("should convert org strike-through to gfm strikethrough", () => {
     const org = "This is +gone+ now.\n"
 

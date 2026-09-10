@@ -108,6 +108,11 @@ per-key record (e.g. `{ html: false }`) to drop them instead.
 Footnotes convert between GFM (`[^label]` / `[^label]: …`) and org
 (`[fn:label]` / `[fn:label] …`) in both directions.
 
+Org underline, superscript and subscript have no Markdown equivalent;
+their raw org markup (`_text_`, `^{2}`, `_{2}`) is kept verbatim as
+escaped text on `org → md` and re-parsed natively on the way back
+(same approach as inline timestamps).
+
 Not yet handled: frontmatter and Obsidian wikilinks (preset/md-ism
 territory rather than core).
 
