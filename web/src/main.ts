@@ -1,5 +1,6 @@
 import { parseConfig } from "../../src/config.js"
 import { applyTheme, watchThemeChanges } from "./theme.js"
+import { CONFIG_SNIPPETS } from "./snippets.js"
 import {
   runConversion,
   type ConversionForm,
@@ -170,11 +171,24 @@ export function init(): void {
         orgToMd?.markdownStyle?.[
           select.id as keyof typeof orgToMd.markdownStyle
         ]
-      if (value) select.value = value
+      if (typeof value === "string") select.value = value
     }
   }
 
   config.addEventListener("input", () => {
+    reflectConfig()
+    persist()
+    convert()
+  })
+  const configSnippet = element<HTMLSelectElement>("configSnippet")
+  configSnippet.addEventListener("change", () => {
+    const snippet =
+      CONFIG_SNIPPETS[configSnippet.value as keyof typeof CONFIG_SNIPPETS]
+    configSnippet.value = ""
+    if (!snippet) {
+      return
+    }
+    config.value = snippet.toml
     reflectConfig()
     persist()
     convert()

@@ -58,6 +58,12 @@ export interface MarkdownStyleOptions {
   fence?: "`" | "~"
   /** Thematic break marker, tripled in output. Default: `"-"`. */
   rule?: "-" | "*" | "_"
+  /**
+   * How often to repeat the thematic break marker (minimum 3).
+   * Default: `3`. mdformat writes 70 underscores (`rule: "_"`,
+   * `ruleRepetition: 70`).
+   */
+  ruleRepetition?: number
 }
 
 export interface OrgToMarkdownOptions {

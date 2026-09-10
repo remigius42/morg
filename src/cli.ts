@@ -54,6 +54,9 @@ async function main() {
       case "--rule":
         markdownStyle[arg.slice(2)] = args[++i] ?? ""
         break
+      case "--rule-repetition":
+        markdownStyle.ruleRepetition = args[++i] ?? ""
+        break
       case "--from":
         fromFormat = args[++i]
         break
@@ -183,7 +186,10 @@ async function main() {
     // config values first, CLI flags layered on top
     const style: MarkdownStyleOptions = {
       ...config.orgToMarkdown?.markdownStyle,
-      ...(markdownStyle as MarkdownStyleOptions)
+      ...markdownStyle,
+      ...(markdownStyle.ruleRepetition !== undefined && {
+        ruleRepetition: Number(markdownStyle.ruleRepetition)
+      })
     }
     const shared = {
       preset,

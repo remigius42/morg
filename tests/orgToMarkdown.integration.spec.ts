@@ -269,6 +269,14 @@ describe("convertOrgToMarkdown", () => {
     )
   })
 
+  it("should honor markdownStyle.ruleRepetition (mdformat style)", () => {
+    expect(
+      convertOrgToMarkdown("-----\n", {
+        markdownStyle: { rule: "_", ruleRepetition: 70 }
+      })
+    ).toBe(`${"_".repeat(70)}\n`)
+  })
+
   it("should convert org strike-through to gfm strikethrough", () => {
     const org = "This is +gone+ now.\n"
 
