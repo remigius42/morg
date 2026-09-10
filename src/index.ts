@@ -1,5 +1,7 @@
 export { convertMarkdownToOrg } from "./markdownToOrg.js"
 export { convertOrgToMarkdown } from "./orgToMarkdown.js"
+export { normalizeMarkdown, normalizeOrg } from "./normalize.js"
+export type { NormalizeOptions } from "./normalize.js"
 export { transformMdastToUniorgAst } from "./core/mdastToUniorg.js"
 export { transformUniorgAstToMdast } from "./core/uniorgToMdast.js"
 export { logseq } from "./presets/logseq.js"

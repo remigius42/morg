@@ -4,6 +4,7 @@ import * as fs from "node:fs"
 import * as path from "node:path"
 import { convertMarkdownToOrg } from "./markdownToOrg.js"
 import { convertOrgToMarkdown } from "./orgToMarkdown.js"
+import { normalizeMarkdown, normalizeOrg } from "./normalize.js"
 import { logseq } from "./presets/logseq.js"
 import { obsidian } from "./presets/obsidian.js"
 import type { Preset } from "./presets/types.js"
@@ -15,6 +16,12 @@ const PRESETS: Record<string, () => Preset> = {
 
 async function main() {
   const args = process.argv.slice(2)
+  // `morg normalize` canonicalizes in place of converting: same format
+  // in and out, one full round trip (see ADR 0001)
+  const normalize = args[0] === "normalize"
+  if (normalize) {
+    args.shift()
+  }
   let fromFormat: string | undefined
   let toFormat: string | undefined
   let inputFile: string | undefined
@@ -86,7 +93,10 @@ async function main() {
   }
 
   // Infer missing format based on the other
-  if (fromFormat && !toFormat) {
+  if (normalize) {
+    fromFormat = fromFormat ?? toFormat
+    toFormat = fromFormat
+  } else if (fromFormat && !toFormat) {
     toFormat = fromFormat === "markdown" ? "org" : "markdown"
   } else if (toFormat && !fromFormat) {
     fromFormat = toFormat === "markdown" ? "org" : "markdown"
@@ -111,7 +121,7 @@ async function main() {
     process.exit(1)
   }
 
-  if (fromFormat === toFormat) {
+  if (!normalize && fromFormat === toFormat) {
     console.error("Error: Source and target formats cannot be the same.")
     process.exit(1)
   }
@@ -139,7 +149,12 @@ async function main() {
 
   let outputContent: string
   try {
-    if (fromFormat === "markdown") {
+    if (normalize) {
+      outputContent =
+        fromFormat === "markdown"
+          ? normalizeMarkdown(inputContent, { preset, onWarning })
+          : normalizeOrg(inputContent, { preset, onWarning })
+    } else if (fromFormat === "markdown") {
       outputContent = convertMarkdownToOrg(inputContent, { preset, onWarning })
     } else {
       outputContent = convertOrgToMarkdown(inputContent, {

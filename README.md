@@ -43,6 +43,11 @@ morg --input page.md --output page.org --preset logseq
 
 # Dropped constructs are reported on stderr; -s / --silent suppresses
 morg --input notes.md --output notes.org --silent
+
+# Normalize to canonical form (same format in and out); this
+# canonicalizes — the one-time reformat a first conversion would
+# apply anyway (ADR 0001) — it is not a style formatter like prettier
+morg normalize --input notes.org --output notes.org
 ```
 
 ### Library
@@ -79,6 +84,13 @@ preset })` — `preserveOrgisms` default `true`; `useHtml` (default
   (`[:div …]`) pass through as plain text and are emitted unescaped in
   Markdown.
 - `obsidian()` — wikilinks `[[Page]]` / `[[Page|alias]]` ↔ org fuzzy links
+
+- `normalizeMarkdown(md, { preset })` / `normalizeOrg(org, { preset })`
+  (CLI: `morg normalize`) — one full round trip to morg's canonical
+  form, a fixed point. Canonicalization, not styling: org-isms and
+  md-isms are rewritten exactly as a conversion would rewrite them.
+  Normalize with the same preset/config you will convert with —
+  convergence is per-config (ADR 0002).
 
 Both convert functions also accept `onWarning: message => …`, called for
 each construct dropped without an equivalent (e.g. image titles, LaTeX
