@@ -34,3 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   bare TODO/DONE leaf headlines → GFM task items
 - Drop reporting via `onWarning`; CLI reports to stderr, `-s` /
   `--silent` suppresses
+- Client-side Web UI at
+  [morg.binarypoetry.ch](https://morg.binarypoetry.ch), deployed to
+  GitHub Pages from `main` (ADR 0003): converter with presets, options
+  and `morg.toml` paste, iframable embed page with `?theme` override

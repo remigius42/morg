@@ -35,6 +35,15 @@ Round-trip fixture tests are the backbone of the test suite
 
 ## Usage
 
+### Web UI
+
+Try morg without installing anything at
+[morg.binarypoetry.ch](https://morg.binarypoetry.ch) — all conversion
+happens in your browser, nothing is uploaded (see [ADR
+0003](docs/adr/0003-client-side-web-ui-on-github-pages.md)). The
+chrome-less embed page (`/embed.html`, optionally with
+`?theme=dark|light`) can be iframed into other sites.
+
 ### CLI
 
 ```bash
@@ -166,8 +175,9 @@ Project vocabulary lives in [CONTEXT.md](CONTEXT.md); design decisions in
 
 The core conversion surface is feature-complete and validated against
 real-world Logseq org vaults (edge cases found there live on as
-anonymized fixtures, e.g. `tests/fixtures/logseq-vault.org`); not yet
-published to npm.
+anonymized fixtures, e.g. `tests/fixtures/logseq-vault.org`); the
+client-side [Web UI](https://morg.binarypoetry.ch) is deployed from
+`main`; not yet published to npm.
 
 How each construct maps — including deliberate normalizations and
 documented drops — is covered in the
