@@ -23,9 +23,8 @@ export function toggleEnabled(
 
 export interface MarkdownToOrgOptions {
   /**
-   * Preserve Markdown constructs without a native Org equivalent as
-   * `morg_`-prefixed org properties (see ADR 0002). Default: `true`.
-   * TODO: not consumed yet — no md-ism handlers are implemented.
+   * Preserve Markdown constructs without a native Org equivalent (e.g.
+   * raw HTML as export blocks/snippets, see ADR 0002). Default: `true`.
    */
   preserveMdisms?: Toggle
   /** Called for each construct dropped without an equivalent. */
@@ -37,8 +36,8 @@ export interface MarkdownToOrgOptions {
 export interface OrgToMarkdownOptions {
   /**
    * Serialize Org constructs without a native Markdown equivalent as
-   * `key:: value` lines (see ADR 0002). Default: `true`.
-   * TODO: not consumed yet — no org-ism handlers are implemented.
+   * `key:: value` lines and verbatim passthroughs (see ADR 0002).
+   * Default: `true`.
    */
   preserveOrgisms?: Toggle
   /**

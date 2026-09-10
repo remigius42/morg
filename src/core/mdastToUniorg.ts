@@ -211,7 +211,7 @@ function transformMdastPhrasingContentToUniorgObject(
         path: node.url,
         children: node.alt ? [{ type: "text", value: node.alt }] : []
       } as unknown as ObjectType
-    // TODO: Add handlers for other mdast phrasing content types
+    // remaining phrasing types have no mapping; dropped with a warning
     default:
       warn(`dropped md ${(node as { type: string }).type}`)
       return null
@@ -360,7 +360,7 @@ function transformMdastNodeToUniorgNode(
     case "definition":
       // consumed by reference-style link resolution
       return null
-    // TODO: Add handlers for other mdast node types
+    // remaining block types have no mapping; dropped with a warning
     default:
       warn(`dropped md ${node.type}`)
       return null

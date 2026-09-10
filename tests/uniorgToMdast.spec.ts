@@ -3,8 +3,7 @@ import { transformUniorgAstToMdast } from "../src/core/uniorgToMdast.js"
 import type { OrgData } from "uniorg"
 
 describe("transformUniorgAstToMdast", () => {
-  it("should transform a uniorg AST to a mdast", () => {
-    // TODO: Add actual test cases here
+  it("should transform an empty uniorg AST to an empty mdast", () => {
     const uniorgAst: OrgData = {
       type: "org-data",
       children: [],

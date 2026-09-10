@@ -284,7 +284,7 @@ function transformUniorgObjectToMdastPhrasingContent(
       return node.backEnd === "html"
         ? { type: "html", value: node.value }
         : null
-    // TODO: Add handlers for other uniorg object types
+    // remaining object types have no mapping; dropped with a warning
     default:
       warn(`dropped org ${node.type}`)
       return null
@@ -547,7 +547,7 @@ function transformUniorgNodeToMdastNode(
       }
     case "latex-environment":
       return { type: "math", value: node.value } as unknown as RootContent
-    // TODO: Add handlers for other uniorg node types
+    // remaining element types have no mapping; dropped with a warning
     default:
       warn(`dropped org ${node.type}`)
       return null
