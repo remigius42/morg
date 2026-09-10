@@ -1,0 +1,6 @@
+#+TITLE: A Note
+#+AUTHOR: Someone
+#+FILETAGS: :one:two:
+
+* Heading
+Body text.

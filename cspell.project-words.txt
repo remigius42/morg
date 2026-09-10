@@ -1,6 +1,7 @@
 andreas
 blockquotes
 commitlint
+filetags
 frontmatter
 lintstagedrc
 logseq

@@ -1,6 +1,7 @@
 import { unified } from "unified"
 import remarkParse from "remark-parse"
 import remarkGfm from "remark-gfm"
+import remarkFrontmatter from "remark-frontmatter"
 import { uniorgStringify } from "uniorg-stringify"
 import { visit } from "unist-util-visit"
 import type { Parent } from "unist"
@@ -26,7 +27,11 @@ export function convertMarkdownToOrg(
   options: MarkdownToOrgOptions = {}
 ): string {
   // Phase 1: Parse Markdown to mdast
-  const mdast = unified().use(remarkParse).use(remarkGfm).parse(markdown)
+  const mdast = unified()
+    .use(remarkParse)
+    .use(remarkGfm)
+    .use(remarkFrontmatter)
+    .parse(markdown)
 
   // Phase 2: Generic mdast to uniorg-ast transformation
   let uniorgAst = transformMdastToUniorgAst(mdast, {

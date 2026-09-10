@@ -120,8 +120,14 @@ re-parsed as descriptive lists on the return trip. With
 `<sup>`, `<sub>`, `<dl>`); the HTML then round-trips as a preserved
 md-ism (org export blocks/snippets), not back to native org markup.
 
-Not yet handled: frontmatter and Obsidian wikilinks (preset/md-ism
-territory rather than core).
+Markdown YAML frontmatter maps to leading org keywords (`title: X` ↔
+`#+TITLE: X`) in both directions, in core — both constructs are native
+to their format. Scalar values pass through as-is; structured YAML
+values are JSON-encoded on a single line in org (per ADR 0002's value
+rule) and restored to YAML on the way back.
+
+Not yet handled: Obsidian wikilinks (preset territory rather than
+core).
 
 ## Development
 

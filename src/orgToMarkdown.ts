@@ -2,6 +2,7 @@ import { unified } from "unified"
 import uniorgParse from "uniorg-parse"
 import remarkStringify from "remark-stringify"
 import remarkGfm from "remark-gfm"
+import remarkFrontmatter from "remark-frontmatter"
 import { transformUniorgAstToMdast } from "./core/uniorgToMdast.js"
 import type { OrgToMarkdownOptions } from "./options.js"
 
@@ -44,6 +45,7 @@ export function convertOrgToMarkdown(
       }
     } as Parameters<typeof remarkStringify>[0])
     .use(remarkGfm)
+    .use(remarkFrontmatter)
     .stringify(mdast)
 
   return markdownContent

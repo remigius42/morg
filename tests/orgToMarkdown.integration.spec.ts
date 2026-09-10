@@ -120,6 +120,14 @@ describe("convertOrgToMarkdown", () => {
     )
   })
 
+  it("should convert leading org keywords to frontmatter", () => {
+    const org = '#+TITLE: My Note\n#+AUTHOR: Rem\n#+TAGS: ["a","b"]\nBody.\n'
+
+    expect(convertOrgToMarkdown(org)).toBe(
+      "---\ntitle: My Note\nauthor: Rem\ntags:\n  - a\n  - b\n---\n\nBody.\n"
+    )
+  })
+
   it("should convert org strike-through to gfm strikethrough", () => {
     const org = "This is +gone+ now.\n"
 

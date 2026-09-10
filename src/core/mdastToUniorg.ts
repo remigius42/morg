@@ -17,6 +17,7 @@ import type {
   ListItem
 } from "uniorg"
 import { toString } from "orgast-util-to-string"
+import { parse as parseYaml } from "yaml"
 import { toggleEnabled, type Toggle } from "../options.js"
 
 export interface MdastToUniorgOptions {
@@ -44,7 +45,13 @@ export function transformMdastToUniorgAst(
 ): OrgData {
   currentOptions = options
   const children: (GreaterElementType | ElementType)[] = mdast.children
-    .map(transformMdastNodeToUniorgNode)
+    .flatMap(child =>
+      // frontmatter maps to org keywords, a native construct (one mdast
+      // node fans out to one keyword per entry)
+      child.type === "yaml"
+        ? frontmatterToKeywords(child.value)
+        : [transformMdastNodeToUniorgNode(child)]
+    )
     .filter(Boolean) as (GreaterElementType | ElementType)[]
 
   const orgAst: OrgData = {
@@ -55,6 +62,27 @@ export function transformMdastToUniorgAst(
   }
 
   return orgAst
+}
+
+// frontmatter entries become #+KEY: value keywords; scalar values as-is,
+// structured values JSON-encoded on a single line (see ADR 0002)
+function frontmatterToKeywords(yamlValue: string): ElementType[] {
+  const data: unknown = parseYaml(yamlValue)
+  if (!data || typeof data !== "object" || Array.isArray(data)) {
+    return []
+  }
+  return Object.entries(data).map(
+    ([key, value]) =>
+      ({
+        type: "keyword",
+        affiliated: {},
+        key: key.toUpperCase(),
+        value:
+          value !== null && typeof value === "object"
+            ? JSON.stringify(value)
+            : String(value)
+      }) as unknown as ElementType
+  )
 }
 
 function transformMdastPhrasingContentToUniorgObject(

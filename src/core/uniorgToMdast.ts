@@ -19,6 +19,7 @@ import type {
   TableRow
 } from "uniorg"
 import { toString as orgastToString } from "orgast-util-to-string"
+import { stringify as stringifyYaml } from "yaml"
 import { toggleEnabled, type Toggle } from "../options.js"
 
 export interface UniorgToMdastOptions {
@@ -50,10 +51,35 @@ export function transformUniorgAstToMdast(
   options: UniorgToMdastOptions = {}
 ): MdastRoot {
   currentOptions = options
-  const children: RootContent[] = (uniorgAst.children || [])
+  const nodes = uniorgAst.children || []
+  // leading #+KEY: value keywords map to md frontmatter, a native
+  // construct; JSON-encoded values restore their structure (ADR 0002)
+  const frontmatter: Record<string, unknown> = {}
+  let first = 0
+  while (nodes[first]?.type === "keyword") {
+    const keyword = nodes[first] as unknown as { key: string; value: string }
+    frontmatter[keyword.key.toLowerCase()] = parseKeywordValue(keyword.value)
+    first++
+  }
+  const children: RootContent[] = nodes
+    .slice(first)
     .flatMap(transformUniorgNodeToMdastNode)
     .filter(Boolean) as RootContent[]
+  if (first > 0) {
+    children.unshift({
+      type: "yaml",
+      value: stringifyYaml(frontmatter).trimEnd()
+    })
+  }
   return { type: "root", children: children }
+}
+
+function parseKeywordValue(value: string): unknown {
+  try {
+    return JSON.parse(value)
+  } catch {
+    return value
+  }
 }
 
 // custom mdast node stringified verbatim (see orgToMarkdown handlers) so

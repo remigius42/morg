@@ -120,6 +120,20 @@ This is a paragraph.
     expect(convertMarkdownToOrg(markdown)).toBe("line one\\\\\nline two\n")
   })
 
+  it("should convert frontmatter to org keywords", () => {
+    const markdown = "---\ntitle: My Note\nauthor: Rem\n---\n\nBody.\n"
+
+    expect(convertMarkdownToOrg(markdown)).toBe(
+      "#+TITLE: My Note\n#+AUTHOR: Rem\nBody.\n"
+    )
+  })
+
+  it("should json-encode structured frontmatter values", () => {
+    const markdown = "---\ntags:\n  - a\n  - b\n---\n\nBody.\n"
+
+    expect(convertMarkdownToOrg(markdown)).toBe('#+TAGS: ["a","b"]\nBody.\n')
+  })
+
   it("should convert strikethrough to org strike-through", () => {
     const markdown = "This is ~~gone~~ now.\n"
 
