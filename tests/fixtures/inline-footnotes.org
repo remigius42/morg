@@ -1,0 +1,5 @@
+A claim.[fn:: Short inline proof] Another.[fn:why: Because reasons]
+
+Standard too.[fn:std]
+
+[fn:std] The standard definition.

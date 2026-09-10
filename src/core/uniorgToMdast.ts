@@ -40,6 +40,43 @@ function htmlEnabled(key: string): boolean {
   return toggleEnabled(currentOptions.useHtml, key, false)
 }
 
+// inline footnotes ([fn:: text], [fn:label: text]) of the current run;
+// GFM has no inline form, so they normalize to a standard reference here
+// plus a definition hoisted to the document end
+let inlineFootnotes: { label: string; children: PhrasingContent[] }[] = []
+let usedFootnoteLabels = new Set<string>()
+
+function nextFreeFootnoteLabel(): string {
+  let candidate = 1
+  while (usedFootnoteLabels.has(String(candidate))) {
+    candidate++
+  }
+  const label = String(candidate)
+  usedFootnoteLabels.add(label)
+  return label
+}
+
+function collectFootnoteLabels(node: unknown): void {
+  if (!node || typeof node !== "object") {
+    return
+  }
+  const candidate = node as {
+    type?: string
+    label?: string | null
+    children?: unknown[]
+  }
+  if (
+    (candidate.type === "footnote-reference" ||
+      candidate.type === "footnote-definition") &&
+    candidate.label
+  ) {
+    usedFootnoteLabels.add(candidate.label)
+  }
+  for (const child of candidate.children || []) {
+    collectFootnoteLabels(child)
+  }
+}
+
 /**
  * Transforms a uniorg AST to a mdast (Markdown AST).
  * @param uniorgAst The uniorg AST to transform.
@@ -51,6 +88,9 @@ export function transformUniorgAstToMdast(
   options: UniorgToMdastOptions = {}
 ): MdastRoot {
   currentOptions = options
+  inlineFootnotes = []
+  usedFootnoteLabels = new Set()
+  collectFootnoteLabels(uniorgAst)
   const nodes = uniorgAst.children || []
   // leading #+KEY: value keywords map to md frontmatter, a native
   // construct; JSON-encoded values restore their structure (ADR 0002)
@@ -69,6 +109,14 @@ export function transformUniorgAstToMdast(
     children.unshift({
       type: "yaml",
       value: stringifyYaml(frontmatter).trimEnd()
+    })
+  }
+  for (const footnote of inlineFootnotes) {
+    children.push({
+      type: "footnoteDefinition",
+      identifier: footnote.label,
+      label: footnote.label,
+      children: [{ type: "paragraph", children: footnote.children }]
     })
   }
   return { type: "root", children: children }
@@ -136,12 +184,23 @@ function transformUniorgObjectToMdastPhrasingContent(
       return { type: "inlineCode", value: node.value }
     case "line-break":
       return { type: "break" }
-    case "footnote-reference":
+    case "footnote-reference": {
+      if ((node as { footnoteType?: string }).footnoteType === "inline") {
+        const label = node.label || nextFreeFootnoteLabel()
+        const content = transformUniorgObjects(node.children)
+        const firstChild = content[0]
+        if (firstChild?.type === "text") {
+          firstChild.value = firstChild.value.trimStart()
+        }
+        inlineFootnotes.push({ label, children: content })
+        return { type: "footnoteReference", identifier: label, label }
+      }
       return {
         type: "footnoteReference",
         identifier: node.label,
         label: node.label
       }
+    }
     case "underline":
     case "superscript":
     case "subscript": {

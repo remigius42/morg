@@ -142,6 +142,15 @@ describe("convertOrgToMarkdown", () => {
     expect(convertOrgToMarkdown(org)).toBe("This is ~~gone~~ now.\n")
   })
 
+  it("should normalize inline footnotes to reference plus definition", () => {
+    const org =
+      "One.[fn:: Anonymous note] Two.[fn:named: Labeled note] More.[fn:1]\n\n[fn:1] Existing.\n"
+
+    expect(convertOrgToMarkdown(org)).toBe(
+      "One.[^2] Two.[^named] More.[^1]\n\n[^1]: Existing.\n\n[^2]: Anonymous note\n\n[^named]: Labeled note\n"
+    )
+  })
+
   it("should convert org footnotes to gfm footnotes", () => {
     const org = "A claim.[fn:1]\n\n[fn:1] The evidence.\n"
 
