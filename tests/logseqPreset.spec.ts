@@ -88,6 +88,15 @@ describe("logseq outline nesting", () => {
     expect(roundTrip(markdown)).toBe(markdown)
   })
 
+  it("maps TODO/DONE text markers to org keywords and back", () => {
+    const markdown = "# TODO Ship it\n\nTODO write tests\n\nDONE plan work\n"
+    const logseqOrg =
+      "* TODO Ship it\n:PROPERTIES:\n:heading: 1\n:END:\n** TODO write tests\n** DONE plan work\n"
+
+    expect(convertMarkdownToOrg(markdown, { preset: logseq() })).toBe(logseqOrg)
+    expect(convertOrgToMarkdown(logseqOrg, { preset: logseq() })).toBe(markdown)
+  })
+
   it("keeps flat body content with nestUnderHeadings false", () => {
     expect(
       convertMarkdownToOrg("# foo\n\nabc\n", {

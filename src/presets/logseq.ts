@@ -68,6 +68,7 @@ export function applyLogseqSpecificsToUniorgAst(
     if (node.type === "headline") {
       const headline = node as unknown as Headline
       currentLevel = headline.level
+      takeTaskMarker(headline)
       result.push(node, headingDrawer(headline.level))
       if (!nestUnderHeadings) {
         result.push({ type: "text", value: "\n" } as Text)
@@ -83,6 +84,7 @@ export function applyLogseqSpecificsToUniorgAst(
         tags: [],
         children: (node as unknown as Paragraph).children
       }
+      takeTaskMarker(blockHeadline as Headline)
       result.push(blockHeadline as { type: string })
     } else {
       result.push(node)
@@ -90,6 +92,22 @@ export function applyLogseqSpecificsToUniorgAst(
   }
   uniorgAst.children = result as unknown as OrgData["children"]
   return uniorgAst
+}
+
+// Logseq md keeps TODO/DONE as leading text markers in the block; in org
+// they are the headline's TODO keyword (other Logseq markers like DOING
+// are not org keywords and simply stay in the title text)
+function takeTaskMarker(headline: Headline): void {
+  const first = headline.children[0]
+  if (first?.type !== "text") {
+    return
+  }
+  const marker = /^(TODO|DONE) /.exec(first.value)
+  if (!marker) {
+    return
+  }
+  headline.todoKeyword = marker[1] as string
+  first.value = first.value.slice((marker[0] ?? "").length)
 }
 
 /**
@@ -135,6 +153,14 @@ function extractInParent(parent: Parent): void {
       continue
     }
     const headline = node as unknown as Headline
+    if (headline.todoKeyword) {
+      // back to Logseq md's text-marker convention (TODO Ship it)
+      headline.children.unshift({
+        type: "text",
+        value: `${headline.todoKeyword} `
+      })
+      headline.todoKeyword = null
+    }
     const heading = takeHeadingProperty(children, i + 1)
     if (heading !== null) {
       headline.level = heading
