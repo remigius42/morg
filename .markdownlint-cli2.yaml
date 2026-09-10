@@ -5,3 +5,4 @@ config:
 ignores:
   - node_modules
   - tests/fixtures # conversion inputs, not documentation
+  - TODO.md # private, gitignored working notes

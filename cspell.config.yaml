@@ -8,6 +8,7 @@ dictionaries:
   - project-words
 ignorePaths:
   - .git
+  - TODO.md # private, gitignored working notes
   - ".husky/_"
   - node_modules
   - dist
