@@ -97,6 +97,14 @@ describe("convertOrgToMarkdown", () => {
     )
   })
 
+  it("should keep generic drawers verbatim", () => {
+    const org = "* Task\n:LOGBOOK:\nNote taken.\n:END:\nBody.\n"
+
+    expect(convertOrgToMarkdown(org)).toBe(
+      "# Task\n\n:LOGBOOK:\nNote taken.\n:END:\n\nBody.\n"
+    )
+  })
+
   it("should restore html export blocks and snippets to raw html", () => {
     const org =
       '#+begin_export html\n<div class="note">\nRaw html\n</div>\n#+end_export\n\nPress @@html:<kbd>@@x@@html:</kbd>@@ now.\n'

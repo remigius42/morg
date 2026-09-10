@@ -1,0 +1,12 @@
+* Task
+:LOGBOOK:
+CLOCK: [2026-09-01 Tue 10:00]--[2026-09-01 Tue 11:00] =>  1:00
+Note taken on start.
+:END:
+Body text.
+
+* Another
+:NOTES:
+Free-form drawer content.
+:END:
+More body.

@@ -19,6 +19,8 @@ import type {
   TableRow
 } from "uniorg"
 import { toString as orgastToString } from "orgast-util-to-string"
+import { unified } from "unified"
+import { uniorgStringify } from "uniorg-stringify"
 import { stringify as stringifyYaml } from "yaml"
 import { toggleEnabled, type Toggle } from "../options.js"
 
@@ -327,6 +329,23 @@ function transformUniorgNodeToMdastNode(
         isms.push(`closed:: ${node.closed.rawValue}`)
       }
       return isms.length ? keyValueParagraph(isms) : null
+    }
+    case "drawer": {
+      if (!orgismEnabled("drawers")) {
+        return null
+      }
+      // generic drawers (:LOGBOOK: …) have no md equivalent; keep their
+      // org text verbatim (unescaped) so the return trip re-parses the
+      // drawer natively
+      const orgText = unified()
+        .use(uniorgStringify)
+        .stringify({
+          type: "org-data",
+          children: [node],
+          contentsBegin: 0,
+          contentsEnd: 0
+        })
+      return keyValueParagraph([orgText.replace(/\n$/, "")])
     }
     case "property-drawer": {
       if (!orgismEnabled("properties")) {

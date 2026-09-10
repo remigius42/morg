@@ -99,8 +99,10 @@ Org-isms serialize to `key:: value` lines directly below the heading
 `closed::`; property drawer entries keep their own keys) and are
 restored to native org syntax on the way back — known keys become
 TODO keywords, priorities, tags and planning lines, unknown keys become
-property drawer entries. `preserveOrgisms` accepts `false` or a
-per-key record to drop them instead.
+property drawer entries. Generic drawers (`:LOGBOOK:` …) keep their
+org text verbatim in Markdown and are re-parsed natively on the way
+back. `preserveOrgisms` accepts `false` or a per-key record to drop
+them instead.
 
 Md-isms: raw HTML is preserved as org `#+begin_export html` blocks
 (block level) and `@@html:...@@` export snippets (inline), restored
