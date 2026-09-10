@@ -1,0 +1,6 @@
+* Inline Markup
+This is /italic/ and *bold*, see [[https://example.com][Example]] or
+https://example.org for details.
+
+- an /italic/ item
+- a *bold* [[https://example.com][link]] item

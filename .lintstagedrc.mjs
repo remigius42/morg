@@ -13,7 +13,12 @@ export default {
     "prettier --no-error-on-unmatched-pattern --ignore-unknown --list-different",
     "cspell --dot --no-must-find-files --no-progress"
   ],
-  "**/*.md": "markdownlint-cli2",
+  // explicit file arguments bypass the ignores in .markdownlint-cli2.yaml,
+  // so filter the conversion fixtures here as well
+  "**/*.md": files => {
+    const filtered = files.filter(file => !file.includes("tests/fixtures/"))
+    return filtered.length ? `markdownlint-cli2 ${filtered.join(" ")}` : []
+  },
   "**/*.{ts,mts,js,mjs}": [
     async files => {
       const filesToLint = await removeIgnoredFiles(files)

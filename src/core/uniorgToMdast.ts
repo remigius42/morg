@@ -36,10 +36,40 @@ function transformUniorgObjectToMdastPhrasingContent(
   switch (node.type) {
     case "text":
       return { type: "text", value: node.value }
-    // TODO: Add handlers for other uniorg object types (bold, italic, link, etc.)
+    case "bold":
+      return {
+        type: "strong",
+        children: transformUniorgObjects(node.children)
+      }
+    case "italic":
+      return {
+        type: "emphasis",
+        children: transformUniorgObjects(node.children)
+      }
+    case "link": {
+      const children = transformUniorgObjects(node.children)
+      return {
+        type: "link",
+        url: node.rawLink,
+        // a plain org link has no description; mdast needs children, and
+        // text === url makes remark-stringify emit an autolink (<url>)
+        children: children.length
+          ? children
+          : [{ type: "text", value: node.rawLink }]
+      }
+    }
+    // TODO: Add handlers for other uniorg object types (code, verbatim, etc.)
     default:
       return null
   }
+}
+
+function transformUniorgObjects(
+  children: ObjectType[] | undefined
+): PhrasingContent[] {
+  return (children || [])
+    .map(transformUniorgObjectToMdastPhrasingContent)
+    .filter(Boolean) as PhrasingContent[]
 }
 
 function transformUniorgNodeToMdastNode(
