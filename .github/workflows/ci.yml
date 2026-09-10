@@ -24,3 +24,25 @@ jobs:
         run: |
           echo "# Hello" | node dist/cli.js --from markdown | grep -q '^\* Hello'
           printf '* Hello\n' | node dist/cli.js --from org | grep -q '^# Hello'
+      - name: Build web UI
+        run: npm run build:web
+      - name: Upload Pages artifact
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: web/dist
+  deploy-pages:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
