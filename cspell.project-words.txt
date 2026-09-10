@@ -4,6 +4,7 @@ autolinks
 binarypoetry
 blockquotes
 canonicalizer
+Comeau
 commitlint
 filetags
 frontmatter
@@ -40,5 +41,7 @@ tyop
 uniorg
 unist
 unmappable
+vite
+vitepress
 wikilink
 wikilinks

@@ -1,6 +1,7 @@
 import "@picocss/pico/css/pico.min.css"
 import "./theme.css"
 import { parseConfig } from "../../src/config.js"
+import { applyTheme, watchThemeChanges } from "./theme.js"
 import {
   runConversion,
   type ConversionForm,
@@ -75,12 +76,10 @@ export function init(): void {
   const options = element<HTMLDetailsElement>("options")
   const styleSelects = STYLE_KEYS.map(key => element<HTMLSelectElement>(key))
 
-  // Theme override for iframe embedding (prefers-color-scheme cannot
-  // follow a host page's manual theme toggle)
-  const theme = new URLSearchParams(location.search).get("theme")
-  if (theme === "dark" || theme === "light") {
-    document.documentElement.dataset.theme = theme
-  }
+  // ?theme= lets host pages override; same-origin embeds follow the
+  // chrome pages' toggle via storage events
+  applyTheme()
+  watchThemeChanges()
 
   function formState(): ConversionForm {
     return {

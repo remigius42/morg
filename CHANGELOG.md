@@ -38,4 +38,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   [morg.binarypoetry.ch](https://morg.binarypoetry.ch), deployed to
   GitHub Pages from `main` (ADR 0003): converter with presets, options,
   normalize modes, `morg.toml` paste and a preloaded demo, iframable
-  embed page with `?theme` override
+  embed page with `?theme` override, light/dark switcher
