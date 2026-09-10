@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <title>morg converter</title>
+  </head>
+  <body>
+    <main class="container-fluid">
+      <form id="converter">
+        <div class="grid">
+          <select id="direction" aria-label="Conversion direction">
+            <option value="md-to-org">Markdown → Org</option>
+            <option value="org-to-md">Org → Markdown</option>
+          </select>
+          <select id="preset" aria-label="Dialect preset">
+            <option value="">No preset</option>
+            <option value="logseq">Logseq</option>
+            <option value="obsidian">Obsidian</option>
+          </select>
+        </div>
+        <div class="grid">
+          <textarea
+            id="input"
+            rows="14"
+            aria-label="Input"
+            placeholder="Paste Markdown here…"
+            spellcheck="false"
+          ></textarea>
+          <textarea
+            id="output"
+            rows="14"
+            aria-label="Output"
+            readonly
+            spellcheck="false"
+          ></textarea>
+        </div>
+        <p id="error" hidden></p>
+        <ul id="warnings" hidden></ul>
+        <details id="options">
+          <summary>Options (Org → Markdown)</summary>
+          <label>
+            <input type="checkbox" id="useHtml" />
+            Render org-only constructs as HTML
+          </label>
+          <label>
+            <input type="checkbox" id="taskCheckboxes" />
+            TODO/DONE headlines → task checkboxes (lossy)
+          </label>
+          <fieldset class="grid">
+            <label>
+              Bullet
+              <select id="bullet">
+                <option>-</option>
+                <option>*</option>
+                <option>+</option>
+              </select>
+            </label>
+            <label>
+              Emphasis
+              <select id="emphasis">
+                <option>*</option>
+                <option>_</option>
+              </select>
+            </label>
+            <label>
+              Strong
+              <select id="strong">
+                <option>*</option>
+                <option>_</option>
+              </select>
+            </label>
+            <label>
+              Fence
+              <select id="fence">
+                <option>`</option>
+                <option>~</option>
+              </select>
+            </label>
+            <label>
+              Rule
+              <select id="rule">
+                <option>-</option>
+                <option>*</option>
+                <option>_</option>
+              </select>
+            </label>
+          </fieldset>
+        </details>
+        <details id="configSection">
+          <summary>Config (morg.toml)</summary>
+          <textarea
+            id="config"
+            rows="6"
+            aria-label="morg.toml config"
+            placeholder="Paste a morg.toml…"
+            spellcheck="false"
+          ></textarea>
+        </details>
+      </form>
+      <p>
+        <small>
+          All conversion happens in your browser — nothing is uploaded, no
+          tracking.
+        </small>
+      </p>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

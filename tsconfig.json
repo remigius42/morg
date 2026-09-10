@@ -3,12 +3,17 @@
     "target": "ES2022",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "lib": ["ES2022"],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "verbatimModuleSyntax": true
   },
-  "include": ["src/**/*.ts", "tests/**/*.ts", "web/src/**/*.ts"]
+  "include": [
+    "src/**/*.ts",
+    "tests/**/*.ts",
+    "web/src/**/*.ts",
+    "web/vite.config.ts"
+  ]
 }

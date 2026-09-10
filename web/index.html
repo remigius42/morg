@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <meta
+      name="description"
+      content="morg — bidirectional Markdown ↔ Org-mode converter with round-trip convergence"
+    />
+    <title>morg — Markdown ↔ Org-mode converter</title>
+  </head>
+  <body>
+    <header class="container">
+      <nav>
+        <ul>
+          <li><strong>morg</strong></li>
+        </ul>
+        <ul>
+          <li><a href="./convert.html">Converter</a></li>
+          <li><a href="https://github.com/remigius42/morg">GitHub</a></li>
+        </ul>
+      </nav>
+    </header>
+    <main class="container">
+      <h1>morg</h1>
+      <p>
+        A bidirectional Markdown ↔ Org-mode converter built for keeping one
+        format as the canonical store of a second brain while editing in the
+        other.
+      </p>
+      <p>
+        Its correctness guarantee is <strong>convergence</strong>: after one
+        round trip, further conversions are byte-for-byte stable in both
+        directions. Markdown-only constructs survive the trip through Org as
+        <code>morg_</code> properties; Org-only constructs travel through
+        Markdown as <code>key:: value</code> conventions. Dialect presets for
+        Logseq and Obsidian are built in.
+      </p>
+      <p><a href="./convert.html" role="button">Try the converter</a></p>
+      <p>
+        The converter runs entirely in your browser — nothing is uploaded, no
+        tracking. For files and automation, morg is also a CLI and a TypeScript
+        library; see the
+        <a href="https://github.com/remigius42/morg">repository</a> for
+        documentation.
+      </p>
+    </main>
+    <footer class="container">
+      <small>
+        © Andreas Remigius Schmidt ·
+        <a href="https://github.com/remigius42/morg/blob/main/LICENSE"
+          >GPL-3.0-or-later</a
+        >
+        · <a href="https://www.buymeacoffee.com/remigius">Buy me a coffee</a>
+      </small>
+    </footer>
+    <script type="module" src="/src/site.ts"></script>
+  </body>
+</html>

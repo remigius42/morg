@@ -22,6 +22,8 @@ orgism
 orgisms
 outliner
 passthroughs
+pico
+picocss
 remappable
 remigius
 sexp
