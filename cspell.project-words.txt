@@ -33,6 +33,7 @@ stringifiers
 stringify
 tblfm
 tseslint
+tyop
 uniorg
 unist
 unmappable
