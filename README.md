@@ -174,17 +174,11 @@ documented drops — is covered in the
 [mapping reference](docs/mappings.md). Notable changes are tracked in
 the [changelog](CHANGELOG.md).
 
-## Development
+## Contributing
 
-```bash
-npm install
-npm run test:unit   # vitest watch mode (test:unit:ci for one-shot)
-npm run lint        # prettier, cspell, markdownlint, eslint, typecheck
-npm run build       # tsc → dist/
-```
-
-Commits follow [Conventional Commits](https://www.conventionalcommits.org/),
-enforced via husky + commitlint; lint-staged runs the linters on staged files.
+See the [contributing guide](CONTRIBUTING.md) for setup, conventions
+and the test-first workflow; participation is governed by the
+[code of conduct](CODE_OF_CONDUCT.md).
 
 ## License
 
