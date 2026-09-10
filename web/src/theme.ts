@@ -49,7 +49,8 @@ export function initThemeToggle(button: HTMLElement | null): void {
     return
   }
   const updateLabel = () => {
-    button.textContent = effectiveTheme() === "dark" ? "☀️" : "🌙"
+    // text-presentation glyphs (not emoji) so CSS can tint them
+    button.textContent = effectiveTheme() === "dark" ? "☀︎" : "☾"
   }
   button.addEventListener("click", () => {
     const next: Theme = effectiveTheme() === "dark" ? "light" : "dark"
