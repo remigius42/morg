@@ -34,3 +34,5 @@ unist
 wikilinks
 autolink
 autolinks
+canonicalizer
+remappable
