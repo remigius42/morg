@@ -104,6 +104,12 @@ describe("convertOrgToMarkdown", () => {
     expect(convertOrgToMarkdown(org)).toBe("before\n\n---\n\nafter\n")
   })
 
+  it("should convert org line breaks to hard line breaks", () => {
+    const org = "line one\\\\\nline two\n"
+
+    expect(convertOrgToMarkdown(org)).toBe("line one\\\nline two\n")
+  })
+
   it("should convert org strike-through to gfm strikethrough", () => {
     const org = "This is +gone+ now.\n"
 

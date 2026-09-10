@@ -102,6 +102,8 @@ function transformUniorgObjectToMdastPhrasingContent(
     case "code":
     case "verbatim":
       return { type: "inlineCode", value: node.value }
+    case "line-break":
+      return { type: "break" }
     case "footnote-reference":
       return {
         type: "footnoteReference",

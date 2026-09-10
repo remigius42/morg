@@ -114,6 +114,12 @@ This is a paragraph.
     expect(convertMarkdownToOrg(markdown)).toBe("before\n\n-----\nafter\n")
   })
 
+  it("should convert hard line breaks to org line breaks", () => {
+    const markdown = "line one\\\nline two\n"
+
+    expect(convertMarkdownToOrg(markdown)).toBe("line one\\\\\nline two\n")
+  })
+
   it("should convert strikethrough to org strike-through", () => {
     const markdown = "This is ~~gone~~ now.\n"
 

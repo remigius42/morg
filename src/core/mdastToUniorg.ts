@@ -101,6 +101,8 @@ function transformMdastPhrasingContentToUniorgObject(
     }
     case "inlineCode":
       return { type: "code", value: node.value }
+    case "break":
+      return { type: "line-break" } as unknown as ObjectType
     case "footnoteReference":
       return {
         type: "footnote-reference",

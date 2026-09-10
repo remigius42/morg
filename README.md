@@ -87,7 +87,8 @@ bold/italic/strikethrough, links, lists (nested, ordered, mixed), and code
 (inline, fenced/src and
 example blocks), blockquotes/quote blocks, images (org side: links to
 image files, alt text as description), horizontal rules (md `---` ↔ org
-`-----`), and tables (GFM ↔ org, incl.
+`-----`), hard line breaks (md `\` or two spaces ↔ org `\\`), and tables
+(GFM ↔ org, incl.
 column alignment via org `<l>/<r>/<c>` cookie rows; `table.el` tables
 are TODO). Markdown is parsed and serialized with GFM enabled.
 
