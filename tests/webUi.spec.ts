@@ -60,6 +60,17 @@ describe("embed page", () => {
     expect(error.textContent).toMatch(/tyop/)
   })
 
+  it("inserts a formatter snippet into the config and applies it", () => {
+    const snippet = element<HTMLSelectElement>("configSnippet")
+    snippet.value = "prettier"
+    snippet.dispatchEvent(new Event("change", { bubbles: true }))
+    expect(element<HTMLTextAreaElement>("config").value).toContain(
+      'emphasis = "_"'
+    )
+    expect(element<HTMLSelectElement>("emphasis").value).toBe("_")
+    expect(snippet.value).toBe("")
+  })
+
   it("persists the config in localStorage", () => {
     const config = element<HTMLTextAreaElement>("config")
     config.value = 'preset = "obsidian"'

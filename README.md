@@ -69,29 +69,18 @@ morg normalize --input notes.org --output notes.org
 
 Options can live in a `morg.toml` (auto-discovered in the working
 directory, or passed via `--config path`). Precedence: CLI flags >
-config file > defaults. Sections mirror the library options objects:
+config file > defaults:
 
 ```toml
 preset = "logseq"
-silent = false
-
-# custom names for org-ism key:: lines (canonical = custom);
-# convergence is per-config — convert with the mapping a file
-# was written with (ADR 0002)
-[orgismKeys]
-todo = "state"
-scheduled = "when"
-
-[markdownToOrg.preserveMdisms]
-html = false
-
-[orgToMarkdown]
-useHtml = false
-taskCheckboxes = false
 
 [orgToMarkdown.markdownStyle]
-emphasis = "_"   # align with prettier
+emphasis = "_" # align with prettier
 ```
+
+The full reference — all sections and compatibility snippets for
+prettier and mdformat — is in
+[docs/CONFIGURATION.md](docs/CONFIGURATION.md).
 
 ### Library
 
@@ -140,10 +129,10 @@ preset })` — `preserveOrgisms` default `true`; `useHtml` (default
   Normalize with the same preset/config you will convert with —
   convergence is per-config (ADR 0002).
 
-- `markdownStyle: { bullet, emphasis, strong, fence, rule }` (on
-  `convertOrgToMarkdown` and `normalizeMarkdown`; CLI `--bullet`,
-  `--emphasis`, `--strong`, `--fence`, `--rule`) — Markdown output
-  style knobs. Defaults match prettier except emphasis (`*italic*`);
+- `markdownStyle: { bullet, emphasis, strong, fence, rule, ruleRepetition }`
+  (on `convertOrgToMarkdown` and `normalizeMarkdown`; CLI `--bullet`,
+  `--emphasis`, `--strong`, `--fence`, `--rule`, `--rule-repetition`)
+  — Markdown output style knobs. Defaults match prettier except emphasis (`*italic*`);
   `--emphasis _` aligns fully with prettier. Canonical form is
   per-config (ADR 0001): round trips must use the same style. Note
   CommonMark/GFM prescribe no style — these defaults are morg's

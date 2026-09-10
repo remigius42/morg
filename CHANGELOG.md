@@ -29,7 +29,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `morg.toml` configuration file (`--config`, precedence
   CLI > config > defaults)
 - Markdown style knobs (`markdownStyle` / `--bullet`, `--emphasis`,
-  `--strong`, `--fence`, `--rule`)
+  `--strong`, `--fence`, `--rule`, `--rule-repetition`)
+- Formatter compatibility snippets for prettier (test-verified fixed
+  point) and mdformat in
+  [docs/CONFIGURATION.md](docs/CONFIGURATION.md), loadable in the Web
+  UI's config panel
 - Opt-in lossy export flag `taskCheckboxes` (`--task-checkboxes`):
   bare TODO/DONE leaf headlines → GFM task items
 - Drop reporting via `onWarning`; CLI reports to stderr, `-s` /
