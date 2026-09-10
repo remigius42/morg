@@ -175,11 +175,16 @@ center / verse / comment blocks, fixed-width blocks, mid-file
 keywords, babel calls, clocks and diary sexps keep their org text
 verbatim in Markdown and are re-parsed natively on the way back;
 statistics cookies (`[1/2]`) and `[cite:…]` citations travel as plain
-text the same way. Org comments (`# …`) map to HTML comments
-(`<!-- … -->`) and back — both are invisible in rendered output, so
-the mapping is lossless in both directions. Non-HTML org export
-blocks are dropped (reported via `onWarning`). `preserveOrgisms` accepts `false` or a per-key record to drop
-them instead.
+text the same way, as do non-HTML export blocks and `@@backend:…@@`
+snippets. Affiliated keywords (`#+CAPTION:`, `#+NAME:`, `#+ATTR_*`)
+travel as verbatim lines directly above their element and re-attach
+natively on the return trip — except on org tables, which discard
+them at parse time (upstream
+[uniorg#151](https://github.com/rasendubi/uniorg/issues/151)). Org
+comments (`# …`) map to HTML comments (`<!-- … -->`) and back — both
+are invisible in rendered output, so the mapping is lossless in both
+directions. `preserveOrgisms` accepts `false` or a per-key record to
+drop them instead.
 
 Md-isms: raw HTML is preserved as org `#+begin_export html` blocks
 (block level) and `@@html:...@@` export snippets (inline), restored

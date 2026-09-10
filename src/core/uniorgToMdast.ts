@@ -363,9 +363,15 @@ function transformUniorgObjectToMdastPhrasingContent(
         value: (node as unknown as { value: string }).value
       } as unknown as PhrasingContent
     case "export-snippet":
-      return node.backEnd === "html"
-        ? { type: "html", value: node.value }
-        : null
+      if (node.backEnd !== "html") {
+        // kept as raw @@backend:…@@ text (unescaped) so the return trip
+        // re-parses the snippet natively
+        return {
+          type: "verbatimInline",
+          value: `@@${node.backEnd}:${node.value}@@`
+        } as unknown as PhrasingContent
+      }
+      return { type: "html", value: node.value }
     // remaining object types have no mapping; dropped with a warning
     default:
       warn(`dropped org ${node.type}`)
@@ -415,7 +421,43 @@ function transformUniorgObjects(
     .filter(Boolean) as PhrasingContent[]
 }
 
+// affiliated keywords (#+CAPTION:, #+NAME:, #+ATTR_*) precede their
+// element as verbatim lines so the return trip re-attaches them natively
+function affiliatedLines(node: unknown): string[] {
+  const affiliated = (node as { affiliated?: Record<string, unknown> })
+    .affiliated
+  return Object.entries(affiliated ?? {}).flatMap(([key, value]) => {
+    const entries = Array.isArray(value) ? value : [value]
+    return entries.map(entry => {
+      const text = Array.isArray(entry)
+        ? entry.map(child => orgastToString(child as ObjectType)).join("")
+        : String(entry)
+      return `#+${key}: ${text}`
+    })
+  })
+}
+
 function transformUniorgNodeToMdastNode(
+  node: GreaterElementType | ElementType | Text
+): RootContent | RootContent[] | null {
+  const result = transformUniorgElement(node)
+  const lines = affiliatedLines(node)
+  if (
+    !result ||
+    !lines.length ||
+    (!Array.isArray(result) && (result as { type: string }).type === "keyValue")
+  ) {
+    // verbatim passthroughs (keyValue) already carry their affiliated
+    // lines via orgNodeToText
+    return result
+  }
+  return [
+    keyValueParagraph(lines),
+    ...(Array.isArray(result) ? result : [result])
+  ]
+}
+
+function transformUniorgElement(
   node: GreaterElementType | ElementType | Text
 ): RootContent | RootContent[] | null {
   switch (node.type) {
@@ -602,8 +644,9 @@ function transformUniorgNodeToMdastNode(
       }
     case "export-block":
       if (node.backend !== "html") {
-        warn(`dropped org export-block (${node.backend ?? "?"})`)
-        return null
+        // other backends have no md meaning; verbatim like the org-only
+        // blocks so the return trip restores them
+        return keyValueParagraph([orgNodeToText(node)])
       }
       return { type: "html", value: trimTrailingNewline(node.value) }
     case "quote-block":

@@ -235,7 +235,15 @@ function transformMdastNodeToUniorgNode(
           .map(transformMdastPhrasingContentToUniorgObject)
           .filter(Boolean) as ObjectType[]
       }
-    case "paragraph":
+    case "paragraph": {
+      // a paragraph of only #+KEY: lines is affiliated keywords (or
+      // mid-file keywords) traveling verbatim; emit as raw text so they
+      // glue to the following element without a blank line — org only
+      // attaches affiliated keywords when directly above their element
+      const keywordLines = keywordOnlyLines(node)
+      if (keywordLines) {
+        return { type: "text", value: `${keywordLines.join("\n")}\n` }
+      }
       return {
         type: "paragraph",
         children: node.children
@@ -244,6 +252,7 @@ function transformMdastNodeToUniorgNode(
         contentsBegin: 0, // Placeholder
         contentsEnd: 0 // Placeholder
       } as Paragraph
+    }
     case "text":
       return { type: "text", value: node.value }
     case "list":
@@ -365,6 +374,23 @@ function transformMdastNodeToUniorgNode(
       warn(`dropped md ${node.type}`)
       return null
   }
+}
+
+const KEYWORD_LINE_RE = /^#\+\S+: /
+
+function keywordOnlyLines(node: {
+  children: PhrasingContent[]
+}): string[] | null {
+  if (!node.children.every(child => child.type === "text")) {
+    return null
+  }
+  const lines = node.children
+    .map(child => (child as { value: string }).value)
+    .join("")
+    .split("\n")
+  return lines.length && lines.every(line => KEYWORD_LINE_RE.test(line))
+    ? lines
+    : null
 }
 
 function transformMdastTableRow(row: MdastTableRow): unknown {

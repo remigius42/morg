@@ -135,13 +135,26 @@ describe("convertOrgToMarkdown", () => {
     )
   })
 
-  it("should report dropped org constructs via onWarning", () => {
+  it("should keep non-html export blocks and snippets verbatim", () => {
     const warnings: string[] = []
-    const org = "#+begin_export latex\n\\sloppy\n#+end_export\n"
+    const org =
+      "#+begin_export latex\n\\sloppy\n#+end_export\n\nAn @@latex:\\emph{x}@@ snippet.\n"
 
-    convertOrgToMarkdown(org, { onWarning: m => warnings.push(m) })
+    expect(
+      convertOrgToMarkdown(org, { onWarning: m => warnings.push(m) })
+    ).toBe(
+      "#+begin_export latex\n\\sloppy\n#+end_export\n\nAn @@latex:\\emph{x}@@ snippet.\n"
+    )
+    expect(warnings).toEqual([])
+  })
 
-    expect(warnings).toEqual(["dropped org export-block (latex)"])
+  it("should keep affiliated keywords as verbatim lines", () => {
+    const org =
+      "#+CAPTION: a snippet\n#+NAME: code-1\n#+begin_src js\nx()\n#+end_src\n"
+
+    expect(convertOrgToMarkdown(org)).toBe(
+      "#+CAPTION: a snippet\n#+NAME: code-1\n\n```js\nx()\n```\n"
+    )
   })
 
   it("should keep special, verse and fixed-width blocks verbatim", () => {

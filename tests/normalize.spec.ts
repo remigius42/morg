@@ -36,12 +36,11 @@ describe("normalizeOrg", () => {
     expect(normalizeOrg(once)).toBe(once)
   })
 
-  it("reports drops via onWarning", () => {
+  it("keeps non-html export blocks with no warnings", () => {
     const warnings: string[] = []
-    normalizeOrg("#+begin_export latex\n\\sloppy\n#+end_export\n", {
-      onWarning: m => warnings.push(m)
-    })
+    const org = "#+begin_export latex\n\\sloppy\n#+end_export\n"
 
-    expect(warnings).toEqual(["dropped org export-block (latex)"])
+    expect(normalizeOrg(org, { onWarning: m => warnings.push(m) })).toBe(org)
+    expect(warnings).toEqual([])
   })
 })

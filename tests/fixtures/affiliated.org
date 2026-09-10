@@ -1,0 +1,14 @@
+#+CAPTION: a labeled snippet
+#+NAME: code-1
+#+begin_src js
+x()
+#+end_src
+
+#+CAPTION: an image
+[[img.png]]
+
+#+begin_export latex
+\sloppy
+#+end_export
+
+An inline @@latex:\emph{x}@@ snippet survives too.
