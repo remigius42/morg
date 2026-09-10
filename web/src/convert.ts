@@ -1,5 +1,6 @@
 import { convertMarkdownToOrg } from "../../src/markdownToOrg.js"
 import { convertOrgToMarkdown } from "../../src/orgToMarkdown.js"
+import { normalizeMarkdown, normalizeOrg } from "../../src/normalize.js"
 import { parseConfig, type MorgConfig } from "../../src/config.js"
 import type { MarkdownStyleOptions, Toggle } from "../../src/options.js"
 import { logseq } from "../../src/presets/logseq.js"
@@ -11,7 +12,8 @@ const PRESETS: Record<string, () => Preset> = {
   obsidian: () => obsidian()
 }
 
-export type Direction = "md-to-org" | "org-to-md"
+export type Direction =
+  "md-to-org" | "org-to-md" | "normalize-md" | "normalize-org"
 
 /** Form state of the Web UI; unset fields fall back to config, then defaults. */
 export interface ConversionForm {
@@ -69,22 +71,38 @@ export function runConversion(
     preset,
     ...(config.orgismKeys && { orgismKeys: config.orgismKeys })
   }
+  const mdToOrgOptions = { ...config.markdownToOrg, ...shared }
+  const orgToMdOptions = {
+    ...config.orgToMarkdown,
+    ...shared,
+    ...(form.useHtml !== undefined && { useHtml: form.useHtml }),
+    ...(form.taskCheckboxes !== undefined && {
+      taskCheckboxes: form.taskCheckboxes
+    }),
+    markdownStyle: {
+      ...config.orgToMarkdown?.markdownStyle,
+      ...form.markdownStyle
+    }
+  }
   try {
-    const output =
-      form.direction === "md-to-org"
-        ? convertMarkdownToOrg(input, { ...config.markdownToOrg, ...shared })
-        : convertOrgToMarkdown(input, {
-            ...config.orgToMarkdown,
-            ...shared,
-            ...(form.useHtml !== undefined && { useHtml: form.useHtml }),
-            ...(form.taskCheckboxes !== undefined && {
-              taskCheckboxes: form.taskCheckboxes
-            }),
-            markdownStyle: {
-              ...config.orgToMarkdown?.markdownStyle,
-              ...form.markdownStyle
-            }
-          })
+    let output: string
+    switch (form.direction) {
+      case "md-to-org":
+        output = convertMarkdownToOrg(input, mdToOrgOptions)
+        break
+      case "org-to-md":
+        output = convertOrgToMarkdown(input, orgToMdOptions)
+        break
+      case "normalize-md":
+        output = normalizeMarkdown(input, {
+          ...mdToOrgOptions,
+          ...orgToMdOptions
+        })
+        break
+      case "normalize-org":
+        output = normalizeOrg(input, { ...mdToOrgOptions, ...orgToMdOptions })
+        break
+    }
     return { output, warnings }
   } catch (error) {
     return { output: "", warnings, error: `Conversion error: ${String(error)}` }

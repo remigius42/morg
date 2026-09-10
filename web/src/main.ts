@@ -10,6 +10,34 @@ import {
 const STORAGE_KEY = "morg-web"
 const STYLE_KEYS = ["bullet", "emphasis", "strong", "fence", "rule"] as const
 
+const ORG_DEMO = `# Paste your Org here — or convert this demo
+
+* morg demo
+** TODO Try the [[https://github.com/remigius42/morg][converter]]
+SCHEDULED: <2026-09-11 Fri>
+
+Some *bold*, /italic/ and =code= text.
+`
+
+const MD_DEMO = `<!-- Paste your Markdown here — or convert this demo -->
+
+# morg demo
+
+## Try the [converter](https://github.com/remigius42/morg)
+
+Some **bold**, *italic* and \`code\` text.
+
+- a list item
+`
+
+function readsMarkdown(direction: Direction): boolean {
+  return direction === "md-to-org" || direction === "normalize-md"
+}
+
+function demoFor(direction: Direction): string {
+  return readsMarkdown(direction) ? MD_DEMO : ORG_DEMO
+}
+
 interface PersistedState {
   direction?: string
   preset?: string
@@ -79,12 +107,12 @@ export function init(): void {
         return item
       })
     )
-    // all current option widgets only affect org → md
-    options.hidden = direction.value !== "org-to-md"
-    input.placeholder =
-      direction.value === "md-to-org"
-        ? "Paste Markdown here…"
-        : "Paste Org here…"
+    // all current option widgets are Markdown-output knobs; md → org
+    // is the only mode without one
+    options.hidden = direction.value === "md-to-org"
+    input.placeholder = readsMarkdown(direction.value as Direction)
+      ? "Paste Markdown here…"
+      : "Paste Org here…"
   }
 
   function persist(): void {
@@ -154,6 +182,14 @@ export function init(): void {
     persist()
     convert()
   })
+  let previousDirection = direction.value as Direction
+  direction.addEventListener("change", () => {
+    // an untouched demo follows the direction's input format
+    if (input.value === demoFor(previousDirection)) {
+      input.value = demoFor(direction.value as Direction)
+    }
+    previousDirection = direction.value as Direction
+  })
   for (const control of [
     direction,
     preset,
@@ -169,8 +205,12 @@ export function init(): void {
   input.addEventListener("input", convert)
 
   restore()
+  previousDirection = direction.value as Direction
   if (config.value) {
     reflectConfig()
+  }
+  if (!input.value) {
+    input.value = demoFor(previousDirection)
   }
   convert()
 }

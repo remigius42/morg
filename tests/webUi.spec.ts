@@ -29,11 +29,26 @@ describe("embed page", () => {
     await setUpPage()
   })
 
+  it("preloads a demo and converts it on load", () => {
+    const input = element<HTMLTextAreaElement>("input")
+    expect(input.value).toContain("Paste your Org here")
+    expect(element<HTMLTextAreaElement>("output").value).not.toBe("")
+  })
+
+  it("swaps the untouched demo when the direction changes", () => {
+    const direction = element<HTMLSelectElement>("direction")
+    direction.value = "md-to-org"
+    direction.dispatchEvent(new Event("change", { bubbles: true }))
+    expect(element<HTMLTextAreaElement>("input").value).toContain(
+      "Paste your Markdown here"
+    )
+  })
+
   it("converts input on typing", () => {
     const input = element<HTMLTextAreaElement>("input")
-    input.value = "# Hello"
+    input.value = "* Hello"
     input.dispatchEvent(new Event("input", { bubbles: true }))
-    expect(element<HTMLTextAreaElement>("output").value).toBe("* Hello\n")
+    expect(element<HTMLTextAreaElement>("output").value).toBe("# Hello\n")
   })
 
   it("shows config errors", () => {

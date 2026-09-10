@@ -11,8 +11,10 @@
       <form id="converter">
         <div class="grid">
           <select id="direction" aria-label="Conversion direction">
-            <option value="md-to-org">Markdown → Org</option>
             <option value="org-to-md">Org → Markdown</option>
+            <option value="md-to-org">Markdown → Org</option>
+            <option value="normalize-org">Normalize Org</option>
+            <option value="normalize-md">Normalize Markdown</option>
           </select>
           <select id="preset" aria-label="Dialect preset">
             <option value="">No preset</option>
@@ -25,7 +27,7 @@
             id="input"
             rows="14"
             aria-label="Input"
-            placeholder="Paste Markdown here…"
+            placeholder="Paste Org here…"
             spellcheck="false"
           ></textarea>
           <textarea
@@ -99,7 +101,7 @@
           ></textarea>
         </details>
       </form>
-      <p>
+      <p class="privacy-note">
         <small>
           All conversion happens in your browser — nothing is uploaded, no
           tracking.

@@ -101,4 +101,24 @@ describe("runConversion", () => {
     )
     expect(result.output).toBe("# buy milk\n\nstate:: TODO\n")
   })
+
+  it("normalizes markdown to canonical form", () => {
+    const result = runConversion("* one", { direction: "normalize-md" })
+    expect(result.output).toBe("- one\n")
+  })
+
+  it("normalizes org to canonical form", () => {
+    const result = runConversion("* TODO  Hello", {
+      direction: "normalize-org"
+    })
+    expect(result.output).toBe("* TODO Hello\n")
+  })
+
+  it("applies markdown style options when normalizing", () => {
+    const result = runConversion("- one", {
+      direction: "normalize-md",
+      markdownStyle: { bullet: "*" }
+    })
+    expect(result.output).toBe("* one\n")
+  })
 })
