@@ -18,6 +18,16 @@ npm run lint        # prettier, cspell, markdownlint, eslint, typecheck
 npm run build       # tsc → dist/
 ```
 
+## Development process
+
+Most of this codebase is written with an AI coding agent (Claude
+Code), under human direction and review: behavior is specified
+test-first (red-green, convergence fixtures), validated against
+real-world vaults, and gated by CI. Design decisions are recorded in
+[docs/adr/](docs/adr/). AI-assisted contributions are welcome under
+the same standard: every change needs tests, and you are responsible
+for what you submit.
+
 ## Project conventions
 
 - Commits follow [Conventional Commits](https://www.conventionalcommits.org/),
