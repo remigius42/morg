@@ -52,6 +52,12 @@ This is a paragraph.
     )
   })
 
+  it("should drop image title attributes (documented)", () => {
+    const markdown = '![A diagram](diagram.svg "The title")\n'
+
+    expect(convertMarkdownToOrg(markdown)).toBe("[[diagram.svg][A diagram]]\n")
+  })
+
   it("should convert tables with a header rule", () => {
     const markdown = "| a | b |\n| --- | --- |\n| 1 | 2 |\n"
 

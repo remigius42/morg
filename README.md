@@ -107,7 +107,11 @@ them instead.
 Md-isms: raw HTML is preserved as org `#+begin_export html` blocks
 (block level) and `@@html:...@@` export snippets (inline), restored
 verbatim on the way back; `preserveMdisms` accepts `false` or a
-per-key record (e.g. `{ html: false }`) to drop them instead.
+per-key record (e.g. `{ html: false }`) to drop them instead. Image
+title attributes (`![alt](url "title")`) are dropped by design: org
+links have no title slot, and an inline construct has no sensible
+`morg_` property anchor (ADR 0002 reserves properties for
+metadata-shaped md-isms).
 
 Footnotes convert between GFM (`[^label]` / `[^label]: …`) and org
 (`[fn:label]` / `[fn:label] …`) in both directions; org inline
