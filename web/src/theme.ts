@@ -49,7 +49,7 @@ export function initThemeToggle(button: HTMLElement | null): void {
     return
   }
   const updateLabel = () => {
-    button.textContent = effectiveTheme() === "dark" ? "☀" : "🌙"
+    button.textContent = effectiveTheme() === "dark" ? "☀️" : "🌙"
   }
   button.addEventListener("click", () => {
     const next: Theme = effectiveTheme() === "dark" ? "light" : "dark"
