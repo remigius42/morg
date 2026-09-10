@@ -108,7 +108,10 @@ verbatim on the way back; `preserveMdisms` accepts `false` or a
 per-key record (e.g. `{ html: false }`) to drop them instead.
 
 Footnotes convert between GFM (`[^label]` / `[^label]: …`) and org
-(`[fn:label]` / `[fn:label] …`) in both directions.
+(`[fn:label]` / `[fn:label] …`) in both directions. Reference-style
+Markdown links and images resolve to inline form during `md → org`.
+Inline org timestamps in body text (active, inactive, ranges) are kept
+verbatim as text in Markdown and re-parsed natively on the way back.
 
 Org underline, superscript and subscript have no Markdown equivalent;
 their raw org markup (`_text_`, `^{2}`, `_{2}`) is kept verbatim as

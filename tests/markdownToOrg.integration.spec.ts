@@ -134,6 +134,15 @@ This is a paragraph.
     expect(convertMarkdownToOrg(markdown)).toBe('#+TAGS: ["a","b"]\nBody.\n')
   })
 
+  it("should resolve reference-style links and images to inline", () => {
+    const markdown =
+      "A [reference][ref] and ![alt][img].\n\n[ref]: https://example.com\n\n[img]: image.png\n"
+
+    expect(convertMarkdownToOrg(markdown)).toBe(
+      "A [[https://example.com][reference]] and [[image.png][alt]].\n"
+    )
+  })
+
   it("should convert strikethrough to org strike-through", () => {
     const markdown = "This is ~~gone~~ now.\n"
 

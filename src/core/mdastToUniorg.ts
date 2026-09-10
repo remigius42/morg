@@ -2,10 +2,12 @@ import type {
   Root as MdastRoot,
   RootContent,
   PhrasingContent,
+  Definition,
   List as MdastList,
   ListItem as MdastListItem,
   TableRow as MdastTableRow
 } from "mdast"
+import { visit } from "unist-util-visit"
 import type {
   OrgData,
   Paragraph,
@@ -29,6 +31,10 @@ export interface MdastToUniorgOptions {
 // through every recursive call site
 let currentOptions: MdastToUniorgOptions = {}
 
+// link definitions of the current run, for resolving reference-style
+// links and images to inline (org has no reference links)
+let currentDefinitions = new Map<string, { url: string; title?: string }>()
+
 function mdismEnabled(key: string): boolean {
   return toggleEnabled(currentOptions.preserveMdisms, key)
 }
@@ -44,6 +50,13 @@ export function transformMdastToUniorgAst(
   options: MdastToUniorgOptions = {}
 ): OrgData {
   currentOptions = options
+  currentDefinitions = new Map()
+  visit(mdast, "definition", (definition: Definition) => {
+    currentDefinitions.set(definition.identifier, {
+      url: definition.url,
+      ...(definition.title != null && { title: definition.title })
+    })
+  })
   const children: (GreaterElementType | ElementType)[] = mdast.children
     .flatMap(child =>
       // frontmatter maps to org keywords, a native construct (one mdast
@@ -126,6 +139,29 @@ function transformMdastPhrasingContentToUniorgObject(
         path: linkNode.url,
         children: linkChildren
       }
+    }
+    case "linkReference": {
+      // org has no reference-style links: resolve to an inline link
+      const definition = currentDefinitions.get(node.identifier)
+      if (!definition) {
+        return null
+      }
+      return transformMdastPhrasingContentToUniorgObject({
+        type: "link",
+        url: definition.url,
+        children: node.children
+      })
+    }
+    case "imageReference": {
+      const definition = currentDefinitions.get(node.identifier)
+      if (!definition) {
+        return null
+      }
+      return transformMdastPhrasingContentToUniorgObject({
+        type: "image",
+        url: definition.url,
+        alt: node.alt ?? null
+      })
     }
     case "inlineCode":
       return { type: "code", value: node.value }
