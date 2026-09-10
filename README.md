@@ -92,6 +92,15 @@ preset })` — `preserveOrgisms` default `true`; `useHtml` (default
   Normalize with the same preset/config you will convert with —
   convergence is per-config (ADR 0002).
 
+- `markdownStyle: { bullet, emphasis, strong, fence, rule }` (on
+  `convertOrgToMarkdown` and `normalizeMarkdown`; CLI `--bullet`,
+  `--emphasis`, `--strong`, `--fence`, `--rule`) — Markdown output
+  style knobs. Defaults match prettier except emphasis (`*italic*`);
+  `--emphasis _` aligns fully with prettier. Canonical form is
+  per-config (ADR 0001): round trips must use the same style. Note
+  CommonMark/GFM prescribe no style — these defaults are morg's
+  canonical choices, not a standard.
+
 Both convert functions also accept `onWarning: message => …`, called for
 each construct dropped without an equivalent (e.g. image titles, LaTeX
 fragments). The CLI wires this to stderr unless `-s` / `--silent` is

@@ -1,5 +1,6 @@
 import { convertMarkdownToOrg } from "./markdownToOrg.js"
 import { convertOrgToMarkdown } from "./orgToMarkdown.js"
+import type { MarkdownStyleOptions } from "./options.js"
 import type { Preset } from "./presets/types.js"
 
 /**
@@ -9,6 +10,8 @@ import type { Preset } from "./presets/types.js"
  * converted with.
  */
 export interface NormalizeOptions {
+  /** Markdown output style; canonical form is per-config (ADR 0001). */
+  markdownStyle?: MarkdownStyleOptions
   /** Called for each construct dropped without an equivalent. */
   onWarning?: (message: string) => void
   /** Dialect preset, applied on both legs of the round trip. */

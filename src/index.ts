@@ -11,5 +11,6 @@ export type { LogseqPresetOptions } from "./presets/logseq.js"
 export type {
   Toggle,
   MarkdownToOrgOptions,
-  OrgToMarkdownOptions
+  OrgToMarkdownOptions,
+  MarkdownStyleOptions
 } from "./options.js"

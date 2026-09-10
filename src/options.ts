@@ -33,6 +33,27 @@ export interface MarkdownToOrgOptions {
   preset?: Preset
 }
 
+/**
+ * Markdown stringifier style knobs (subset of remark-stringify options).
+ * Canonical form is parameterized by these (see ADR 0001): round trips
+ * must use the same style, and files formatted under one style are not
+ * a fixed point under another. Defaults: `-` bullet, `*` emphasis /
+ * `*` strong (i.e. `**bold**`), backtick fences, `-` rule — prettier's
+ * choices except emphasis (`emphasis: "_"` aligns with prettier).
+ */
+export interface MarkdownStyleOptions {
+  /** Unordered list marker. Default: `"-"`. */
+  bullet?: "-" | "*" | "+"
+  /** Emphasis (italic) marker. Default: `"*"`. */
+  emphasis?: "*" | "_"
+  /** Strong (bold) marker, doubled in output. Default: `"*"`. */
+  strong?: "*" | "_"
+  /** Code fence marker. Default: `` "`" ``. */
+  fence?: "`" | "~"
+  /** Thematic break marker, tripled in output. Default: `"-"`. */
+  rule?: "-" | "*" | "_"
+}
+
 export interface OrgToMarkdownOptions {
   /**
    * Serialize Org constructs without a native Markdown equivalent as
@@ -55,6 +76,8 @@ export interface OrgToMarkdownOptions {
    * Default: `false`.
    */
   taskCheckboxes?: boolean
+  /** Markdown output style; canonical form is per-config (ADR 0001). */
+  markdownStyle?: MarkdownStyleOptions
   /** Called for each construct dropped without an equivalent. */
   onWarning?: (message: string) => void
   /** Dialect preset extracted before the generic conversion. */

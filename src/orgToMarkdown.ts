@@ -39,11 +39,13 @@ export function convertOrgToMarkdown(
 
   // Phase 4: Render mdast to Markdown string
   // bullet and rule "-" (not remark's default "*") are morg's canonical
-  // Markdown form
+  // Markdown form; markdownStyle knobs override it (canonical form is
+  // then per-config, see ADR 0001)
   const markdownContent = unified()
     .use(remarkStringify, {
       bullet: "-",
       rule: "-",
+      ...options.markdownStyle,
       handlers: {
         // key:: value blocks and preset inline passthroughs (e.g.
         // wikilinks) are emitted verbatim, unescaped

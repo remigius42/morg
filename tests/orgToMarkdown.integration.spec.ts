@@ -231,6 +231,19 @@ describe("convertOrgToMarkdown", () => {
     expect(convertOrgToMarkdown(org)).toBe("An α and → here.\n")
   })
 
+  it("should honor markdownStyle stringifier knobs", () => {
+    const org =
+      "Some /italic/ and *bold* text.\n\n- item one\n- item two\n\n-----\n\n#+begin_src js\ncode()\n#+end_src\n"
+
+    expect(
+      convertOrgToMarkdown(org, {
+        markdownStyle: { emphasis: "_", bullet: "*", rule: "*", fence: "~" }
+      })
+    ).toBe(
+      "Some _italic_ and **bold** text.\n\n* item one\n* item two\n\n***\n\n~~~js\ncode()\n~~~\n"
+    )
+  })
+
   it("should convert org strike-through to gfm strikethrough", () => {
     const org = "This is +gone+ now.\n"
 

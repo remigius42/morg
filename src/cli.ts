@@ -5,6 +5,7 @@ import * as path from "node:path"
 import { convertMarkdownToOrg } from "./markdownToOrg.js"
 import { convertOrgToMarkdown } from "./orgToMarkdown.js"
 import { normalizeMarkdown, normalizeOrg } from "./normalize.js"
+import type { MarkdownStyleOptions } from "./options.js"
 import { logseq } from "./presets/logseq.js"
 import { obsidian } from "./presets/obsidian.js"
 import type { Preset } from "./presets/types.js"
@@ -29,6 +30,7 @@ async function main() {
   let presetName: string | undefined
   let silent = false
   let taskCheckboxes = false
+  const markdownStyle: Record<string, string> = {}
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i]
@@ -39,6 +41,13 @@ async function main() {
         break
       case "--task-checkboxes":
         taskCheckboxes = true
+        break
+      case "--bullet":
+      case "--emphasis":
+      case "--strong":
+      case "--fence":
+      case "--rule":
+        markdownStyle[arg.slice(2)] = args[++i] ?? ""
         break
       case "--from":
         fromFormat = args[++i]
@@ -149,10 +158,15 @@ async function main() {
 
   let outputContent: string
   try {
+    const style = markdownStyle as MarkdownStyleOptions
     if (normalize) {
       outputContent =
         fromFormat === "markdown"
-          ? normalizeMarkdown(inputContent, { preset, onWarning })
+          ? normalizeMarkdown(inputContent, {
+              preset,
+              onWarning,
+              markdownStyle: style
+            })
           : normalizeOrg(inputContent, { preset, onWarning })
     } else if (fromFormat === "markdown") {
       outputContent = convertMarkdownToOrg(inputContent, { preset, onWarning })
@@ -160,7 +174,8 @@ async function main() {
       outputContent = convertOrgToMarkdown(inputContent, {
         preset,
         onWarning,
-        taskCheckboxes
+        taskCheckboxes,
+        markdownStyle: style
       })
     }
   } catch (error) {

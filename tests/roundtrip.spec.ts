@@ -58,6 +58,21 @@ describe("useHtml", () => {
   })
 })
 
+describe("markdownStyle", () => {
+  it("custom style output is a fixed point (per-config convergence)", () => {
+    const markdown = "Some *italic* and **bold** text.\n\n- item\n\n---\n"
+    const style = { emphasis: "_", bullet: "*" } as const
+    const roundTrip = (input: string): string =>
+      convertOrgToMarkdown(convertMarkdownToOrg(input), {
+        markdownStyle: style
+      })
+    const once = roundTrip(markdown)
+    expect(roundTrip(once)).toBe(once)
+    expect(once).toContain("_italic_")
+    expect(once).toContain("* item")
+  })
+})
+
 describe("taskCheckboxes", () => {
   it("task checkbox output is a fixed point", () => {
     const org = "* TODO Buy milk\n* DONE Call mom\n\nAfter.\n"
