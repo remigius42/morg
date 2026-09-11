@@ -21,6 +21,11 @@ silent = false        # suppress dropped-construct warnings (CLI -s)
 todo = "state"
 scheduled = "when"
 
+[markdownToOrg]
+# interpret morg's own useHtml vocabulary (bare <u>, <sup>, <sub>,
+# <dl>/<dt>/<dd>) as native org constructs; see "HTML flag pairing"
+interpretHtml = false
+
 # preserve markdown-only constructs during md → org; false or a
 # per-construct table (ADR 0002)
 [markdownToOrg.preserveMdisms]
@@ -45,6 +50,24 @@ fence = "`"         # "`" | "~"
 rule = "-"          # "-" | "*" | "_"
 ruleRepetition = 3  # marker count for thematic breaks (min 3)
 ```
+
+## HTML flag pairing
+
+`orgToMarkdown.useHtml` and `markdownToOrg.interpretHtml` are inverses
+over the HTML vocabulary morg emits (`<u>`, `<sup>`, `<sub>`,
+`<dl>/<dt>/<dd>`, bare tags without attributes); any other HTML is
+governed by `preserveMdisms` as usual. The four combinations:
+
+- **both off** (default): org-only markup stays verbatim org text in
+  Markdown; HTML passes through preserved in both directions.
+- **both on**: lossless symmetric round trip — Markdown holds rendered
+  HTML, Org holds native markup.
+- **`useHtml` only**: one-way door — org markup becomes HTML, and the
+  return trip preserves it as an export block, never restoring the
+  native construct.
+- **`interpretHtml` only**: HTML-cleanup mode — matching HTML in
+  Markdown migrates to native org constructs, and the round trip
+  converges away from HTML.
 
 ## Formatter compatibility snippets
 

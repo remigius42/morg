@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Opt-in `interpretHtml` flag (`--interpret-html`,
+  `[markdownToOrg] interpretHtml`, Web UI checkbox): during md → org,
+  the HTML vocabulary morg itself emits under `useHtml` (bare `<u>`,
+  `<sup>`, `<sub>`, `<dl>/<dt>/<dd>`) becomes native Org constructs
+  instead of a preserved md-ism. Inverse of `useHtml`: with both
+  enabled the round trip is lossless; with `interpretHtml` alone it
+  converges away from HTML (cleanup mode). Default `false`.
+
 ## [0.1.0] - 2026-09-10
 
 ### Added

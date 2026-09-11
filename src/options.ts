@@ -28,6 +28,15 @@ export interface MarkdownToOrgOptions {
    */
   preserveMdisms?: Toggle
   /**
+   * Interpret the HTML vocabulary morg itself emits under `useHtml`
+   * (bare `<u>`, `<sup>`, `<sub>`, `<dl>/<dt>/<dd>` without attributes)
+   * as native Org constructs instead of preserving it as an md-ism.
+   * The inverse of `useHtml`; with both enabled the round trip is
+   * lossless. Any other HTML still preserves per `preserveMdisms`.
+   * Default: `false`.
+   */
+  interpretHtml?: boolean
+  /**
    * Custom names for org-ism `key::` lines, canonical → custom (e.g.
    * `{ todo: "state" }`). Must match the mapping the file was written
    * with — Convergence is per-config (ADR 0002).
@@ -77,7 +86,9 @@ export interface OrgToMarkdownOptions {
    * Render Org constructs without a Markdown equivalent as raw HTML
    * (`<u>`, `<sup>`, `<sub>`, `<dl>`) instead of keeping their org markup
    * verbatim. HTML round-trips as a preserved md-ism (export blocks and
-   * snippets), not back to native org markup. Default: `false`.
+   * snippets), not back to native org markup — a one-way door unless
+   * the return trip enables its inverse, `interpretHtml`.
+   * Default: `false`.
    */
   useHtml?: Toggle
   /**

@@ -73,6 +73,21 @@ describe("embed page", () => {
     expect(snippet.value).toBe("")
   })
 
+  it("interprets html via the interpretHtml checkbox", () => {
+    const direction = element<HTMLSelectElement>("direction")
+    direction.value = "md-to-org"
+    direction.dispatchEvent(new Event("change", { bubbles: true }))
+    const input = element<HTMLTextAreaElement>("input")
+    input.value = "Some <u>underlined</u> text.\n"
+    input.dispatchEvent(new Event("input", { bubbles: true }))
+    const interpretHtml = element<HTMLInputElement>("interpretHtml")
+    interpretHtml.checked = true
+    interpretHtml.dispatchEvent(new Event("change", { bubbles: true }))
+    expect(element<HTMLTextAreaElement>("output").value).toBe(
+      "Some _underlined_ text.\n"
+    )
+  })
+
   it("persists the config in localStorage", () => {
     const config = element<HTMLTextAreaElement>("config")
     config.value = 'preset = "obsidian"'

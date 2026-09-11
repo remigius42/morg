@@ -56,6 +56,16 @@ describe("useHtml", () => {
     expect(roundTrip(once)).toBe(once)
     expect(convertOrgToMarkdown(input, { useHtml: true })).toContain("<sup>")
   })
+
+  it("interpretHtml is the inverse of useHtml (lossless round trip)", () => {
+    const input =
+      "Some _underlined_ H_{2}O and x^{2}.\n\n- apple :: a fruit\n- vim :: an editor\n"
+    expect(
+      convertMarkdownToOrg(convertOrgToMarkdown(input, { useHtml: true }), {
+        interpretHtml: true
+      })
+    ).toBe(input)
+  })
 })
 
 describe("markdownStyle", () => {

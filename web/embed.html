@@ -55,10 +55,14 @@
         <p id="error" hidden></p>
         <ul id="warnings" hidden></ul>
         <details id="options">
-          <summary>Options (Org → Markdown)</summary>
+          <summary>Options</summary>
           <label>
             <input type="checkbox" id="useHtml" />
-            Render org-only constructs as HTML
+            Render org-only constructs as HTML (Org → Markdown)
+          </label>
+          <label>
+            <input type="checkbox" id="interpretHtml" />
+            Interpret morg's HTML as native Org (Markdown → Org)
           </label>
           <label>
             <input type="checkbox" id="taskCheckboxes" />

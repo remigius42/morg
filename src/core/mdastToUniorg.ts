@@ -24,6 +24,7 @@ import { toggleEnabled, type Toggle } from "../options.js"
 
 export interface MdastToUniorgOptions {
   preserveMdisms?: Toggle
+  interpretHtml?: boolean
   onWarning?: (message: string) => void
 }
 
@@ -103,6 +104,44 @@ function frontmatterToKeywords(yamlValue: string): ElementType[] {
   )
 }
 
+// html tags morg itself emits under useHtml; with interpretHtml a bare
+// open/close pair becomes the corresponding native org object
+const INLINE_HTML_ORG_TYPES: Record<string, ObjectType["type"]> = {
+  u: "underline",
+  sup: "superscript",
+  sub: "subscript"
+}
+
+function transformPhrasingChildren(children: PhrasingContent[]): ObjectType[] {
+  const result: ObjectType[] = []
+  for (let i = 0; i < children.length; i++) {
+    const node = children[i] as PhrasingContent
+    if (currentOptions.interpretHtml && node.type === "html") {
+      const tag = /^<(u|sup|sub)>$/.exec(node.value)?.[1]
+      const orgType = tag ? INLINE_HTML_ORG_TYPES[tag] : undefined
+      const end = orgType
+        ? children.findIndex(
+            (child, j) =>
+              j > i && child.type === "html" && child.value === `</${tag}>`
+          )
+        : -1
+      if (orgType && end !== -1) {
+        result.push({
+          type: orgType,
+          children: transformPhrasingChildren(children.slice(i + 1, end))
+        } as ObjectType)
+        i = end
+        continue
+      }
+    }
+    const transformed = transformMdastPhrasingContentToUniorgObject(node)
+    if (transformed) {
+      result.push(transformed)
+    }
+  }
+  return result
+}
+
 function transformMdastPhrasingContentToUniorgObject(
   node: PhrasingContent
 ): ObjectType | null {
@@ -112,23 +151,17 @@ function transformMdastPhrasingContentToUniorgObject(
     case "emphasis":
       return {
         type: "italic",
-        children: node.children
-          .map(transformMdastPhrasingContentToUniorgObject)
-          .filter(Boolean) as ObjectType[]
+        children: transformPhrasingChildren(node.children)
       }
     case "strong":
       return {
         type: "bold",
-        children: node.children
-          .map(transformMdastPhrasingContentToUniorgObject)
-          .filter(Boolean) as ObjectType[]
+        children: transformPhrasingChildren(node.children)
       }
     case "delete":
       return {
         type: "strike-through",
-        children: node.children
-          .map(transformMdastPhrasingContentToUniorgObject)
-          .filter(Boolean) as ObjectType[]
+        children: transformPhrasingChildren(node.children)
       }
     case "link": {
       const linkNode = node
@@ -140,9 +173,7 @@ function transformMdastPhrasingContentToUniorgObject(
         only?.type === "text" &&
         only.value === linkNode.url
           ? []
-          : (linkNode.children
-              .map(transformMdastPhrasingContentToUniorgObject)
-              .filter(Boolean) as ObjectType[])
+          : transformPhrasingChildren(linkNode.children)
       // rawLink should just be the URL, uniorg-stringify adds the brackets
       return {
         type: "link",
@@ -239,9 +270,7 @@ function transformMdastNodeToUniorgNode(
         commented: false,
         rawValue: toString(node),
         tags: [],
-        children: node.children
-          .map(transformMdastPhrasingContentToUniorgObject)
-          .filter(Boolean) as ObjectType[]
+        children: transformPhrasingChildren(node.children)
       }
     case "paragraph": {
       // a paragraph of only #+KEY: lines is affiliated keywords (or
@@ -254,9 +283,7 @@ function transformMdastNodeToUniorgNode(
       }
       return {
         type: "paragraph",
-        children: node.children
-          .map(transformMdastPhrasingContentToUniorgObject)
-          .filter(Boolean) as ObjectType[],
+        children: transformPhrasingChildren(node.children),
         contentsBegin: 0, // Placeholder
         contentsEnd: 0 // Placeholder
       } as Paragraph
@@ -305,6 +332,12 @@ function transformMdastNodeToUniorgNode(
           type: "comment",
           value: (comment[1] ?? "").trim()
         } as unknown as ElementType
+      }
+      if (currentOptions.interpretHtml) {
+        const descriptiveList = interpretDefinitionList(node.value)
+        if (descriptiveList) {
+          return descriptiveList
+        }
       }
       // block raw html is a md-ism: preserved as an org export block
       return mdismEnabled("html")
@@ -407,9 +440,7 @@ function transformMdastTableRow(row: MdastTableRow): unknown {
     rowType: "standard",
     children: row.children.map(cell => ({
       type: "table-cell",
-      children: cell.children
-        .map(transformMdastPhrasingContentToUniorgObject)
-        .filter(Boolean) as ObjectType[]
+      children: transformPhrasingChildren(cell.children)
     }))
   }
 }
@@ -417,6 +448,40 @@ function transformMdastTableRow(row: MdastTableRow): unknown {
 // Mirrors the AST shape uniorg-parse produces for lists: ordered numbering
 // lives in each item's bullet, and nested lists sit inside the parent
 // item's children with indent = parent indent + bullet length.
+// a bare <dl> block in the exact shape morg emits under useHtml
+// (alternating attribute-less <dt>/<dd> lines) becomes a ` :: ` list —
+// the same markdown convention descriptive lists use without useHtml,
+// so the org side re-parses it as a native descriptive list
+function interpretDefinitionList(html: string): ElementType | null {
+  const body = /^<dl>\n((?:<dt>.*<\/dt>\n<dd>.*<\/dd>\n?)+)<\/dl>\s*$/.exec(
+    html
+  )?.[1]
+  if (!body) {
+    return null
+  }
+  const entries = [
+    ...body.matchAll(/<dt>(.*)<\/dt>\n<dd>(.*)<\/dd>/g)
+  ] as RegExpMatchArray[]
+  return {
+    type: "plain-list",
+    listType: "unordered",
+    indent: 0,
+    affiliated: {},
+    children: entries.map(([, term, definition]) => ({
+      type: "list-item",
+      indent: 0,
+      bullet: "- ",
+      counter: null,
+      checkbox: null,
+      children: [{ type: "text", value: `${term} :: ${definition}\n` }],
+      contentsBegin: 0,
+      contentsEnd: 0
+    })),
+    contentsBegin: 0,
+    contentsEnd: 0
+  } as unknown as ElementType
+}
+
 function transformMdastList(listNode: MdastList, indent: number): List {
   const start = listNode.start ?? 1
   return {
@@ -452,9 +517,7 @@ function transformMdastListItem(
       }
       if (child.type === "paragraph") {
         return [
-          ...(child.children
-            .map(transformMdastPhrasingContentToUniorgObject)
-            .filter(Boolean) as ObjectType[]),
+          ...transformPhrasingChildren(child.children),
           { type: "text", value: "\n" }
         ]
       }

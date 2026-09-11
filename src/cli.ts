@@ -31,6 +31,7 @@ async function main() {
   let presetName: string | undefined
   let silent = false
   let taskCheckboxes = false
+  let interpretHtml = false
   let configPath: string | undefined
   const markdownStyle: Record<string, string> = {}
 
@@ -43,6 +44,9 @@ async function main() {
         break
       case "--task-checkboxes":
         taskCheckboxes = true
+        break
+      case "--interpret-html":
+        interpretHtml = true
         break
       case "--config":
         configPath = args[++i]
@@ -94,6 +98,7 @@ async function main() {
   silent = silent || config.silent === true
   taskCheckboxes =
     taskCheckboxes || config.orgToMarkdown?.taskCheckboxes === true
+  interpretHtml = interpretHtml || config.markdownToOrg?.interpretHtml === true
 
   let preset: Preset | undefined
   if (presetName) {
@@ -196,7 +201,7 @@ async function main() {
       onWarning,
       ...(config.orgismKeys && { orgismKeys: config.orgismKeys })
     }
-    const mdToOrgOptions = { ...config.markdownToOrg, ...shared }
+    const mdToOrgOptions = { ...config.markdownToOrg, ...shared, interpretHtml }
     const orgToMdOptions = {
       ...config.orgToMarkdown,
       ...shared,

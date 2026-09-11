@@ -11,6 +11,9 @@ silent = true
 todo = "state"
 scheduled = "when"
 
+[markdownToOrg]
+interpretHtml = true
+
 [markdownToOrg.preserveMdisms]
 html = false
 
@@ -27,7 +30,7 @@ bullet = "*"
       preset: "logseq",
       silent: true,
       orgismKeys: { todo: "state", scheduled: "when" },
-      markdownToOrg: { preserveMdisms: { html: false } },
+      markdownToOrg: { interpretHtml: true, preserveMdisms: { html: false } },
       orgToMarkdown: {
         useHtml: true,
         taskCheckboxes: true,

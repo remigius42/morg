@@ -40,6 +40,9 @@ export function convertMarkdownToOrg(
     ...(options.preserveMdisms !== undefined && {
       preserveMdisms: options.preserveMdisms
     }),
+    ...(options.interpretHtml !== undefined && {
+      interpretHtml: options.interpretHtml
+    }),
     ...(options.onWarning !== undefined && { onWarning: options.onWarning })
   })
 

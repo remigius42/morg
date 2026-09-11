@@ -21,6 +21,7 @@ export interface ConversionForm {
   /** Preset name; empty string means none. */
   preset?: string
   useHtml?: Toggle
+  interpretHtml?: boolean
   taskCheckboxes?: boolean
   markdownStyle?: MarkdownStyleOptions
 }
@@ -71,7 +72,13 @@ export function runConversion(
     preset,
     ...(config.orgismKeys && { orgismKeys: config.orgismKeys })
   }
-  const mdToOrgOptions = { ...config.markdownToOrg, ...shared }
+  const mdToOrgOptions = {
+    ...config.markdownToOrg,
+    ...shared,
+    ...(form.interpretHtml !== undefined && {
+      interpretHtml: form.interpretHtml
+    })
+  }
   const orgToMdOptions = {
     ...config.orgToMarkdown,
     ...shared,

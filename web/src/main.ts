@@ -72,6 +72,7 @@ interface PersistedState {
   direction?: string
   preset?: string
   useHtml?: boolean
+  interpretHtml?: boolean
   taskCheckboxes?: boolean
   style?: Record<string, string>
   config?: string
@@ -96,13 +97,13 @@ export function init(): void {
   const direction = element<HTMLSelectElement>("direction")
   const preset = element<HTMLSelectElement>("preset")
   const useHtml = element<HTMLInputElement>("useHtml")
+  const interpretHtml = element<HTMLInputElement>("interpretHtml")
   const taskCheckboxes = element<HTMLInputElement>("taskCheckboxes")
   const config = element<HTMLTextAreaElement>("config")
   const input = element<HTMLTextAreaElement>("input")
   const output = element<HTMLTextAreaElement>("output")
   const error = element<HTMLParagraphElement>("error")
   const warnings = element<HTMLUListElement>("warnings")
-  const options = element<HTMLDetailsElement>("options")
   const styleSelects = STYLE_KEYS.map(key => element<HTMLSelectElement>(key))
 
   // ?theme= lets host pages override; same-origin embeds follow the
@@ -115,6 +116,7 @@ export function init(): void {
       direction: direction.value as Direction,
       preset: preset.value,
       useHtml: useHtml.checked,
+      interpretHtml: interpretHtml.checked,
       taskCheckboxes: taskCheckboxes.checked,
       markdownStyle: Object.fromEntries(
         styleSelects.map(select => [select.id, select.value])
@@ -135,9 +137,6 @@ export function init(): void {
         return item
       })
     )
-    // all current option widgets are Markdown-output knobs; md → org
-    // is the only mode without one
-    options.hidden = direction.value === "md-to-org"
     input.placeholder = readsMarkdown(direction.value as Direction)
       ? "Paste Markdown here…"
       : "Paste Org here…"
@@ -148,6 +147,7 @@ export function init(): void {
       direction: direction.value,
       preset: preset.value,
       useHtml: useHtml.checked,
+      interpretHtml: interpretHtml.checked,
       taskCheckboxes: taskCheckboxes.checked,
       style: Object.fromEntries(
         styleSelects.map(select => [select.id, select.value])
@@ -173,6 +173,8 @@ export function init(): void {
     if (state.direction) direction.value = state.direction
     if (state.preset !== undefined) preset.value = state.preset
     if (state.useHtml !== undefined) useHtml.checked = state.useHtml
+    if (state.interpretHtml !== undefined)
+      interpretHtml.checked = state.interpretHtml
     if (state.taskCheckboxes !== undefined)
       taskCheckboxes.checked = state.taskCheckboxes
     for (const select of styleSelects) {
@@ -194,6 +196,8 @@ export function init(): void {
     if (parsed.preset !== undefined) preset.value = parsed.preset
     const orgToMd = parsed.orgToMarkdown
     if (typeof orgToMd?.useHtml === "boolean") useHtml.checked = orgToMd.useHtml
+    if (parsed.markdownToOrg?.interpretHtml !== undefined)
+      interpretHtml.checked = parsed.markdownToOrg.interpretHtml
     if (orgToMd?.taskCheckboxes !== undefined)
       taskCheckboxes.checked = orgToMd.taskCheckboxes
     for (const select of styleSelects) {
@@ -235,6 +239,7 @@ export function init(): void {
     direction,
     preset,
     useHtml,
+    interpretHtml,
     taskCheckboxes,
     ...styleSelects
   ]) {

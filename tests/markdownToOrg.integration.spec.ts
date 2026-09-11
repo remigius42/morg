@@ -142,6 +142,49 @@ This is a paragraph.
     )
   })
 
+  it("should interpret <u> as org underline with interpretHtml", () => {
+    const markdown = "Some <u>underlined</u> text.\n"
+
+    expect(convertMarkdownToOrg(markdown, { interpretHtml: true })).toBe(
+      "Some _underlined_ text.\n"
+    )
+  })
+
+  it("should interpret <sup> and <sub> as org script markup with interpretHtml", () => {
+    const markdown = "E = mc<sup>2</sup> and H<sub>2</sub>O.\n"
+
+    expect(convertMarkdownToOrg(markdown, { interpretHtml: true })).toBe(
+      "E = mc^{2} and H_{2}O.\n"
+    )
+  })
+
+  it("should preserve html with attributes or unknown tags despite interpretHtml", () => {
+    const markdown = 'Keep <u class="x">this</u> and <kbd>that</kbd>.\n'
+
+    expect(convertMarkdownToOrg(markdown, { interpretHtml: true })).toBe(
+      'Keep @@html:<u class="x">@@this@@html:</u>@@ and ' +
+        "@@html:<kbd>@@that@@html:</kbd>@@.\n"
+    )
+  })
+
+  it("should preserve morg's html vocabulary without interpretHtml", () => {
+    const markdown = "Some <u>underlined</u> text.\n"
+
+    expect(convertMarkdownToOrg(markdown)).toBe(
+      "Some @@html:<u>@@underlined@@html:</u>@@ text.\n"
+    )
+  })
+
+  it("should interpret <dl> as org descriptive list with interpretHtml", () => {
+    const markdown =
+      "<dl>\n<dt>term</dt>\n<dd>a definition</dd>\n" +
+      "<dt>other</dt>\n<dd>second entry</dd>\n</dl>\n"
+
+    expect(convertMarkdownToOrg(markdown, { interpretHtml: true })).toBe(
+      "- term :: a definition\n- other :: second entry\n"
+    )
+  })
+
   it("should drop html when preserveMdisms.html is false", () => {
     const markdown = "Press <kbd>x</kbd> now.\n\n<div>\nblock\n</div>\n"
 

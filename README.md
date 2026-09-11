@@ -99,8 +99,13 @@ const logseqOrg = convertMarkdownToOrg(markdown, { preset: logseq() })
 
 Options (flags accept `boolean` or a per-construct `Record<string, boolean>`):
 
-- `convertMarkdownToOrg(md, { preserveMdisms, preset })` — `preserveMdisms`
-  default `true`
+- `convertMarkdownToOrg(md, { preserveMdisms, interpretHtml, preset })` —
+  `preserveMdisms` default `true`; `interpretHtml` (default `false`,
+  CLI `--interpret-html`) interprets the HTML vocabulary morg itself
+  emits under `useHtml` (bare `<u>`, `<sup>`, `<sub>`, `<dl>`) as
+  native Org constructs — the inverse of `useHtml`: with both enabled
+  the round trip is lossless, with `interpretHtml` alone it converges
+  away from HTML (cleanup mode); other HTML preserves as usual
 - `convertOrgToMarkdown(org, { preserveOrgisms, useHtml, taskCheckboxes,
 preset })` — `preserveOrgisms` default `true`; `useHtml` (default
   `false`) renders org-only markup as raw HTML (`<u>`, `<sup>`, `<sub>`,
