@@ -4,6 +4,13 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    # only propose releases that have aged a week (supply-chain caution)
+    cooldown:
+      default-days: 7
+    ignore:
+      # @types/node major must track .nvmrc, not the latest Node
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
