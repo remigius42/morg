@@ -237,6 +237,7 @@ describe("convert", () => {
 
   it("wraps converter failures in a CliError", () => {
     const throwingPreset = {
+      name: "throwing",
       applyToUniorg: () => {
         throw new Error("boom")
       }
