@@ -1,6 +1,8 @@
 // @vitest-environment happy-dom
 import { readFileSync } from "node:fs"
 import { beforeEach, describe, expect, it } from "vitest"
+import { convertMarkdownToOrg } from "../src/markdownToOrg.js"
+import { convertOrgToMarkdown } from "../src/orgToMarkdown.js"
 
 // Smoke check: the Embed Page markup wired by main.ts converts on input.
 function loadEmbedPageBody(): string {
@@ -76,5 +78,28 @@ describe("embed page", () => {
     config.value = 'preset = "obsidian"'
     config.dispatchEvent(new Event("input", { bubbles: true }))
     expect(localStorage.getItem("morg-web")).toMatch(/obsidian/)
+  })
+})
+
+// the demos are the first thing every visitor converts — pin that they
+// round-trip convergently and warning-free under default options
+describe("demo documents", () => {
+  it("org demo converges without warnings", async () => {
+    const { ORG_DEMO } = await import("../web/src/main.js")
+    const warnings: string[] = []
+    const onWarning = (message: string) => warnings.push(message)
+    const md = convertOrgToMarkdown(ORG_DEMO, { onWarning })
+    const org = convertMarkdownToOrg(md, { onWarning })
+    expect(convertOrgToMarkdown(org, { onWarning })).toBe(md)
+    expect(warnings).toEqual([])
+  })
+
+  it("md demo is canonical and converges without warnings", async () => {
+    const { MD_DEMO } = await import("../web/src/main.js")
+    const warnings: string[] = []
+    const onWarning = (message: string) => warnings.push(message)
+    const org = convertMarkdownToOrg(MD_DEMO, { onWarning })
+    expect(convertOrgToMarkdown(org, { onWarning })).toBe(MD_DEMO)
+    expect(warnings).toEqual([])
   })
 })
