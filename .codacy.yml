@@ -1,14 +1,16 @@
 ---
-engines:
-  # TSLint is deprecated (superseded by typescript-eslint) and its default
-  # patterns conflict with our Prettier config (e.g. trailingComma: none).
-  tslint:
-    enabled: false
-  # ESLint runs in GitHub CI with the repo's own eslint.config.js
-  # (flat config, which Codacy cannot detect/use). Codacy's bundled
-  # ESLint applies its own pattern set instead, including naming-
-  # heuristic rules like xss/no-mixed-html that false-positive on a
-  # markup-conversion library. Disabled here to avoid duplicate,
-  # divergent linting.
-  eslint:
-    enabled: false
+# Tool enablement is UI-only in Codacy (Settings → Code patterns) and
+# cannot be expressed in this file; this file records those decisions
+# so they are visible in the repo:
+# - TSLint: disabled — deprecated tool; its default patterns conflict
+#   with our Prettier config (trailingComma: none).
+# - ESLint (legacy): disabled — cannot use our flat eslint.config.js
+#   and applies Codacy's own pattern set instead, incl. naming-
+#   heuristic rules like xss/no-mixed-html that false-positive on a
+#   markup-conversion library.
+# - ESLint v9: disabled — picks up eslint.config.js, but our
+#   type-aware rules (recommendedTypeChecked) need installed
+#   dependencies to resolve types; Codacy's sandbox has none, so
+#   every imported type degrades to an unresolvable/error type and
+#   no-unsafe-* rules false-positive across the codebase.
+# The enforced ESLint runs in GitHub CI (npm run lint) and pre-commit.
