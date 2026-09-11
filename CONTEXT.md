@@ -32,6 +32,16 @@ entirely in the browser; no input ever leaves it.
 The chrome-less converter page of the Web UI, designed to be iframed —
 both by the Web UI's own converter page and by third-party sites.
 
+## Source Layout
+
+The `src/` root is the public library surface: everything `index.ts`
+exports lives there (the pipeline modules `markdownToOrg.ts` /
+`orgToMarkdown.ts`, their composition `normalize.ts`, plus `config.ts`
+and `options.ts`). `src/core/` is internal AST machinery, reachable
+only through the root pipelines — adapters (`src/cli/`, `web/`)
+import root modules, never `core/`. `src/presets/` holds the dialect
+plugins (see Preset).
+
 ## Preset
 
 A named bundle of dialect-specific transforms applied on top of the dialect-agnostic core (e.g. `logseq`). The core pipelines never contain dialect knowledge. Options that only have observable effect in a dialect (e.g. `nestUnderHeadings` for outline nesting) are scoped to their Preset, not the core.
