@@ -28,21 +28,19 @@ export interface MdastToUniorgOptions {
   onWarning?: (message: string) => void
 }
 
-// options for the current transformMdastToUniorgAst run; the transform is
-// synchronous, so module state is safe and avoids threading the options
-// through every recursive call site
-let currentOptions: MdastToUniorgOptions = {}
-
-// link definitions of the current run, for resolving reference-style
-// links and images to inline (org has no reference links)
-let currentDefinitions = new Map<string, { url: string; title?: string }>()
-
-function mdismEnabled(key: string): boolean {
-  return toggleEnabled(currentOptions.preserveMdisms, key)
+interface TransformContext {
+  options: MdastToUniorgOptions
+  // link definitions of the current run, for resolving reference-style
+  // links and images to inline (org has no reference links)
+  definitions: Map<string, { url: string; title?: string }>
 }
 
-function warn(message: string): void {
-  currentOptions.onWarning?.(message)
+function mdismEnabled(ctx: TransformContext, key: string): boolean {
+  return toggleEnabled(ctx.options.preserveMdisms, key)
+}
+
+function warn(ctx: TransformContext, message: string): void {
+  ctx.options.onWarning?.(message)
 }
 
 /**
@@ -55,10 +53,9 @@ export function transformMdastToUniorgAst(
   mdast: MdastRoot,
   options: MdastToUniorgOptions = {}
 ): OrgData {
-  currentOptions = options
-  currentDefinitions = new Map()
+  const ctx: TransformContext = { options, definitions: new Map() }
   visit(mdast, "definition", (definition: Definition) => {
-    currentDefinitions.set(definition.identifier, {
+    ctx.definitions.set(definition.identifier, {
       url: definition.url,
       ...(definition.title != null && { title: definition.title })
     })
@@ -69,7 +66,7 @@ export function transformMdastToUniorgAst(
       // node fans out to one keyword per entry)
       child.type === "yaml"
         ? frontmatterToKeywords(child.value)
-        : [transformMdastNodeToUniorgNode(child)]
+        : [transformMdastNodeToUniorgNode(ctx, child)]
     )
     .filter(Boolean) as (GreaterElementType | ElementType)[]
 
@@ -134,22 +131,28 @@ function matchInlineHtmlPair(
   return end === -1 ? null : { orgType, end }
 }
 
-function transformPhrasingChildren(children: PhrasingContent[]): ObjectType[] {
+function transformPhrasingChildren(
+  ctx: TransformContext,
+  children: PhrasingContent[]
+): ObjectType[] {
   const result: ObjectType[] = []
   for (let i = 0; i < children.length; i++) {
     const node = children[i] as PhrasingContent
-    const pair = currentOptions.interpretHtml
+    const pair = ctx.options.interpretHtml
       ? matchInlineHtmlPair(children, i)
       : null
     if (pair) {
       result.push({
         type: pair.orgType,
-        children: transformPhrasingChildren(children.slice(i + 1, pair.end))
+        children: transformPhrasingChildren(
+          ctx,
+          children.slice(i + 1, pair.end)
+        )
       } as ObjectType)
       i = pair.end
       continue
     }
-    const transformed = transformMdastPhrasingContentToUniorgObject(node)
+    const transformed = transformMdastPhrasingContentToUniorgObject(ctx, node)
     if (transformed) {
       result.push(transformed)
     }
@@ -158,6 +161,7 @@ function transformPhrasingChildren(children: PhrasingContent[]): ObjectType[] {
 }
 
 function transformMdastLink(
+  ctx: TransformContext,
   linkNode: Extract<PhrasingContent, { type: "link" }>
 ): ObjectType {
   const [only] = linkNode.children
@@ -168,7 +172,7 @@ function transformMdastLink(
     only?.type === "text" &&
     only.value === linkNode.url
       ? []
-      : transformPhrasingChildren(linkNode.children)
+      : transformPhrasingChildren(ctx, linkNode.children)
   // rawLink should just be the URL, uniorg-stringify adds the brackets
   return {
     type: "link",
@@ -181,14 +185,15 @@ function transformMdastLink(
 }
 
 function transformMdastLinkReference(
+  ctx: TransformContext,
   node: Extract<PhrasingContent, { type: "linkReference" }>
 ): ObjectType | null {
   // org has no reference-style links: resolve to an inline link
-  const definition = currentDefinitions.get(node.identifier)
+  const definition = ctx.definitions.get(node.identifier)
   if (!definition) {
     return null
   }
-  return transformMdastPhrasingContentToUniorgObject({
+  return transformMdastPhrasingContentToUniorgObject(ctx, {
     type: "link",
     url: definition.url,
     children: node.children
@@ -196,13 +201,14 @@ function transformMdastLinkReference(
 }
 
 function transformMdastImageReference(
+  ctx: TransformContext,
   node: Extract<PhrasingContent, { type: "imageReference" }>
 ): ObjectType | null {
-  const definition = currentDefinitions.get(node.identifier)
+  const definition = ctx.definitions.get(node.identifier)
   if (!definition) {
     return null
   }
-  return transformMdastPhrasingContentToUniorgObject({
+  return transformMdastPhrasingContentToUniorgObject(ctx, {
     type: "image",
     url: definition.url,
     alt: node.alt ?? null
@@ -210,13 +216,14 @@ function transformMdastImageReference(
 }
 
 function transformMdastImage(
+  ctx: TransformContext,
   node: Extract<PhrasingContent, { type: "image" }>
 ): ObjectType {
   // org has no dedicated image syntax: a plain file link renders
   // inline, alt text becomes the link description; the title
   // attribute has no org slot and is dropped (see README)
   if (node.title) {
-    warn(`dropped image title "${node.title}" (${node.url})`)
+    warn(ctx, `dropped image title "${node.title}" (${node.url})`)
   }
   return {
     type: "link",
@@ -238,6 +245,7 @@ function transformMdastInlineMath(node: PhrasingContent): ObjectType {
 }
 
 function transformMdastPhrasingContentToUniorgObject(
+  ctx: TransformContext,
   node: PhrasingContent
 ): ObjectType | null {
   switch (node.type) {
@@ -246,24 +254,24 @@ function transformMdastPhrasingContentToUniorgObject(
     case "emphasis":
       return {
         type: "italic",
-        children: transformPhrasingChildren(node.children)
+        children: transformPhrasingChildren(ctx, node.children)
       }
     case "strong":
       return {
         type: "bold",
-        children: transformPhrasingChildren(node.children)
+        children: transformPhrasingChildren(ctx, node.children)
       }
     case "delete":
       return {
         type: "strike-through",
-        children: transformPhrasingChildren(node.children)
+        children: transformPhrasingChildren(ctx, node.children)
       }
     case "link":
-      return transformMdastLink(node)
+      return transformMdastLink(ctx, node)
     case "linkReference":
-      return transformMdastLinkReference(node)
+      return transformMdastLinkReference(ctx, node)
     case "imageReference":
-      return transformMdastImageReference(node)
+      return transformMdastImageReference(ctx, node)
     case "inlineCode":
       return { type: "code", value: node.value }
     case "inlineMath" as PhrasingContent["type"]:
@@ -279,7 +287,7 @@ function transformMdastPhrasingContentToUniorgObject(
       } as unknown as ObjectType
     case "html":
       // inline raw html is a md-ism: preserved as an org export snippet
-      return mdismEnabled("html")
+      return mdismEnabled(ctx, "html")
         ? {
             type: "export-snippet",
             backEnd: "html",
@@ -287,15 +295,16 @@ function transformMdastPhrasingContentToUniorgObject(
           }
         : null
     case "image":
-      return transformMdastImage(node)
+      return transformMdastImage(ctx, node)
     // remaining phrasing types have no mapping; dropped with a warning
     default:
-      warn(`dropped md ${(node as { type: string }).type}`)
+      warn(ctx, `dropped md ${(node as { type: string }).type}`)
       return null
   }
 }
 
 function transformMdastTable(
+  ctx: TransformContext,
   node: Extract<RootContent, { type: "table" }>
 ): ElementType {
   const [headerRow, ...bodyRows] = node.children
@@ -316,10 +325,10 @@ function transformMdastTable(
       ]
     : []
   const rows = [
-    ...(headerRow ? [transformMdastTableRow(headerRow)] : []),
+    ...(headerRow ? [transformMdastTableRow(ctx, headerRow)] : []),
     { type: "table-row", rowType: "rule", children: [] },
     ...cookieRow,
-    ...bodyRows.map(transformMdastTableRow)
+    ...bodyRows.map(row => transformMdastTableRow(ctx, row))
   ]
   return {
     type: "table",
@@ -330,6 +339,7 @@ function transformMdastTable(
 }
 
 function transformMdastHtml(
+  ctx: TransformContext,
   node: Extract<RootContent, { type: "html" }>
 ): ElementType | null {
   // html comments are markdown's comment idiom and map natively to
@@ -341,14 +351,14 @@ function transformMdastHtml(
       value: (comment[1] ?? "").trim()
     } as unknown as ElementType
   }
-  if (currentOptions.interpretHtml) {
+  if (ctx.options.interpretHtml) {
     const descriptiveList = interpretDefinitionList(node.value)
     if (descriptiveList) {
       return descriptiveList
     }
   }
   // block raw html is a md-ism: preserved as an org export block
-  return mdismEnabled("html")
+  return mdismEnabled(ctx, "html")
     ? ({
         type: "export-block",
         backend: "html",
@@ -404,6 +414,7 @@ function transformMdastMath(node: RootContent | PhrasingContent): ElementType {
 }
 
 function transformMdastHeading(
+  ctx: TransformContext,
   node: Extract<RootContent, { type: "heading" }>
 ): ElementType {
   return {
@@ -414,16 +425,17 @@ function transformMdastHeading(
     commented: false,
     rawValue: toString(node),
     tags: [],
-    children: transformPhrasingChildren(node.children)
+    children: transformPhrasingChildren(ctx, node.children)
   }
 }
 
 function transformMdastNodeToUniorgNode(
+  ctx: TransformContext,
   node: RootContent | PhrasingContent
 ): GreaterElementType | ElementType | Text | null {
   switch (node.type) {
     case "heading":
-      return transformMdastHeading(node)
+      return transformMdastHeading(ctx, node)
     case "paragraph": {
       // a paragraph of only #+KEY: lines is affiliated keywords (or
       // mid-file keywords) traveling verbatim; emit as raw text so they
@@ -435,7 +447,7 @@ function transformMdastNodeToUniorgNode(
       }
       return {
         type: "paragraph",
-        children: transformPhrasingChildren(node.children),
+        children: transformPhrasingChildren(ctx, node.children),
         contentsBegin: 0, // Placeholder
         contentsEnd: 0 // Placeholder
       } as Paragraph
@@ -443,11 +455,11 @@ function transformMdastNodeToUniorgNode(
     case "text":
       return { type: "text", value: node.value }
     case "list":
-      return transformMdastList(node, 0)
+      return transformMdastList(ctx, node, 0)
     case "table":
-      return transformMdastTable(node)
+      return transformMdastTable(ctx, node)
     case "html":
-      return transformMdastHtml(node)
+      return transformMdastHtml(ctx, node)
     case "thematicBreak":
       return { type: "horizontal-rule" } as unknown as ElementType
     case "footnoteDefinition":
@@ -456,14 +468,14 @@ function transformMdastNodeToUniorgNode(
         label: node.identifier,
         affiliated: {},
         children: node.children
-          .map(transformMdastNodeToUniorgNode)
+          .map(child => transformMdastNodeToUniorgNode(ctx, child))
           .filter(Boolean)
       } as unknown as ElementType
     case "blockquote":
       return {
         type: "quote-block",
         children: node.children
-          .map(transformMdastNodeToUniorgNode)
+          .map(child => transformMdastNodeToUniorgNode(ctx, child))
           .filter(Boolean)
       } as unknown as ElementType
     case "code":
@@ -475,7 +487,7 @@ function transformMdastNodeToUniorgNode(
       return null
     // remaining block types have no mapping; dropped with a warning
     default:
-      warn(`dropped md ${node.type}`)
+      warn(ctx, `dropped md ${node.type}`)
       return null
   }
 }
@@ -497,13 +509,16 @@ function keywordOnlyLines(node: {
     : null
 }
 
-function transformMdastTableRow(row: MdastTableRow): unknown {
+function transformMdastTableRow(
+  ctx: TransformContext,
+  row: MdastTableRow
+): unknown {
   return {
     type: "table-row",
     rowType: "standard",
     children: row.children.map(cell => ({
       type: "table-cell",
-      children: transformPhrasingChildren(cell.children)
+      children: transformPhrasingChildren(ctx, cell.children)
     }))
   }
 }
@@ -552,7 +567,11 @@ function interpretDefinitionList(html: string): ElementType | null {
 // Mirrors the AST shape uniorg-parse produces for lists: ordered numbering
 // lives in each item's bullet, and nested lists sit inside the parent
 // item's children with indent = parent indent + bullet length.
-function transformMdastList(listNode: MdastList, indent: number): List {
+function transformMdastList(
+  ctx: TransformContext,
+  listNode: MdastList,
+  indent: number
+): List {
   const start = listNode.start ?? 1
   return {
     type: "plain-list",
@@ -561,6 +580,7 @@ function transformMdastList(listNode: MdastList, indent: number): List {
     affiliated: {},
     children: listNode.children.map((item, i) =>
       transformMdastListItem(
+        ctx,
         item,
         indent,
         listNode.ordered ? `${start + i}. ` : "- "
@@ -572,6 +592,7 @@ function transformMdastList(listNode: MdastList, indent: number): List {
 }
 
 function transformMdastListItem(
+  ctx: TransformContext,
   item: MdastListItem,
   indent: number,
   bullet: string
@@ -583,15 +604,15 @@ function transformMdastListItem(
   const children = item.children
     .flatMap((child): ItemChild[] => {
       if (child.type === "list") {
-        return [transformMdastList(child, indent + bullet.length)]
+        return [transformMdastList(ctx, child, indent + bullet.length)]
       }
       if (child.type === "paragraph") {
         return [
-          ...transformPhrasingChildren(child.children),
+          ...transformPhrasingChildren(ctx, child.children),
           { type: "text", value: "\n" }
         ]
       }
-      return [transformMdastNodeToUniorgNode(child)]
+      return [transformMdastNodeToUniorgNode(ctx, child)]
     })
     .filter(Boolean)
   return {

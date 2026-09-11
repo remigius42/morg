@@ -32,45 +32,44 @@ export interface UniorgToMdastOptions {
   onWarning?: (message: string) => void
 }
 
-// options for the current transformUniorgAstToMdast run; the transform is
-// synchronous, so module state is safe and avoids threading the options
-// through every recursive call site
-let currentOptions: UniorgToMdastOptions = {}
-
-function orgismEnabled(key: string): boolean {
-  return toggleEnabled(currentOptions.preserveOrgisms, key)
+// per-run state threaded through the recursive transform helpers;
+// inlineFootnotes collects inline footnotes ([fn:: text], [fn:label: text]):
+// GFM has no inline form, so they normalize to a standard reference plus a
+// definition hoisted to the document end
+interface TransformContext {
+  options: UniorgToMdastOptions
+  inlineFootnotes: { label: string; children: PhrasingContent[] }[]
+  usedFootnoteLabels: Set<string>
 }
 
-function htmlEnabled(key: string): boolean {
-  return toggleEnabled(currentOptions.useHtml, key, false)
+function orgismEnabled(ctx: TransformContext, key: string): boolean {
+  return toggleEnabled(ctx.options.preserveOrgisms, key)
 }
 
-function warn(message: string): void {
-  currentOptions.onWarning?.(message)
+function htmlEnabled(ctx: TransformContext, key: string): boolean {
+  return toggleEnabled(ctx.options.useHtml, key, false)
+}
+
+function warn(ctx: TransformContext, message: string): void {
+  ctx.options.onWarning?.(message)
 }
 
 // org-ism key:: names are user-configurable (ADR 0002 point 5)
-function keyName(key: string): string {
-  return currentOptions.orgismKeys?.[key] ?? key
+function keyName(ctx: TransformContext, key: string): string {
+  return ctx.options.orgismKeys?.[key] ?? key
 }
 
-// inline footnotes ([fn:: text], [fn:label: text]) of the current run;
-// GFM has no inline form, so they normalize to a standard reference here
-// plus a definition hoisted to the document end
-let inlineFootnotes: { label: string; children: PhrasingContent[] }[] = []
-let usedFootnoteLabels = new Set<string>()
-
-function nextFreeFootnoteLabel(): string {
+function nextFreeFootnoteLabel(ctx: TransformContext): string {
   let candidate = 1
-  while (usedFootnoteLabels.has(String(candidate))) {
+  while (ctx.usedFootnoteLabels.has(String(candidate))) {
     candidate++
   }
   const label = String(candidate)
-  usedFootnoteLabels.add(label)
+  ctx.usedFootnoteLabels.add(label)
   return label
 }
 
-function collectFootnoteLabels(node: unknown): void {
+function collectFootnoteLabels(ctx: TransformContext, node: unknown): void {
   if (!node || typeof node !== "object") {
     return
   }
@@ -84,10 +83,10 @@ function collectFootnoteLabels(node: unknown): void {
       candidate.type === "footnote-definition") &&
     candidate.label
   ) {
-    usedFootnoteLabels.add(candidate.label)
+    ctx.usedFootnoteLabels.add(candidate.label)
   }
   for (const child of candidate.children || []) {
-    collectFootnoteLabels(child)
+    collectFootnoteLabels(ctx, child)
   }
 }
 
@@ -101,10 +100,12 @@ export function transformUniorgAstToMdast(
   uniorgAst: OrgData,
   options: UniorgToMdastOptions = {}
 ): MdastRoot {
-  currentOptions = options
-  inlineFootnotes = []
-  usedFootnoteLabels = new Set()
-  collectFootnoteLabels(uniorgAst)
+  const ctx: TransformContext = {
+    options,
+    inlineFootnotes: [],
+    usedFootnoteLabels: new Set()
+  }
+  collectFootnoteLabels(ctx, uniorgAst)
   const nodes = uniorgAst.children || []
   // leading #+KEY: value keywords map to md frontmatter, a native
   // construct; JSON-encoded values restore their structure (ADR 0002)
@@ -117,7 +118,7 @@ export function transformUniorgAstToMdast(
   }
   const children: RootContent[] = nodes
     .slice(first)
-    .flatMap(transformUniorgNodeToMdastNode)
+    .flatMap(node => transformUniorgNodeToMdastNode(ctx, node))
     .filter(Boolean) as RootContent[]
   // adjacent single-item task lists (one per converted TODO section)
   // merge into one list, or the output would not be a fixed point
@@ -130,7 +131,7 @@ export function transformUniorgAstToMdast(
       value: stringifyYaml(frontmatter).trimEnd()
     })
   }
-  for (const footnote of inlineFootnotes) {
+  for (const footnote of ctx.inlineFootnotes) {
     children.push({
       type: "footnoteDefinition",
       identifier: footnote.label,
@@ -180,6 +181,7 @@ function mergeAdjacentTaskLists(children: RootContent[]): void {
 // (no priority, tags or content) becomes a GFM task item; anything
 // richer keeps the heading (with a warning) so no metadata is lost
 function sectionAsTaskItem(
+  ctx: TransformContext,
   children: (GreaterElementType | ElementType | Text)[]
 ): RootContent | null {
   const headline = children[0]
@@ -201,6 +203,7 @@ function sectionAsTaskItem(
             : null
   if (reason) {
     warn(
+      ctx,
       `taskCheckboxes: kept heading "${orgastToString(headline).trim()}" (${reason})`
     )
     return null
@@ -217,7 +220,7 @@ function sectionAsTaskItem(
         children: [
           {
             type: "paragraph",
-            children: transformUniorgObjects(headline.children)
+            children: transformUniorgObjects(ctx, headline.children)
           }
         ]
       }
@@ -242,6 +245,7 @@ function orgNodeToText(node: unknown): string {
 const IMAGE_EXTENSION_RE = /\.(png|jpe?g|gif|svg|webp|avif|bmp|ico)$/i
 
 function transformUniorgObjectToMdastPhrasingContent(
+  ctx: TransformContext,
   node: ObjectType
 ): PhrasingContent | PhrasingContent[] | null {
   switch (node.type) {
@@ -250,31 +254,31 @@ function transformUniorgObjectToMdastPhrasingContent(
     case "bold":
       return {
         type: "strong",
-        children: transformUniorgObjects(node.children)
+        children: transformUniorgObjects(ctx, node.children)
       }
     case "italic":
       return {
         type: "emphasis",
-        children: transformUniorgObjects(node.children)
+        children: transformUniorgObjects(ctx, node.children)
       }
     case "strike-through":
       return {
         type: "delete",
-        children: transformUniorgObjects(node.children)
+        children: transformUniorgObjects(ctx, node.children)
       }
     case "link":
-      return transformUniorgLink(node)
+      return transformUniorgLink(ctx, node)
     case "code":
     case "verbatim":
       return { type: "inlineCode", value: node.value }
     case "line-break":
       return { type: "break" }
     case "footnote-reference":
-      return transformFootnoteReference(node)
+      return transformFootnoteReference(ctx, node)
     case "underline":
     case "superscript":
     case "subscript":
-      return transformScriptMarkup(node)
+      return transformScriptMarkup(ctx, node)
     case "latex-fragment":
       // display-only paragraphs become math blocks (see the paragraph
       // handler); a fragment inside running text is inline math
@@ -306,12 +310,13 @@ function transformUniorgObjectToMdastPhrasingContent(
       return transformExportSnippet(node)
     // remaining object types have no mapping; dropped with a warning
     default:
-      warn(`dropped org ${node.type}`)
+      warn(ctx, `dropped org ${node.type}`)
       return null
   }
 }
 
 function transformUniorgLink(
+  ctx: TransformContext,
   node: Extract<ObjectType, { type: "link" }>
 ): PhrasingContent {
   const descriptionText = orgastToString(node)
@@ -346,7 +351,7 @@ function transformUniorgLink(
       children: [{ type: "text", value: node.rawLink }]
     }
   }
-  const children = transformUniorgObjects(node.children)
+  const children = transformUniorgObjects(ctx, node.children)
   // md cannot nest links; flatten a description that contains one
   // (org parses bare urls inside descriptions as links)
   const flattened = children.some(
@@ -358,10 +363,11 @@ function transformUniorgLink(
 }
 
 function transformFootnoteReference(
+  ctx: TransformContext,
   node: Extract<ObjectType, { type: "footnote-reference" }>
 ): PhrasingContent {
   if ((node as { footnoteType?: string }).footnoteType === "inline") {
-    return transformInlineFootnoteReference(node)
+    return transformInlineFootnoteReference(ctx, node)
   }
   return {
     type: "footnoteReference",
@@ -371,26 +377,28 @@ function transformFootnoteReference(
 }
 
 function transformInlineFootnoteReference(
+  ctx: TransformContext,
   node: Extract<ObjectType, { type: "footnote-reference" }>
 ): PhrasingContent {
-  const label = node.label || nextFreeFootnoteLabel()
-  const content = transformUniorgObjects(node.children)
+  const label = node.label || nextFreeFootnoteLabel(ctx)
+  const content = transformUniorgObjects(ctx, node.children)
   const firstChild = content[0]
   if (firstChild?.type === "text") {
     firstChild.value = firstChild.value.trimStart()
   }
-  inlineFootnotes.push({ label, children: content })
+  ctx.inlineFootnotes.push({ label, children: content })
   return { type: "footnoteReference", identifier: label, label }
 }
 
 function transformScriptMarkup(
+  ctx: TransformContext,
   node: Extract<ObjectType, { type: "underline" | "superscript" | "subscript" }>
 ): PhrasingContent | PhrasingContent[] {
   // markdown has no equivalents; with useHtml render as raw html
   // (a preserved md-ism on the return trip), otherwise keep the raw
   // org markup as text so the return trip re-parses it natively
   // (convergent, like inline timestamps)
-  if (htmlEnabled(node.type)) {
+  if (htmlEnabled(ctx, node.type)) {
     const tagName =
       node.type === "underline"
         ? "u"
@@ -399,7 +407,7 @@ function transformScriptMarkup(
           : "sub"
     return [
       { type: "html", value: `<${tagName}>` },
-      ...transformUniorgObjects(node.children),
+      ...transformUniorgObjects(ctx, node.children),
       { type: "html", value: `</${tagName}>` }
     ]
   }
@@ -464,10 +472,11 @@ function trimTrailingNewline(value: string): string {
 }
 
 function transformUniorgObjects(
+  ctx: TransformContext,
   children: ObjectType[] | undefined
 ): PhrasingContent[] {
   return (children || [])
-    .flatMap(transformUniorgObjectToMdastPhrasingContent)
+    .flatMap(child => transformUniorgObjectToMdastPhrasingContent(ctx, child))
     .filter(Boolean) as PhrasingContent[]
 }
 
@@ -488,9 +497,10 @@ function affiliatedLines(node: unknown): string[] {
 }
 
 function transformUniorgNodeToMdastNode(
+  ctx: TransformContext,
   node: GreaterElementType | ElementType | Text
 ): RootContent | RootContent[] | null {
-  const result = transformUniorgElement(node)
+  const result = transformUniorgElement(ctx, node)
   const lines = affiliatedLines(node)
   if (
     !result ||
@@ -508,17 +518,18 @@ function transformUniorgNodeToMdastNode(
 }
 
 function transformUniorgElement(
+  ctx: TransformContext,
   node: GreaterElementType | ElementType | Text
 ): RootContent | RootContent[] | null {
   switch (node.type) {
     case "section":
-      return transformSection(node)
+      return transformSection(ctx, node)
     case "headline":
-      return transformHeadline(node)
+      return transformHeadline(ctx, node)
     case "planning":
-      return transformPlanning(node)
+      return transformPlanning(ctx, node)
     case "drawer":
-      return transformDrawer(node)
+      return transformDrawer(ctx, node)
     case "special-block":
     case "center-block":
     case "verse-block":
@@ -533,9 +544,9 @@ function transformUniorgElement(
       // (keywords here are mid-file ones; leading ones became frontmatter)
       return keyValueParagraph([orgNodeToText(node)])
     case "property-drawer":
-      return transformPropertyDrawer(node)
+      return transformPropertyDrawer(ctx, node)
     case "paragraph":
-      return transformParagraph(node)
+      return transformParagraph(ctx, node)
     case "text":
       // Whitespace-only text at block level is a formatting artifact.
       if (node.value.trim() === "") {
@@ -543,20 +554,17 @@ function transformUniorgElement(
       }
       return { type: "text", value: node.value }
     case "plain-list":
-      if (node.listType === "descriptive" && htmlEnabled("descriptiveList")) {
-        return descriptiveListToHtml(node)
-      }
-      return transformUniorgList(node)
+      return transformPlainList(ctx, node)
     case "table":
-      return transformTable(node)
+      return transformTable(ctx, node)
     case "horizontal-rule":
       return { type: "thematicBreak" }
     case "footnote-definition":
-      return transformFootnoteDefinition(node)
+      return transformFootnoteDefinition(ctx, node)
     case "export-block":
       return transformExportBlock(node)
     case "quote-block":
-      return transformQuoteBlock(node)
+      return transformQuoteBlock(ctx, node)
     case "src-block":
       return transformSrcBlock(node)
     case "example-block":
@@ -567,67 +575,81 @@ function transformUniorgElement(
       return { type: "math", value: node.value } as unknown as RootContent
     // remaining element types have no mapping; dropped with a warning
     default:
-      warn(`dropped org ${node.type}`)
+      warn(ctx, `dropped org ${node.type}`)
       return null
   }
 }
 
+function transformPlainList(
+  ctx: TransformContext,
+  node: List
+): RootContent | RootContent[] {
+  if (node.listType === "descriptive" && htmlEnabled(ctx, "descriptiveList")) {
+    return descriptiveListToHtml(node)
+  }
+  return transformUniorgList(ctx, node)
+}
+
 function transformSection(
+  ctx: TransformContext,
   node: Extract<GreaterElementType, { type: "section" }>
 ): RootContent | RootContent[] {
-  if (currentOptions.taskCheckboxes) {
-    const task = sectionAsTaskItem(node.children || [])
+  if (ctx.options.taskCheckboxes) {
+    const task = sectionAsTaskItem(ctx, node.children || [])
     if (task) {
       return task
     }
   }
   return (node.children || [])
-    .flatMap(transformUniorgNodeToMdastNode)
+    .flatMap(child => transformUniorgNodeToMdastNode(ctx, child))
     .filter(Boolean) as RootContent[]
 }
 
 function transformHeadline(
+  ctx: TransformContext,
   node: Extract<ElementType, { type: "headline" }>
 ): RootContent | RootContent[] {
   const heading: RootContent = {
     type: "heading",
     depth: node.level as Heading["depth"],
-    children: transformUniorgObjects(node.children)
+    children: transformUniorgObjects(ctx, node.children)
   }
   // org-isms serialize as key:: value lines directly below the heading
   const isms: string[] = []
-  if (node.todoKeyword && orgismEnabled("todo")) {
-    isms.push(`${keyName("todo")}:: ${node.todoKeyword}`)
+  if (node.todoKeyword && orgismEnabled(ctx, "todo")) {
+    isms.push(`${keyName(ctx, "todo")}:: ${node.todoKeyword}`)
   }
-  if (node.priority && orgismEnabled("priority")) {
-    isms.push(`${keyName("priority")}:: ${node.priority}`)
+  if (node.priority && orgismEnabled(ctx, "priority")) {
+    isms.push(`${keyName(ctx, "priority")}:: ${node.priority}`)
   }
-  if (node.tags.length && orgismEnabled("tags")) {
-    isms.push(`${keyName("tags")}:: ${node.tags.join(", ")}`)
+  if (node.tags.length && orgismEnabled(ctx, "tags")) {
+    isms.push(`${keyName(ctx, "tags")}:: ${node.tags.join(", ")}`)
   }
   return isms.length ? [heading, keyValueParagraph(isms)] : heading
 }
 
 function transformPlanning(
+  ctx: TransformContext,
   node: Extract<ElementType, { type: "planning" }>
 ): RootContent | null {
   const isms: string[] = []
-  if (node.scheduled && orgismEnabled("scheduled")) {
-    isms.push(`${keyName("scheduled")}:: ${node.scheduled.rawValue}`)
+  if (node.scheduled && orgismEnabled(ctx, "scheduled")) {
+    isms.push(`${keyName(ctx, "scheduled")}:: ${node.scheduled.rawValue}`)
   }
-  if (node.deadline && orgismEnabled("deadline")) {
-    isms.push(`${keyName("deadline")}:: ${node.deadline.rawValue}`)
+  if (node.deadline && orgismEnabled(ctx, "deadline")) {
+    isms.push(`${keyName(ctx, "deadline")}:: ${node.deadline.rawValue}`)
   }
-  if (node.closed && orgismEnabled("closed")) {
-    isms.push(`${keyName("closed")}:: ${node.closed.rawValue}`)
+  if (node.closed && orgismEnabled(ctx, "closed")) {
+    isms.push(`${keyName(ctx, "closed")}:: ${node.closed.rawValue}`)
   }
   return isms.length ? keyValueParagraph(isms) : null
 }
 
 function transformDrawer(
+  ctx: TransformContext,
   node: Extract<GreaterElementType, { type: "drawer" }>
 ): RootContent | null {
-  if (!orgismEnabled("drawers")) {
+  if (!orgismEnabled(ctx, "drawers")) {
     return null
   }
   // generic drawers (:LOGBOOK: …) have no md equivalent; keep their
@@ -637,9 +659,10 @@ function transformDrawer(
 }
 
 function transformPropertyDrawer(
+  ctx: TransformContext,
   node: Extract<GreaterElementType, { type: "property-drawer" }>
 ): RootContent | null {
-  if (!orgismEnabled("properties")) {
+  if (!orgismEnabled(ctx, "properties")) {
     return null
   }
   const isms = (node.children || [])
@@ -649,13 +672,14 @@ function transformPropertyDrawer(
 }
 
 function transformParagraph(
+  ctx: TransformContext,
   node: Extract<ElementType, { type: "paragraph" }>
 ): RootContent | null {
   const math = paragraphAsDisplayMath(node)
   if (math) {
     return math
   }
-  const children = transformUniorgObjects(node.children)
+  const children = transformUniorgObjects(ctx, node.children)
   // md gives leading whitespace structural meaning (list
   // continuation, code); collapse per-line indentation inside
   // paragraphs — insignificant in org and in rendered md alike
@@ -715,6 +739,7 @@ function trimParagraphEdges(children: PhrasingContent[]): void {
 }
 
 function transformTable(
+  ctx: TransformContext,
   node: Extract<GreaterElementType, { type: "table" }>
 ): RootContent {
   if (node.tableType === "table.el") {
@@ -755,13 +780,16 @@ function transformTable(
         type: "tableRow",
         children: (row.children || []).map(cell => ({
           type: "tableCell",
-          children: transformUniorgObjects(cell.children).map(trimCellPadding)
+          children: transformUniorgObjects(ctx, cell.children).map(
+            trimCellPadding
+          )
         }))
       }))
   } as unknown as RootContent
 }
 
 function transformFootnoteDefinition(
+  ctx: TransformContext,
   node: Extract<GreaterElementType, { type: "footnote-definition" }>
 ): RootContent {
   return {
@@ -769,7 +797,7 @@ function transformFootnoteDefinition(
     identifier: node.label,
     label: node.label,
     children: (node.children || [])
-      .flatMap(transformUniorgNodeToMdastNode)
+      .flatMap(child => transformUniorgNodeToMdastNode(ctx, child))
       .filter(Boolean) as BlockContent[]
   }
 }
@@ -786,12 +814,13 @@ function transformExportBlock(
 }
 
 function transformQuoteBlock(
+  ctx: TransformContext,
   node: Extract<GreaterElementType, { type: "quote-block" }>
 ): RootContent {
   return {
     type: "blockquote",
     children: (node.children || [])
-      .flatMap(transformUniorgNodeToMdastNode)
+      .flatMap(child => transformUniorgNodeToMdastNode(ctx, child))
       .filter(Boolean) as BlockContent[]
   }
 }
@@ -856,7 +885,7 @@ function descriptiveListToHtml(node: List): RootContent {
 // A single blank line does not end a list in org, so one uniorg plain-list
 // can mix ordered and unordered bullets. Markdown cannot: split the items
 // into runs by bullet kind, one mdast list per run.
-function transformUniorgList(node: List): MdastList[] {
+function transformUniorgList(ctx: TransformContext, node: List): MdastList[] {
   const items = (node.children || []).filter(
     (child): child is ListItem => child.type === "list-item"
   )
@@ -879,12 +908,15 @@ function transformUniorgList(node: List): MdastList[] {
       ordered,
       start: ordered ? parseInt(firstBullet, 10) || 1 : null,
       spread: false,
-      children: run.map(transformUniorgListItem)
+      children: run.map(item => transformUniorgListItem(ctx, item))
     }
   })
 }
 
-function transformUniorgListItem(item: ListItem): MdastListItem {
+function transformUniorgListItem(
+  ctx: TransformContext,
+  item: ListItem
+): MdastListItem {
   // a descriptive list item starts with a list-item-tag (the term); md has
   // no descriptive lists, so keep the ` :: ` syntax literally in the item
   // text — the return trip re-parses it as a descriptive list
@@ -893,7 +925,7 @@ function transformUniorgListItem(item: ListItem): MdastListItem {
   )
   const children = (item.children || [])
     .filter(child => child !== tag)
-    .flatMap(transformUniorgNodeToMdastNode)
+    .flatMap(child => transformUniorgNodeToMdastNode(ctx, child))
     .filter(Boolean) as (BlockContent | DefinitionContent)[]
   if (tag) {
     const term: PhrasingContent = {

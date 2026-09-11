@@ -112,4 +112,32 @@ describe("transformUniorgAstToMdast", () => {
       ]
     })
   })
+
+  it("should isolate inline footnote state between runs", () => {
+    const buildAst = (): OrgData =>
+      ({
+        type: "org-data",
+        children: [
+          {
+            type: "paragraph",
+            children: [
+              { type: "text", value: "Note" },
+              {
+                type: "footnote-reference",
+                footnoteType: "inline",
+                label: "",
+                children: [{ type: "text", value: "inline note" }]
+              }
+            ]
+          }
+        ],
+        contentsBegin: 0,
+        contentsEnd: 0
+      }) as unknown as OrgData
+
+    const first = transformUniorgAstToMdast(buildAst())
+    const second = transformUniorgAstToMdast(buildAst())
+
+    expect(second).toEqual(first)
+  })
 })
