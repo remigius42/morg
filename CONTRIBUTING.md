@@ -37,7 +37,8 @@ for what you submit.
   (`tests/roundtrip.spec.ts`): every mapping change needs a convergence
   fixture in `tests/fixtures/`, and behavior is developed red-green
   (failing test first).
-- The correctness guarantee is convergence, not byte-losslessness —
+- The guarantee is semantic faithfulness plus convergence, not
+  byte-losslessness —
   read [ADR 0001](docs/adr/0001-convergence-over-losslessness.md)
   before changing mapping behavior, and
   [ADR 0002](docs/adr/0002-mdism-property-namespace.md) for how

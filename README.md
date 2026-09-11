@@ -20,8 +20,8 @@ generic) as the interop surface. Dialect conventions — such as
 ## Round-trip convergence
 
 Strict byte-losslessness between the two formats is impossible. morg's
-correctness guarantee is **convergence** instead (see [ADR
-0001](docs/adr/0001-convergence-over-losslessness.md)):
+guarantee is to be **semantically faithful and convergent** instead
+(see [ADR 0001](docs/adr/0001-convergence-over-losslessness.md)):
 
 - One round trip (`md → org → md` or `org → md → org`) may normalize formatting,
   but its output is a fixed point: converting again reproduces it byte-for-byte.
@@ -30,6 +30,8 @@ correctness guarantee is **convergence** instead (see [ADR
   org properties; `org → md` serializes Org-only constructs ("org-isms") as
   `key:: value` conventions ([ADR
   0002](docs/adr/0002-mdism-property-namespace.md)).
+- The few constructs that cannot be carried are documented in the
+  [mapping reference](docs/mappings.md) and reported as warnings.
 
 Round-trip fixture tests are the backbone of the test suite
 (`tests/roundtrip.spec.ts`).
