@@ -27,6 +27,9 @@ export default {
       }
       return `eslint --max-warnings=0 ${filesToLint.join(" ")}`
     },
-    "vitest run --passWithNoTests"
+    "vitest run --passWithNoTests",
+    // function form: project-wide typecheck regardless of staged files
+    // (eslint's typed rules don't fully type-check; see d536b60)
+    () => "tsc --noEmit -p tsconfig.json"
   ]
 }
