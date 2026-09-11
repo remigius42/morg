@@ -19,6 +19,14 @@ jobs:
         run: npm run lint
       - name: Test
         run: npm run test:unit:ci
+      - name: Upload coverage to Codacy
+        # skipped for forked PRs, which cannot access the token secret
+        if: github.event_name == 'push' || !github.event.pull_request.head.repo.fork
+        # third-party action pinned to a commit SHA (immutable, unlike tags)
+        uses: codacy/codacy-coverage-reporter-action@89d6c85cfafaec52c72b6c5e8b2878d33104c699 # v1.3.0
+        with:
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          coverage-reports: coverage/lcov.info
       - name: Build
         run: npm run build
       - name: Smoke-test CLI
