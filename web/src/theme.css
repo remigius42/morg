@@ -1,8 +1,8 @@
 /* Brand theme matching binarypoetry.ch: oklch hue 90° ramp, Arial. */
-@import "@picocss/pico/css/pico.min.css";
+@import url("@picocss/pico/css/pico.min.css");
 
 :root {
-  --pico-font-family: Arial, Helvetica, sans-serif;
+  --pico-font-family: arial, helvetica, sans-serif;
   --theme-color: oklch(37% 0.075 90deg);
   --theme-color-2: oklch(52% 0.075 90deg);
   --theme-color-soft: oklch(68% 0.075 90deg / 12%);
@@ -20,7 +20,7 @@
 
   /* Surfaces matching the website (VitePress defaults), overriding
      Pico's blue-tinted slate */
-  --site-bg-light: #ffffff;
+  --site-bg-light: #fff;
   --site-text-light: #3c3c43;
   --site-bg-dark: #1b1b1f;
   --site-bg-alt-dark: #161618;

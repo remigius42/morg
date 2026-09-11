@@ -14,3 +14,8 @@
 #   every imported type degrades to an unresolvable/error type and
 #   no-unsafe-* rules false-positive across the codebase.
 # The enforced ESLint runs in GitHub CI (npm run lint) and pre-commit.
+
+# fixtures deliberately contain edge cases (missing alt text, multiple
+# H1s, alternate rule markers); repo markdownlint excludes them too
+exclude_paths:
+  - tests/fixtures/**
