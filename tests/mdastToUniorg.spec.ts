@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { transformMdastToUniorgAst } from "../src/core/mdastToUniorg.js"
+import { transformMdastToUniorgAst } from "../src/core/mdastToUniorg/index.js"
 import type { Root as MdastRoot } from "mdast"
 
 describe("transformMdastToUniorgAst", () => {

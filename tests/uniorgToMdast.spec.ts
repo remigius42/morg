@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { transformUniorgAstToMdast } from "../src/core/uniorgToMdast.js"
+import { transformUniorgAstToMdast } from "../src/core/uniorgToMdast/index.js"
 import type { OrgData } from "uniorg"
 
 describe("transformUniorgAstToMdast", () => {

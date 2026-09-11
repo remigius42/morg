@@ -4,7 +4,7 @@ import remarkStringify from "remark-stringify"
 import remarkGfm from "remark-gfm"
 import remarkFrontmatter from "remark-frontmatter"
 import remarkMath from "remark-math"
-import { transformUniorgAstToMdast } from "./core/uniorgToMdast.js"
+import { transformUniorgAstToMdast } from "./core/uniorgToMdast/index.js"
 import type { OrgToMarkdownOptions } from "./options.js"
 
 /**

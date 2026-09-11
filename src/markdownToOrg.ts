@@ -14,7 +14,7 @@ import type {
   Text,
   Timestamp
 } from "uniorg"
-import { transformMdastToUniorgAst } from "./core/mdastToUniorg.js"
+import { transformMdastToUniorgAst } from "./core/mdastToUniorg/index.js"
 import type { MarkdownToOrgOptions } from "./options.js"
 
 /**
