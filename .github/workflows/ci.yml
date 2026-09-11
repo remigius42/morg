@@ -31,9 +31,29 @@ jobs:
         uses: actions/upload-pages-artifact@v5
         with:
           path: web/dist
+  security-scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: "npm"
+      - name: Install production dependencies
+        # `--ignore-scripts` because `scripts.prepare` runs husky, which is a
+        # dev dependency omitted here for the scan
+        run: npm install --omit=dev --ignore-scripts
+      - name: Run security scan with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: fs
+          scanners: vuln,secret,config
+          format: table
+          exit-code: 1
   deploy-pages:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    needs: build
+    needs: [build, security-scan]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
