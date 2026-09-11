@@ -164,22 +164,30 @@ function repairHighlights(uniorgAst: OrgData): void {
 // Logseq page and block references: [[page]] stays a wikilink,
 // [[page][label]] becomes [label]([[page]]), [[((uuid))][label]]
 // becomes [label](((uuid))) — emitted unescaped via verbatim-inline
+const BLOCK_REF_RE = /^\(\(.*\)\)$/
+
+function pageRefValue(label: string, target: string): string {
+  if (!label) {
+    return `[[${target}]]`
+  }
+  if (BLOCK_REF_RE.test(target)) {
+    return `[${label}](${target})`
+  }
+  return `[${label}]([[${target}]])`
+}
+
 function fuzzyLinksToPageRefs(uniorgAst: OrgData): void {
   visit(
     uniorgAst as Parent,
     "link",
     (node: Parent & { linkType?: string; rawLink?: string }, index, parent) => {
-      const isBlockRef = /^\(\(.*\)\)$/.test(node.rawLink ?? "")
+      const target = node.rawLink ?? ""
+      const isBlockRef = BLOCK_REF_RE.test(target)
       if ((node.linkType !== "fuzzy" && !isBlockRef) || !parent) {
         return undefined
       }
       const label = node.children.length ? toString(node) : ""
-      const target = node.rawLink ?? ""
-      const value = !label
-        ? `[[${target}]]`
-        : /^\(\(.*\)\)$/.test(target)
-          ? `[${label}](${target})`
-          : `[${label}]([[${target}]])`
+      const value = pageRefValue(label, target)
       parent.children[index as number] = {
         type: "verbatim-inline",
         value
