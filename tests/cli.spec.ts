@@ -243,4 +243,13 @@ describe("cli process", () => {
     expect(result.stderr).toMatch(/cannot be the same/)
     expect(result.stdout).toBe("")
   })
+
+  it("reports the failing config path with the underlying error", async () => {
+    const missing = path.join(tmp, "missing.toml")
+    const result = await run(["--config", missing, "--from", "org"], "* x")
+    expect(result.code).toBe(1)
+    expect(result.stderr).toMatch(/Error reading .*missing\.toml/)
+    // the cause is printed alongside the message
+    expect(result.stderr).toMatch(/ENOENT/)
+  })
 })
