@@ -1,0 +1,6 @@
+---
+engines:
+  # TSLint is deprecated (superseded by typescript-eslint) and its default
+  # patterns conflict with our Prettier config (e.g. trailingComma: none).
+  tslint:
+    enabled: false
