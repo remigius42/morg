@@ -19,3 +19,5 @@
 # H1s, alternate rule markers); repo markdownlint excludes them too
 exclude_paths:
   - tests/fixtures/**
+  # generated file; size/duplication metrics are meaningless on it
+  - package-lock.json
