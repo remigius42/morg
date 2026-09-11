@@ -4,3 +4,11 @@ engines:
   # patterns conflict with our Prettier config (e.g. trailingComma: none).
   tslint:
     enabled: false
+  # ESLint runs in GitHub CI with the repo's own eslint.config.js
+  # (flat config, which Codacy cannot detect/use). Codacy's bundled
+  # ESLint applies its own pattern set instead, including naming-
+  # heuristic rules like xss/no-mixed-html that false-positive on a
+  # markup-conversion library. Disabled here to avoid duplicate,
+  # divergent linting.
+  eslint:
+    enabled: false

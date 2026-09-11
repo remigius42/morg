@@ -4,6 +4,7 @@ autolinks
 binarypoetry
 blockquotes
 canonicalizer
+codacy
 Comeau
 commitlint
 filetags
