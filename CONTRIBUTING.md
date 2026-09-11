@@ -14,7 +14,7 @@ participating you agree to abide by its terms.
 ```bash
 npm install
 npm run test:unit   # vitest watch mode (test:unit:ci for one-shot)
-npm run lint        # prettier, cspell, markdownlint, eslint, typecheck
+npm run lint        # prettier, cspell, markdownlint, eslint, knip, typecheck
 npm run build       # tsc → dist/
 ```
 

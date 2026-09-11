@@ -129,9 +129,7 @@ function takeTaskMarker(headline: Headline): void {
  * @param uniorgAst The Logseq-flavored uniorg AST to transform.
  * @returns The generic uniorg AST.
  */
-export function extractLogseqSpecificsFromUniorgAst(
-  uniorgAst: OrgData
-): OrgData {
+function extractLogseqSpecificsFromUniorgAst(uniorgAst: OrgData): OrgData {
   extractInParent(uniorgAst)
   repairHighlights(uniorgAst)
   fuzzyLinksToPageRefs(uniorgAst)
