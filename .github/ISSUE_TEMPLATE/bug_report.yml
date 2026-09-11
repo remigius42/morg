@@ -1,0 +1,71 @@
+# The relevant documentation can be found at
+# yamllint disable rule:line-length
+# - https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/configuring-issue-templates-for-your-repository#creating-issue-forms
+# - https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/syntax-for-githubs-form-schema
+# yamllint enable rule:line-length
+
+name: Bug Report
+description: File a bug report
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for helping to make this project better and for taking the
+        time to fill out this bug report!
+  - type: dropdown
+    id: interface
+    attributes:
+      label: Interface
+      description: Where did you run the conversion?
+      options:
+        - CLI
+        - Web UI (morg.binarypoetry.ch)
+        - Library (npm / import)
+    validations:
+      required: true
+  - type: textarea
+    id: input-sample
+    attributes:
+      label: Input sample
+      description: |
+        The smallest input that reproduces the problem, plus the exact command
+        or options used (e.g. direction, preset, config).
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: |
+        The output you got and the output you expected. For Round Trip issues,
+        mention whether a second Round Trip changes the output again.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: morg version
+      description: Version tag or commit (for the Web UI, the date is enough).
+    validations:
+      required: false
+  - type: checkboxes
+    id: formalities
+    attributes:
+      label: Formalities
+      description: |
+        By submitting this issue
+
+        - you agree to follow the
+          [Code of Conduct](https://github.com/remigius42/morg/blob/main/CODE_OF_CONDUCT.md)
+          of this project
+        - you confirm that you have had a look at the
+          [existing issues](https://github.com/remigius42/morg/issues)
+          and you are certain that this issue would not be a duplicate
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true
+        - label: I confirm that I have looked at the already reported issues and I am sure that this issue would not be a duplicate
+          required: true

@@ -1,0 +1,45 @@
+# The relevant documentation can be found at
+# yamllint disable rule:line-length
+# - https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/configuring-issue-templates-for-your-repository#creating-issue-forms
+# - https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/syntax-for-githubs-form-schema
+# yamllint enable rule:line-length
+
+name: Feature Request / Discussion
+description: Propose a change or start a discussion before opening a PR
+title: "[Feature]: "
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to propose an improvement! Describing your
+        idea here before opening a PR is the best way to avoid wasted effort.
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like to change or add?
+      description: |
+        Describe the problem you're trying to solve and your proposed
+        solution. For new construct mappings, an input/output example in both
+        formats helps a lot (see the
+        [mapping reference](https://github.com/remigius42/morg/blob/main/docs/mappings.md)).
+    validations:
+      required: true
+  - type: checkboxes
+    id: formalities
+    attributes:
+      label: Formalities
+      description: |
+        By submitting this issue
+
+        - you agree to follow the
+          [Code of Conduct](https://github.com/remigius42/morg/blob/main/CODE_OF_CONDUCT.md)
+          of this project
+        - you confirm that you have had a look at the
+          [existing issues](https://github.com/remigius42/morg/issues)
+          and you are certain that this issue would not be a duplicate
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true
+        - label: I confirm that I have looked at the already reported issues and I am sure that this would not be a duplicate
+          required: true
