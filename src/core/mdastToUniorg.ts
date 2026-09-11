@@ -445,29 +445,33 @@ function transformMdastTableRow(row: MdastTableRow): unknown {
   }
 }
 
-// Mirrors the AST shape uniorg-parse produces for lists: ordered numbering
-// lives in each item's bullet, and nested lists sit inside the parent
-// item's children with indent = parent indent + bullet length.
-// a bare <dl> block in the exact shape morg emits under useHtml
-// (alternating attribute-less <dt>/<dd> lines) becomes a ` :: ` list —
-// the same markdown convention descriptive lists use without useHtml,
-// so the org side re-parses it as a native descriptive list
+// a bare <dl> whose body is nothing but attribute-less <dt>/<dd> pairs
+// (any whitespace between tags) becomes a ` :: ` list — the same
+// markdown convention descriptive lists use without useHtml, so the
+// org side re-parses it as a native descriptive list; anything richer
+// stays a preserved md-ism
 function interpretDefinitionList(html: string): ElementType | null {
-  const body = /^<dl>\n((?:<dt>.*<\/dt>\n<dd>.*<\/dd>\n?)+)<\/dl>\s*$/.exec(
-    html
-  )?.[1]
+  const body = /^<dl>([\s\S]*)<\/dl>\s*$/.exec(html.trim())?.[1]
   if (!body) {
     return null
   }
-  const entries = [
-    ...body.matchAll(/<dt>(.*)<\/dt>\n<dd>(.*)<\/dd>/g)
-  ] as RegExpMatchArray[]
+  const entries: [string, string][] = []
+  const leftover = body.replace(
+    /<dt>([^<]*)<\/dt>\s*<dd>([^<]*)<\/dd>/g,
+    (_match, term: string, definition: string) => {
+      entries.push([term.trim(), definition.trim()])
+      return ""
+    }
+  )
+  if (!entries.length || leftover.trim() !== "") {
+    return null
+  }
   return {
     type: "plain-list",
     listType: "unordered",
     indent: 0,
     affiliated: {},
-    children: entries.map(([, term, definition]) => ({
+    children: entries.map(([term, definition]) => ({
       type: "list-item",
       indent: 0,
       bullet: "- ",
@@ -482,6 +486,9 @@ function interpretDefinitionList(html: string): ElementType | null {
   } as unknown as ElementType
 }
 
+// Mirrors the AST shape uniorg-parse produces for lists: ordered numbering
+// lives in each item's bullet, and nested lists sit inside the parent
+// item's children with indent = parent indent + bullet length.
 function transformMdastList(listNode: MdastList, indent: number): List {
   const start = listNode.start ?? 1
   return {

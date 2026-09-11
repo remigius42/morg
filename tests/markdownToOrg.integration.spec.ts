@@ -185,6 +185,18 @@ This is a paragraph.
     )
   })
 
+  it("should interpret <dl> regardless of whitespace between tags", () => {
+    const sameLine = "<dl>\n<dt>foo</dt><dd>bar</dd>\n</dl>\n"
+    const indented = "<dl>\n  <dt>foo</dt>\n  <dd>bar</dd>\n</dl>\n"
+    const oneLine = "<dl><dt>foo</dt><dd>bar</dd></dl>\n"
+
+    for (const markdown of [sameLine, indented, oneLine]) {
+      expect(convertMarkdownToOrg(markdown, { interpretHtml: true })).toBe(
+        "- foo :: bar\n"
+      )
+    }
+  })
+
   it("should drop html when preserveMdisms.html is false", () => {
     const markdown = "Press <kbd>x</kbd> now.\n\n<div>\nblock\n</div>\n"
 
