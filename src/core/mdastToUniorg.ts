@@ -112,30 +112,42 @@ const INLINE_HTML_ORG_TYPES: Record<string, ObjectType["type"]> = {
   sub: "subscript"
 }
 
+// tag names are case-insensitive and may have whitespace before
+// the closing > (valid html); attributes disqualify the tag
+function matchInlineHtmlPair(
+  children: PhrasingContent[],
+  i: number
+): { orgType: ObjectType["type"]; end: number } | null {
+  const node = children[i] as PhrasingContent
+  if (node.type !== "html") {
+    return null
+  }
+  const tag = /^<(u|sup|sub)\s*>$/i.exec(node.value)?.[1]?.toLowerCase()
+  const orgType = tag ? INLINE_HTML_ORG_TYPES[tag] : undefined
+  if (!orgType) {
+    return null
+  }
+  const closeTag = new RegExp(`^</${tag}\\s*>$`, "i")
+  const end = children.findIndex(
+    (child, j) => j > i && child.type === "html" && closeTag.test(child.value)
+  )
+  return end === -1 ? null : { orgType, end }
+}
+
 function transformPhrasingChildren(children: PhrasingContent[]): ObjectType[] {
   const result: ObjectType[] = []
   for (let i = 0; i < children.length; i++) {
     const node = children[i] as PhrasingContent
-    if (currentOptions.interpretHtml && node.type === "html") {
-      // tag names are case-insensitive and may have whitespace before
-      // the closing > (valid html); attributes disqualify the tag
-      const tag = /^<(u|sup|sub)\s*>$/i.exec(node.value)?.[1]?.toLowerCase()
-      const orgType = tag ? INLINE_HTML_ORG_TYPES[tag] : undefined
-      const closeTag = new RegExp(`^</${tag}\\s*>$`, "i")
-      const end = orgType
-        ? children.findIndex(
-            (child, j) =>
-              j > i && child.type === "html" && closeTag.test(child.value)
-          )
-        : -1
-      if (orgType && end !== -1) {
-        result.push({
-          type: orgType,
-          children: transformPhrasingChildren(children.slice(i + 1, end))
-        } as ObjectType)
-        i = end
-        continue
-      }
+    const pair = currentOptions.interpretHtml
+      ? matchInlineHtmlPair(children, i)
+      : null
+    if (pair) {
+      result.push({
+        type: pair.orgType,
+        children: transformPhrasingChildren(children.slice(i + 1, pair.end))
+      } as ObjectType)
+      i = pair.end
+      continue
     }
     const transformed = transformMdastPhrasingContentToUniorgObject(node)
     if (transformed) {
@@ -143,6 +155,86 @@ function transformPhrasingChildren(children: PhrasingContent[]): ObjectType[] {
     }
   }
   return result
+}
+
+function transformMdastLink(
+  linkNode: Extract<PhrasingContent, { type: "link" }>
+): ObjectType {
+  const [only] = linkNode.children
+  // text equal to the url (autolinks) is no description; a plain
+  // [[url]] keeps the org side canonical
+  const linkChildren =
+    linkNode.children.length === 1 &&
+    only?.type === "text" &&
+    only.value === linkNode.url
+      ? []
+      : transformPhrasingChildren(linkNode.children)
+  // rawLink should just be the URL, uniorg-stringify adds the brackets
+  return {
+    type: "link",
+    format: "bracket", // Assuming bracket format for Markdown links
+    linkType: "url",
+    rawLink: linkNode.url,
+    path: linkNode.url,
+    children: linkChildren
+  }
+}
+
+function transformMdastLinkReference(
+  node: Extract<PhrasingContent, { type: "linkReference" }>
+): ObjectType | null {
+  // org has no reference-style links: resolve to an inline link
+  const definition = currentDefinitions.get(node.identifier)
+  if (!definition) {
+    return null
+  }
+  return transformMdastPhrasingContentToUniorgObject({
+    type: "link",
+    url: definition.url,
+    children: node.children
+  })
+}
+
+function transformMdastImageReference(
+  node: Extract<PhrasingContent, { type: "imageReference" }>
+): ObjectType | null {
+  const definition = currentDefinitions.get(node.identifier)
+  if (!definition) {
+    return null
+  }
+  return transformMdastPhrasingContentToUniorgObject({
+    type: "image",
+    url: definition.url,
+    alt: node.alt ?? null
+  })
+}
+
+function transformMdastImage(
+  node: Extract<PhrasingContent, { type: "image" }>
+): ObjectType {
+  // org has no dedicated image syntax: a plain file link renders
+  // inline, alt text becomes the link description; the title
+  // attribute has no org slot and is dropped (see README)
+  if (node.title) {
+    warn(`dropped image title "${node.title}" (${node.url})`)
+  }
+  return {
+    type: "link",
+    format: "bracket",
+    linkType: "file",
+    rawLink: node.url,
+    path: node.url,
+    children: node.alt ? [{ type: "text", value: node.alt }] : []
+  } as unknown as ObjectType
+}
+
+function transformMdastInlineMath(node: PhrasingContent): ObjectType {
+  const value = (node as unknown as { value: string }).value
+  return {
+    type: "latex-fragment",
+    value: `$${value}$`,
+    contents: value
+  } as unknown as ObjectType
 }
 
 function transformMdastPhrasingContentToUniorgObject(
@@ -166,60 +258,16 @@ function transformMdastPhrasingContentToUniorgObject(
         type: "strike-through",
         children: transformPhrasingChildren(node.children)
       }
-    case "link": {
-      const linkNode = node
-      const [only] = linkNode.children
-      // text equal to the url (autolinks) is no description; a plain
-      // [[url]] keeps the org side canonical
-      const linkChildren =
-        linkNode.children.length === 1 &&
-        only?.type === "text" &&
-        only.value === linkNode.url
-          ? []
-          : transformPhrasingChildren(linkNode.children)
-      // rawLink should just be the URL, uniorg-stringify adds the brackets
-      return {
-        type: "link",
-        format: "bracket", // Assuming bracket format for Markdown links
-        linkType: "url",
-        rawLink: linkNode.url,
-        path: linkNode.url,
-        children: linkChildren
-      }
-    }
-    case "linkReference": {
-      // org has no reference-style links: resolve to an inline link
-      const definition = currentDefinitions.get(node.identifier)
-      if (!definition) {
-        return null
-      }
-      return transformMdastPhrasingContentToUniorgObject({
-        type: "link",
-        url: definition.url,
-        children: node.children
-      })
-    }
-    case "imageReference": {
-      const definition = currentDefinitions.get(node.identifier)
-      if (!definition) {
-        return null
-      }
-      return transformMdastPhrasingContentToUniorgObject({
-        type: "image",
-        url: definition.url,
-        alt: node.alt ?? null
-      })
-    }
+    case "link":
+      return transformMdastLink(node)
+    case "linkReference":
+      return transformMdastLinkReference(node)
+    case "imageReference":
+      return transformMdastImageReference(node)
     case "inlineCode":
       return { type: "code", value: node.value }
-    case "inlineMath" as PhrasingContent["type"]: {
-      const value = (node as unknown as { value: string }).value
-      return {
-        type: "latex-fragment",
-        value: `$${value}$`,
-        contents: value
-      } as unknown as ObjectType
-    }
+    case "inlineMath" as PhrasingContent["type"]:
+      return transformMdastInlineMath(node)
     case "break":
       return { type: "line-break" } as unknown as ObjectType
     case "footnoteReference":
@@ -239,24 +287,134 @@ function transformMdastPhrasingContentToUniorgObject(
           }
         : null
     case "image":
-      // org has no dedicated image syntax: a plain file link renders
-      // inline, alt text becomes the link description; the title
-      // attribute has no org slot and is dropped (see README)
-      if (node.title) {
-        warn(`dropped image title "${node.title}" (${node.url})`)
-      }
-      return {
-        type: "link",
-        format: "bracket",
-        linkType: "file",
-        rawLink: node.url,
-        path: node.url,
-        children: node.alt ? [{ type: "text", value: node.alt }] : []
-      } as unknown as ObjectType
+      return transformMdastImage(node)
     // remaining phrasing types have no mapping; dropped with a warning
     default:
       warn(`dropped md ${(node as { type: string }).type}`)
       return null
+  }
+}
+
+function transformMdastTable(
+  node: Extract<RootContent, { type: "table" }>
+): ElementType {
+  const [headerRow, ...bodyRows] = node.children
+  // GFM column alignment maps to an org alignment cookie row
+  // (| <l> | <r> | <c> |) directly below the header rule
+  const cookieRow = (node.align || []).some(Boolean)
+    ? [
+        {
+          type: "table-row",
+          rowType: "standard",
+          children: (node.align || []).map(align => ({
+            type: "table-cell",
+            children: align
+              ? [{ type: "text", value: `<${align.charAt(0)}>` }]
+              : []
+          }))
+        }
+      ]
+    : []
+  const rows = [
+    ...(headerRow ? [transformMdastTableRow(headerRow)] : []),
+    { type: "table-row", rowType: "rule", children: [] },
+    ...cookieRow,
+    ...bodyRows.map(transformMdastTableRow)
+  ]
+  return {
+    type: "table",
+    tableType: "org",
+    tblfm: null,
+    children: rows
+  } as unknown as ElementType
+}
+
+function transformMdastHtml(
+  node: Extract<RootContent, { type: "html" }>
+): ElementType | null {
+  // html comments are markdown's comment idiom and map natively to
+  // org comments (not an md-ism)
+  const comment = /^<!--([\s\S]*?)-->\s*$/.exec(node.value)
+  if (comment) {
+    return {
+      type: "comment",
+      value: (comment[1] ?? "").trim()
+    } as unknown as ElementType
+  }
+  if (currentOptions.interpretHtml) {
+    const descriptiveList = interpretDefinitionList(node.value)
+    if (descriptiveList) {
+      return descriptiveList
+    }
+  }
+  // block raw html is a md-ism: preserved as an org export block
+  return mdismEnabled("html")
+    ? ({
+        type: "export-block",
+        backend: "html",
+        value: node.value
+      } as unknown as ElementType)
+    : null
+}
+
+function transformMdastCode(
+  node: Extract<RootContent, { type: "code" }>
+): ElementType {
+  // a table.el-tagged fence restores the verbatim table.el table it
+  // was serialized from
+  if (node.lang === "table.el") {
+    return {
+      type: "table",
+      tableType: "table.el",
+      tblfm: "",
+      value: `${node.value}\n`
+    } as unknown as ElementType
+  }
+  return (node.lang
+    ? { type: "src-block", language: node.lang, value: node.value }
+    : {
+        type: "example-block",
+        value: node.value
+      }) as unknown as ElementType
+}
+
+// \begin… blocks restore to latex environments; plain display math
+// becomes a $$…$$ fragment (org's display form)
+function transformMdastMath(node: RootContent | PhrasingContent): ElementType {
+  const value = (node as unknown as { value: string }).value
+  if (value.startsWith("\\begin{")) {
+    return {
+      type: "latex-environment",
+      affiliated: {},
+      value
+    } as unknown as ElementType
+  }
+  return {
+    type: "paragraph",
+    children: [
+      {
+        type: "latex-fragment",
+        value: `$$\n${value}\n$$`,
+        contents: `\n${value}\n`
+      }
+    ],
+    contentsBegin: 0,
+    contentsEnd: 0
+  } as unknown as ElementType
+}
+
+function transformMdastHeading(
+  node: Extract<RootContent, { type: "heading" }>
+): ElementType {
+  return {
+    type: "headline",
+    level: node.depth,
+    todoKeyword: null,
+    priority: null,
+    commented: false,
+    rawValue: toString(node),
+    tags: [],
+    children: transformPhrasingChildren(node.children)
   }
 }
 
@@ -265,16 +423,7 @@ function transformMdastNodeToUniorgNode(
 ): GreaterElementType | ElementType | Text | null {
   switch (node.type) {
     case "heading":
-      return {
-        type: "headline",
-        level: node.depth,
-        todoKeyword: null,
-        priority: null,
-        commented: false,
-        rawValue: toString(node),
-        tags: [],
-        children: transformPhrasingChildren(node.children)
-      }
+      return transformMdastHeading(node)
     case "paragraph": {
       // a paragraph of only #+KEY: lines is affiliated keywords (or
       // mid-file keywords) traveling verbatim; emit as raw text so they
@@ -295,62 +444,10 @@ function transformMdastNodeToUniorgNode(
       return { type: "text", value: node.value }
     case "list":
       return transformMdastList(node, 0)
-    case "table": {
-      const [headerRow, ...bodyRows] = node.children
-      // GFM column alignment maps to an org alignment cookie row
-      // (| <l> | <r> | <c> |) directly below the header rule
-      const cookieRow = (node.align || []).some(Boolean)
-        ? [
-            {
-              type: "table-row",
-              rowType: "standard",
-              children: (node.align || []).map(align => ({
-                type: "table-cell",
-                children: align
-                  ? [{ type: "text", value: `<${align.charAt(0)}>` }]
-                  : []
-              }))
-            }
-          ]
-        : []
-      const rows = [
-        ...(headerRow ? [transformMdastTableRow(headerRow)] : []),
-        { type: "table-row", rowType: "rule", children: [] },
-        ...cookieRow,
-        ...bodyRows.map(transformMdastTableRow)
-      ]
-      return {
-        type: "table",
-        tableType: "org",
-        tblfm: null,
-        children: rows
-      } as unknown as ElementType
-    }
-    case "html": {
-      // html comments are markdown's comment idiom and map natively to
-      // org comments (not an md-ism)
-      const comment = /^<!--([\s\S]*?)-->\s*$/.exec(node.value)
-      if (comment) {
-        return {
-          type: "comment",
-          value: (comment[1] ?? "").trim()
-        } as unknown as ElementType
-      }
-      if (currentOptions.interpretHtml) {
-        const descriptiveList = interpretDefinitionList(node.value)
-        if (descriptiveList) {
-          return descriptiveList
-        }
-      }
-      // block raw html is a md-ism: preserved as an org export block
-      return mdismEnabled("html")
-        ? ({
-            type: "export-block",
-            backend: "html",
-            value: node.value
-          } as unknown as ElementType)
-        : null
-    }
+    case "table":
+      return transformMdastTable(node)
+    case "html":
+      return transformMdastHtml(node)
     case "thematicBreak":
       return { type: "horizontal-rule" } as unknown as ElementType
     case "footnoteDefinition":
@@ -370,46 +467,9 @@ function transformMdastNodeToUniorgNode(
           .filter(Boolean)
       } as unknown as ElementType
     case "code":
-      // a table.el-tagged fence restores the verbatim table.el table it
-      // was serialized from
-      if (node.lang === "table.el") {
-        return {
-          type: "table",
-          tableType: "table.el",
-          tblfm: "",
-          value: `${node.value}\n`
-        } as unknown as ElementType
-      }
-      return (node.lang
-        ? { type: "src-block", language: node.lang, value: node.value }
-        : {
-            type: "example-block",
-            value: node.value
-          }) as unknown as ElementType
-    case "math" as RootContent["type"]: {
-      // \begin… blocks restore to latex environments; plain display math
-      // becomes a $$…$$ fragment (org's display form)
-      const value = (node as unknown as { value: string }).value
-      if (value.startsWith("\\begin{")) {
-        return {
-          type: "latex-environment",
-          affiliated: {},
-          value
-        } as unknown as ElementType
-      }
-      return {
-        type: "paragraph",
-        children: [
-          {
-            type: "latex-fragment",
-            value: `$$\n${value}\n$$`,
-            contents: `\n${value}\n`
-          }
-        ],
-        contentsBegin: 0,
-        contentsEnd: 0
-      } as unknown as ElementType
-    }
+      return transformMdastCode(node)
+    case "math" as RootContent["type"]:
+      return transformMdastMath(node)
     case "definition":
       // consumed by reference-style link resolution
       return null

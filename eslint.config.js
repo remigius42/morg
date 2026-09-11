@@ -18,7 +18,19 @@ export default tseslint.config(
       "@typescript-eslint/no-unused-vars": [
         "error",
         { argsIgnorePattern: "^_" }
+      ],
+      complexity: ["error", { max: 10, variant: "modified" }],
+      "max-lines-per-function": [
+        "error",
+        { max: 60, skipBlankLines: true, skipComments: true }
       ]
+    }
+  },
+  {
+    // describe/it wrappers are naturally long; complexity still applies
+    files: ["tests/**"],
+    rules: {
+      "max-lines-per-function": "off"
     }
   },
   {

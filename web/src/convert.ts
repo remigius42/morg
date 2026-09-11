@@ -32,6 +32,69 @@ export interface ConversionResult {
   error?: string
 }
 
+function resolvePreset(
+  presetName: string | undefined
+): { preset?: Preset } | { error: string } {
+  if (!presetName) {
+    return {}
+  }
+  const factory = PRESETS[presetName]
+  if (!factory) {
+    return {
+      error: `Unknown preset '${presetName}'. Available presets: ${Object.keys(PRESETS).join(", ")}`
+    }
+  }
+  return { preset: factory() }
+}
+
+function buildOptions(
+  form: ConversionForm,
+  config: MorgConfig,
+  shared: object
+): {
+  mdToOrgOptions: Parameters<typeof convertMarkdownToOrg>[1]
+  orgToMdOptions: Parameters<typeof convertOrgToMarkdown>[1]
+} {
+  const mdToOrgOptions = {
+    ...config.markdownToOrg,
+    ...shared,
+    ...(form.interpretHtml !== undefined && {
+      interpretHtml: form.interpretHtml
+    })
+  }
+  const orgToMdOptions = {
+    ...config.orgToMarkdown,
+    ...shared,
+    ...(form.useHtml !== undefined && { useHtml: form.useHtml }),
+    ...(form.taskCheckboxes !== undefined && {
+      taskCheckboxes: form.taskCheckboxes
+    }),
+    markdownStyle: {
+      ...config.orgToMarkdown?.markdownStyle,
+      ...form.markdownStyle
+    }
+  }
+  return { mdToOrgOptions, orgToMdOptions }
+}
+
+function convert(
+  input: string,
+  direction: Direction,
+  mdToOrgOptions: Parameters<typeof convertMarkdownToOrg>[1],
+  orgToMdOptions: Parameters<typeof convertOrgToMarkdown>[1]
+): string {
+  switch (direction) {
+    case "md-to-org":
+      return convertMarkdownToOrg(input, mdToOrgOptions)
+    case "org-to-md":
+      return convertOrgToMarkdown(input, orgToMdOptions)
+    case "normalize-md":
+      return normalizeMarkdown(input, { ...mdToOrgOptions, ...orgToMdOptions })
+    case "normalize-org":
+      return normalizeOrg(input, { ...mdToOrgOptions, ...orgToMdOptions })
+  }
+}
+
 /**
  * Runs one conversion for the Web UI, collecting warnings instead of
  * printing them. Precedence mirrors the CLI: form > config > defaults.
@@ -53,63 +116,24 @@ export function runConversion(
     }
   }
 
-  const presetName = form.preset || config.preset
-  let preset: Preset | undefined
-  if (presetName) {
-    const factory = PRESETS[presetName]
-    if (!factory) {
-      return {
-        output: "",
-        warnings,
-        error: `Unknown preset '${presetName}'. Available presets: ${Object.keys(PRESETS).join(", ")}`
-      }
-    }
-    preset = factory()
+  const resolved = resolvePreset(form.preset || config.preset)
+  if ("error" in resolved) {
+    return { output: "", warnings, error: resolved.error }
   }
 
   const shared = {
     onWarning,
-    preset,
+    preset: resolved.preset,
     ...(config.orgismKeys && { orgismKeys: config.orgismKeys })
   }
-  const mdToOrgOptions = {
-    ...config.markdownToOrg,
-    ...shared,
-    ...(form.interpretHtml !== undefined && {
-      interpretHtml: form.interpretHtml
-    })
-  }
-  const orgToMdOptions = {
-    ...config.orgToMarkdown,
-    ...shared,
-    ...(form.useHtml !== undefined && { useHtml: form.useHtml }),
-    ...(form.taskCheckboxes !== undefined && {
-      taskCheckboxes: form.taskCheckboxes
-    }),
-    markdownStyle: {
-      ...config.orgToMarkdown?.markdownStyle,
-      ...form.markdownStyle
-    }
-  }
+  const { mdToOrgOptions, orgToMdOptions } = buildOptions(form, config, shared)
   try {
-    let output: string
-    switch (form.direction) {
-      case "md-to-org":
-        output = convertMarkdownToOrg(input, mdToOrgOptions)
-        break
-      case "org-to-md":
-        output = convertOrgToMarkdown(input, orgToMdOptions)
-        break
-      case "normalize-md":
-        output = normalizeMarkdown(input, {
-          ...mdToOrgOptions,
-          ...orgToMdOptions
-        })
-        break
-      case "normalize-org":
-        output = normalizeOrg(input, { ...mdToOrgOptions, ...orgToMdOptions })
-        break
-    }
+    const output = convert(
+      input,
+      form.direction,
+      mdToOrgOptions,
+      orgToMdOptions
+    )
     return { output, warnings }
   } catch (error) {
     return { output: "", warnings, error: `Conversion error: ${String(error)}` }

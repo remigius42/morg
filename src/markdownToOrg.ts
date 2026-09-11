@@ -105,66 +105,97 @@ function makeTimestamp(rawValue: string): Timestamp {
   return { type: "timestamp", rawValue } as Timestamp
 }
 
+type Planning = Partial<Record<"scheduled" | "deadline" | "closed", Timestamp>>
+
+function applyOrgismEntry(
+  headline: Headline,
+  planning: Planning,
+  properties: NodeProperty[],
+  key: string,
+  value: string
+): void {
+  switch (key) {
+    case "todo":
+      headline.todoKeyword = value
+      break
+    case "priority":
+      headline.priority = value
+      break
+    case "tags":
+      headline.tags = value.split(/,\s*/)
+      break
+    case "scheduled":
+    case "deadline":
+    case "closed":
+      planning[key] = makeTimestamp(value)
+      break
+    default:
+      properties.push({ type: "node-property", key, value })
+  }
+}
+
+function consumeOrgismParagraphs(
+  children: { type: string }[],
+  i: number,
+  canonicalKeys: Map<string, string>
+): { planning: Planning; properties: NodeProperty[]; consumed: number } {
+  const headline = children[i] as Headline
+  const planning: Planning = {}
+  const properties: NodeProperty[] = []
+  let consumed = 0
+  let entries
+  while ((entries = parseKeyValueParagraph(children[i + 1 + consumed]))) {
+    for (const [rawKey, value] of entries) {
+      const key = canonicalKeys.get(rawKey) ?? rawKey
+      applyOrgismEntry(headline, planning, properties, key, value)
+    }
+    consumed++
+  }
+  return { planning, properties, consumed }
+}
+
+function buildOrgismReplacements(
+  planning: Planning,
+  properties: NodeProperty[]
+): object[] {
+  const replacements: object[] = []
+  if (Object.keys(planning).length) {
+    replacements.push({
+      type: "planning",
+      scheduled: planning.scheduled ?? null,
+      deadline: planning.deadline ?? null,
+      closed: planning.closed ?? null
+    })
+  }
+  if (properties.length) {
+    replacements.push({
+      type: "property-drawer",
+      children: properties,
+      contentsBegin: 0,
+      contentsEnd: 0
+    })
+  }
+  return replacements
+}
+
 function restoreOrgisms(
   uniorgAst: OrgData,
   canonicalKeys: Map<string, string>
 ): void {
   const children = uniorgAst.children as { type: string }[]
   for (let i = 0; i < children.length; i++) {
-    const headline = children[i]
-    if (headline?.type !== "headline") {
+    if (children[i]?.type !== "headline") {
       continue
     }
-    const planning: Partial<
-      Record<"scheduled" | "deadline" | "closed", Timestamp>
-    > = {}
-    const properties: NodeProperty[] = []
-    let consumed = 0
-    let entries
-    while ((entries = parseKeyValueParagraph(children[i + 1 + consumed]))) {
-      for (const [rawKey, value] of entries) {
-        const key = canonicalKeys.get(rawKey) ?? rawKey
-        switch (key) {
-          case "todo":
-            ;(headline as Headline).todoKeyword = value
-            break
-          case "priority":
-            ;(headline as Headline).priority = value
-            break
-          case "tags":
-            ;(headline as Headline).tags = value.split(/,\s*/)
-            break
-          case "scheduled":
-          case "deadline":
-          case "closed":
-            planning[key] = makeTimestamp(value)
-            break
-          default:
-            properties.push({ type: "node-property", key, value })
-        }
-      }
-      consumed++
-    }
+    const { planning, properties, consumed } = consumeOrgismParagraphs(
+      children,
+      i,
+      canonicalKeys
+    )
     if (!consumed) {
       continue
     }
-    const replacements: object[] = []
-    if (Object.keys(planning).length) {
-      replacements.push({
-        type: "planning",
-        scheduled: planning.scheduled ?? null,
-        deadline: planning.deadline ?? null,
-        closed: planning.closed ?? null
-      })
-    }
-    if (properties.length) {
-      replacements.push({
-        type: "property-drawer",
-        children: properties,
-        contentsBegin: 0,
-        contentsEnd: 0
-      })
-    }
+    const replacements = buildOrgismReplacements(planning, properties)
     children.splice(i + 1, consumed, ...(replacements as { type: string }[]))
   }
 }

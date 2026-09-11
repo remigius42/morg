@@ -86,133 +86,149 @@ function element<T extends HTMLElement>(id: string): T {
   return found as T
 }
 
-/** Wires the Embed Page form to `runConversion`. Idempotent per form. */
-export function init(): void {
-  const form = element<HTMLFormElement>("converter")
-  if (form.dataset.initialized) {
+interface Controls {
+  direction: HTMLSelectElement
+  preset: HTMLSelectElement
+  useHtml: HTMLInputElement
+  interpretHtml: HTMLInputElement
+  taskCheckboxes: HTMLInputElement
+  config: HTMLTextAreaElement
+  input: HTMLTextAreaElement
+  output: HTMLTextAreaElement
+  error: HTMLParagraphElement
+  warnings: HTMLUListElement
+  styleSelects: HTMLSelectElement[]
+}
+
+function findControls(): Controls {
+  return {
+    direction: element<HTMLSelectElement>("direction"),
+    preset: element<HTMLSelectElement>("preset"),
+    useHtml: element<HTMLInputElement>("useHtml"),
+    interpretHtml: element<HTMLInputElement>("interpretHtml"),
+    taskCheckboxes: element<HTMLInputElement>("taskCheckboxes"),
+    config: element<HTMLTextAreaElement>("config"),
+    input: element<HTMLTextAreaElement>("input"),
+    output: element<HTMLTextAreaElement>("output"),
+    error: element<HTMLParagraphElement>("error"),
+    warnings: element<HTMLUListElement>("warnings"),
+    styleSelects: STYLE_KEYS.map(key => element<HTMLSelectElement>(key))
+  }
+}
+
+function assign<T>(value: T | undefined, apply: (value: T) => void): void {
+  if (value !== undefined) apply(value)
+}
+
+function formState(controls: Controls): ConversionForm {
+  return {
+    direction: controls.direction.value as Direction,
+    preset: controls.preset.value,
+    useHtml: controls.useHtml.checked,
+    interpretHtml: controls.interpretHtml.checked,
+    taskCheckboxes: controls.taskCheckboxes.checked,
+    markdownStyle: Object.fromEntries(
+      controls.styleSelects.map(select => [select.id, select.value])
+    )
+  }
+}
+
+function convert(controls: Controls): void {
+  const { input, output, error, warnings, direction, config } = controls
+  const result = runConversion(input.value, formState(controls), config.value)
+  output.value = result.output
+  error.hidden = !result.error
+  error.textContent = result.error ?? ""
+  warnings.hidden = result.warnings.length === 0
+  warnings.replaceChildren(
+    ...result.warnings.map(message => {
+      const item = document.createElement("li")
+      item.textContent = message
+      return item
+    })
+  )
+  input.placeholder = readsMarkdown(direction.value as Direction)
+    ? "Paste Markdown here…"
+    : "Paste Org here…"
+}
+
+function persist(controls: Controls): void {
+  const state: PersistedState = {
+    direction: controls.direction.value,
+    preset: controls.preset.value,
+    useHtml: controls.useHtml.checked,
+    interpretHtml: controls.interpretHtml.checked,
+    taskCheckboxes: controls.taskCheckboxes.checked,
+    style: Object.fromEntries(
+      controls.styleSelects.map(select => [select.id, select.value])
+    ),
+    config: controls.config.value
+  }
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+  } catch {
+    // storage may be unavailable (iframe partitioning, private mode)
+  }
+}
+
+function restore(controls: Controls): void {
+  let state: PersistedState
+  try {
+    state = JSON.parse(
+      localStorage.getItem(STORAGE_KEY) ?? "{}"
+    ) as PersistedState
+  } catch {
     return
   }
-  form.dataset.initialized = "true"
-
-  const direction = element<HTMLSelectElement>("direction")
-  const preset = element<HTMLSelectElement>("preset")
-  const useHtml = element<HTMLInputElement>("useHtml")
-  const interpretHtml = element<HTMLInputElement>("interpretHtml")
-  const taskCheckboxes = element<HTMLInputElement>("taskCheckboxes")
-  const config = element<HTMLTextAreaElement>("config")
-  const input = element<HTMLTextAreaElement>("input")
-  const output = element<HTMLTextAreaElement>("output")
-  const error = element<HTMLParagraphElement>("error")
-  const warnings = element<HTMLUListElement>("warnings")
-  const styleSelects = STYLE_KEYS.map(key => element<HTMLSelectElement>(key))
-
-  // ?theme= lets host pages override; same-origin embeds follow the
-  // chrome pages' toggle via storage events
-  applyTheme()
-  watchThemeChanges()
-
-  function formState(): ConversionForm {
-    return {
-      direction: direction.value as Direction,
-      preset: preset.value,
-      useHtml: useHtml.checked,
-      interpretHtml: interpretHtml.checked,
-      taskCheckboxes: taskCheckboxes.checked,
-      markdownStyle: Object.fromEntries(
-        styleSelects.map(select => [select.id, select.value])
-      )
-    }
+  if (state.direction) controls.direction.value = state.direction
+  assign(state.preset, value => (controls.preset.value = value))
+  assign(state.useHtml, value => (controls.useHtml.checked = value))
+  assign(state.interpretHtml, value => (controls.interpretHtml.checked = value))
+  assign(
+    state.taskCheckboxes,
+    value => (controls.taskCheckboxes.checked = value)
+  )
+  for (const select of controls.styleSelects) {
+    const value = state.style?.[select.id]
+    if (value) select.value = value
   }
+  if (state.config) controls.config.value = state.config
+}
 
-  function convert(): void {
-    const result = runConversion(input.value, formState(), config.value)
-    output.value = result.output
-    error.hidden = !result.error
-    error.textContent = result.error ?? ""
-    warnings.hidden = result.warnings.length === 0
-    warnings.replaceChildren(
-      ...result.warnings.map(message => {
-        const item = document.createElement("li")
-        item.textContent = message
-        return item
-      })
-    )
-    input.placeholder = readsMarkdown(direction.value as Direction)
-      ? "Paste Markdown here…"
-      : "Paste Org here…"
+// WYSIWYG precedence: a valid pasted config populates the form
+// controls for the fields they cover; the controls then always win
+function reflectConfig(controls: Controls): void {
+  let parsed
+  try {
+    parsed = parseConfig(controls.config.value)
+  } catch {
+    return // convert() reports the error
   }
-
-  function persist(): void {
-    const state: PersistedState = {
-      direction: direction.value,
-      preset: preset.value,
-      useHtml: useHtml.checked,
-      interpretHtml: interpretHtml.checked,
-      taskCheckboxes: taskCheckboxes.checked,
-      style: Object.fromEntries(
-        styleSelects.map(select => [select.id, select.value])
-      ),
-      config: config.value
-    }
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
-    } catch {
-      // storage may be unavailable (iframe partitioning, private mode)
-    }
+  assign(parsed.preset, value => (controls.preset.value = value))
+  const orgToMd = parsed.orgToMarkdown
+  if (typeof orgToMd?.useHtml === "boolean")
+    controls.useHtml.checked = orgToMd.useHtml
+  assign(
+    parsed.markdownToOrg?.interpretHtml,
+    value => (controls.interpretHtml.checked = value)
+  )
+  assign(
+    orgToMd?.taskCheckboxes,
+    value => (controls.taskCheckboxes.checked = value)
+  )
+  for (const select of controls.styleSelects) {
+    const value =
+      orgToMd?.markdownStyle?.[select.id as keyof typeof orgToMd.markdownStyle]
+    if (typeof value === "string") select.value = value
   }
+}
 
-  function restore(): void {
-    let state: PersistedState
-    try {
-      state = JSON.parse(
-        localStorage.getItem(STORAGE_KEY) ?? "{}"
-      ) as PersistedState
-    } catch {
-      return
-    }
-    if (state.direction) direction.value = state.direction
-    if (state.preset !== undefined) preset.value = state.preset
-    if (state.useHtml !== undefined) useHtml.checked = state.useHtml
-    if (state.interpretHtml !== undefined)
-      interpretHtml.checked = state.interpretHtml
-    if (state.taskCheckboxes !== undefined)
-      taskCheckboxes.checked = state.taskCheckboxes
-    for (const select of styleSelects) {
-      const value = state.style?.[select.id]
-      if (value) select.value = value
-    }
-    if (state.config) config.value = state.config
-  }
-
-  // WYSIWYG precedence: a valid pasted config populates the form
-  // controls for the fields they cover; the controls then always win
-  function reflectConfig(): void {
-    let parsed
-    try {
-      parsed = parseConfig(config.value)
-    } catch {
-      return // convert() reports the error
-    }
-    if (parsed.preset !== undefined) preset.value = parsed.preset
-    const orgToMd = parsed.orgToMarkdown
-    if (typeof orgToMd?.useHtml === "boolean") useHtml.checked = orgToMd.useHtml
-    if (parsed.markdownToOrg?.interpretHtml !== undefined)
-      interpretHtml.checked = parsed.markdownToOrg.interpretHtml
-    if (orgToMd?.taskCheckboxes !== undefined)
-      taskCheckboxes.checked = orgToMd.taskCheckboxes
-    for (const select of styleSelects) {
-      const value =
-        orgToMd?.markdownStyle?.[
-          select.id as keyof typeof orgToMd.markdownStyle
-        ]
-      if (typeof value === "string") select.value = value
-    }
-  }
-
+function wireListeners(controls: Controls): void {
+  const { direction, config, input } = controls
   config.addEventListener("input", () => {
-    reflectConfig()
-    persist()
-    convert()
+    reflectConfig(controls)
+    persist(controls)
+    convert(controls)
   })
   const configSnippet = element<HTMLSelectElement>("configSnippet")
   configSnippet.addEventListener("change", () => {
@@ -223,9 +239,9 @@ export function init(): void {
       return
     }
     config.value = snippet.toml
-    reflectConfig()
-    persist()
-    convert()
+    reflectConfig(controls)
+    persist(controls)
+    convert(controls)
   })
   let previousDirection = direction.value as Direction
   direction.addEventListener("change", () => {
@@ -237,28 +253,47 @@ export function init(): void {
   })
   for (const control of [
     direction,
-    preset,
-    useHtml,
-    interpretHtml,
-    taskCheckboxes,
-    ...styleSelects
+    controls.preset,
+    controls.useHtml,
+    controls.interpretHtml,
+    controls.taskCheckboxes,
+    ...controls.styleSelects
   ]) {
     control.addEventListener("change", () => {
-      persist()
-      convert()
+      persist(controls)
+      convert(controls)
     })
   }
-  input.addEventListener("input", convert)
+  input.addEventListener("input", () => convert(controls))
+}
 
-  restore()
-  previousDirection = direction.value as Direction
-  if (config.value) {
-    reflectConfig()
+/** Wires the Embed Page form to `runConversion`. Idempotent per form. */
+export function init(): void {
+  const form = element<HTMLFormElement>("converter")
+  if (form.dataset.initialized) {
+    return
   }
-  if (!input.value) {
-    input.value = demoFor(previousDirection)
+  form.dataset.initialized = "true"
+
+  const controls = findControls()
+
+  // ?theme= lets host pages override; same-origin embeds follow the
+  // chrome pages' toggle via storage events
+  applyTheme()
+  watchThemeChanges()
+
+  // restore before wiring so the direction listener's baseline for the
+  // untouched-demo swap matches the restored direction
+  restore(controls)
+  wireListeners(controls)
+
+  if (controls.config.value) {
+    reflectConfig(controls)
   }
-  convert()
+  if (!controls.input.value) {
+    controls.input.value = demoFor(controls.direction.value as Direction)
+  }
+  convert(controls)
 }
 
 if (document.getElementById("converter")) {

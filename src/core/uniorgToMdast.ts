@@ -262,102 +262,19 @@ function transformUniorgObjectToMdastPhrasingContent(
         type: "delete",
         children: transformUniorgObjects(node.children)
       }
-    case "link": {
-      const descriptionText = orgastToString(node)
-      // org has no dedicated image syntax; the common convention is a
-      // link to an image file, so map those to markdown images
-      if (IMAGE_EXTENSION_RE.test(node.rawLink)) {
-        return { type: "image", url: node.rawLink, alt: descriptionText }
-      }
-      // a description equal to the url (a common Logseq pattern) is no
-      // description: text === url makes remark-stringify emit an
-      // autolink (<url>), which restores to a plain org link. Urls full
-      // of / and _ re-parse as italic/subscript inside the description
-      // (and even uniorg-stringify garbles them back), so compare with
-      // org's emphasis-marker characters stripped from both sides
-      const withoutMarkers = (value: string): string =>
-        value.replace(/[/*_+~={}]/g, "")
-      const serializedDescription = node.children.length
-        ? orgNodeToText({
-            type: "paragraph",
-            children: node.children,
-            contentsBegin: 0,
-            contentsEnd: 0
-          }).trim()
-        : ""
-      if (
-        !node.children.length ||
-        withoutMarkers(serializedDescription) === withoutMarkers(node.rawLink)
-      ) {
-        return {
-          type: "link",
-          url: node.rawLink,
-          children: [{ type: "text", value: node.rawLink }]
-        }
-      }
-      const children = transformUniorgObjects(node.children)
-      // md cannot nest links; flatten a description that contains one
-      // (org parses bare urls inside descriptions as links)
-      const flattened = children.some(
-        child => child.type === "link" || child.type === "image"
-      )
-        ? [{ type: "text", value: descriptionText } as PhrasingContent]
-        : children
-      return { type: "link", url: node.rawLink, children: flattened }
-    }
+    case "link":
+      return transformUniorgLink(node)
     case "code":
     case "verbatim":
       return { type: "inlineCode", value: node.value }
     case "line-break":
       return { type: "break" }
-    case "footnote-reference": {
-      if ((node as { footnoteType?: string }).footnoteType === "inline") {
-        const label = node.label || nextFreeFootnoteLabel()
-        const content = transformUniorgObjects(node.children)
-        const firstChild = content[0]
-        if (firstChild?.type === "text") {
-          firstChild.value = firstChild.value.trimStart()
-        }
-        inlineFootnotes.push({ label, children: content })
-        return { type: "footnoteReference", identifier: label, label }
-      }
-      return {
-        type: "footnoteReference",
-        identifier: node.label,
-        label: node.label
-      }
-    }
+    case "footnote-reference":
+      return transformFootnoteReference(node)
     case "underline":
     case "superscript":
-    case "subscript": {
-      // markdown has no equivalents; with useHtml render as raw html
-      // (a preserved md-ism on the return trip), otherwise keep the raw
-      // org markup as text so the return trip re-parses it natively
-      // (convergent, like inline timestamps)
-      if (htmlEnabled(node.type)) {
-        const tagName =
-          node.type === "underline"
-            ? "u"
-            : node.type === "superscript"
-              ? "sup"
-              : "sub"
-        return [
-          { type: "html", value: `<${tagName}>` },
-          ...transformUniorgObjects(node.children),
-          { type: "html", value: `</${tagName}>` }
-        ]
-      }
-      const content = orgastToString(node)
-      return {
-        type: "text",
-        value:
-          node.type === "underline"
-            ? `_${content}_`
-            : node.type === "superscript"
-              ? `^{${content}}`
-              : `_{${content}}`
-      }
-    }
+    case "subscript":
+      return transformScriptMarkup(node)
     case "latex-fragment":
       // display-only paragraphs become math blocks (see the paragraph
       // handler); a fragment inside running text is inline math
@@ -386,20 +303,130 @@ function transformUniorgObjectToMdastPhrasingContent(
         value: (node as unknown as { value: string }).value
       } as unknown as PhrasingContent
     case "export-snippet":
-      if (node.backEnd !== "html") {
-        // kept as raw @@backend:…@@ text (unescaped) so the return trip
-        // re-parses the snippet natively
-        return {
-          type: "verbatimInline",
-          value: `@@${node.backEnd}:${node.value}@@`
-        } as unknown as PhrasingContent
-      }
-      return { type: "html", value: node.value }
+      return transformExportSnippet(node)
     // remaining object types have no mapping; dropped with a warning
     default:
       warn(`dropped org ${node.type}`)
       return null
   }
+}
+
+function transformUniorgLink(
+  node: Extract<ObjectType, { type: "link" }>
+): PhrasingContent {
+  const descriptionText = orgastToString(node)
+  // org has no dedicated image syntax; the common convention is a
+  // link to an image file, so map those to markdown images
+  if (IMAGE_EXTENSION_RE.test(node.rawLink)) {
+    return { type: "image", url: node.rawLink, alt: descriptionText }
+  }
+  // a description equal to the url (a common Logseq pattern) is no
+  // description: text === url makes remark-stringify emit an
+  // autolink (<url>), which restores to a plain org link. Urls full
+  // of / and _ re-parse as italic/subscript inside the description
+  // (and even uniorg-stringify garbles them back), so compare with
+  // org's emphasis-marker characters stripped from both sides
+  const withoutMarkers = (value: string): string =>
+    value.replace(/[/*_+~={}]/g, "")
+  const serializedDescription = node.children.length
+    ? orgNodeToText({
+        type: "paragraph",
+        children: node.children,
+        contentsBegin: 0,
+        contentsEnd: 0
+      }).trim()
+    : ""
+  if (
+    !node.children.length ||
+    withoutMarkers(serializedDescription) === withoutMarkers(node.rawLink)
+  ) {
+    return {
+      type: "link",
+      url: node.rawLink,
+      children: [{ type: "text", value: node.rawLink }]
+    }
+  }
+  const children = transformUniorgObjects(node.children)
+  // md cannot nest links; flatten a description that contains one
+  // (org parses bare urls inside descriptions as links)
+  const flattened = children.some(
+    child => child.type === "link" || child.type === "image"
+  )
+    ? [{ type: "text", value: descriptionText } as PhrasingContent]
+    : children
+  return { type: "link", url: node.rawLink, children: flattened }
+}
+
+function transformFootnoteReference(
+  node: Extract<ObjectType, { type: "footnote-reference" }>
+): PhrasingContent {
+  if ((node as { footnoteType?: string }).footnoteType === "inline") {
+    return transformInlineFootnoteReference(node)
+  }
+  return {
+    type: "footnoteReference",
+    identifier: node.label,
+    label: node.label
+  }
+}
+
+function transformInlineFootnoteReference(
+  node: Extract<ObjectType, { type: "footnote-reference" }>
+): PhrasingContent {
+  const label = node.label || nextFreeFootnoteLabel()
+  const content = transformUniorgObjects(node.children)
+  const firstChild = content[0]
+  if (firstChild?.type === "text") {
+    firstChild.value = firstChild.value.trimStart()
+  }
+  inlineFootnotes.push({ label, children: content })
+  return { type: "footnoteReference", identifier: label, label }
+}
+
+function transformScriptMarkup(
+  node: Extract<ObjectType, { type: "underline" | "superscript" | "subscript" }>
+): PhrasingContent | PhrasingContent[] {
+  // markdown has no equivalents; with useHtml render as raw html
+  // (a preserved md-ism on the return trip), otherwise keep the raw
+  // org markup as text so the return trip re-parses it natively
+  // (convergent, like inline timestamps)
+  if (htmlEnabled(node.type)) {
+    const tagName =
+      node.type === "underline"
+        ? "u"
+        : node.type === "superscript"
+          ? "sup"
+          : "sub"
+    return [
+      { type: "html", value: `<${tagName}>` },
+      ...transformUniorgObjects(node.children),
+      { type: "html", value: `</${tagName}>` }
+    ]
+  }
+  const content = orgastToString(node)
+  return {
+    type: "text",
+    value:
+      node.type === "underline"
+        ? `_${content}_`
+        : node.type === "superscript"
+          ? `^{${content}}`
+          : `_{${content}}`
+  }
+}
+
+function transformExportSnippet(
+  node: Extract<ObjectType, { type: "export-snippet" }>
+): PhrasingContent {
+  if (node.backEnd !== "html") {
+    // kept as raw @@backend:…@@ text (unescaped) so the return trip
+    // re-parses the snippet natively
+    return {
+      type: "verbatimInline",
+      value: `@@${node.backEnd}:${node.value}@@`
+    } as unknown as PhrasingContent
+  }
+  return { type: "html", value: node.value }
 }
 
 function cellText(cell: TableRow["children"][number]): string {
@@ -484,57 +511,14 @@ function transformUniorgElement(
   node: GreaterElementType | ElementType | Text
 ): RootContent | RootContent[] | null {
   switch (node.type) {
-    case "section": {
-      if (currentOptions.taskCheckboxes) {
-        const task = sectionAsTaskItem(node.children || [])
-        if (task) {
-          return task
-        }
-      }
-      return (node.children || [])
-        .flatMap(transformUniorgNodeToMdastNode)
-        .filter(Boolean) as RootContent[]
-    }
-    case "headline": {
-      const heading: RootContent = {
-        type: "heading",
-        depth: node.level as Heading["depth"],
-        children: transformUniorgObjects(node.children)
-      }
-      // org-isms serialize as key:: value lines directly below the heading
-      const isms: string[] = []
-      if (node.todoKeyword && orgismEnabled("todo")) {
-        isms.push(`${keyName("todo")}:: ${node.todoKeyword}`)
-      }
-      if (node.priority && orgismEnabled("priority")) {
-        isms.push(`${keyName("priority")}:: ${node.priority}`)
-      }
-      if (node.tags.length && orgismEnabled("tags")) {
-        isms.push(`${keyName("tags")}:: ${node.tags.join(", ")}`)
-      }
-      return isms.length ? [heading, keyValueParagraph(isms)] : heading
-    }
-    case "planning": {
-      const isms: string[] = []
-      if (node.scheduled && orgismEnabled("scheduled")) {
-        isms.push(`${keyName("scheduled")}:: ${node.scheduled.rawValue}`)
-      }
-      if (node.deadline && orgismEnabled("deadline")) {
-        isms.push(`${keyName("deadline")}:: ${node.deadline.rawValue}`)
-      }
-      if (node.closed && orgismEnabled("closed")) {
-        isms.push(`${keyName("closed")}:: ${node.closed.rawValue}`)
-      }
-      return isms.length ? keyValueParagraph(isms) : null
-    }
+    case "section":
+      return transformSection(node)
+    case "headline":
+      return transformHeadline(node)
+    case "planning":
+      return transformPlanning(node)
     case "drawer":
-      if (!orgismEnabled("drawers")) {
-        return null
-      }
-      // generic drawers (:LOGBOOK: …) have no md equivalent; keep their
-      // org text verbatim (unescaped) so the return trip re-parses the
-      // drawer natively
-      return keyValueParagraph([orgNodeToText(node)])
+      return transformDrawer(node)
     case "special-block":
     case "center-block":
     case "verse-block":
@@ -548,64 +532,10 @@ function transformUniorgElement(
       // drawers: verbatim org text, re-parsed natively on the return trip
       // (keywords here are mid-file ones; leading ones became frontmatter)
       return keyValueParagraph([orgNodeToText(node)])
-    case "property-drawer": {
-      if (!orgismEnabled("properties")) {
-        return null
-      }
-      const isms = (node.children || [])
-        .filter(child => child.type === "node-property")
-        .map(property => `${property.key}:: ${property.value}`)
-      return isms.length ? keyValueParagraph(isms) : null
-    }
-    case "paragraph": {
-      // a paragraph holding only a display fragment ($$…$$ or \[…\]) is
-      // display math and becomes a math block
-      const substantial = (node.children || []).filter(
-        child => !(child.type === "text" && child.value.trim() === "")
-      )
-      const only = substantial[0]
-      if (
-        substantial.length === 1 &&
-        only?.type === "latex-fragment" &&
-        (only.value.startsWith("$$") || only.value.startsWith("\\["))
-      ) {
-        return {
-          type: "math",
-          value: only.contents.replace(/^\n/, "").replace(/\n$/, "")
-        } as unknown as RootContent
-      }
-      const children = transformUniorgObjects(node.children)
-      // md gives leading whitespace structural meaning (list
-      // continuation, code); collapse per-line indentation inside
-      // paragraphs — insignificant in org and in rendered md alike
-      children.forEach((child, index) => {
-        if (child.type === "text") {
-          child.value = child.value.replace(/\n[ \t]+/g, "\n")
-          if (index === 0) {
-            child.value = child.value.replace(/^[ \t]+/, "")
-          }
-        }
-      })
-      // uniorg keeps surrounding blank lines inside the paragraph node;
-      // strip them so remark-stringify produces canonical spacing.
-      const last = children[children.length - 1]
-      if (last?.type === "text") {
-        last.value = last.value.replace(/\n+$/, "")
-        if (last.value === "") {
-          children.pop()
-        }
-      }
-      const head = children[0]
-      if (head?.type === "text") {
-        head.value = head.value.replace(/^\n+/, "")
-        if (head.value === "") {
-          children.shift()
-        }
-      }
-      // a paragraph emptied by the cleanup (whitespace-only) would
-      // stringify as stray blank lines
-      return children.length ? { type: "paragraph", children } : null
-    }
+    case "property-drawer":
+      return transformPropertyDrawer(node)
+    case "paragraph":
+      return transformParagraph(node)
     case "text":
       // Whitespace-only text at block level is a formatting artifact.
       if (node.value.trim() === "") {
@@ -617,106 +547,285 @@ function transformUniorgElement(
         return descriptiveListToHtml(node)
       }
       return transformUniorgList(node)
-    case "table": {
-      if (node.tableType === "table.el") {
-        // table.el tables have no cell structure, only a verbatim value;
-        // a table.el-tagged fenced block carries it so the return trip
-        // can restore the table
-        return {
-          type: "code",
-          lang: "table.el",
-          value: trimTrailingNewline(
-            (node as unknown as { value: string }).value
-          )
-        }
-      }
-      const standardRows = (node.children || []).filter(
-        (row): row is TableRow =>
-          row.type === "table-row" && row.rowType === "standard"
-      )
-      // an org alignment cookie row (| <l> | <r> | <c> |) becomes GFM
-      // column alignment instead of a content row
-      const cookieRow = standardRows.find(isAlignmentCookieRow)
-      const align = cookieRow
-        ? (cookieRow.children || []).map(cell => {
-            const cookie = /^<([lrc])\d*>$/.exec(cellText(cell))?.[1]
-            return cookie === "l"
-              ? ("left" as const)
-              : cookie === "r"
-                ? ("right" as const)
-                : cookie === "c"
-                  ? ("center" as const)
-                  : null
-          })
-        : null
-      return {
-        type: "table",
-        align,
-        children: standardRows
-          .filter(row => row !== cookieRow)
-          .map(row => ({
-            type: "tableRow",
-            children: (row.children || []).map(cell => ({
-              type: "tableCell",
-              children: transformUniorgObjects(cell.children).map(
-                trimCellPadding
-              )
-            }))
-          }))
-      } as unknown as RootContent
-    }
+    case "table":
+      return transformTable(node)
     case "horizontal-rule":
       return { type: "thematicBreak" }
     case "footnote-definition":
-      return {
-        type: "footnoteDefinition",
-        identifier: node.label,
-        label: node.label,
-        children: (node.children || [])
-          .flatMap(transformUniorgNodeToMdastNode)
-          .filter(Boolean) as BlockContent[]
-      }
+      return transformFootnoteDefinition(node)
     case "export-block":
-      if (node.backend !== "html") {
-        // other backends have no md meaning; verbatim like the org-only
-        // blocks so the return trip restores them
-        return keyValueParagraph([orgNodeToText(node)])
-      }
-      return { type: "html", value: trimTrailingNewline(node.value) }
+      return transformExportBlock(node)
     case "quote-block":
-      return {
-        type: "blockquote",
-        children: (node.children || [])
-          .flatMap(transformUniorgNodeToMdastNode)
-          .filter(Boolean) as BlockContent[]
-      }
+      return transformQuoteBlock(node)
     case "src-block":
-      return {
-        type: "code",
-        lang: node.language || null,
-        value: trimTrailingNewline(node.value)
-      }
+      return transformSrcBlock(node)
     case "example-block":
-      return {
-        type: "code",
-        lang: null,
-        value: trimTrailingNewline(node.value)
-      }
+      return transformExampleBlock(node)
     case "comment":
-      // html comments are markdown's comment idiom (hidden by every
-      // renderer) and restore to org comments on the return trip
-      return {
-        type: "html",
-        value: node.value.includes("\n")
-          ? `<!--\n${node.value}\n-->`
-          : `<!-- ${node.value} -->`
-      }
+      return transformComment(node)
     case "latex-environment":
       return { type: "math", value: node.value } as unknown as RootContent
     // remaining element types have no mapping; dropped with a warning
     default:
       warn(`dropped org ${node.type}`)
       return null
+  }
+}
+
+function transformSection(
+  node: Extract<GreaterElementType, { type: "section" }>
+): RootContent | RootContent[] {
+  if (currentOptions.taskCheckboxes) {
+    const task = sectionAsTaskItem(node.children || [])
+    if (task) {
+      return task
+    }
+  }
+  return (node.children || [])
+    .flatMap(transformUniorgNodeToMdastNode)
+    .filter(Boolean) as RootContent[]
+}
+
+function transformHeadline(
+  node: Extract<ElementType, { type: "headline" }>
+): RootContent | RootContent[] {
+  const heading: RootContent = {
+    type: "heading",
+    depth: node.level as Heading["depth"],
+    children: transformUniorgObjects(node.children)
+  }
+  // org-isms serialize as key:: value lines directly below the heading
+  const isms: string[] = []
+  if (node.todoKeyword && orgismEnabled("todo")) {
+    isms.push(`${keyName("todo")}:: ${node.todoKeyword}`)
+  }
+  if (node.priority && orgismEnabled("priority")) {
+    isms.push(`${keyName("priority")}:: ${node.priority}`)
+  }
+  if (node.tags.length && orgismEnabled("tags")) {
+    isms.push(`${keyName("tags")}:: ${node.tags.join(", ")}`)
+  }
+  return isms.length ? [heading, keyValueParagraph(isms)] : heading
+}
+
+function transformPlanning(
+  node: Extract<ElementType, { type: "planning" }>
+): RootContent | null {
+  const isms: string[] = []
+  if (node.scheduled && orgismEnabled("scheduled")) {
+    isms.push(`${keyName("scheduled")}:: ${node.scheduled.rawValue}`)
+  }
+  if (node.deadline && orgismEnabled("deadline")) {
+    isms.push(`${keyName("deadline")}:: ${node.deadline.rawValue}`)
+  }
+  if (node.closed && orgismEnabled("closed")) {
+    isms.push(`${keyName("closed")}:: ${node.closed.rawValue}`)
+  }
+  return isms.length ? keyValueParagraph(isms) : null
+}
+
+function transformDrawer(
+  node: Extract<GreaterElementType, { type: "drawer" }>
+): RootContent | null {
+  if (!orgismEnabled("drawers")) {
+    return null
+  }
+  // generic drawers (:LOGBOOK: …) have no md equivalent; keep their
+  // org text verbatim (unescaped) so the return trip re-parses the
+  // drawer natively
+  return keyValueParagraph([orgNodeToText(node)])
+}
+
+function transformPropertyDrawer(
+  node: Extract<GreaterElementType, { type: "property-drawer" }>
+): RootContent | null {
+  if (!orgismEnabled("properties")) {
+    return null
+  }
+  const isms = (node.children || [])
+    .filter(child => child.type === "node-property")
+    .map(property => `${property.key}:: ${property.value}`)
+  return isms.length ? keyValueParagraph(isms) : null
+}
+
+function transformParagraph(
+  node: Extract<ElementType, { type: "paragraph" }>
+): RootContent | null {
+  const math = paragraphAsDisplayMath(node)
+  if (math) {
+    return math
+  }
+  const children = transformUniorgObjects(node.children)
+  // md gives leading whitespace structural meaning (list
+  // continuation, code); collapse per-line indentation inside
+  // paragraphs — insignificant in org and in rendered md alike
+  children.forEach((child, index) => {
+    if (child.type === "text") {
+      child.value = child.value.replace(/\n[ \t]+/g, "\n")
+      if (index === 0) {
+        child.value = child.value.replace(/^[ \t]+/, "")
+      }
+    }
+  })
+  trimParagraphEdges(children)
+  // a paragraph emptied by the cleanup (whitespace-only) would
+  // stringify as stray blank lines
+  return children.length ? { type: "paragraph", children } : null
+}
+
+// a paragraph holding only a display fragment ($$…$$ or \[…\]) is
+// display math and becomes a math block
+function paragraphAsDisplayMath(
+  node: Extract<ElementType, { type: "paragraph" }>
+): RootContent | null {
+  const substantial = (node.children || []).filter(
+    child => !(child.type === "text" && child.value.trim() === "")
+  )
+  const only = substantial[0]
+  if (
+    substantial.length === 1 &&
+    only?.type === "latex-fragment" &&
+    (only.value.startsWith("$$") || only.value.startsWith("\\["))
+  ) {
+    return {
+      type: "math",
+      value: only.contents.replace(/^\n/, "").replace(/\n$/, "")
+    } as unknown as RootContent
+  }
+  return null
+}
+
+// uniorg keeps surrounding blank lines inside the paragraph node;
+// strip them so remark-stringify produces canonical spacing.
+function trimParagraphEdges(children: PhrasingContent[]): void {
+  const last = children[children.length - 1]
+  if (last?.type === "text") {
+    last.value = last.value.replace(/\n+$/, "")
+    if (last.value === "") {
+      children.pop()
+    }
+  }
+  const head = children[0]
+  if (head?.type === "text") {
+    head.value = head.value.replace(/^\n+/, "")
+    if (head.value === "") {
+      children.shift()
+    }
+  }
+}
+
+function transformTable(
+  node: Extract<GreaterElementType, { type: "table" }>
+): RootContent {
+  if (node.tableType === "table.el") {
+    // table.el tables have no cell structure, only a verbatim value;
+    // a table.el-tagged fenced block carries it so the return trip
+    // can restore the table
+    return {
+      type: "code",
+      lang: "table.el",
+      value: trimTrailingNewline((node as unknown as { value: string }).value)
+    }
+  }
+  const standardRows = (node.children || []).filter(
+    (row): row is TableRow =>
+      row.type === "table-row" && row.rowType === "standard"
+  )
+  // an org alignment cookie row (| <l> | <r> | <c> |) becomes GFM
+  // column alignment instead of a content row
+  const cookieRow = standardRows.find(isAlignmentCookieRow)
+  const align = cookieRow
+    ? (cookieRow.children || []).map(cell => {
+        const cookie = /^<([lrc])\d*>$/.exec(cellText(cell))?.[1]
+        return cookie === "l"
+          ? ("left" as const)
+          : cookie === "r"
+            ? ("right" as const)
+            : cookie === "c"
+              ? ("center" as const)
+              : null
+      })
+    : null
+  return {
+    type: "table",
+    align,
+    children: standardRows
+      .filter(row => row !== cookieRow)
+      .map(row => ({
+        type: "tableRow",
+        children: (row.children || []).map(cell => ({
+          type: "tableCell",
+          children: transformUniorgObjects(cell.children).map(trimCellPadding)
+        }))
+      }))
+  } as unknown as RootContent
+}
+
+function transformFootnoteDefinition(
+  node: Extract<GreaterElementType, { type: "footnote-definition" }>
+): RootContent {
+  return {
+    type: "footnoteDefinition",
+    identifier: node.label,
+    label: node.label,
+    children: (node.children || [])
+      .flatMap(transformUniorgNodeToMdastNode)
+      .filter(Boolean) as BlockContent[]
+  }
+}
+
+function transformExportBlock(
+  node: Extract<ElementType, { type: "export-block" }>
+): RootContent {
+  if (node.backend !== "html") {
+    // other backends have no md meaning; verbatim like the org-only
+    // blocks so the return trip restores them
+    return keyValueParagraph([orgNodeToText(node)])
+  }
+  return { type: "html", value: trimTrailingNewline(node.value) }
+}
+
+function transformQuoteBlock(
+  node: Extract<GreaterElementType, { type: "quote-block" }>
+): RootContent {
+  return {
+    type: "blockquote",
+    children: (node.children || [])
+      .flatMap(transformUniorgNodeToMdastNode)
+      .filter(Boolean) as BlockContent[]
+  }
+}
+
+function transformSrcBlock(
+  node: Extract<ElementType, { type: "src-block" }>
+): RootContent {
+  return {
+    type: "code",
+    lang: node.language || null,
+    value: trimTrailingNewline(node.value)
+  }
+}
+
+function transformExampleBlock(
+  node: Extract<ElementType, { type: "example-block" }>
+): RootContent {
+  return {
+    type: "code",
+    lang: null,
+    value: trimTrailingNewline(node.value)
+  }
+}
+
+function transformComment(
+  node: Extract<ElementType, { type: "comment" }>
+): RootContent {
+  // html comments are markdown's comment idiom (hidden by every
+  // renderer) and restore to org comments on the return trip
+  return {
+    type: "html",
+    value: node.value.includes("\n")
+      ? `<!--\n${node.value}\n-->`
+      : `<!-- ${node.value} -->`
   }
 }
 
