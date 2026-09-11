@@ -197,6 +197,15 @@ This is a paragraph.
     }
   })
 
+  it("should interpret html tags case-insensitively and with tag whitespace", () => {
+    const markdown =
+      "Some <U>underlined</U > text.\n\n<DL>\n<dt >foo</dt>\n<dd>bar</dd >\n</DL>\n"
+
+    expect(convertMarkdownToOrg(markdown, { interpretHtml: true })).toBe(
+      "Some _underlined_ text.\n\n- foo :: bar\n"
+    )
+  })
+
   it("should drop html when preserveMdisms.html is false", () => {
     const markdown = "Press <kbd>x</kbd> now.\n\n<div>\nblock\n</div>\n"
 

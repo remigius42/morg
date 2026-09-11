@@ -117,12 +117,15 @@ function transformPhrasingChildren(children: PhrasingContent[]): ObjectType[] {
   for (let i = 0; i < children.length; i++) {
     const node = children[i] as PhrasingContent
     if (currentOptions.interpretHtml && node.type === "html") {
-      const tag = /^<(u|sup|sub)>$/.exec(node.value)?.[1]
+      // tag names are case-insensitive and may have whitespace before
+      // the closing > (valid html); attributes disqualify the tag
+      const tag = /^<(u|sup|sub)\s*>$/i.exec(node.value)?.[1]?.toLowerCase()
       const orgType = tag ? INLINE_HTML_ORG_TYPES[tag] : undefined
+      const closeTag = new RegExp(`^</${tag}\\s*>$`, "i")
       const end = orgType
         ? children.findIndex(
             (child, j) =>
-              j > i && child.type === "html" && child.value === `</${tag}>`
+              j > i && child.type === "html" && closeTag.test(child.value)
           )
         : -1
       if (orgType && end !== -1) {
@@ -451,13 +454,13 @@ function transformMdastTableRow(row: MdastTableRow): unknown {
 // org side re-parses it as a native descriptive list; anything richer
 // stays a preserved md-ism
 function interpretDefinitionList(html: string): ElementType | null {
-  const body = /^<dl>([\s\S]*)<\/dl>\s*$/.exec(html.trim())?.[1]
+  const body = /^<dl\s*>([\s\S]*)<\/dl\s*>\s*$/i.exec(html.trim())?.[1]
   if (!body) {
     return null
   }
   const entries: [string, string][] = []
   const leftover = body.replace(
-    /<dt>([^<]*)<\/dt>\s*<dd>([^<]*)<\/dd>/g,
+    /<dt\s*>([^<]*)<\/dt\s*>\s*<dd\s*>([^<]*)<\/dd\s*>/gi,
     (_match, term: string, definition: string) => {
       entries.push([term.trim(), definition.trim()])
       return ""
