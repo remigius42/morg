@@ -2,12 +2,12 @@ import { execFile } from "node:child_process"
 import * as fs from "node:fs"
 import * as os from "node:os"
 import * as path from "node:path"
-import { afterAll, describe, expect, it } from "vitest"
+import { afterAll, describe, expect, it, vi } from "vitest"
 import { parseArgs } from "../src/cli/args.js"
 import { loadConfig } from "../src/cli/configFile.js"
 import { resolvePreset } from "../src/cli/presets.js"
 import { inferFormats, validateFormats } from "../src/cli/formats.js"
-import { buildConversionOptions } from "../src/cli/conversion.js"
+import { buildConversionOptions, convert } from "../src/cli/conversion.js"
 import { CliError } from "../src/cli/error.js"
 
 describe("parseArgs", () => {
@@ -194,6 +194,59 @@ describe("buildConversionOptions", () => {
     expect(
       buildConversionOptions(cli({}), {}, undefined).orgToMdOptions.onWarning
     ).toBeDefined()
+  })
+})
+
+describe("convert", () => {
+  const cli = (overrides: object) => ({ ...parseArgs([]), ...overrides })
+
+  it("converts in both directions", () => {
+    expect(convert("# Hello", "markdown", false, cli({}), {}, undefined)).toBe(
+      "* Hello\n"
+    )
+    expect(convert("* Hello", "org", false, cli({}), {}, undefined)).toBe(
+      "# Hello\n"
+    )
+  })
+
+  it("normalizes both formats", () => {
+    expect(convert("#   Hello", "markdown", true, cli({}), {}, undefined)).toBe(
+      "# Hello\n"
+    )
+    expect(convert("*    Hello", "org", true, cli({}), {}, undefined)).toBe(
+      "* Hello\n"
+    )
+  })
+
+  it("reports dropped constructs as morg: warnings on stderr", () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => undefined)
+    try {
+      convert(
+        '![alt](img.png "title")',
+        "markdown",
+        false,
+        cli({}),
+        {},
+        undefined
+      )
+      expect(spy).toHaveBeenCalledWith(expect.stringMatching(/^morg: .*title/))
+    } finally {
+      spy.mockRestore()
+    }
+  })
+
+  it("wraps converter failures in a CliError", () => {
+    const throwingPreset = {
+      applyToUniorg: () => {
+        throw new Error("boom")
+      }
+    }
+    expect(() =>
+      convert("# x", "markdown", false, cli({}), {}, throwingPreset)
+    ).toThrow(CliError)
+    expect(() =>
+      convert("# x", "markdown", false, cli({}), {}, throwingPreset)
+    ).toThrow("Conversion error:")
   })
 })
 
