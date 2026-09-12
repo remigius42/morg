@@ -282,6 +282,15 @@ describe("cli process", () => {
     expect(org).toMatchObject({ stdout: "# Hello\n\n", code: 0 })
   })
 
+  it("decodes stdin as utf-8 across chunk boundaries", async () => {
+    // a multi-byte character straddling a 64 KiB chunk boundary must survive
+    const filler = "a".repeat(65535 - "# ".length)
+    const result = await run(["--from", "markdown"], `# ${filler}é done\n`)
+    expect(result.code).toBe(0)
+    expect(result.stdout).toContain("é done")
+    expect(result.stdout).not.toContain("�")
+  })
+
   it("converts between files, inferring formats from extensions", async () => {
     const input = path.join(tmp, "in.md")
     const output = path.join(tmp, "out.org")

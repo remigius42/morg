@@ -14,12 +14,13 @@ async function readInput(inputFile: string | undefined): Promise<string> {
   }
   // Read from stdin
   return new Promise<string>(resolve => {
-    let data = ""
+    const chunks: Buffer[] = []
     process.stdin.on("data", chunk => {
-      data += chunk.toString()
+      chunks.push(chunk)
     })
     process.stdin.on("end", () => {
-      resolve(data)
+      // decode once: a multi-byte character may straddle two chunks
+      resolve(Buffer.concat(chunks).toString("utf8"))
     })
   })
 }
