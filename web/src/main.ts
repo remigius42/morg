@@ -1,5 +1,6 @@
 import { parseConfig } from "../../src/config.js"
 import { applyTheme, watchThemeChanges } from "./theme.js"
+import { renderVersion } from "./version.js"
 import { CONFIG_SNIPPETS } from "./snippets.js"
 import {
   runConversion,
@@ -283,6 +284,8 @@ export function init(): void {
   form.dataset.initialized = "true"
 
   const controls = findControls()
+
+  renderVersion()
 
   // ?theme= lets host pages override; same-origin embeds follow the
   // chrome pages' toggle via storage events

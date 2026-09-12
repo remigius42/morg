@@ -96,6 +96,12 @@ describe("embed page", () => {
     expect(element<HTMLTextAreaElement>("output").value).not.toBe("")
   })
 
+  it("shows the build version", () => {
+    // the embed page is what sits on the host site, so it is where a
+    // "which version is this?" question actually comes from
+    expect(element("version").textContent).toMatch(/^v\d|^[0-9a-f]{7}/)
+  })
+
   it("persists the config in localStorage", () => {
     const config = element<HTMLTextAreaElement>("config")
     config.value = 'preset = "obsidian"'

@@ -9,6 +9,11 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
+        with:
+          # full history and tags: the web build stamps the page with
+          # `git describe --tags`, which degrades to a bare commit SHA
+          # on the default shallow checkout, which has no tags
+          fetch-depth: 0
       - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
