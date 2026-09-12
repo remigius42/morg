@@ -64,6 +64,21 @@ describe("parseArgs", () => {
     })
   })
 
+  it("reads optional true/false values for boolean flags", () => {
+    expect(parseArgs(["--silent"]).silent).toBe(true)
+    expect(parseArgs(["--silent", "true"]).silent).toBe(true)
+    expect(parseArgs(["--silent", "false"]).silent).toBe(false)
+    expect(parseArgs(["--task-checkboxes", "false"]).taskCheckboxes).toBe(false)
+    expect(parseArgs(["--interpret-html", "false"]).interpretHtml).toBe(false)
+    // unset stays unset, so config can still decide
+    expect(parseArgs([]).silent).toBeUndefined()
+    // a following flag is not the value
+    expect(parseArgs(["-s", "--from", "org"])).toMatchObject({
+      silent: true,
+      fromFormat: "org"
+    })
+  })
+
   it("rejects value-taking flags without a value", () => {
     expect(() => parseArgs(["--bullet"])).toThrow("--bullet requires a value")
     expect(() => parseArgs(["--config"])).toThrow("--config requires a value")
@@ -206,6 +221,30 @@ describe("buildConversionOptions", () => {
     expect(
       buildConversionOptions(cli({}), {}, undefined).orgToMdOptions.onWarning
     ).toBeDefined()
+  })
+
+  it("lets an explicit CLI false override a config true", () => {
+    expect(
+      buildConversionOptions(
+        cli({ silent: false }),
+        { silent: true },
+        undefined
+      ).orgToMdOptions.onWarning
+    ).toBeDefined()
+    expect(
+      buildConversionOptions(
+        cli({ taskCheckboxes: false }),
+        { orgToMarkdown: { taskCheckboxes: true } },
+        undefined
+      ).orgToMdOptions.taskCheckboxes
+    ).toBe(false)
+    expect(
+      buildConversionOptions(
+        cli({ interpretHtml: false }),
+        { markdownToOrg: { interpretHtml: true } },
+        undefined
+      ).mdToOrgOptions.interpretHtml
+    ).toBe(false)
   })
 })
 

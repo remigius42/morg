@@ -61,7 +61,9 @@ echo "# Hello" | morg --from markdown
 # Apply a dialect preset
 morg --input page.md --output page.org --preset logseq
 
-# Dropped constructs are reported on stderr; -s / --silent suppresses
+# Dropped constructs are reported on stderr; -s / --silent suppresses.
+# Boolean flags take an optional value, so --silent false overrides a
+# morg.toml that sets it
 morg --input notes.md --output notes.org --silent
 
 # Normalize to canonical form (same format in and out); this

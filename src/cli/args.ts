@@ -7,9 +7,11 @@ export interface CliArgs {
   inputFile: string | undefined
   outputFile: string | undefined
   presetName: string | undefined
-  silent: boolean
-  taskCheckboxes: boolean
-  interpretHtml: boolean
+  // unset (undefined) so the config file can still decide -- see
+  // buildConversionOptions; only an explicit flag overrides it
+  silent: boolean | undefined
+  taskCheckboxes: boolean | undefined
+  interpretHtml: boolean | undefined
   configPath: string | undefined
   markdownStyle: Record<string, string>
 }
@@ -28,9 +30,9 @@ export function parseArgs(args: string[]): CliArgs {
     inputFile: undefined,
     outputFile: undefined,
     presetName: undefined,
-    silent: false,
-    taskCheckboxes: false,
-    interpretHtml: false,
+    silent: undefined,
+    taskCheckboxes: undefined,
+    interpretHtml: undefined,
     configPath: undefined,
     markdownStyle: {}
   }
@@ -53,11 +55,13 @@ const VALUE_FLAGS = new Set([
   "--preset"
 ])
 
-const BOOLEAN_FLAGS = new Set([
-  "-s",
-  "--silent",
-  "--task-checkboxes",
-  "--interpret-html"
+type BooleanOption = "silent" | "taskCheckboxes" | "interpretHtml"
+
+const BOOLEAN_FLAGS = new Map<string, BooleanOption>([
+  ["-s", "silent"],
+  ["--silent", "silent"],
+  ["--task-checkboxes", "taskCheckboxes"],
+  ["--interpret-html", "interpretHtml"]
 ])
 
 // a following flag means the value was forgotten; a lone `-` is a legitimate
@@ -77,18 +81,18 @@ function takeValue(args: string[], index: number): string {
 
 function parseFlags(parsed: CliArgs, args: string[]): void {
   for (let i = 0; i < args.length; i++) {
-    const arg = args[i]
+    const arg = args[i] ?? ""
+    // boolean flags take an optional `true`/`false`; bare means true
+    const option = BOOLEAN_FLAGS.get(arg)
+    if (option) {
+      const value = args[i + 1]
+      if (value === "true" || value === "false") {
+        i++
+      }
+      parsed[option] = value !== "false"
+      continue
+    }
     switch (arg) {
-      case "-s":
-      case "--silent":
-        parsed.silent = true
-        break
-      case "--task-checkboxes":
-        parsed.taskCheckboxes = true
-        break
-      case "--interpret-html":
-        parsed.interpretHtml = true
-        break
       case "--config":
         parsed.configPath = takeValue(args, i++)
         break

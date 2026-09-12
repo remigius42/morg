@@ -5,6 +5,10 @@ directory, or passed via `--config path`). Precedence: CLI flags >
 config file > defaults. Sections mirror the library options objects;
 unknown top-level keys are rejected so typos fail loudly.
 
+Boolean CLI flags take an optional value — `--silent` is shorthand for
+`--silent true`, and `--silent false` turns off a config that sets it,
+which is what makes the precedence above hold in both directions.
+
 The [Web UI](https://morg.binarypoetry.ch) accepts the same TOML in
 its Config panel.
 

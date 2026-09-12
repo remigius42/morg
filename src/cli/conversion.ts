@@ -7,16 +7,28 @@ import type { Preset } from "../presets/types.js"
 import type { CliArgs } from "./args.js"
 import { CliError } from "./error.js"
 
+// an explicit CLI flag wins, otherwise the config, otherwise the default
+function resolveFlag(
+  cliValue: boolean | undefined,
+  configValue: boolean | undefined
+): boolean {
+  return cliValue ?? configValue ?? false
+}
+
 export function buildConversionOptions(
   cli: CliArgs,
   config: MorgConfig,
   preset: Preset | undefined
 ) {
-  const silent = cli.silent || config.silent === true
-  const taskCheckboxes =
-    cli.taskCheckboxes || config.orgToMarkdown?.taskCheckboxes === true
-  const interpretHtml =
-    cli.interpretHtml || config.markdownToOrg?.interpretHtml === true
+  const silent = resolveFlag(cli.silent, config.silent)
+  const taskCheckboxes = resolveFlag(
+    cli.taskCheckboxes,
+    config.orgToMarkdown?.taskCheckboxes
+  )
+  const interpretHtml = resolveFlag(
+    cli.interpretHtml,
+    config.markdownToOrg?.interpretHtml
+  )
 
   // dropped constructs are reported on stderr unless -s / --silent
   const onWarning = silent
