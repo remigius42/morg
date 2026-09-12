@@ -54,14 +54,9 @@ This is a paragraph.
 
   it("should percent-encode brackets in link and image urls", () => {
     // org bracket-link paths cannot contain [ or ]
-    const warnings: string[] = []
-    expect(
-      convertMarkdownToOrg("[x](http://e.com/?a[]=1)\n", {
-        onWarning: message => warnings.push(message)
-      })
-    ).toBe("[[http://e.com/?a%5B%5D=1][x]]\n")
-    expect(warnings).toHaveLength(1)
-    expect(warnings[0]).toMatch(/\?a\[]=1/)
+    expect(convertMarkdownToOrg("[x](http://e.com/?a[]=1)\n")).toBe(
+      "[[http://e.com/?a%5B%5D=1][x]]\n"
+    )
     expect(convertMarkdownToOrg("![a](i[1].png)\n")).toBe(
       "[[i%5B1%5D.png][a]]\n"
     )

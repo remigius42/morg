@@ -165,6 +165,28 @@ describe("logseq outline nesting", () => {
     )
   })
 
+  it("rewrites labeled page refs whose page name has no space", () => {
+    // remark parses [label]([[soil]]) as a real link -- unlike
+    // [[other page]], whose space makes it an invalid destination
+    expect(
+      convertMarkdownToOrg("See [label]([[soil]]) here.\n", {
+        preset: logseq()
+      })
+    ).toBe("* See [[soil][label]] here.\n")
+  })
+
+  it("round-trips a single-word labeled page ref", () => {
+    const markdown = "See [label]([[soil]]) here.\n"
+    expect(
+      convertOrgToMarkdown(
+        convertMarkdownToOrg(markdown, { preset: logseq() }),
+        {
+          preset: logseq()
+        }
+      )
+    ).toBe(markdown)
+  })
+
   it("converges with a planning line and a drawer property", () => {
     const markdown =
       "# Task\n\ntodo:: TODO\nscheduled:: <2026-01-01 Thu>\ncustom_id:: abc\n"

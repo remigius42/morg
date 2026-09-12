@@ -4,7 +4,8 @@ import type {
   Paragraph,
   PropertyDrawer,
   NodeProperty,
-  Text
+  Text,
+  Link
 } from "uniorg"
 import type { Parent } from "unist"
 import { visit } from "unist-util-visit"
@@ -62,6 +63,36 @@ function placeHeadingProperty(node: { type: string }, level: number): boolean {
   return true
 }
 
+// the page name of a [[page]] link destination, or null. The core
+// transform percent-encodes brackets in urls (an org link path cannot
+// hold them), so the destination arrives here already encoded.
+function pageRefUrlTarget(rawLink: string): string | null {
+  const decoded = rawLink.replaceAll("%5B", "[").replaceAll("%5D", "]")
+  return /^\[\[(.+)\]\]$/.exec(decoded)?.[1] ?? null
+}
+
+// Logseq md labeled page refs ([label]([[page]])) become org's
+// [[page][label]] description syntax. A page name containing a space is
+// not a valid CommonMark destination, so the ref travels as plain text;
+// without one remark parses it as a real link instead.
+function rewriteLabeledPageRefs(uniorgAst: OrgData): void {
+  visit(uniorgAst as Parent, "text", (node: Text) => {
+    node.value = node.value.replace(
+      /\[([^\]]+)\]\(\[\[([^\]]+)\]\]\)/g,
+      "[[$2][$1]]"
+    )
+  })
+  visit(uniorgAst as Parent, "link", (node: Link) => {
+    const page = pageRefUrlTarget(node.rawLink)
+    if (page === null) {
+      return
+    }
+    node.linkType = "fuzzy"
+    node.rawLink = page
+    node.path = page
+  })
+}
+
 function toBlockHeadline(node: Paragraph, level: number): { type: string } {
   const blockHeadline: Partial<Headline> = {
     type: "headline",
@@ -90,14 +121,7 @@ export function applyLogseqSpecificsToUniorgAst(
   uniorgAst: OrgData,
   nestUnderHeadings = true
 ): OrgData {
-  // Logseq md labeled page refs ([label]([[page]])) become org's
-  // [[page][label]] description syntax
-  visit(uniorgAst as Parent, "text", (node: Text) => {
-    node.value = node.value.replace(
-      /\[([^\]]+)\]\(\[\[([^\]]+)\]\]\)/g,
-      "[[$2][$1]]"
-    )
-  })
+  rewriteLabeledPageRefs(uniorgAst)
   const children = uniorgAst.children as unknown as { type: string }[]
   const result: { type: string }[] = []
   let currentLevel = 0
