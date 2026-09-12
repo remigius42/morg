@@ -1,6 +1,6 @@
 {
   "name": "morg",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Bidirectional Markdown ↔ Org-mode converter with round-trip convergence",
   "keywords": [
     "org-mode",

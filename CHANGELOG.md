@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-12
+
 ### Added
 
 - Opt-in `interpretHtml` flag (`--interpret-html`,
@@ -23,6 +25,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   still means `true`. This is what makes the documented
   `CLI > config > defaults` precedence hold in both directions — a
   config setting `true` can now be turned off from the command line.
+- The Web UI shows its build version (`git describe --tags`, injected at
+  build time) in the page chrome, including the embed page. The Web UI
+  deploys from every push to `main`, so it is usually ahead of the
+  latest tag: the string reads `v0.2.0` on a release and
+  `v0.2.0-3-g<sha>` three commits later.
 
 ### Changed
 
@@ -124,5 +131,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   normalize modes, `morg.toml` paste and a preloaded demo, iframable
   embed page with `?theme` override, light/dark switcher
 
-[unreleased]: https://github.com/remigius42/morg/compare/v0.1.0...HEAD
+[unreleased]: https://github.com/remigius42/morg/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/remigius42/morg/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/remigius42/morg/releases/tag/v0.1.0
