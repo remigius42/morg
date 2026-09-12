@@ -66,6 +66,15 @@ describe("useHtml", () => {
       })
     ).toBe(input)
   })
+
+  it("stays lossless when list terms contain html-special characters", () => {
+    const input = "- a < b :: x & y\n"
+    expect(
+      convertMarkdownToOrg(convertOrgToMarkdown(input, { useHtml: true }), {
+        interpretHtml: true
+      })
+    ).toBe(input)
+  })
 })
 
 describe("markdownStyle", () => {

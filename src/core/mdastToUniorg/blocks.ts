@@ -114,6 +114,15 @@ export function transformMdastHtml(
 // markdown convention descriptive lists use without useHtml, so the
 // org side re-parses it as a native descriptive list; anything richer
 // stays a preserved md-ism
+// inverse of the escaping the useHtml side applies to <dt>/<dd> text
+function unescapeHtmlText(text: string): string {
+  return text
+    .trim()
+    .replaceAll("&lt;", "<")
+    .replaceAll("&gt;", ">")
+    .replaceAll("&amp;", "&")
+}
+
 function interpretDefinitionList(html: string): ElementType | null {
   const body = /^<dl\s*>([\s\S]*)<\/dl\s*>\s*$/i.exec(html.trim())?.[1]
   if (!body) {
@@ -123,7 +132,7 @@ function interpretDefinitionList(html: string): ElementType | null {
   const leftover = body.replace(
     /<dt\s*>([^<]*)<\/dt\s*>\s*<dd\s*>([^<]*)<\/dd\s*>/gi,
     (_match, term: string, definition: string) => {
-      entries.push([term.trim(), definition.trim()])
+      entries.push([unescapeHtmlText(term), unescapeHtmlText(definition)])
       return ""
     }
   )

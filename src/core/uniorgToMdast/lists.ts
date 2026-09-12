@@ -28,6 +28,15 @@ function listItemTag(item: ListItem): ListItem["children"][number] | undefined {
   )
 }
 
+// `&`, `<` and `>` in the text would otherwise produce invalid html that
+// interpretDefinitionList cannot read back; decoded again on that side
+function escapeHtmlText(text: string): string {
+  return text
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+}
+
 // with useHtml a descriptive list renders as a <dl> block (a preserved
 // md-ism on the return trip); terms and definitions are flattened to text
 function descriptiveListToHtml(node: List): RootContent {
@@ -38,12 +47,16 @@ function descriptiveListToHtml(node: List): RootContent {
     }
     const tag = listItemTag(item)
     const definition = (item.children || []).filter(child => child !== tag)
-    lines.push(`<dt>${tag ? orgastToString(tag).trim() : ""}</dt>`)
     lines.push(
-      `<dd>${definition
-        .map(child => orgastToString(child))
-        .join("")
-        .trim()}</dd>`
+      `<dt>${escapeHtmlText(tag ? orgastToString(tag).trim() : "")}</dt>`
+    )
+    lines.push(
+      `<dd>${escapeHtmlText(
+        definition
+          .map(child => orgastToString(child))
+          .join("")
+          .trim()
+      )}</dd>`
     )
   }
   lines.push("</dl>")

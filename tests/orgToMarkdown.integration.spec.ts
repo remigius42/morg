@@ -332,6 +332,14 @@ describe("convertOrgToMarkdown", () => {
     )
   })
 
+  it("should html-escape descriptive list terms and definitions", () => {
+    const org = "- a < b :: x & y\n"
+
+    expect(convertOrgToMarkdown(org, { useHtml: true })).toBe(
+      "<dl>\n<dt>a &lt; b</dt>\n<dd>x &amp; y</dd>\n</dl>\n"
+    )
+  })
+
   it("should autolink links whose description equals the url", () => {
     const org =
       "[[https://example.com/a_b/][https://example.com/a_b/]] and [[https://example.com/plain/]]\n"
