@@ -40,7 +40,12 @@ exports lives there (the pipeline modules `markdownToOrg.ts` /
 and `options.ts`). `src/core/` is internal AST machinery, reachable
 only through the root pipelines — adapters (`src/cli/`, `web/`)
 import root modules, never `core/`. `src/presets/` holds the dialect
-plugins (see Preset).
+plugins (see Preset) and their registry.
+
+Anything both adapters need lives in `src/` rather than in either of
+them: `conversionOptions.ts` layers explicit overrides over the config,
+and `presets/registry.ts` maps a preset name to a Preset. Duplicating
+one of those in an adapter is how the two drift apart.
 
 ## Preset
 

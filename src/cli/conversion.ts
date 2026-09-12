@@ -2,60 +2,44 @@ import { convertMarkdownToOrg } from "../markdownToOrg.js"
 import { convertOrgToMarkdown } from "../orgToMarkdown.js"
 import { normalizeMarkdown, normalizeOrg } from "../normalize.js"
 import type { MorgConfig } from "../config.js"
+import { buildConversionOptions as layerOptions } from "../conversionOptions.js"
 import type { MarkdownStyleOptions } from "../options.js"
 import type { Preset } from "../presets/types.js"
 import type { CliArgs } from "./args.js"
 import { CliError } from "./error.js"
-
-// an explicit CLI flag wins, otherwise the config, otherwise the default
-function resolveFlag(
-  cliValue: boolean | undefined,
-  configValue: boolean | undefined
-): boolean {
-  return cliValue ?? configValue ?? false
-}
 
 export function buildConversionOptions(
   cli: CliArgs,
   config: MorgConfig,
   preset: Preset | undefined
 ) {
-  const silent = resolveFlag(cli.silent, config.silent)
-  const taskCheckboxes = resolveFlag(
-    cli.taskCheckboxes,
-    config.orgToMarkdown?.taskCheckboxes
-  )
-  const interpretHtml = resolveFlag(
-    cli.interpretHtml,
-    config.markdownToOrg?.interpretHtml
-  )
-
-  // dropped constructs are reported on stderr unless -s / --silent
+  // an explicit --silent wins over the config; dropped constructs are
+  // reported on stderr unless it ends up on
+  const silent = cli.silent ?? config.silent ?? false
   const onWarning = silent
     ? undefined
     : (message: string) => console.error(`morg: ${message}`)
 
-  // config values first, CLI flags layered on top
-  const style: MarkdownStyleOptions = {
-    ...config.orgToMarkdown?.markdownStyle,
+  // style flags arrive as strings; the numeric one needs converting
+  const markdownStyle: MarkdownStyleOptions = {
     ...cli.markdownStyle,
     ...(cli.markdownStyle.ruleRepetition !== undefined && {
       ruleRepetition: Number(cli.markdownStyle.ruleRepetition)
     })
   }
-  const shared = {
-    preset,
-    onWarning,
-    ...(config.orgismKeys && { orgismKeys: config.orgismKeys })
-  }
-  const mdToOrgOptions = { ...config.markdownToOrg, ...shared, interpretHtml }
-  const orgToMdOptions = {
-    ...config.orgToMarkdown,
-    ...shared,
-    taskCheckboxes,
-    markdownStyle: style
-  }
-  return { mdToOrgOptions, orgToMdOptions }
+  return layerOptions(
+    {
+      taskCheckboxes: cli.taskCheckboxes,
+      interpretHtml: cli.interpretHtml,
+      markdownStyle
+    },
+    config,
+    {
+      preset,
+      onWarning,
+      ...(config.orgismKeys && { orgismKeys: config.orgismKeys })
+    }
+  )
 }
 
 export function convert(

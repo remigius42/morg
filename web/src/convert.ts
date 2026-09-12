@@ -2,15 +2,10 @@ import { convertMarkdownToOrg } from "../../src/markdownToOrg.js"
 import { convertOrgToMarkdown } from "../../src/orgToMarkdown.js"
 import { normalizeMarkdown, normalizeOrg } from "../../src/normalize.js"
 import { parseConfig, type MorgConfig } from "../../src/config.js"
+import { buildConversionOptions } from "../../src/conversionOptions.js"
 import type { MarkdownStyleOptions, Toggle } from "../../src/options.js"
-import { logseq } from "../../src/presets/logseq.js"
-import { obsidian } from "../../src/presets/obsidian.js"
+import { createPreset } from "../../src/presets/registry.js"
 import type { Preset } from "../../src/presets/types.js"
-
-const PRESETS: Record<string, () => Preset> = {
-  logseq: () => logseq(),
-  obsidian: () => obsidian()
-}
 
 export type Direction =
   "md-to-org" | "org-to-md" | "normalize-md" | "normalize-org"
@@ -35,46 +30,11 @@ export interface ConversionResult {
 function resolvePreset(
   presetName: string | undefined
 ): { preset?: Preset } | { error: string } {
-  if (!presetName) {
-    return {}
+  try {
+    return { preset: createPreset(presetName) }
+  } catch (error) {
+    return { error: (error as Error).message }
   }
-  const factory = PRESETS[presetName]
-  if (!factory) {
-    return {
-      error: `Unknown preset '${presetName}'. Available presets: ${Object.keys(PRESETS).join(", ")}`
-    }
-  }
-  return { preset: factory() }
-}
-
-function buildOptions(
-  form: ConversionForm,
-  config: MorgConfig,
-  shared: object
-): {
-  mdToOrgOptions: Parameters<typeof convertMarkdownToOrg>[1]
-  orgToMdOptions: Parameters<typeof convertOrgToMarkdown>[1]
-} {
-  const mdToOrgOptions = {
-    ...config.markdownToOrg,
-    ...shared,
-    ...(form.interpretHtml !== undefined && {
-      interpretHtml: form.interpretHtml
-    })
-  }
-  const orgToMdOptions = {
-    ...config.orgToMarkdown,
-    ...shared,
-    ...(form.useHtml !== undefined && { useHtml: form.useHtml }),
-    ...(form.taskCheckboxes !== undefined && {
-      taskCheckboxes: form.taskCheckboxes
-    }),
-    markdownStyle: {
-      ...config.orgToMarkdown?.markdownStyle,
-      ...form.markdownStyle
-    }
-  }
-  return { mdToOrgOptions, orgToMdOptions }
 }
 
 function convert(
@@ -129,7 +89,16 @@ export function runConversion(
     preset: resolved.preset,
     ...(config.orgismKeys && { orgismKeys: config.orgismKeys })
   }
-  const { mdToOrgOptions, orgToMdOptions } = buildOptions(form, config, shared)
+  const { mdToOrgOptions, orgToMdOptions } = buildConversionOptions(
+    {
+      interpretHtml: form.interpretHtml,
+      useHtml: form.useHtml,
+      taskCheckboxes: form.taskCheckboxes,
+      markdownStyle: form.markdownStyle
+    },
+    config,
+    shared
+  )
   try {
     const output = convert(
       input,
