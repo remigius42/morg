@@ -261,6 +261,15 @@ This is a paragraph.
     expect(convertMarkdownToOrg(markdown)).toBe('#+TAGS: ["a","b"]\nBody.\n')
   })
 
+  it("should json-encode multi-line frontmatter values", () => {
+    // a raw newline would end the keyword and push the rest into the body
+    const markdown = "---\ndesc: |\n  line1\n  line2\n---\n\nBody.\n"
+
+    expect(convertMarkdownToOrg(markdown)).toBe(
+      '#+DESC: "line1\\nline2\\n"\nBody.\n'
+    )
+  })
+
   it("should emit plain org links when the text equals the url", () => {
     const markdown = "<https://example.com/a_b/> in text.\n"
 

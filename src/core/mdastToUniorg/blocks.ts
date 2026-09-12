@@ -9,6 +9,16 @@ import { parse as parseYaml } from "yaml"
 import { mdismEnabled, type TransformContext } from "./context.js"
 import { transformPhrasingChildren } from "./phrasing.js"
 
+// a keyword is a single line, so anything that is not a single-line
+// scalar is JSON-encoded and restored by JSON.parse on the way back
+function keywordValue(value: unknown): string {
+  if (value !== null && typeof value === "object") {
+    return JSON.stringify(value)
+  }
+  const text = String(value)
+  return text.includes("\n") ? JSON.stringify(text) : text
+}
+
 // frontmatter entries become #+KEY: value keywords; scalar values as-is,
 // structured values JSON-encoded on a single line (see ADR 0002)
 export function frontmatterToKeywords(yamlValue: string): ElementType[] {
@@ -22,10 +32,7 @@ export function frontmatterToKeywords(yamlValue: string): ElementType[] {
         type: "keyword",
         affiliated: {},
         key: key.toUpperCase(),
-        value:
-          value !== null && typeof value === "object"
-            ? JSON.stringify(value)
-            : String(value)
+        value: keywordValue(value)
       }) as unknown as ElementType
   )
 }

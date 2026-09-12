@@ -67,6 +67,14 @@ describe("useHtml", () => {
     ).toBe(input)
   })
 
+  it("keeps a multi-line frontmatter value out of the body", () => {
+    const input = "---\ndesc: |\n  line1\n  line2\n---\n\nBody.\n"
+    const once = mdRoundTrip(input)
+    expect(once).toContain("line2")
+    expect(once).not.toMatch(/line2\nBody\./)
+    expect(mdRoundTrip(once)).toBe(once)
+  })
+
   it("stays lossless when list terms contain html-special characters", () => {
     const input = "- a < b :: x & y\n"
     expect(

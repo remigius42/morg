@@ -76,9 +76,11 @@ on the way back; `preserveMdisms` accepts `false` or a per-key record
 
 Markdown YAML frontmatter maps to leading org keywords (`title: X` ↔
 `#+TITLE: X`) in both directions — both constructs are native to their
-format. Scalar values pass through as-is; structured YAML values are
-JSON-encoded on a single line in org (ADR 0002's value rule) and
-restored to YAML on the way back.
+format. Single-line scalar values pass through as-is; structured YAML
+values and multi-line scalars (block or folded) are JSON-encoded on a
+single line in org (ADR 0002's value rule) and restored to YAML on the
+way back — an org keyword is one line, so a raw newline would end it
+and push the rest of the value into the document body.
 
 Reference-style links and images resolve to inline form. A link text
 equal to its url becomes an autolink (`<url>`) and restores as a plain
