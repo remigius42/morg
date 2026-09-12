@@ -144,6 +144,38 @@ describe("logseq outline nesting", () => {
     expect(roundTrip(markdown)).toBe(markdown)
   })
 
+  it("keeps org's element order around a planning line", () => {
+    // planning must sit directly below the headline and org reads only
+    // one property drawer, so :heading: has to join the existing one
+    const markdown =
+      "# Task\n\ntodo:: TODO\nscheduled:: <2026-01-01 Thu>\ncustom_id:: abc\n"
+
+    expect(convertMarkdownToOrg(markdown, { preset: logseq() })).toBe(
+      "* TODO Task\nSCHEDULED: <2026-01-01 Thu>\n:PROPERTIES:\n" +
+        ":heading: 1\n:custom_id: abc\n:END:\n"
+    )
+  })
+
+  it("still recognizes a heading whose drawer follows a planning line", () => {
+    const org =
+      "* Heading\nSCHEDULED: <2026-01-01 Thu>\n:PROPERTIES:\n:heading: 1\n:END:\n\nbody\n"
+
+    expect(convertOrgToMarkdown(org, { preset: logseq() })).toBe(
+      "# Heading\n\nscheduled:: <2026-01-01 Thu>\n\nbody\n"
+    )
+  })
+
+  it("converges with a planning line and a drawer property", () => {
+    const markdown =
+      "# Task\n\ntodo:: TODO\nscheduled:: <2026-01-01 Thu>\ncustom_id:: abc\n"
+    const roundTrip = (md: string): string =>
+      convertOrgToMarkdown(convertMarkdownToOrg(md, { preset: logseq() }), {
+        preset: logseq()
+      })
+    const once = roundTrip(markdown)
+    expect(roundTrip(once)).toBe(once)
+  })
+
   it("keeps flat body content with nestUnderHeadings false", () => {
     expect(
       convertMarkdownToOrg("# foo\n\nabc\n", {

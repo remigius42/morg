@@ -34,18 +34,47 @@ export function logseq(options: LogseqPresetOptions = {}): Preset {
   }
 }
 
+function headingProperty(level: number): NodeProperty {
+  return { type: "node-property", key: "heading", value: String(level) }
+}
+
 function headingDrawer(level: number): PropertyDrawer {
-  const property: NodeProperty = {
-    type: "node-property",
-    key: "heading",
-    value: String(level)
-  }
   return {
     type: "property-drawer",
-    children: [property],
+    children: [headingProperty(level)],
     contentsBegin: 0,
     contentsEnd: 0
   }
+}
+
+// org fixes the order below a headline: the planning line first, then a
+// single property drawer. :heading: therefore has to let the planning
+// line pass and join an existing drawer rather than displace either.
+// Returns whether the property has been placed on `node`.
+function placeHeadingProperty(node: { type: string }, level: number): boolean {
+  if (node.type === "planning") {
+    return false
+  }
+  if (node.type !== "property-drawer") {
+    return false
+  }
+  ;(node as unknown as PropertyDrawer).children.unshift(headingProperty(level))
+  return true
+}
+
+function toBlockHeadline(node: Paragraph, level: number): { type: string } {
+  const blockHeadline: Partial<Headline> = {
+    type: "headline",
+    level,
+    todoKeyword: null,
+    priority: null,
+    commented: false,
+    rawValue: "",
+    tags: [],
+    children: node.children
+  }
+  takeTaskMarker(blockHeadline as Headline)
+  return blockHeadline as { type: string }
 }
 
 /**
@@ -72,32 +101,50 @@ export function applyLogseqSpecificsToUniorgAst(
   const children = uniorgAst.children as unknown as { type: string }[]
   const result: { type: string }[] = []
   let currentLevel = 0
+  // level of a headline whose :heading: property still needs a home
+  let pending: number | null = null
+  const separate = (): void => {
+    if (!nestUnderHeadings) {
+      result.push({ type: "text", value: "\n" } as Text)
+    }
+  }
+  // no drawer took the property: give it one of its own
+  const settle = (): void => {
+    if (pending === null) {
+      return
+    }
+    result.push(headingDrawer(pending))
+    pending = null
+    separate()
+  }
   for (const node of children) {
     if (node.type === "headline") {
+      settle()
       const headline = node as unknown as Headline
       currentLevel = headline.level
       takeTaskMarker(headline)
-      result.push(node, headingDrawer(headline.level))
-      if (!nestUnderHeadings) {
-        result.push({ type: "text", value: "\n" } as Text)
-      }
-    } else if (nestUnderHeadings && node.type === "paragraph") {
-      const blockHeadline: Partial<Headline> = {
-        type: "headline",
-        level: currentLevel + 1,
-        todoKeyword: null,
-        priority: null,
-        commented: false,
-        rawValue: "",
-        tags: [],
-        children: (node as unknown as Paragraph).children
-      }
-      takeTaskMarker(blockHeadline as Headline)
-      result.push(blockHeadline as { type: string })
-    } else {
       result.push(node)
+      pending = headline.level
+      continue
     }
+    if (pending !== null) {
+      if (placeHeadingProperty(node, pending)) {
+        pending = null
+        result.push(node)
+        separate()
+        continue
+      }
+      if (node.type !== "planning") {
+        settle()
+      }
+    }
+    result.push(
+      nestUnderHeadings && node.type === "paragraph"
+        ? toBlockHeadline(node as unknown as Paragraph, currentLevel + 1)
+        : node
+    )
   }
+  settle()
   uniorgAst.children = result as unknown as OrgData["children"]
   return uniorgAst
 }
@@ -236,7 +283,9 @@ function extractInParent(parent: Parent): void {
       headline.todoKeyword = null
       headline.priority = null
     }
-    const heading = takeHeadingProperty(children, i + 1)
+    // a planning line sits between the headline and its drawer
+    const drawerIndex = children[i + 1]?.type === "planning" ? i + 2 : i + 1
+    const heading = takeHeadingProperty(children, drawerIndex)
     if (heading !== null) {
       headline.level = heading
     } else {
