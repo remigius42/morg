@@ -61,6 +61,17 @@ export function transformPhrasingChildren(
   return result
 }
 
+// an org bracket-link path cannot contain [ or ]; percent-encoding keeps
+// the url equivalent and, unlike org's backslash escaping, survives being
+// parsed back (uniorg does not decode `\[`)
+function orgSafeUrl(ctx: TransformContext, url: string): string {
+  if (!/[[\]]/.test(url)) {
+    return url
+  }
+  warn(ctx, `percent-encoded brackets in url "${url}"`)
+  return url.replaceAll("[", "%5B").replaceAll("]", "%5D")
+}
+
 function transformMdastLink(
   ctx: TransformContext,
   linkNode: Extract<PhrasingContent, { type: "link" }>
@@ -75,12 +86,13 @@ function transformMdastLink(
       ? []
       : transformPhrasingChildren(ctx, linkNode.children)
   // rawLink should just be the URL, uniorg-stringify adds the brackets
+  const url = orgSafeUrl(ctx, linkNode.url)
   return {
     type: "link",
     format: "bracket", // Assuming bracket format for Markdown links
     linkType: "url",
-    rawLink: linkNode.url,
-    path: linkNode.url,
+    rawLink: url,
+    path: url,
     children: linkChildren
   }
 }
@@ -126,12 +138,13 @@ function transformMdastImage(
   if (node.title) {
     warn(ctx, `dropped image title "${node.title}" (${node.url})`)
   }
+  const url = orgSafeUrl(ctx, node.url)
   return {
     type: "link",
     format: "bracket",
     linkType: "file",
-    rawLink: node.url,
-    path: node.url,
+    rawLink: url,
+    path: url,
     children: node.alt ? [{ type: "text", value: node.alt }] : []
   } as unknown as ObjectType
 }

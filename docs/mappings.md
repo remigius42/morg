@@ -103,6 +103,12 @@ One round trip lands on canonical form (ADR 0001); notable
 normalizations beyond formatting:
 
 - link text equal to its url → autolink / plain `[[url]]`
+- `[` and `]` in a link or image url → `%5B` / `%5D` (reported via
+  `onWarning`): an org bracket-link path cannot hold them, and org's
+  own backslash escaping is not read back by uniorg. Equivalent for
+  query strings like `?a[]=1`; an IPv6 literal host
+  (`http://[::1]/…`) does not survive this and is better written as a
+  hostname
 - per-line leading whitespace inside paragraphs is collapsed
   (insignificant in org and rendered md, but structurally meaningful
   to md parsers)
