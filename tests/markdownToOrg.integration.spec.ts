@@ -124,6 +124,18 @@ This is a paragraph.
     )
   })
 
+  it("should keep unusable todo, priority and tags values as properties", () => {
+    // a drawer property that happens to be named todo would otherwise be
+    // written onto the headline and corrupt the title
+    const markdown =
+      "# Head\n\ntodo:: something\npriority:: not-a-letter\ntags:: no spaces here\n"
+
+    expect(convertMarkdownToOrg(markdown)).toBe(
+      "* Head\n:PROPERTIES:\n:todo: something\n:priority: not-a-letter\n" +
+        ":tags: no spaces here\n:END:\n"
+    )
+  })
+
   it("should restore planning keys and unknown keys as drawer properties", () => {
     const markdown =
       "# Meeting\n\nscheduled:: <2026-09-15 Tue>\ndeadline:: <2026-09-20 Sun>\n\ncustom_id:: mtg\n\nNotes.\n"

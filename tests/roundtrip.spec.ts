@@ -67,6 +67,12 @@ describe("useHtml", () => {
     ).toBe(input)
   })
 
+  it("keeps a drawer property named like an org-ism key", () => {
+    const input = "* Head\n:PROPERTIES:\n:todo: something\n:END:\n"
+    const once = orgRoundTrip(input)
+    expect(once).toBe(input)
+  })
+
   it("keeps every value of a repeated keyword", () => {
     const input = "#+AUTHOR: a\n#+AUTHOR: b\n\nBody.\n"
     // keywords canonicalize adjacent to the body; both values survive

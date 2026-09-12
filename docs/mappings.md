@@ -32,7 +32,11 @@ heading (`todo::`, `priority::`, `tags::`, `scheduled::`, `deadline::`,
 `closed::`; property drawer entries keep their own keys) and is
 restored to native org syntax on the way back — known keys become TODO
 keywords, priorities, tags and planning lines, unknown keys become
-property drawer entries. Key names are remappable via `orgismKeys`
+property drawer entries. A known key whose value org could not carry in
+that slot (a priority that is not a single letter, a drawer property
+that merely happens to be named `todo`) becomes a property drawer entry
+too, rather than being written onto the headline. Key names are
+remappable via `orgismKeys`
 (convergence is then per-config, ADR 0002). `preserveOrgisms` accepts
 `false` or a per-key record to drop org-isms instead.
 

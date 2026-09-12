@@ -107,6 +107,14 @@ function makeTimestamp(rawValue: string): Timestamp {
 
 type Planning = Partial<Record<"scheduled" | "deadline" | "closed", Timestamp>>
 
+// the headline slots have a syntax of their own: a value org could not
+// carry there (a drawer property that merely shares the name, a
+// hand-written line) stays a property instead of corrupting the title
+const TODO_KEYWORD_RE = /^[A-Z][A-Z0-9_-]*$/
+const PRIORITY_RE = /^[A-Z]$/
+const TAG_LIST_RE = /^[\w@#%]+(?:,\s*[\w@#%]+)*$/
+const TIMESTAMP_RE = /^[<[].*[>\]]$/
+
 function applyOrgismEntry(
   headline: Headline,
   planning: Planning,
@@ -116,22 +124,35 @@ function applyOrgismEntry(
 ): void {
   switch (key) {
     case "todo":
+      if (!TODO_KEYWORD_RE.test(value)) {
+        break
+      }
       headline.todoKeyword = value
-      break
+      return
     case "priority":
+      if (!PRIORITY_RE.test(value)) {
+        break
+      }
       headline.priority = value
-      break
+      return
     case "tags":
+      if (!TAG_LIST_RE.test(value)) {
+        break
+      }
       headline.tags = value.split(/,\s*/)
-      break
+      return
     case "scheduled":
     case "deadline":
     case "closed":
+      if (!TIMESTAMP_RE.test(value)) {
+        break
+      }
       planning[key] = makeTimestamp(value)
-      break
+      return
     default:
-      properties.push({ type: "node-property", key, value })
+      break
   }
+  properties.push({ type: "node-property", key, value })
 }
 
 function consumeOrgismParagraphs(
