@@ -89,7 +89,8 @@ export function transformMdastHtml(
   if (comment) {
     return {
       type: "comment",
-      value: (comment[1] ?? "").trim()
+      // inverse of the escaping applied when the comment was emitted
+      value: (comment[1] ?? "").trim().replaceAll("--&gt;", "-->")
     } as unknown as ElementType
   }
   if (ctx.options.interpretHtml) {

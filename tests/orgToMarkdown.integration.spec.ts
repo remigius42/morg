@@ -180,6 +180,12 @@ describe("convertOrgToMarkdown", () => {
     )
   })
 
+  it("should not let a comment body close the html comment early", () => {
+    const org = "# see --> here\n"
+
+    expect(convertOrgToMarkdown(org)).toBe("<!-- see --&gt; here -->\n")
+  })
+
   it("should keep generic drawers verbatim", () => {
     const org = "* Task\n:LOGBOOK:\nNote taken.\n:END:\nBody.\n"
 

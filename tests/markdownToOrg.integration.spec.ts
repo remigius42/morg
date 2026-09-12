@@ -126,6 +126,12 @@ This is a paragraph.
     )
   })
 
+  it("should restore an escaped comment terminator", () => {
+    const markdown = "<!-- see --&gt; here -->\n"
+
+    expect(convertMarkdownToOrg(markdown)).toBe("# see --> here\n")
+  })
+
   it("should preserve block html as an export block", () => {
     const markdown = '<div class="note">\nRaw html\n</div>\n'
 

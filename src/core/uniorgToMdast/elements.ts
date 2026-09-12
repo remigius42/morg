@@ -351,11 +351,11 @@ function transformComment(
   node: Extract<ElementType, { type: "comment" }>
 ): RootContent {
   // html comments are markdown's comment idiom (hidden by every
-  // renderer) and restore to org comments on the return trip
+  // renderer) and restore to org comments on the return trip; an
+  // embedded `-->` would close the comment early, so escape it
+  const value = node.value.replaceAll("-->", "--&gt;")
   return {
     type: "html",
-    value: node.value.includes("\n")
-      ? `<!--\n${node.value}\n-->`
-      : `<!-- ${node.value} -->`
+    value: value.includes("\n") ? `<!--\n${value}\n-->` : `<!-- ${value} -->`
   }
 }

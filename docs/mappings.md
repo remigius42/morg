@@ -50,7 +50,9 @@ time (upstream [uniorg#151](https://github.com/rasendubi/uniorg/issues/151)).
 
 Org comments (`# …`) map to HTML comments (`<!-- … -->`) and back —
 both are invisible in rendered output, so the mapping is lossless in
-both directions.
+both directions. A `-->` inside the comment body is written as
+`--&gt;` (and decoded on the way back), since it would otherwise close
+the HTML comment early and leak the rest of the line into the page.
 
 Org underline, superscript and subscript have no Markdown equivalent;
 their raw org markup (`_text_`, `^{2}`, `_{2}`) is kept verbatim as
