@@ -126,6 +126,19 @@ describe("inferFormats", () => {
       "org"
     ])
   })
+
+  it("keeps a conflicting normalize target for validation", () => {
+    expect(
+      inferFormats(
+        cli({ normalize: true, fromFormat: "markdown", toFormat: "org" })
+      )
+    ).toEqual(["markdown", "org"])
+    expect(
+      inferFormats(
+        cli({ normalize: true, inputFile: "a.md", outputFile: "b.org" })
+      )
+    ).toEqual(["markdown", "org"])
+  })
 })
 
 describe("validateFormats", () => {
@@ -146,6 +159,12 @@ describe("validateFormats", () => {
       /cannot be the same/
     )
     expect(() => validateFormats("org", "org", true)).not.toThrow()
+  })
+
+  it("rejects differing source and target for normalize", () => {
+    expect(() => validateFormats("markdown", "org", true)).toThrow(
+      /normalize.*same format/i
+    )
   })
 })
 

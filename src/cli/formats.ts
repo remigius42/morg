@@ -36,8 +36,10 @@ function inferMissingFormat(
   toFormat: string | undefined
 ): [fromFormat: string | undefined, toFormat: string | undefined] {
   if (normalize) {
+    // mirror whichever side is known; a conflict between the two is left
+    // intact for validateFormats to reject rather than silently overwritten
     fromFormat = fromFormat ?? toFormat
-    toFormat = fromFormat
+    toFormat = toFormat ?? fromFormat
   } else if (fromFormat && !toFormat) {
     toFormat = fromFormat === "markdown" ? "org" : "markdown"
   } else if (toFormat && !fromFormat) {
@@ -69,5 +71,12 @@ export function validateFormats(
 
   if (!normalize && fromFormat === toFormat) {
     throw new CliError("Error: Source and target formats cannot be the same.")
+  }
+
+  if (normalize && fromFormat !== toFormat) {
+    throw new CliError(
+      "Error: normalize reads and writes the same format; " +
+        `got '${fromFormat}' and '${toFormat}'.`
+    )
   }
 }
