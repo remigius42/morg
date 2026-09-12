@@ -233,6 +233,14 @@ describe("convertOrgToMarkdown", () => {
     )
   })
 
+  it("should collect repeated keywords into a yaml sequence", () => {
+    const org = "#+AUTHOR: a\n#+AUTHOR: b\n\nBody.\n"
+
+    expect(convertOrgToMarkdown(org)).toBe(
+      "---\nauthor:\n  - a\n  - b\n---\n\nBody.\n"
+    )
+  })
+
   it("should keep inline timestamps verbatim", () => {
     const org = "Meet on <2026-09-15 Tue> or logged [2026-09-01 Tue] instead.\n"
 

@@ -82,6 +82,12 @@ single line in org (ADR 0002's value rule) and restored to YAML on the
 way back — an org keyword is one line, so a raw newline would end it
 and push the rest of the value into the document body.
 
+A YAML sequence maps to a repeated keyword (`tags: [a, b]` ↔
+`#+TAGS: a` + `#+TAGS: b`), which is org's own way of carrying several
+values for one key; repeating a keyword is legal org and no longer
+collapses to the last value. A one-element sequence normalizes to a
+plain scalar on the first round trip.
+
 Reference-style links and images resolve to inline form. A link text
 equal to its url becomes an autolink (`<url>`) and restores as a plain
 `[[url]]` — the common Logseq bookmark pattern.

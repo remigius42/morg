@@ -26,13 +26,25 @@ export function transformUniorgAstToMdast(
   const nodes = uniorgAst.children || []
   // leading #+KEY: value keywords map to md frontmatter, a native
   // construct; JSON-encoded values restore their structure (ADR 0002)
-  const frontmatter: Record<string, unknown> = {}
+  const collected = new Map<string, unknown[]>()
   let first = 0
   while (nodes[first]?.type === "keyword") {
     const keyword = nodes[first] as unknown as { key: string; value: string }
-    frontmatter[keyword.key.toLowerCase()] = parseKeywordValue(keyword.value)
+    const key = keyword.key.toLowerCase()
+    // a keyword may legally repeat; collect the values instead of
+    // letting the last one win
+    collected.set(key, [
+      ...(collected.get(key) ?? []),
+      parseKeywordValue(keyword.value)
+    ])
     first++
   }
+  const frontmatter: Record<string, unknown> = Object.fromEntries(
+    [...collected].map(([key, values]) => [
+      key,
+      values.length === 1 ? values[0] : values
+    ])
+  )
   const children: RootContent[] = transformNodes(ctx, nodes.slice(first))
   // adjacent single-item task lists (one per converted TODO section)
   // merge into one list, or the output would not be a fixed point

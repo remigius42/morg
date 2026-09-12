@@ -26,15 +26,20 @@ export function frontmatterToKeywords(yamlValue: string): ElementType[] {
   if (!data || typeof data !== "object" || Array.isArray(data)) {
     return []
   }
-  return Object.entries(data).map(
-    ([key, value]) =>
-      ({
-        type: "keyword",
-        affiliated: {},
-        key: key.toUpperCase(),
-        value: keywordValue(value)
-      }) as unknown as ElementType
-  )
+  return Object.entries(data).flatMap(([key, value]) => {
+    // a sequence becomes repeated keywords -- org's own way of carrying
+    // several values for one key, and what they read back as
+    const values = Array.isArray(value) && value.length ? value : [value]
+    return values.map(
+      item =>
+        ({
+          type: "keyword",
+          affiliated: {},
+          key: key.toUpperCase(),
+          value: keywordValue(item)
+        }) as unknown as ElementType
+    )
+  })
 }
 
 export function transformMdastTable(

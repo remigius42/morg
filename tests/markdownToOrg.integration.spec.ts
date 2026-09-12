@@ -256,9 +256,16 @@ This is a paragraph.
   })
 
   it("should json-encode structured frontmatter values", () => {
+    const markdown = "---\nmeta:\n  a: 1\n---\n\nBody.\n"
+
+    expect(convertMarkdownToOrg(markdown)).toBe('#+META: {"a":1}\nBody.\n')
+  })
+
+  it("should expand a frontmatter sequence into repeated keywords", () => {
+    // org's own way of carrying several values for one key
     const markdown = "---\ntags:\n  - a\n  - b\n---\n\nBody.\n"
 
-    expect(convertMarkdownToOrg(markdown)).toBe('#+TAGS: ["a","b"]\nBody.\n')
+    expect(convertMarkdownToOrg(markdown)).toBe("#+TAGS: a\n#+TAGS: b\nBody.\n")
   })
 
   it("should json-encode multi-line frontmatter values", () => {

@@ -67,6 +67,14 @@ describe("useHtml", () => {
     ).toBe(input)
   })
 
+  it("keeps every value of a repeated keyword", () => {
+    const input = "#+AUTHOR: a\n#+AUTHOR: b\n\nBody.\n"
+    // keywords canonicalize adjacent to the body; both values survive
+    const once = orgRoundTrip(input)
+    expect(once).toBe("#+AUTHOR: a\n#+AUTHOR: b\nBody.\n")
+    expect(orgRoundTrip(once)).toBe(once)
+  })
+
   it("keeps a multi-line frontmatter value out of the body", () => {
     const input = "---\ndesc: |\n  line1\n  line2\n---\n\nBody.\n"
     const once = mdRoundTrip(input)
