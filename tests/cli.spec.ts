@@ -64,6 +64,18 @@ describe("parseArgs", () => {
     })
   })
 
+  it("rejects value-taking flags without a value", () => {
+    expect(() => parseArgs(["--bullet"])).toThrow("--bullet requires a value")
+    expect(() => parseArgs(["--config"])).toThrow("--config requires a value")
+    expect(() => parseArgs(["--rule-repetition"])).toThrow(CliError)
+    // a following flag is a missing value, not the value
+    expect(() => parseArgs(["--from", "--input", "a.md"])).toThrow(
+      "--from requires a value"
+    )
+    // but a lone dash is a legitimate bullet character
+    expect(parseArgs(["--bullet", "-"]).markdownStyle.bullet).toBe("-")
+  })
+
   it("rejects unknown arguments", () => {
     expect(() => parseArgs(["--bogus"])).toThrow(CliError)
     expect(() => parseArgs(["--bogus"])).toThrow("Unknown argument: --bogus")
