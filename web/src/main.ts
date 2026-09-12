@@ -180,7 +180,14 @@ function restore(controls: Controls): void {
   } catch {
     return
   }
-  if (state.direction) controls.direction.value = state.direction
+  // a stale or hand-edited value would leave the select blank, so keep
+  // the default unless the option actually exists
+  if (state.direction) {
+    const options = [...controls.direction.options].map(option => option.value)
+    if (options.includes(state.direction)) {
+      controls.direction.value = state.direction
+    }
+  }
   assign(state.preset, value => (controls.preset.value = value))
   assign(state.useHtml, value => (controls.useHtml.checked = value))
   assign(state.interpretHtml, value => (controls.interpretHtml.checked = value))

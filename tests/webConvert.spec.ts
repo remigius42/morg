@@ -14,6 +14,15 @@ describe("runConversion", () => {
     expect(result.output).toBe("# Hello\n")
   })
 
+  it("reports an unknown direction instead of succeeding emptily", () => {
+    // reachable from a stale or hand-edited localStorage entry
+    const result = runConversion("# Hello", {
+      direction: "bogus" as never
+    })
+    expect(result.error).toMatch(/direction/i)
+    expect(result.output).toBe("")
+  })
+
   it("collects warnings for dropped constructs", () => {
     const result = runConversion('![alt](img.png "title")', {
       direction: "md-to-org"

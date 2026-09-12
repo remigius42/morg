@@ -88,6 +88,14 @@ describe("embed page", () => {
     )
   })
 
+  it("ignores a persisted direction the select does not offer", async () => {
+    localStorage.setItem("morg-web", JSON.stringify({ direction: "bogus" }))
+    await setUpPage()
+    const direction = element<HTMLSelectElement>("direction")
+    expect(direction.value).not.toBe("")
+    expect(element<HTMLTextAreaElement>("output").value).not.toBe("")
+  })
+
   it("persists the config in localStorage", () => {
     const config = element<HTMLTextAreaElement>("config")
     config.value = 'preset = "obsidian"'

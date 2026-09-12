@@ -92,6 +92,9 @@ function convert(
       return normalizeMarkdown(input, { ...mdToOrgOptions, ...orgToMdOptions })
     case "normalize-org":
       return normalizeOrg(input, { ...mdToOrgOptions, ...orgToMdOptions })
+    default:
+      // out-of-union value, e.g. from a stale persisted form state
+      throw new Error(`Unknown direction '${String(direction)}'`)
   }
 }
 
