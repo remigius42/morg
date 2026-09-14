@@ -17,11 +17,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `.toml` goes to the config panel and expands it; a document goes to
   the input, and its extension picks the conversion direction —
   the format half only, so a Normalize mode survives (`notes.org`
-  dropped while normalizing Markdown selects "Normalize Org"). The
-  download is named after the opened file with the output extension
-  (`notes.md` → `notes.org`). Files over 1 MB load with a warning that
-  conversion may be slow. Nothing is uploaded: the browser reads and
-  writes the file itself.
+  dropped while normalizing Markdown selects "Normalize Org"). Several
+  files dropped together are routed by kind, and any the converter
+  cannot use are named in the warning list. The download is named after
+  the opened file with the output extension (`notes.md` → `notes.org`);
+  normalizing adds `.normalized` (`notes.org` → `notes.normalized.org`)
+  so the result cannot be saved over its own source. Copy and Download
+  are disabled while the conversion is failing. Files over 1 MB load
+  with a warning that conversion may be slow. Nothing is uploaded: the
+  browser reads and writes the file itself.
+
+- Dragging files over the Web UI raises an overlay naming what the
+  converter accepts, and a hint next to "Open file…" says a file can be
+  dropped before any drag has started. The page-wide drop target was
+  otherwise invisible.
+
+### Changed
+
+- `.markdown` is no longer recognized as a Markdown extension in the
+  Web UI. It never was in the CLI, and one extension table is now
+  shared by both (`src/fileNames.ts`); the file picker still offers
+  `.markdown` files, it just leaves the direction to you.
+
+### Fixed
+
+- Web UI: a file name whose extension collided with an `Object`
+  property (`notes.constructor`, `notes.__proto__`) selected a
+  nonexistent direction, blanking the dropdown and failing every later
+  conversion.
+- Web UI: a file that could not be read — a dropped folder, a file
+  moved between picking and reading — failed silently; the drop now
+  reports the error instead of appearing to do nothing.
+- Web UI: dragging a text selection into either textarea no longer has
+  its default cancelled by the page-wide file-drop handler.
+- Web UI: the download object URL is no longer revoked in the same task
+  as the click, which could abort the save in Firefox and Safari.
+- Web UI: the clipboard fallback works on iOS Safari (which refuses to
+  select a `readonly` textarea) and says so when a copy is refused
+  outright, instead of failing indistinguishably from success.
+- Web UI: a config restored from a previous visit is marked as active
+  on the Config panel, rather than taking effect with no indication.
 
 ## [0.2.0] - 2026-09-12
 

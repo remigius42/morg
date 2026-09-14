@@ -50,11 +50,14 @@ chrome-less embed page (`/embed.html`, optionally with
 `?theme=dark|light`) can be iframed into other sites.
 
 Besides pasting, a file can be opened with the picker or dropped
-anywhere on the converter — a `.toml` lands in the config panel, a
-document in the input, and the conversion direction follows the
-extension. The result can be copied or saved with the Copy and
-Download buttons. Files are read and written by the browser itself;
-this is not an upload.
+anywhere on the page — a `.toml` lands in the config panel, a document
+in the input, and the conversion direction follows the extension. Drop
+both at once and each goes where it belongs; an overlay names what is
+accepted while a drag is in flight. The result can be copied
+or saved with the Copy and Download buttons; a normalized file is saved
+as `notes.normalized.org`, so it never lands on top of its own source.
+Files are read and written by the browser itself; this is not an
+upload.
 
 ### CLI
 
