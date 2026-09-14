@@ -305,6 +305,25 @@ describe("embed page", () => {
     expect(element<HTMLTextAreaElement>("output").value).toBe("# Quick\n")
   })
 
+  it("recovers from a conversion that never ran", async () => {
+    // a conversion can fail to happen at all rather than fail on its
+    // input: the worker dies and the chunk its stand-in needs will not
+    // load. Nothing comes back to take the Converting notice down, so
+    // without this the page is locked for the rest of its life
+    const failing: ConversionRunner = {
+      run: () => Promise.reject(new Error("chunk gone"))
+    }
+    await setUpPage(failing)
+
+    expect(element("converting").hidden).toBe(true)
+    const error = element<HTMLParagraphElement>("error")
+    expect(error.hidden).toBe(false)
+    expect(error.textContent).toMatch(/chunk gone/)
+    // the run never produced output, so there is still nothing to save
+    expect(element<HTMLButtonElement>("copyOutput").disabled).toBe(true)
+    expect(element<HTMLButtonElement>("downloadOutput").disabled).toBe(true)
+  })
+
   it("shows config errors", async () => {
     const config = element<HTMLTextAreaElement>("config")
     config.value = "tyop = true"

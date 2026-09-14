@@ -219,11 +219,25 @@ async function convert(controls: Controls): Promise<void> {
 
   const ticket = ++controls.latestRun
   beginRun(controls)
-  const result = await controls.runner.run(
-    input.value,
-    formState(controls),
-    config.value
-  )
+  let result
+  try {
+    result = await controls.runner.run(
+      input.value,
+      formState(controls),
+      config.value
+    )
+  } catch (cause) {
+    // the conversion did not fail, it never ran — a dead worker whose
+    // stand-in could not be loaded. Nothing else will take the notice
+    // down, and a page that stays "Converting…" for good is worse than
+    // one that says what went wrong
+    if (ticket === controls.latestRun) {
+      endRun(controls)
+      error.hidden = false
+      error.textContent = `Could not convert: ${String(cause)}`
+    }
+    return
+  }
   if (ticket !== controls.latestRun) {
     return // a newer run has been asked for; this output is already stale
   }
