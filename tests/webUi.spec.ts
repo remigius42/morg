@@ -286,6 +286,33 @@ describe("embed page", () => {
     vi.unstubAllGlobals()
   })
 
+  it("marks an active config without reopening the panel on load", async () => {
+    localStorage.setItem(
+      "morg-web",
+      JSON.stringify({ config: 'preset = "obsidian"' })
+    )
+    await setUpPage()
+    const section = element<HTMLDetailsElement>("configSection")
+    // the user collapsed it on purpose; reopening it every load overrides
+    // that, but a config in force must still be visible
+    expect(section.open).toBe(false)
+    expect(section.querySelector("summary")?.textContent).toMatch(/active/)
+    expect(element<HTMLSelectElement>("preset").value).toBe("obsidian")
+  })
+
+  it("marks and unmarks the config panel as it is edited", () => {
+    const config = element<HTMLTextAreaElement>("config")
+    const summary =
+      element<HTMLDetailsElement>("configSection").querySelector("summary")
+    config.value = 'preset = "obsidian"'
+    config.dispatchEvent(new Event("input", { bubbles: true }))
+    expect(summary?.textContent).toMatch(/active/)
+
+    config.value = ""
+    config.dispatchEvent(new Event("input", { bubbles: true }))
+    expect(summary?.textContent).not.toMatch(/active/)
+  })
+
   it("says so when copying is refused outright", async () => {
     // iOS Safari rejects the API and returns false from execCommand; with
     // no feedback, "copied" and "did nothing" look identical

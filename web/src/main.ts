@@ -105,6 +105,7 @@ interface Controls {
   styleSelects: HTMLSelectElement[]
   copyButton: HTMLButtonElement
   downloadButton: HTMLButtonElement
+  configSection: HTMLDetailsElement
   /**
    * Notices about the opened file itself, e.g. its size. convert()
    * rebuilds the warning list from scratch, so these cannot live in the
@@ -136,6 +137,7 @@ function findControls(): Controls {
     styleSelects: STYLE_KEYS.map(key => element<HTMLSelectElement>(key)),
     copyButton: element<HTMLButtonElement>("copyOutput"),
     downloadButton: element<HTMLButtonElement>("downloadOutput"),
+    configSection: element<HTMLDetailsElement>("configSection"),
     notices: [],
     previousDirection: element<HTMLSelectElement>("direction")
       .value as Direction
@@ -262,11 +264,29 @@ function reflectConfig(controls: Controls): void {
 }
 
 /**
+ * Makes an active config visible. A config that just arrived is opened,
+ * since it changed the output under the user's hands and the panel is the
+ * only place that shows why; a config already in force when the page loads
+ * is only marked, so a deliberately collapsed panel stays collapsed.
+ */
+function showConfig(controls: Controls, expand = true): void {
+  const active = Boolean(controls.config.value.trim())
+  const summary = controls.configSection.querySelector("summary")
+  if (summary) {
+    summary.textContent = active
+      ? "Config (morg.toml) — active"
+      : "Config (morg.toml)"
+  }
+  if (active && expand) {
+    controls.configSection.open = true
+  }
+}
+
+/**
  * Loads opened files. A `.toml` is a config wherever it was dropped —
- * morg never converts one — so each file goes where its kind belongs,
- * and the collapsed config panel has to open, or the file would take
- * effect invisibly. Only one of each can be in force at a time; the rest
- * are named in the warning list rather than dropped on the floor.
+ * morg never converts one — so each file goes where its kind belongs.
+ * Only one of each can be in force at a time; the rest are named in the
+ * warning list rather than dropped on the floor.
  */
 async function openFiles(
   controls: Controls,
@@ -286,7 +306,7 @@ async function openFiles(
 
   if (config) {
     controls.config.value = await config.text()
-    element<HTMLDetailsElement>("configSection").open = true
+    showConfig(controls)
     reflectConfig(controls)
   }
   if (doc) {
@@ -435,6 +455,8 @@ function wireFileControls(controls: Controls): void {
 function wireListeners(controls: Controls): void {
   const { direction, config, input } = controls
   config.addEventListener("input", () => {
+    // typed by hand, so the panel is already open — only the mark matters
+    showConfig(controls, false)
     reflectConfig(controls)
     persist(controls)
     convert(controls)
@@ -502,6 +524,9 @@ export function init(): void {
   wireListeners(controls)
   wireFileControls(controls)
 
+  // a restored config is already in force, but the user collapsed the
+  // panel on purpose; mark it rather than reopening it on every load
+  showConfig(controls, false)
   if (controls.config.value) {
     reflectConfig(controls)
   }
