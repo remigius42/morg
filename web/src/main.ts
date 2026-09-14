@@ -336,6 +336,18 @@ function downloadOutput(controls: Controls): void {
   URL.revokeObjectURL(url)
 }
 
+/**
+ * Loads files, reporting a failed read rather than leaving the drop
+ * looking like it did nothing — dropping a folder rejects here, and so
+ * does a file moved or revoked between picking and reading.
+ */
+function open(controls: Controls, files: readonly TextFile[]): void {
+  openFiles(controls, files).catch((cause: unknown) => {
+    controls.error.hidden = false
+    controls.error.textContent = `Could not read the file: ${String(cause)}`
+  })
+}
+
 /** Whether a drag carries files rather than, say, a text selection. */
 function carriesFiles(event: DragEvent): boolean {
   return event.dataTransfer?.types.includes("Files") ?? false
@@ -354,7 +366,7 @@ function wireFileControls(controls: Controls): void {
     picker.click()
   )
   picker.addEventListener("change", () => {
-    void openFiles(controls, [...(picker.files ?? [])])
+    open(controls, [...(picker.files ?? [])])
     // so choosing the same file twice in a row still fires a change
     picker.value = ""
   })
@@ -377,7 +389,7 @@ function wireFileControls(controls: Controls): void {
   document.addEventListener("drop", event => {
     const files = event.dataTransfer?.files
     if (files?.length) {
-      void openFiles(controls, [...files])
+      open(controls, [...files])
     }
   })
 }

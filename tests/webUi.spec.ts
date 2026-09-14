@@ -199,6 +199,19 @@ describe("embed page", () => {
     expect(warnings.textContent).toMatch(/photo\.png/)
   })
 
+  it("reports a file it cannot read", async () => {
+    // dropping a folder rejects here; swallowing it makes the drop look
+    // like it simply did nothing
+    await drop({
+      name: "folder",
+      size: 0,
+      text: () => Promise.reject(new Error("NotFoundError"))
+    })
+    const error = element<HTMLParagraphElement>("error")
+    expect(error.hidden).toBe(false)
+    expect(error.textContent).toMatch(/NotFoundError/)
+  })
+
   it("accepts a file dropped anywhere on the page", async () => {
     // the converter form does not cover the viewport; a drop landing in
     // the margin looked like a broken feature
