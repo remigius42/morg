@@ -32,6 +32,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   dropped before any drag has started. The page-wide drop target was
   otherwise invisible.
 
+- An end-to-end suite (`tests/e2e/`, Playwright, `npm run test:e2e`)
+  driving the Web UI in Chromium and WebKit against the built pages,
+  plus axe accessibility audits of every page in both color schemes and
+  in the states only an interaction reaches. It covers what the
+  happy-dom specs cannot decide: whether the conversion worker really
+  starts, real file picking, dropping and downloading, the clipboard and
+  its selection-copy fallback, and the theme crossing into the embedded
+  frame. It runs in CI after the builds, and the Web UI no longer
+  deploys unless it passes.
+
 ### Changed
 
 - Copy and Download are disabled in the Web UI while a conversion is
@@ -59,14 +69,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Web UI. It never was in the CLI, and one extension table is now
   shared by both (`src/fileNames.ts`); the file picker still offers
   `.markdown` files, it just leaves the direction to you.
-
-- An end-to-end suite (`tests/e2e/`, Playwright) covering the Web UI in
-  Chromium and WebKit against the built pages, plus axe accessibility
-  audits of every page in both color schemes and in the states only an
-  interaction reaches. It covers what the happy-dom specs cannot decide:
-  whether the conversion worker really starts, real file picking,
-  dropping and downloading, the clipboard and its selection-copy
-  fallback, and the theme crossing into the embedded frame.
 
 ### Fixed
 
