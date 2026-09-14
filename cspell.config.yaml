@@ -13,6 +13,7 @@ ignorePaths:
   - node_modules
   - dist
   - coverage
+  - tests/e2e/reports # playwright's own html/trace output
   - package-lock.json
   - LICENSE
   - cspell.project-words.txt

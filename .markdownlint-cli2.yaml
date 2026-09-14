@@ -5,4 +5,5 @@ config:
 ignores:
   - node_modules
   - tests/fixtures # conversion inputs, not documentation
+  - tests/e2e/reports # playwright's own failure reports
   - TODO.md # private, gitignored working notes

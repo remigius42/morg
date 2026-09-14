@@ -1,6 +1,7 @@
 node_modules/
 dist/
 coverage/
+tests/e2e/reports/
 package-lock.json
 tests/fixtures/
 LICENSE
