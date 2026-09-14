@@ -26,6 +26,10 @@
   --site-bg-alt-dark: #161618;
   --site-bg-soft-dark: #202127;
   --site-text-dark: #dfdfd6;
+
+  /* white rather than the page text: the dark button's amber fill is the
+     one surface the page text does not clear AA against (4.27:1) */
+  --form-element-text-dark: #fff;
 }
 
 [data-theme="light"],
@@ -39,6 +43,7 @@
   --form-element-bright: var(--form-element-bright-light);
   --form-element-dark: var(--form-element-dark-light);
   --form-element-edge: var(--form-element-edge-light);
+  --form-element-text: var(--site-text-light);
   --pico-background-color: var(--site-bg-light);
   --pico-color: var(--site-text-light);
 }
@@ -54,6 +59,7 @@
     --form-element-bright: var(--form-element-bright-dark);
     --form-element-dark: var(--form-element-dark-dark);
     --form-element-edge: var(--form-element-edge-dark);
+    --form-element-text: var(--form-element-text-dark);
     --pico-background-color: var(--site-bg-dark);
     --pico-color: var(--site-text-dark);
     --pico-card-background-color: var(--site-bg-soft-dark);
@@ -74,6 +80,7 @@
   --form-element-bright: var(--form-element-bright-dark);
   --form-element-dark: var(--form-element-dark-dark);
   --form-element-edge: var(--form-element-edge-dark);
+  --form-element-text: var(--form-element-text-dark);
   --pico-background-color: var(--site-bg-dark);
   --pico-color: var(--site-text-dark);
   --pico-card-background-color: var(--site-bg-soft-dark);
@@ -114,7 +121,10 @@ body > footer,
     var(--form-element-edge) 100%
   );
   text-decoration: none;
-  color: var(--pico-color);
+  /* not --pico-color: Pico redefines it to the link color on every anchor,
+     so it resolves here to the brand amber rather than the page text —
+     which fails AA against the button's own fill in dark mode */
+  color: var(--form-element-text);
   user-select: none;
   -webkit-tap-highlight-color: transparent;
 }
