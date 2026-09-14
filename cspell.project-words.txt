@@ -49,5 +49,6 @@ unmappable
 unstub
 vite
 vitepress
+WCAG
 wikilink
 wikilinks
