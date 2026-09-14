@@ -20,17 +20,28 @@ describe("conversion worker bundle", () => {
     // never sees, and the build under test stops being the built one
     const nodeEnv = process.env.NODE_ENV
     process.env.NODE_ENV = "production"
-    const built = (await build({
-      ...config,
-      root: new URL("../web/", import.meta.url).pathname,
-      configFile: false,
-      logLevel: "silent",
-      // vitest runs under NODE_ENV=test, and the dev resolution pulls in
-      // debug's browser build — which is not what gets deployed
-      mode: "production",
-      build: { ...config.build, write: false }
-    })) as Rollup.RollupOutput | Rollup.RollupOutput[]
-    process.env.NODE_ENV = nodeEnv
+    let built: Rollup.RollupOutput | Rollup.RollupOutput[]
+    try {
+      built = (await build({
+        ...config,
+        root: new URL("../web/", import.meta.url).pathname,
+        configFile: false,
+        logLevel: "silent",
+        // vitest runs under NODE_ENV=test, and the dev resolution pulls in
+        // debug's browser build — which is not what gets deployed
+        mode: "production",
+        build: { ...config.build, write: false }
+      })) as Rollup.RollupOutput | Rollup.RollupOutput[]
+    } finally {
+      // a real build that throws or runs out its budget would otherwise
+      // leave production set for every test this worker runs afterwards,
+      // silently changing how their dependencies resolve
+      if (nodeEnv === undefined) {
+        delete process.env.NODE_ENV
+      } else {
+        process.env.NODE_ENV = nodeEnv
+      }
+    }
 
     const worker = [built]
       .flat()

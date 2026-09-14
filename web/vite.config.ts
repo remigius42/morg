@@ -12,6 +12,15 @@ import { resolveVersion } from "./version.js"
  * The package already publishes a DOM-free build for exactly this; Vite
  * resolves the worker bundle with the browser condition regardless, so
  * the worker build points at it directly.
+ *
+ * Naming the dependency rather than asking for its `worker` export
+ * condition, which would cover every package shipping one, is not a
+ * preference: `worker.plugins` takes no resolve options, and a `config`
+ * hook returning `resolve.conditions` does not reach the worker bundle
+ * (tried under Vite 8 — the DOM build came back). Node's resolver takes
+ * no conditions either, so the alternative is interpreting export maps
+ * by hand. The next offender is caught by tests/webWorkerBundle.spec.ts
+ * instead, which is where the silence this guards against is closed.
  */
 function domFreeEntityDecoder(): Plugin {
   const dependency = "decode-named-character-reference"
