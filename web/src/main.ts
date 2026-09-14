@@ -103,6 +103,8 @@ interface Controls {
   error: HTMLParagraphElement
   warnings: HTMLUListElement
   styleSelects: HTMLSelectElement[]
+  copyButton: HTMLButtonElement
+  downloadButton: HTMLButtonElement
   /**
    * Notices about the opened file itself, e.g. its size. convert()
    * rebuilds the warning list from scratch, so these cannot live in the
@@ -132,6 +134,8 @@ function findControls(): Controls {
     error: element<HTMLParagraphElement>("error"),
     warnings: element<HTMLUListElement>("warnings"),
     styleSelects: STYLE_KEYS.map(key => element<HTMLSelectElement>(key)),
+    copyButton: element<HTMLButtonElement>("copyOutput"),
+    downloadButton: element<HTMLButtonElement>("downloadOutput"),
     notices: [],
     previousDirection: element<HTMLSelectElement>("direction")
       .value as Direction
@@ -161,6 +165,10 @@ function convert(controls: Controls): void {
   output.value = result.output
   error.hidden = !result.error
   error.textContent = result.error ?? ""
+  // a failed conversion leaves the output empty; saving it would write an
+  // empty file, under normalize one named all but identically to the source
+  controls.copyButton.disabled = Boolean(result.error)
+  controls.downloadButton.disabled = Boolean(result.error)
   const messages = [...controls.notices, ...result.warnings]
   warnings.hidden = messages.length === 0
   warnings.replaceChildren(
@@ -354,10 +362,10 @@ function carriesFiles(event: DragEvent): boolean {
 }
 
 function wireFileControls(controls: Controls): void {
-  element<HTMLButtonElement>("copyOutput").addEventListener("click", () => {
+  controls.copyButton.addEventListener("click", () => {
     void copyOutput(controls.output)
   })
-  element<HTMLButtonElement>("downloadOutput").addEventListener("click", () =>
+  controls.downloadButton.addEventListener("click", () =>
     downloadOutput(controls)
   )
 

@@ -285,6 +285,21 @@ describe("embed page", () => {
     vi.unstubAllGlobals()
   })
 
+  it("disables copy and download while the conversion is failing", () => {
+    // saving here writes an empty file — and under normalize that name is
+    // one keystroke away from the source document's own
+    const config = element<HTMLTextAreaElement>("config")
+    config.value = "tyop = true"
+    config.dispatchEvent(new Event("input", { bubbles: true }))
+    expect(element<HTMLButtonElement>("downloadOutput").disabled).toBe(true)
+    expect(element<HTMLButtonElement>("copyOutput").disabled).toBe(true)
+
+    config.value = ""
+    config.dispatchEvent(new Event("input", { bubbles: true }))
+    expect(element<HTMLButtonElement>("downloadOutput").disabled).toBe(false)
+    expect(element<HTMLButtonElement>("copyOutput").disabled).toBe(false)
+  })
+
   it("downloads the output under the opened file's name", async () => {
     const saved = captureDownload()
     await drop(textFile("notes.org", "* Saved"))
