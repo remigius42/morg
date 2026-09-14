@@ -103,7 +103,9 @@
         </ul>
       </nav>
     </header>
-    <main class="container-fluid">
+    <!-- labelled because the embedded converter is a document of its own
+         and brings a second `main` into the accessibility tree -->
+    <main class="container-fluid" aria-label="Converter">
       <!-- the Clipboard API needs an explicit grant in an iframe; without
            it the Copy button falls back to a selection copy -->
       <iframe

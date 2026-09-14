@@ -556,7 +556,10 @@ function wireDropOverlay(): void {
   overlay.className = "drop-overlay"
   overlay.hidden = true
   overlay.textContent = "Drop a document or a morg.toml"
-  document.body.append(overlay)
+  // inside the landmark rather than on the body: content outside every
+  // landmark is skipped by landmark navigation, and the overlay is fixed
+  // so its parent has no say in where it paints
+  ;(document.querySelector("main") ?? document.body).append(overlay)
 
   // dragleave fires on every element boundary the pointer crosses, so a
   // plain show/hide pair flickers; only the outermost leave counts
