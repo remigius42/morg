@@ -71,8 +71,18 @@ describe("outputFileName", () => {
     expect(outputFileName("NOTES", "org-to-md")).toBe("NOTES.md")
   })
 
-  it("keeps the extension when normalizing in place", () => {
-    expect(outputFileName("notes.org", "normalize-org")).toBe("notes.org")
+  it("marks a normalized file rather than reusing the source name", () => {
+    // an identical name invites saving over the original, and the browser
+    // offers exactly that when the download lands in the source folder
+    expect(outputFileName("notes.org", "normalize-org")).toBe(
+      "notes.normalized.org"
+    )
+    expect(outputFileName("notes.md", "normalize-md")).toBe(
+      "notes.normalized.md"
+    )
+    expect(outputFileName(undefined, "normalize-org")).toBe(
+      "morg-output.normalized.org"
+    )
   })
 
   it("keeps a dotfile's name instead of stripping it", () => {

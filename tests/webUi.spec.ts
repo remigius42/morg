@@ -239,6 +239,14 @@ describe("embed page", () => {
     expect(await saved.contents()).toBe("* Saved\n".replace("*", "#"))
   })
 
+  it("keeps a normalized download from overwriting its source", async () => {
+    const saved = captureDownload()
+    element<HTMLSelectElement>("direction").value = "normalize-org"
+    await drop(textFile("notes.org", "* Saved"))
+    element<HTMLButtonElement>("downloadOutput").click()
+    expect(saved.name()).toBe("notes.normalized.org")
+  })
+
   it("names a paste-only download generically", () => {
     const saved = captureDownload()
     element<HTMLButtonElement>("downloadOutput").click()

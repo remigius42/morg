@@ -1,5 +1,5 @@
 import { formatFromFileName, splitFileName } from "../../src/fileNames.js"
-import { writesMarkdown, type Direction } from "./convert.js"
+import { normalizes, writesMarkdown, type Direction } from "./convert.js"
 
 /** An opened file; structural, so a test needs no real `File`. */
 export interface TextFile {
@@ -27,7 +27,7 @@ export function directionForFile(name: string, current: Direction): Direction {
     return current
   }
   const short = format === "markdown" ? "md" : "org"
-  if (current.startsWith("normalize-")) {
+  if (normalizes(current)) {
     return `normalize-${short}`
   }
   return short === "md" ? "md-to-org" : "org-to-md"
@@ -36,6 +36,9 @@ export function directionForFile(name: string, current: Direction): Direction {
 /**
  * Name to save the output under, derived from the file that was opened.
  * A paste-only session has no source name and gets a generic one.
+ * Normalizing keeps the source format, so the name would otherwise match
+ * the original exactly and invite saving over it; `.normalized` keeps the
+ * two apart.
  */
 export function outputFileName(
   source: string | undefined,
@@ -43,7 +46,8 @@ export function outputFileName(
 ): string {
   const extension = writesMarkdown(direction) ? "md" : "org"
   const { stem } = splitFileName(source ?? "morg-output")
-  return `${stem}.${extension}`
+  const infix = normalizes(direction) ? ".normalized" : ""
+  return `${stem}${infix}.${extension}`
 }
 
 /**

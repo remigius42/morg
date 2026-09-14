@@ -15,6 +15,11 @@ export function readsMarkdown(direction: Direction): boolean {
   return direction === "md-to-org" || direction === "normalize-md"
 }
 
+/** Whether a direction rewrites its input format rather than converting. */
+export function normalizes(direction: Direction): boolean {
+  return direction === "normalize-md" || direction === "normalize-org"
+}
+
 /** Whether a direction writes Markdown (rather than Org) as its output. */
 export function writesMarkdown(direction: Direction): boolean {
   return direction === "org-to-md" || direction === "normalize-md"
