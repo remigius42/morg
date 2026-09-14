@@ -420,7 +420,8 @@ async function openFiles(
   const notices: string[] = []
 
   if (config) {
-    notices.push(...[sizeWarning(config)].filter(n => n !== undefined))
+    // no size warning: it is about how long a conversion takes, and a
+    // config is read rather than converted
     controls.config.value = await config.text()
     showConfig(controls)
     reflectConfig(controls)

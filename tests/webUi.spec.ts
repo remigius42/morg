@@ -458,6 +458,13 @@ describe("embed page", () => {
     expect(element("warnings").textContent).toMatch(/photo\.png/)
   })
 
+  it("says nothing about the size of a config", async () => {
+    // the size warning talks about how long converting will take and
+    // points at the CLI for large documents; a config is never converted
+    await drop(textFile("morg.toml", 'preset = "obsidian"', 2_000_000))
+    expect(element("warnings").textContent).not.toMatch(/morg\.toml/)
+  })
+
   it("reports a file it cannot read", async () => {
     // dropping a folder rejects here; swallowing it makes the drop look
     // like it simply did nothing
