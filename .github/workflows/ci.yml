@@ -6,7 +6,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # the e2e step brings its own browser download and a second web build;
+    # 10 was enough for lint, unit tests and the builds alone
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
         with:
@@ -40,6 +42,20 @@ jobs:
           printf '* Hello\n' | node dist/cli.js --from org | grep -q '^# Hello'
       - name: Build web UI
         run: npm run build:web
+      # a step rather than a job: it runs only once lint, the unit tests and
+      # the builds are green, and reuses this runner's node_modules instead
+      # of paying for a second checkout and install
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium webkit
+      - name: Test web UI end to end
+        run: npm run test:e2e
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: playwright-report
+          path: tests/e2e/reports/
+          retention-days: 7
       - name: Upload Pages artifact
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         uses: actions/upload-pages-artifact@v5
