@@ -27,6 +27,23 @@ describe("splitFileName", () => {
     })
   })
 
+  it("reads the extension from the last path segment", () => {
+    // the CLI is given paths, not bare names: a directory called
+    // "release.v2" says nothing about the format of the file inside it
+    expect(splitFileName("docs/.org")).toEqual({
+      stem: "docs/.org",
+      extension: ""
+    })
+    expect(splitFileName("release.v2/notes")).toEqual({
+      stem: "release.v2/notes",
+      extension: ""
+    })
+    expect(splitFileName("docs/notes.md")).toEqual({
+      stem: "docs/notes",
+      extension: "md"
+    })
+  })
+
   it("splits on the last dot", () => {
     expect(splitFileName("notes.backup.md")).toEqual({
       stem: "notes.backup",
