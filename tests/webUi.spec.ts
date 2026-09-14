@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { readFileSync } from "node:fs"
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { convertMarkdownToOrg } from "../src/markdownToOrg.js"
 import { convertOrgToMarkdown } from "../src/orgToMarkdown.js"
 
@@ -51,19 +51,43 @@ async function dropOn(
   await Promise.resolve()
 }
 
+// happy-dom has no URL.createObjectURL to spy on, so these are defined
+// outright — and undone after every test, or the no-op anchor click and
+// the stubbed execCommand would silently outlive the test that wanted them
+const undoStubs: (() => void)[] = []
+
+function stub(target: object, key: string, value: unknown): void {
+  const original = Object.getOwnPropertyDescriptor(target, key)
+  undoStubs.push(() => {
+    if (original) {
+      Object.defineProperty(target, key, original)
+    } else {
+      delete (target as Record<string, unknown>)[key]
+    }
+  })
+  Object.defineProperty(target, key, {
+    value,
+    configurable: true,
+    writable: true
+  })
+}
+
 /** Intercepts the object-URL download so nothing touches the disk. */
 function captureDownload() {
   let blob: Blob | undefined
   let name = ""
-  const url = URL as unknown as Record<string, unknown>
-  url.createObjectURL = (value: Blob) => {
+  stub(URL, "createObjectURL", (value: Blob) => {
     blob = value
     return "blob:captured"
-  }
-  url.revokeObjectURL = () => undefined
-  HTMLAnchorElement.prototype.click = function (this: HTMLAnchorElement) {
-    name = this.download
-  }
+  })
+  stub(URL, "revokeObjectURL", () => undefined)
+  stub(
+    HTMLAnchorElement.prototype,
+    "click",
+    function (this: HTMLAnchorElement) {
+      name = this.download
+    }
+  )
   return {
     name: () => name,
     contents: () => blob?.text() ?? Promise.resolve("")
@@ -74,6 +98,12 @@ describe("embed page", () => {
   beforeEach(async () => {
     localStorage.clear()
     await setUpPage()
+  })
+
+  afterEach(() => {
+    while (undoStubs.length) undoStubs.pop()?.()
+    vi.restoreAllMocks()
+    vi.unstubAllGlobals()
   })
 
   it("preloads a demo and converts it on load", () => {
@@ -265,7 +295,6 @@ describe("embed page", () => {
     element<HTMLButtonElement>("copyOutput").click()
     await Promise.resolve()
     expect(copied).toEqual([element<HTMLTextAreaElement>("output").value])
-    vi.unstubAllGlobals()
   })
 
   it("falls back to execCommand when the clipboard is blocked", async () => {
@@ -274,16 +303,29 @@ describe("embed page", () => {
       clipboard: { writeText: () => Promise.reject(new Error("denied")) }
     })
     const commands: string[] = []
-    document.execCommand = (command: string) => {
+    stub(document, "execCommand", (command: string) => {
       commands.push(command)
       return true
-    }
-
+    })
     element<HTMLButtonElement>("copyOutput").click()
     await Promise.resolve()
     await Promise.resolve()
     expect(commands).toEqual(["copy"])
-    vi.unstubAllGlobals()
+  })
+
+  it("says so when copying is refused outright", async () => {
+    // iOS Safari rejects the API and returns false from execCommand; with
+    // no feedback, "copied" and "did nothing" look identical
+    vi.stubGlobal("navigator", {
+      clipboard: { writeText: () => Promise.reject(new Error("denied")) }
+    })
+    stub(document, "execCommand", () => false)
+    element<HTMLButtonElement>("copyOutput").click()
+    await Promise.resolve()
+    await Promise.resolve()
+    const error = element<HTMLParagraphElement>("error")
+    expect(error.hidden).toBe(false)
+    expect(error.textContent).toMatch(/Ctrl\+C/)
   })
 
   it("marks an active config without reopening the panel on load", async () => {
@@ -311,22 +353,6 @@ describe("embed page", () => {
     config.value = ""
     config.dispatchEvent(new Event("input", { bubbles: true }))
     expect(summary?.textContent).not.toMatch(/active/)
-  })
-
-  it("says so when copying is refused outright", async () => {
-    // iOS Safari rejects the API and returns false from execCommand; with
-    // no feedback, "copied" and "did nothing" look identical
-    vi.stubGlobal("navigator", {
-      clipboard: { writeText: () => Promise.reject(new Error("denied")) }
-    })
-    document.execCommand = () => false
-    element<HTMLButtonElement>("copyOutput").click()
-    await Promise.resolve()
-    await Promise.resolve()
-    const error = element<HTMLParagraphElement>("error")
-    expect(error.hidden).toBe(false)
-    expect(error.textContent).toMatch(/Ctrl\+C/)
-    vi.unstubAllGlobals()
   })
 
   it("disables copy and download while the conversion is failing", () => {
