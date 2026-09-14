@@ -14,10 +14,30 @@ function loadEmbedPageBody(): string {
   return body.replace(/<script[\s\S]*?<\/script>/g, "")
 }
 
+/**
+ * Replacing the body is not replacing the page: the drag and drop
+ * handlers are wired on the document, so without taking them off they
+ * outlive the form they were wired for and a later drop is handled twice,
+ * once by a set of controls no longer in the page.
+ */
+const documentListeners: [string, EventListener][] = []
+
 async function setUpPage(runner?: ConversionRunner) {
+  for (const [type, listener] of documentListeners.splice(0)) {
+    document.removeEventListener(type, listener)
+  }
   document.body.innerHTML = loadEmbedPageBody()
   const { init } = await import("../web/src/main.js")
-  init(runner)
+  const original = document.addEventListener.bind(document)
+  document.addEventListener = (type: string, listener: EventListener) => {
+    documentListeners.push([type, listener])
+    original(type, listener)
+  }
+  try {
+    init(runner)
+  } finally {
+    document.addEventListener = original
+  }
   await settle()
 }
 
@@ -808,6 +828,20 @@ describe("embed page", () => {
     const { init } = await import("../web/src/main.js")
     init()
     expect(constructed).toEqual([])
+  })
+
+  it("wires the page once when it is set up again", async () => {
+    // setUpPage replaces the body, but the drag and drop handlers live on
+    // the document and survive it, still closed over the controls of a
+    // form that is no longer in the page. A drop would be opened twice —
+    // two conversions, and the detached form persisting over the live
+    // one's settings
+    const runs: string[] = []
+    await setUpPage(countingRunner(runs))
+    await setUpPage(countingRunner(runs))
+    runs.length = 0
+    await drop(textFile("notes.org", "* Saved"))
+    expect(runs).toEqual(["* Saved"])
   })
 
   it("persists the config in localStorage", () => {
