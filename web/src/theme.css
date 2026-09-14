@@ -200,13 +200,6 @@ nav li:has(> .theme-switch) {
   border: none;
 }
 
-/* the action rows sit above the two textareas; Pico's default button
-   margin would push them away from the box they belong to */
-.file-actions button {
-  width: auto;
-  margin-bottom: var(--pico-spacing);
-}
-
 .file-actions > div:last-child {
   text-align: right;
 }
