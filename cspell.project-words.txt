@@ -8,6 +8,8 @@ codacy
 Comeau
 commitlint
 dotless
+dragenter
+dragleave
 filetags
 frontmatter
 iframable

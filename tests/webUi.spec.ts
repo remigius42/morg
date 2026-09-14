@@ -51,6 +51,16 @@ async function dropOn(
   await Promise.resolve()
 }
 
+/** Dispatches a drag event carrying the given `dataTransfer.types`. */
+function dragEvent(type: string, target: EventTarget, types: string[]): Event {
+  const event = new Event(type, { bubbles: true, cancelable: true })
+  Object.defineProperty(event, "dataTransfer", {
+    value: { types, files: [] }
+  })
+  target.dispatchEvent(event)
+  return event
+}
+
 // happy-dom has no URL.createObjectURL to spy on, so these are defined
 // outright — and undone after every test, or the no-op anchor click and
 // the stubbed execCommand would silently outlive the test that wanted them
@@ -390,6 +400,44 @@ describe("embed page", () => {
     const saved = captureDownload()
     element<HTMLButtonElement>("downloadOutput").click()
     expect(saved.name()).toBe("morg-output.md")
+  })
+
+  it("says a file can be dropped, before any drag starts", () => {
+    // the overlay only appears mid-drag, so it cannot teach anyone that
+    // dropping is possible in the first place
+    expect(element("openFile").parentElement?.textContent).toMatch(/drop/i)
+  })
+
+  it("shows a drop overlay while files are dragged over the page", () => {
+    // the whole page is the drop target, so nothing on screen says a drop
+    // would do anything — or what the converter accepts
+    dragEvent("dragenter", document.body, ["Files"])
+    const overlay = element("dropOverlay")
+    expect(overlay.hidden).toBe(false)
+    expect(overlay.textContent).toMatch(/morg\.toml/)
+  })
+
+  it("hides the overlay once the files land", async () => {
+    dragEvent("dragenter", document.body, ["Files"])
+    await drop(textFile("notes.org", "* Dropped"))
+    expect(element("dropOverlay").hidden).toBe(true)
+  })
+
+  it("keeps the overlay up while the drag crosses child elements", () => {
+    // dragleave fires on every boundary inside the page; hiding on the
+    // first one makes the overlay flicker away mid-drag
+    dragEvent("dragenter", document.body, ["Files"])
+    dragEvent("dragenter", element("input"), ["Files"])
+    dragEvent("dragleave", document.body, ["Files"])
+    expect(element("dropOverlay").hidden).toBe(false)
+
+    dragEvent("dragleave", element("input"), ["Files"])
+    expect(element("dropOverlay").hidden).toBe(true)
+  })
+
+  it("stays out of the way of a text drag", () => {
+    dragEvent("dragenter", element("input"), ["text/plain"])
+    expect(element("dropOverlay").hidden).toBe(true)
   })
 
   it("swallows a file drop that misses the form", () => {

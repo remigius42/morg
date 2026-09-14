@@ -107,9 +107,9 @@ interface Controls {
   downloadButton: HTMLButtonElement
   configSection: HTMLDetailsElement
   /**
-   * Notices about the opened file itself, e.g. its size. convert()
-   * rebuilds the warning list from scratch, so these cannot live in the
-   * DOM alone.
+   * Notices about the opened files themselves, e.g. a size or the ones a
+   * drop could not use. convert() rebuilds the warning list from scratch,
+   * so these cannot live in the DOM alone.
    */
   notices: string[]
   /** Name the download follows; undefined until a file has been opened. */
@@ -395,6 +395,47 @@ function downloadOutput(controls: Controls): void {
 }
 
 /**
+ * Announces the page-wide drop target while files are over it, and says
+ * what the converter accepts. Built here rather than in the markup so
+ * every page that wires main.ts gets it.
+ */
+function wireDropOverlay(): void {
+  const overlay = document.createElement("div")
+  overlay.id = "dropOverlay"
+  overlay.className = "drop-overlay"
+  overlay.hidden = true
+  overlay.textContent = "Drop a document or a morg.toml"
+  document.body.append(overlay)
+
+  // dragleave fires on every element boundary the pointer crosses, so a
+  // plain show/hide pair flickers; only the outermost leave counts
+  let depth = 0
+  document.addEventListener("dragenter", event => {
+    if (!carriesFiles(event)) {
+      return
+    }
+    depth += 1
+    overlay.hidden = false
+  })
+  document.addEventListener("dragleave", event => {
+    if (!carriesFiles(event)) {
+      return
+    }
+    depth = Math.max(0, depth - 1)
+    overlay.hidden = depth === 0
+  })
+  document.addEventListener("drop", () => {
+    depth = 0
+    overlay.hidden = true
+  })
+}
+
+/** Whether a drag carries files rather than, say, a text selection. */
+function carriesFiles(event: DragEvent): boolean {
+  return event.dataTransfer?.types.includes("Files") ?? false
+}
+
+/**
  * Loads files, reporting a failed read rather than leaving the drop
  * looking like it did nothing — dropping a folder rejects here, and so
  * does a file moved or revoked between picking and reading.
@@ -406,12 +447,8 @@ function open(controls: Controls, files: readonly TextFile[]): void {
   })
 }
 
-/** Whether a drag carries files rather than, say, a text selection. */
-function carriesFiles(event: DragEvent): boolean {
-  return event.dataTransfer?.types.includes("Files") ?? false
-}
-
 function wireFileControls(controls: Controls): void {
+  wireDropOverlay()
   controls.copyButton.addEventListener("click", () => {
     void copyOutput(controls)
   })
@@ -495,7 +532,7 @@ function wireListeners(controls: Controls): void {
     })
   }
   input.addEventListener("input", () => {
-    // the notices described the opened file, not what is in the box now
+    // the notices described the opened files, not what is in the box now
     controls.notices = []
     convert(controls)
   })

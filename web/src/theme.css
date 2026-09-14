@@ -200,6 +200,31 @@ nav li:has(> .theme-switch) {
   border: none;
 }
 
+.drop-hint {
+  display: block;
+  color: var(--pico-muted-color);
+}
+
+/* pointer-events: none keeps the overlay from generating drag events of
+   its own, which would fight the dragenter/dragleave depth counter */
+.drop-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  font-size: 1.25rem;
+  color: var(--pico-primary);
+  background: color-mix(
+    in oklch,
+    var(--pico-background-color) 85%,
+    transparent
+  );
+  border: 2px dashed var(--pico-primary);
+}
+
 .file-actions > div:last-child {
   text-align: right;
 }
