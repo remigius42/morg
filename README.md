@@ -61,7 +61,9 @@ upload.
 
 Typing is converted once you pause, not once per keystroke, and the
 conversion itself runs in a web worker, so the page stays responsive
-even while a large document is being converted.
+even while a large document is being converted. Copy and Download are
+unavailable for as long as a conversion is running, so they can never
+save the previous document's output.
 
 ### CLI
 

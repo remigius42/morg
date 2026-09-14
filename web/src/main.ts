@@ -23,6 +23,12 @@ const STYLE_KEYS = ["bullet", "emphasis", "strong", "fence", "rule"] as const
  */
 export const DEBOUNCE_MS = 200
 
+/**
+ * How long a conversion may run before it is announced. Below this the
+ * notice would appear and vanish within a frame or two of every pause.
+ */
+export const CONVERTING_AFTER_MS = 150
+
 // the two demos are the same document in both dialects; convergence and
 // zero warnings are pinned by test (tests/webUi.spec.ts)
 export const ORG_DEMO = `# Paste your Org here — or convert this demo
@@ -124,6 +130,10 @@ interface Controls {
    * so the baseline cannot live in that closure.
    */
   previousDirection: Direction
+  /** Says a conversion is running; built here, not in the markup. */
+  converting: HTMLParagraphElement
+  /** Pending delay before `converting` is shown, if any. */
+  convertingTimer?: ReturnType<typeof setTimeout>
   /** Where conversions run. */
   runner: ConversionRunner
   /**
@@ -132,6 +142,29 @@ interface Controls {
    * a result only paints while it is still the newest one asked for.
    */
   latestRun: number
+}
+
+/**
+ * The "converting" notice, built rather than marked up so every page that
+ * wires main.ts gets it — the same reason the drop overlay is built here.
+ * It sits where the error goes, since it answers the same question about
+ * why the output is not what the input says it should be.
+ */
+function convertingNotice(): HTMLParagraphElement {
+  const existing = document.getElementById("converting")
+  if (existing) {
+    return existing as HTMLParagraphElement
+  }
+  const notice = document.createElement("p")
+  notice.id = "converting"
+  notice.hidden = true
+  // polite, not assertive: it interrupts nothing, and a conversion fast
+  // enough to be uninteresting is never announced at all
+  notice.setAttribute("aria-live", "polite")
+  notice.textContent = "Converting…"
+  const error = element<HTMLParagraphElement>("error")
+  error.before(notice)
+  return notice
 }
 
 function findControls(runner: ConversionRunner): Controls {
@@ -151,6 +184,7 @@ function findControls(runner: ConversionRunner): Controls {
     downloadButton: element<HTMLButtonElement>("downloadOutput"),
     configSection: element<HTMLDetailsElement>("configSection"),
     notices: [],
+    converting: convertingNotice(),
     previousDirection: element<HTMLSelectElement>("direction")
       .value as Direction,
     runner,
@@ -184,6 +218,7 @@ async function convert(controls: Controls): Promise<void> {
     : "Paste Org here…"
 
   const ticket = ++controls.latestRun
+  beginRun(controls)
   const result = await controls.runner.run(
     input.value,
     formState(controls),
@@ -192,6 +227,7 @@ async function convert(controls: Controls): Promise<void> {
   if (ticket !== controls.latestRun) {
     return // a newer run has been asked for; this output is already stale
   }
+  endRun(controls)
   output.value = result.output
   error.hidden = !result.error
   error.textContent = result.error ?? ""
@@ -208,6 +244,32 @@ async function convert(controls: Controls): Promise<void> {
       return item
     })
   )
+}
+
+/**
+ * Marks a conversion as in flight. The output box still holds the last
+ * result, which belongs to a document that is no longer in the input, so
+ * Copy and Download come off until it has been replaced — saving stale
+ * output is the same silent data loss as saving under a stale name.
+ *
+ * Off the UI thread there is nothing else to notice a conversion by: the
+ * freeze used to be the progress indicator. The notice is delayed rather
+ * than shown outright, since an ordinary document converts in a few
+ * milliseconds and a notice that fast is a blink on every keystroke.
+ */
+function beginRun(controls: Controls): void {
+  controls.copyButton.disabled = true
+  controls.downloadButton.disabled = true
+  clearTimeout(controls.convertingTimer)
+  controls.convertingTimer = setTimeout(() => {
+    controls.converting.hidden = false
+  }, CONVERTING_AFTER_MS)
+}
+
+/** Drops the in-flight marks; the result itself sets what comes after. */
+function endRun(controls: Controls): void {
+  clearTimeout(controls.convertingTimer)
+  controls.converting.hidden = true
 }
 
 /**

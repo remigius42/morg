@@ -34,6 +34,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Copy and Download are disabled in the Web UI while a conversion is
+  running. The output box still holds the previous result until the new
+  one arrives, and saving that wrote one document's conversion under
+  the next document's name. A conversion still running after 150 ms
+  says so; a faster one passes without comment.
+
 - The Web UI converts in a web worker, so the page no longer freezes
   while a large document is converted. A browser that has no workers
   falls back to converting in place, as before. The conversion pipeline

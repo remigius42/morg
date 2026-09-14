@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { convertMarkdownToOrg } from "../src/markdownToOrg.js"
 import { convertOrgToMarkdown } from "../src/orgToMarkdown.js"
-import { DEBOUNCE_MS } from "../web/src/main.js"
+import { CONVERTING_AFTER_MS, DEBOUNCE_MS } from "../web/src/main.js"
 import { runConversion } from "../web/src/convert.js"
 import type { ConversionRunner } from "../web/src/runner.js"
 
@@ -55,6 +55,22 @@ function countingRunner(runs: string[]): ConversionRunner {
       runs.push(input)
       return Promise.resolve(runConversion(input, form, config))
     }
+  }
+}
+
+/**
+ * Converts only when let go, so the window while a conversion is in
+ * flight — which a real worker has and a synchronous run does not — can
+ * be looked at. Each run appends its release to `release`, in order.
+ */
+function deferredRunner(release: (() => void)[]): ConversionRunner {
+  return {
+    run: (input, form, config) =>
+      new Promise(resolve => {
+        release.push(() => {
+          resolve(runConversion(input, form, config))
+        })
+      })
   }
 }
 
@@ -194,12 +210,7 @@ describe("embed page", () => {
     // letting the older result land would show output for input that is
     // no longer in the box
     const pending: (() => void)[] = []
-    await setUpPage({
-      run: (input, form, config) =>
-        new Promise(resolve => {
-          pending.push(() => resolve(runConversion(input, form, config)))
-        })
-    })
+    await setUpPage(deferredRunner(pending))
     const input = element<HTMLTextAreaElement>("input")
     for (const value of ["* Slow", "* Fast"]) {
       input.value = value
@@ -213,6 +224,85 @@ describe("embed page", () => {
     })
     await settle()
     expect(element<HTMLTextAreaElement>("output").value).toBe("# Fast\n")
+  })
+
+  it("will not copy or save output a newer input has orphaned", async () => {
+    // off the UI thread the output box keeps the last result while the
+    // next one runs. Saving it writes the previous document's conversion
+    // under the current document's name — the freeze used to make that
+    // impossible by locking the page
+    const saved = captureDownload()
+    const release: (() => void)[] = []
+    await setUpPage(deferredRunner(release))
+    release.shift()?.() // the load conversion, so there is output to steal
+    await settle()
+    expect(element<HTMLButtonElement>("downloadOutput").disabled).toBe(false)
+
+    const input = element<HTMLTextAreaElement>("input")
+    input.value = "* An entirely different document"
+    input.dispatchEvent(new Event("input", { bubbles: true }))
+    await settle()
+    expect(element<HTMLButtonElement>("downloadOutput").disabled).toBe(true)
+    expect(element<HTMLButtonElement>("copyOutput").disabled).toBe(true)
+    element<HTMLButtonElement>("downloadOutput").click()
+    expect(saved.name()).toBe("")
+
+    release.shift()?.()
+    await settle()
+    expect(element<HTMLButtonElement>("downloadOutput").disabled).toBe(false)
+    expect(element<HTMLTextAreaElement>("output").value).toBe(
+      "# An entirely different document\n"
+    )
+  })
+
+  it("announces a conversion only once it has run long", async () => {
+    // off the UI thread nothing else marks a conversion — the freeze used
+    // to be the progress indicator — but an ordinary document converts in
+    // milliseconds, and announcing that is a blink on every pause
+    const release: (() => void)[] = []
+    await setUpPage(deferredRunner(release))
+    release.shift()?.() // the load conversion, so the page is at rest
+    await settle()
+    const converting = element("converting")
+    expect(converting.hidden).toBe(true)
+    expect(converting.textContent).toMatch(/converting/i)
+    // polite: it must not interrupt whatever is being typed
+    expect(converting.getAttribute("aria-live")).toBe("polite")
+
+    const input = element<HTMLTextAreaElement>("input")
+    input.value = "* Slow"
+    input.dispatchEvent(new Event("input", { bubbles: true }))
+    await vi.advanceTimersByTimeAsync(DEBOUNCE_MS) // the run starts here
+    await vi.advanceTimersByTimeAsync(CONVERTING_AFTER_MS - 1)
+    expect(converting.hidden).toBe(true)
+
+    await vi.advanceTimersByTimeAsync(1)
+    expect(converting.hidden).toBe(false)
+
+    release.shift()?.()
+    await settle()
+    expect(converting.hidden).toBe(true)
+    expect(element<HTMLTextAreaElement>("output").value).toBe("# Slow\n")
+  })
+
+  it("never announces a conversion that beat the delay", async () => {
+    // the notice is scheduled on every run, so a run that finishes first
+    // has to take its pending announcement down with it
+    const release: (() => void)[] = []
+    await setUpPage(deferredRunner(release))
+    release.shift()?.()
+    await settle()
+
+    const input = element<HTMLTextAreaElement>("input")
+    input.value = "* Quick"
+    input.dispatchEvent(new Event("input", { bubbles: true }))
+    await vi.advanceTimersByTimeAsync(DEBOUNCE_MS)
+    release.shift()?.()
+    await settle()
+
+    await vi.advanceTimersByTimeAsync(CONVERTING_AFTER_MS * 2)
+    expect(element("converting").hidden).toBe(true)
+    expect(element<HTMLTextAreaElement>("output").value).toBe("# Quick\n")
   })
 
   it("shows config errors", async () => {
