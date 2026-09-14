@@ -1,3 +1,4 @@
+import { formatFromFileName, splitFileName } from "../../src/fileNames.js"
 import { writesMarkdown, type Direction } from "./convert.js"
 
 /** An opened file; structural, so a test needs no real `File`. */
@@ -10,22 +11,9 @@ export interface TextFile {
 /** Above this, conversion is slow enough to be worth mentioning. */
 export const LARGE_FILE_BYTES = 1_000_000
 
-/** Document formats morg can read, by file extension. */
-const DOCUMENT_FORMATS: Record<string, "md" | "org"> = {
-  org: "org",
-  md: "md",
-  markdown: "md"
-}
-
-function extensionOf(name: string): string {
-  const dot = name.lastIndexOf(".")
-  // a dotless name has no extension — "org" is a file, not a format
-  return dot === -1 ? "" : name.slice(dot + 1).toLowerCase()
-}
-
 /** Whether an opened file belongs in the config panel rather than the input. */
 export function isConfigFile(name: string): boolean {
-  return extensionOf(name) === "toml"
+  return splitFileName(name).extension === "toml"
 }
 
 /**
@@ -34,14 +22,15 @@ export function isConfigFile(name: string): boolean {
  * half alone; an unknown extension changes nothing.
  */
 export function directionForFile(name: string, current: Direction): Direction {
-  const format = DOCUMENT_FORMATS[extensionOf(name)]
+  const format = formatFromFileName(name)
   if (!format) {
     return current
   }
+  const short = format === "markdown" ? "md" : "org"
   if (current.startsWith("normalize-")) {
-    return `normalize-${format}`
+    return `normalize-${short}`
   }
-  return format === "md" ? "md-to-org" : "org-to-md"
+  return short === "md" ? "md-to-org" : "org-to-md"
 }
 
 /**
@@ -53,9 +42,8 @@ export function outputFileName(
   direction: Direction
 ): string {
   const extension = writesMarkdown(direction) ? "md" : "org"
-  const name = source ?? "morg-output"
-  const dot = name.lastIndexOf(".")
-  return `${dot === -1 ? name : name.slice(0, dot)}.${extension}`
+  const { stem } = splitFileName(source ?? "morg-output")
+  return `${stem}.${extension}`
 }
 
 /**

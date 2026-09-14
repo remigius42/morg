@@ -23,11 +23,24 @@ describe("directionForFile", () => {
     expect(directionForFile("LICENSE", "normalize-md")).toBe("normalize-md")
     // a dotless name is not its own extension
     expect(directionForFile("org", "md-to-org")).toBe("md-to-org")
+    // .markdown is deliberately not inferred: the CLI does not accept it
+    // either, and the picker still lets you choose one — it just leaves
+    // the direction to the user
+    expect(directionForFile("notes.markdown", "org-to-md")).toBe("org-to-md")
   })
 
   it("matches the extension case-insensitively", () => {
     expect(directionForFile("NOTES.ORG", "md-to-org")).toBe("org-to-md")
-    expect(directionForFile("notes.Markdown", "org-to-md")).toBe("md-to-org")
+    expect(directionForFile("notes.MD", "org-to-md")).toBe("md-to-org")
+  })
+
+  it("is not fooled by inherited object properties", () => {
+    // these once produced directions like "normalize-[object Object]",
+    // which blanks the select and fails every later conversion
+    expect(directionForFile("notes.constructor", "normalize-md")).toBe(
+      "normalize-md"
+    )
+    expect(directionForFile("notes.__proto__", "org-to-md")).toBe("org-to-md")
   })
 })
 
@@ -60,6 +73,11 @@ describe("outputFileName", () => {
 
   it("keeps the extension when normalizing in place", () => {
     expect(outputFileName("notes.org", "normalize-org")).toBe("notes.org")
+  })
+
+  it("keeps a dotfile's name instead of stripping it", () => {
+    expect(outputFileName(".hidden", "org-to-md")).toBe(".hidden.md")
+    expect(outputFileName(".org", "org-to-md")).toBe(".org.md")
   })
 })
 

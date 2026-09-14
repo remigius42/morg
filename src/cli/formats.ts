@@ -1,17 +1,6 @@
-import * as path from "node:path"
 import type { CliArgs } from "./args.js"
 import { CliError } from "./error.js"
-
-function formatFromExtension(file: string): string | undefined {
-  const ext = path.extname(file).toLowerCase()
-  if (ext === ".md") {
-    return "markdown"
-  }
-  if (ext === ".org") {
-    return "org"
-  }
-  return undefined
-}
+import { formatFromFileName } from "../fileNames.js"
 
 export function inferFormats(
   cli: CliArgs
@@ -20,10 +9,10 @@ export function inferFormats(
 
   // Infer formats from file extensions first
   if (cli.inputFile && !fromFormat) {
-    fromFormat = formatFromExtension(cli.inputFile)
+    fromFormat = formatFromFileName(cli.inputFile)
   }
   if (cli.outputFile && !toFormat) {
-    toFormat = formatFromExtension(cli.outputFile)
+    toFormat = formatFromFileName(cli.outputFile)
   }
 
   return inferMissingFormat(cli.normalize, fromFormat, toFormat)
