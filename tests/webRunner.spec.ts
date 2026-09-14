@@ -115,6 +115,38 @@ describe("createRunner", () => {
     expect(second?.output).toBe("# Two\n")
   })
 
+  it("reports a request the worker will not take", async () => {
+    // postMessage throws on a value structured clone cannot carry; the
+    // caller has to hear about it rather than wait out a request that was
+    // never sent
+    const worker = useFakeWorker()
+    const runner = createRunner()
+    const instance = worker.constructed[0]
+    if (instance) {
+      instance.postMessage = () => {
+        throw new Error("DataCloneError")
+      }
+    }
+    await expect(
+      runner.run("* Hello", { direction: "org-to-md" })
+    ).rejects.toThrow("DataCloneError")
+  })
+
+  it("reports a response it cannot read", async () => {
+    // messageerror instead of message: the worker answered, but the
+    // answer did not survive the trip. No id comes with it, so every
+    // request still waiting is one that will never be answered
+    const worker = useFakeWorker()
+    const runner = createRunner()
+    const instance = worker.constructed[0]
+    if (instance) {
+      instance.postMessage = () => undefined
+    }
+    const inFlight = runner.run("* Hello", { direction: "org-to-md" })
+    instance?.emit("messageerror")
+    await expect(inFlight).rejects.toThrow(/could not be read/)
+  })
+
   it("converts in place once the worker has died", async () => {
     // a worker that throws on startup takes its in-flight requests with
     // it; leaving those promises unsettled hangs the output box forever
@@ -130,5 +162,33 @@ describe("createRunner", () => {
       output: "# After\n",
       warnings: []
     })
+  })
+
+  it("reports a rescue conversion that cannot be loaded", async () => {
+    // the rescue imports the pipeline chunk on first use, which is a
+    // fetch: offline, or after a deploy rotated the hashed name under a
+    // tab that stayed open, it never arrives. Both the dead worker and
+    // its stand-in have failed by then, and the caller is still waiting
+    vi.resetModules()
+    vi.doMock("../web/src/convert.js", () => {
+      throw new Error("chunk gone")
+    })
+    try {
+      const { createRunner: create } = await import("../web/src/runner.js")
+      const worker = useFakeWorker()
+      const runner = create()
+      const instance = worker.constructed[0]
+      if (instance) {
+        instance.postMessage = () => undefined
+      }
+      const inFlight = runner.run("* Before", { direction: "org-to-md" })
+      instance?.emit("error")
+      // that it settles at all is the point; the message belongs to
+      // vitest's mock loader, not to anything the runner produced
+      await expect(inFlight).rejects.toThrow()
+    } finally {
+      vi.doUnmock("../web/src/convert.js")
+      vi.resetModules()
+    }
   })
 })
