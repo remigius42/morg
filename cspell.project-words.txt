@@ -1,4 +1,3 @@
-Comeau
 andreas
 autolink
 autolinks
@@ -6,6 +5,7 @@ binarypoetry
 blockquotes
 canonicalizer
 codacy
+Comeau
 commitlint
 dotless
 filetags
