@@ -134,6 +134,8 @@ interface Controls {
   previousDirection: Direction
   /** Says a conversion is running; built here, not in the markup. */
   converting: HTMLParagraphElement
+  /** Says the clipboard refused, and what to do instead. */
+  copyError: HTMLParagraphElement
   /** Pending delay before `converting` is shown, if any. */
   convertingTimer?: ReturnType<typeof setTimeout>
   /** Where conversions run. */
@@ -147,26 +149,25 @@ interface Controls {
 }
 
 /**
- * The "converting" notice, built rather than marked up so every page that
- * wires main.ts gets it — the same reason the drop overlay is built here.
- * It sits where the error goes, since it answers the same question about
- * why the output is not what the input says it should be.
+ * A notice built rather than marked up, so every page that wires main.ts
+ * gets it — the same reason the drop overlay is built here. All of them
+ * sit by the error, since they answer the same question about why the
+ * page is not doing what it was asked to.
+ *
+ * Each says one thing and owns the element it says it in: sharing a slot
+ * means whichever writes last erases the other, and a conversion runs on
+ * every keystroke.
  */
-function convertingNotice(): HTMLParagraphElement {
-  const existing = document.getElementById("converting")
-  if (existing) {
-    return existing as HTMLParagraphElement
-  }
-  const notice = document.createElement("p")
-  notice.id = "converting"
-  notice.hidden = true
+function notice(id: string, text: string): HTMLParagraphElement {
+  const built = document.createElement("p")
+  built.id = id
+  built.hidden = true
   // polite, not assertive: it interrupts nothing, and a conversion fast
   // enough to be uninteresting is never announced at all
-  notice.setAttribute("aria-live", "polite")
-  notice.textContent = "Converting…"
-  const error = element<HTMLParagraphElement>("error")
-  error.before(notice)
-  return notice
+  built.setAttribute("aria-live", "polite")
+  built.textContent = text
+  element<HTMLParagraphElement>("error").before(built)
+  return built
 }
 
 function findControls(runner: ConversionRunner): Controls {
@@ -186,7 +187,11 @@ function findControls(runner: ConversionRunner): Controls {
     downloadButton: element<HTMLButtonElement>("downloadOutput"),
     configSection: element<HTMLDetailsElement>("configSection"),
     notices: [],
-    converting: convertingNotice(),
+    converting: notice("converting", "Converting…"),
+    copyError: notice(
+      "copyError",
+      "Could not copy — select the output and press Ctrl+C."
+    ),
     previousDirection: element<HTMLSelectElement>("direction")
       .value as Direction,
     runner,
@@ -481,17 +486,16 @@ function partition<T>(
  */
 async function copyOutput(controls: Controls): Promise<void> {
   const { output } = controls
+  controls.copyError.hidden = true
   try {
     await navigator.clipboard.writeText(output.value)
     return
   } catch {
     // fall through to the selection copy
   }
-  if (!selectionCopy(output)) {
-    controls.error.hidden = false
-    controls.error.textContent =
-      "Could not copy — select the output and press Ctrl+C."
-  }
+  // not the conversion error: there it reads as a failed conversion, and
+  // the next keystroke takes the instruction away before it can be read
+  controls.copyError.hidden = selectionCopy(output)
 }
 
 /**

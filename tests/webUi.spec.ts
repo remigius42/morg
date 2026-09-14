@@ -560,9 +560,38 @@ describe("embed page", () => {
     element<HTMLButtonElement>("copyOutput").click()
     await Promise.resolve()
     await Promise.resolve()
-    const error = element<HTMLParagraphElement>("error")
-    expect(error.hidden).toBe(false)
-    expect(error.textContent).toMatch(/Ctrl\+C/)
+    const notice = element<HTMLParagraphElement>("copyError")
+    expect(notice.hidden).toBe(false)
+    expect(notice.textContent).toMatch(/Ctrl\+C/)
+    // it is not a conversion error: reported in that slot it reads as one,
+    // and the next run wipes it before it can be acted on
+    expect(element<HTMLParagraphElement>("error").hidden).toBe(true)
+
+    const input = element<HTMLTextAreaElement>("input")
+    input.value = "* Still there"
+    input.dispatchEvent(new Event("input", { bubbles: true }))
+    await settle()
+    expect(notice.hidden).toBe(false)
+  })
+
+  it("takes the copy instruction down once copying works", async () => {
+    vi.stubGlobal("navigator", {
+      clipboard: { writeText: () => Promise.reject(new Error("denied")) }
+    })
+    stub(document, "execCommand", () => false)
+    const copy = element<HTMLButtonElement>("copyOutput")
+    copy.click()
+    await Promise.resolve()
+    await Promise.resolve()
+    expect(element("copyError").hidden).toBe(false)
+
+    vi.stubGlobal("navigator", {
+      clipboard: { writeText: () => Promise.resolve() }
+    })
+    copy.click()
+    await Promise.resolve()
+    await Promise.resolve()
+    expect(element("copyError").hidden).toBe(true)
   })
 
   it("marks an active config without reopening the panel on load", async () => {
