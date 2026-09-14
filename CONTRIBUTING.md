@@ -21,7 +21,16 @@ npm run build       # tsc → dist/
 
 The end-to-end suite needs its browsers once:
 `npx playwright install chromium webkit`. It builds `web/` and serves it
-itself, so nothing needs to be running first.
+itself, so nothing needs to be running first — but it will reuse a
+server already listening on port 4173 rather than rebuilding, so kill
+any stray `vite preview` before testing a change to the build.
+
+Playwright's WebKit bundle links against pinned system libraries
+(`libicu*.so.74`, `libxml2.so.2`, `libjxl`, `flite`) that distributions
+other than the Ubuntu it is built for may not carry, and
+`playwright install-deps` only speaks `apt`. Where WebKit will not
+launch, run `npm run test:e2e:chromium` and leave WebKit to CI, which
+covers it on every pull request.
 
 ## Development process
 

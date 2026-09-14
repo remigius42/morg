@@ -14,6 +14,8 @@ filetags
 frontmatter
 iframable
 iframed
+libicu
+libjxl
 lintstagedrc
 logseq
 losslessness
