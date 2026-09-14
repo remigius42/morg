@@ -53,11 +53,13 @@ Besides pasting, a file can be opened with the picker or dropped
 anywhere on the page — a `.toml` lands in the config panel, a document
 in the input, and the conversion direction follows the extension. Drop
 both at once and each goes where it belongs; an overlay names what is
-accepted while a drag is in flight. The result can be copied
-or saved with the Copy and Download buttons; a normalized file is saved
-as `notes.normalized.org`, so it never lands on top of its own source.
-Files are read and written by the browser itself; this is not an
-upload.
+accepted while a drag is in flight, and anything that turns out not to
+be text is named in the warning list rather than loaded. The result can
+be copied or saved with the Copy and Download buttons; a normalized file
+is saved as `notes.normalized.org`, and switching to a direction that no
+longer reads the opened file falls back to a generic name, so neither
+lands on top of its own source. Files are read and written by the
+browser itself; this is not an upload.
 
 Typing is converted once you pause, not once per keystroke, and the
 conversion itself runs in a web worker, so the page stays responsive

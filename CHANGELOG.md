@@ -62,6 +62,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A file name is now split on its last path segment, so a path the CLI
+  is given (`docs/.org`) follows the same dotfile rule as a name the
+  Web UI reads off a dropped file. `morg docs/.org` no longer infers a
+  format from a hidden file's name.
+- Web UI: a conversion that could not be run at all — rather than one
+  that failed on its input — left the page locked: "Converting…" up,
+  Copy and Download disabled, and no message. The worker now reports a
+  request structured clone refuses, a reply that did not survive the
+  trip, and a stand-in conversion whose code could not be fetched;
+  the page shows the failure and carries on.
+- Web UI: coming back to a restored "Markdown → Org" and switching to
+  "Org → Markdown" left the Markdown demo in the input, to be converted
+  as Org. The untouched-demo swap now compares against the restored
+  direction rather than the page's default.
+- Web UI: a dropped file that is not text — a png, a pdf, an archive —
+  was decoded as UTF-8 and its replacement characters converted. It is
+  named in the warning list instead. Text files the picker's filter
+  does not cover (`README`, `notes.txt`) still open as before.
+- Web UI: opening `notes.md` and then selecting "Org → Markdown" offered
+  the download as `notes.md` — the source file. A direction that no
+  longer reads the opened file's format falls back to the generic
+  timestamped name; "Normalize Markdown" still reads it, so it keeps the
+  name.
+- Web UI: a refused copy says so in its own notice instead of the
+  conversion error slot, where it read as a failed conversion and was
+  wiped by the next keystroke before it could be acted on. The fallback
+  copy also gives the caret back, instead of leaving the focus on the
+  output.
+- Web UI: a dropped `morg.toml` over 1 MB no longer produces a warning
+  about how long converting it will take; a config is read, not
+  converted.
 - Web UI: the download kept the opened file's name after the input had
   been replaced, so converting `notes.org`, saving `notes.md`, then
   pasting an unrelated document and saving again wrote the second over
