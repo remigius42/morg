@@ -550,6 +550,22 @@ describe("embed page", () => {
     expect(commands).toEqual(["copy"])
   })
 
+  it("leaves the caret where it was after a fallback copy", async () => {
+    // every Copy click takes this path in an iframe without
+    // allow="clipboard-write", and it selects the output to copy it —
+    // someone mid-edit would have to click back into the input to type
+    vi.stubGlobal("navigator", {
+      clipboard: { writeText: () => Promise.reject(new Error("denied")) }
+    })
+    stub(document, "execCommand", () => true)
+    const input = element<HTMLTextAreaElement>("input")
+    input.focus()
+    element<HTMLButtonElement>("copyOutput").click()
+    await Promise.resolve()
+    await Promise.resolve()
+    expect(document.activeElement).toBe(input)
+  })
+
   it("says so when copying is refused outright", async () => {
     // iOS Safari rejects the API and returns false from execCommand; with
     // no feedback, "copied" and "did nothing" look identical

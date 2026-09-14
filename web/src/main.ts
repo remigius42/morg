@@ -504,6 +504,10 @@ async function copyOutput(controls: Controls): Promise<void> {
  */
 function selectionCopy(output: HTMLTextAreaElement): boolean {
   const wasReadOnly = output.readOnly
+  // copying takes the focus, and in an iframe without clipboard-write
+  // that is every copy; someone mid-sentence would be typing into
+  // nothing until they clicked back
+  const wasFocused = document.activeElement
   output.readOnly = false
   try {
     output.focus()
@@ -514,6 +518,9 @@ function selectionCopy(output: HTMLTextAreaElement): boolean {
   } finally {
     output.readOnly = wasReadOnly
     output.setSelectionRange(0, 0)
+    if (wasFocused instanceof HTMLElement) {
+      wasFocused.focus()
+    }
   }
 }
 
