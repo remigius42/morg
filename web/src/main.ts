@@ -668,6 +668,9 @@ function wireListeners(controls: Controls): void {
       return
     }
     config.value = snippet.toml
+    // a snippet puts a config in force as surely as typing one does; the
+    // panel is already open, since the select is inside it
+    showConfig(controls, false)
     reflectConfig(controls)
     persist(controls)
     startConvert(controls)
