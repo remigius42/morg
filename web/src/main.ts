@@ -710,14 +710,17 @@ function wireListeners(controls: Controls): void {
 }
 
 /** Wires the Embed Page form to a `ConversionRunner`. Idempotent per form. */
-export function init(runner: ConversionRunner = createRunner()): void {
+export function init(runner?: ConversionRunner): void {
   const form = element<HTMLFormElement>("converter")
   if (form.dataset.initialized) {
     return
   }
   form.dataset.initialized = "true"
 
-  const controls = findControls(runner)
+  // built past the guard, not in a default argument: an argument is
+  // evaluated before the guard can turn the call away, and the worker it
+  // starts would run unreachable for the life of the page
+  const controls = findControls(runner ?? createRunner())
 
   renderVersion()
 

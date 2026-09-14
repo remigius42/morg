@@ -788,6 +788,28 @@ describe("embed page", () => {
     }
   })
 
+  it("builds no runner for a form already wired", async () => {
+    // init is idempotent per form, but the runner was built by a default
+    // argument — evaluated before the guard reads it, so a second call
+    // started a worker and then walked away from it, leaving it running
+    // and unreachable for the life of the page
+    const constructed: unknown[] = []
+    vi.stubGlobal(
+      "Worker",
+      class {
+        constructor() {
+          constructed.push(this)
+        }
+        addEventListener() {
+          // the runner wires message and error handlers
+        }
+      }
+    )
+    const { init } = await import("../web/src/main.js")
+    init()
+    expect(constructed).toEqual([])
+  })
+
   it("persists the config in localStorage", () => {
     const config = element<HTMLTextAreaElement>("config")
     config.value = 'preset = "obsidian"'
