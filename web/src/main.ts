@@ -309,6 +309,11 @@ function downloadOutput(controls: Controls): void {
   URL.revokeObjectURL(url)
 }
 
+/** Whether a drag carries files rather than, say, a text selection. */
+function carriesFiles(event: DragEvent): boolean {
+  return event.dataTransfer?.types.includes("Files") ?? false
+}
+
 function wireFileControls(controls: Controls): void {
   element<HTMLButtonElement>("copyOutput").addEventListener("click", () => {
     void copyOutput(controls.output)
@@ -332,9 +337,15 @@ function wireFileControls(controls: Controls): void {
 
   // the browser navigates to a dropped file unless the default is
   // prevented, which would replace the converter and discard the input;
-  // dragover needs it too, or no drop event fires at all
+  // dragover needs it too, or no drop event fires at all. Only file drags
+  // qualify — cancelling a text drag would break dropping a selection
+  // into the textareas, which is native behavior worth keeping.
   for (const type of ["dragover", "drop"]) {
-    document.addEventListener(type, event => event.preventDefault())
+    document.addEventListener(type, event => {
+      if (carriesFiles(event as DragEvent)) {
+        event.preventDefault()
+      }
+    })
   }
 
   element<HTMLFormElement>("converter").addEventListener("drop", event => {

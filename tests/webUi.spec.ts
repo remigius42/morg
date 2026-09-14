@@ -36,8 +36,11 @@ function textFile(name: string, contents: string, size?: number) {
 /** Drops a file on the converter form, as a browser would. */
 async function drop(...files: ReturnType<typeof textFile>[]): Promise<void> {
   const event = new Event("drop", { bubbles: true, cancelable: true })
-  Object.defineProperty(event, "dataTransfer", { value: { files } })
+  Object.defineProperty(event, "dataTransfer", {
+    value: { types: ["Files"], files }
+  })
   element("converter").dispatchEvent(event)
+  await Promise.resolve()
   await Promise.resolve()
 }
 
@@ -253,13 +256,30 @@ describe("embed page", () => {
     expect(saved.name()).toBe("morg-output.md")
   })
 
-  it("swallows a drop that misses the form", () => {
+  it("swallows a file drop that misses the form", () => {
     // the browser default is to navigate to the dropped file, which would
     // replace the converter and discard whatever was typed
     for (const type of ["dragover", "drop"]) {
       const event = new Event(type, { bubbles: true, cancelable: true })
+      Object.defineProperty(event, "dataTransfer", {
+        value: { types: ["Files"], files: [] }
+      })
       document.body.dispatchEvent(event)
       expect(event.defaultPrevented).toBe(true)
+    }
+  })
+
+  it("lets a text drag land in the textarea", () => {
+    // dragging a selection into the input is a native textarea behavior;
+    // cancelling it makes the drag vanish with no feedback
+    const input = element<HTMLTextAreaElement>("input")
+    for (const type of ["dragover", "drop"]) {
+      const event = new Event(type, { bubbles: true, cancelable: true })
+      Object.defineProperty(event, "dataTransfer", {
+        value: { types: ["text/plain"], files: [] }
+      })
+      input.dispatchEvent(event)
+      expect(event.defaultPrevented).toBe(false)
     }
   })
 
