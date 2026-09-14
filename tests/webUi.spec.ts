@@ -278,10 +278,27 @@ describe("embed page", () => {
       commands.push(command)
       return true
     }
+
     element<HTMLButtonElement>("copyOutput").click()
     await Promise.resolve()
     await Promise.resolve()
     expect(commands).toEqual(["copy"])
+    vi.unstubAllGlobals()
+  })
+
+  it("says so when copying is refused outright", async () => {
+    // iOS Safari rejects the API and returns false from execCommand; with
+    // no feedback, "copied" and "did nothing" look identical
+    vi.stubGlobal("navigator", {
+      clipboard: { writeText: () => Promise.reject(new Error("denied")) }
+    })
+    document.execCommand = () => false
+    element<HTMLButtonElement>("copyOutput").click()
+    await Promise.resolve()
+    await Promise.resolve()
+    const error = element<HTMLParagraphElement>("error")
+    expect(error.hidden).toBe(false)
+    expect(error.textContent).toMatch(/Ctrl\+C/)
     vi.unstubAllGlobals()
   })
 

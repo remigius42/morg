@@ -319,12 +319,37 @@ function partition<T>(
  * Copies the output. The Clipboard API is unavailable in a cross-origin
  * iframe without `allow="clipboard-write"`, so a selection copy stands in.
  */
-async function copyOutput(output: HTMLTextAreaElement): Promise<void> {
+async function copyOutput(controls: Controls): Promise<void> {
+  const { output } = controls
   try {
     await navigator.clipboard.writeText(output.value)
+    return
   } catch {
-    output.select()
-    document.execCommand("copy")
+    // fall through to the selection copy
+  }
+  if (!selectionCopy(output)) {
+    controls.error.hidden = false
+    controls.error.textContent =
+      "Could not copy — select the output and press Ctrl+C."
+  }
+}
+
+/**
+ * Copies via the output's own selection. iOS Safari refuses to select a
+ * readonly textarea, so the attribute comes off for the duration.
+ */
+function selectionCopy(output: HTMLTextAreaElement): boolean {
+  const wasReadOnly = output.readOnly
+  output.readOnly = false
+  try {
+    output.focus()
+    output.setSelectionRange(0, output.value.length)
+    return document.execCommand("copy")
+  } catch {
+    return false
+  } finally {
+    output.readOnly = wasReadOnly
+    output.setSelectionRange(0, 0)
   }
 }
 
@@ -368,7 +393,7 @@ function carriesFiles(event: DragEvent): boolean {
 
 function wireFileControls(controls: Controls): void {
   controls.copyButton.addEventListener("click", () => {
-    void copyOutput(controls.output)
+    void copyOutput(controls)
   })
   controls.downloadButton.addEventListener("click", () =>
     downloadOutput(controls)
