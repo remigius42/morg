@@ -178,6 +178,26 @@ describe("embed page", () => {
     )
   })
 
+  it("swaps the demo a restored direction loaded", async () => {
+    // the visitor who left in Markdown mode comes back to the Markdown
+    // demo; switching away has to swap it, the same as it would for
+    // anyone who never left. A baseline read before the restore compares
+    // against the markup's default and leaves the wrong dialect in the
+    // box — converted as the other one on the very first interaction
+    localStorage.setItem("morg-web", JSON.stringify({ direction: "md-to-org" }))
+    await setUpPage()
+    expect(element<HTMLTextAreaElement>("input").value).toContain(
+      "Paste your Markdown here"
+    )
+
+    const direction = element<HTMLSelectElement>("direction")
+    direction.value = "org-to-md"
+    direction.dispatchEvent(new Event("change", { bubbles: true }))
+    expect(element<HTMLTextAreaElement>("input").value).toContain(
+      "Paste your Org here"
+    )
+  })
+
   it("converts input on typing", async () => {
     const input = element<HTMLTextAreaElement>("input")
     input.value = "* Hello"

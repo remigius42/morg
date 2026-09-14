@@ -686,9 +686,11 @@ export function init(runner: ConversionRunner = createRunner()): void {
   applyTheme()
   watchThemeChanges()
 
-  // restore before wiring so the direction listener's baseline for the
-  // untouched-demo swap matches the restored direction
   restore(controls)
+  // findControls read the baseline off the markup's default; the restore
+  // may have just moved the select somewhere else, and the demo swap
+  // compares the input against whichever direction it was written for
+  controls.previousDirection = controls.direction.value as Direction
   wireListeners(controls)
   wireFileControls(controls)
 
