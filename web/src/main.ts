@@ -340,8 +340,13 @@ function downloadOutput(controls: Controls): void {
     controls.openedFileName,
     controls.direction.value as Direction
   )
+  // Firefox only acts on a click if the anchor is in the document, and
+  // revoking in the same task can invalidate the blob before the download
+  // task has read it
+  document.body.append(link)
   link.click()
-  URL.revokeObjectURL(url)
+  link.remove()
+  setTimeout(() => URL.revokeObjectURL(url), 0)
 }
 
 /**
