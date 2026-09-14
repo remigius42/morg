@@ -4,10 +4,10 @@ import { renderVersion } from "./version.js"
 import { CONFIG_SNIPPETS } from "./snippets.js"
 import {
   readsMarkdown,
-  runConversion,
   type ConversionForm,
   type Direction
 } from "./convert.js"
+import { synchronousRunner, type ConversionRunner } from "./runner.js"
 import {
   directionForFile,
   isConfigFile,
@@ -18,6 +18,13 @@ import {
 
 const STORAGE_KEY = "morg-web"
 const STYLE_KEYS = ["bullet", "emphasis", "strong", "fence", "rule"] as const
+
+/**
+ * How long typing pauses before the conversion runs. Long enough that a
+ * word is typed in one run, short enough that the output still feels
+ * live at the end of a line.
+ */
+export const DEBOUNCE_MS = 200
 
 // the two demos are the same document in both dialects; convergence and
 // zero warnings are pinned by test (tests/webUi.spec.ts)
@@ -120,9 +127,17 @@ interface Controls {
    * so the baseline cannot live in that closure.
    */
   previousDirection: Direction
+  /** Where conversions run. */
+  runner: ConversionRunner
+  /**
+   * Ticket of the most recently requested conversion. Runs settle out of
+   * order — a one-line edit overtakes the 1 MB document it replaced — so
+   * a result only paints while it is still the newest one asked for.
+   */
+  latestRun: number
 }
 
-function findControls(): Controls {
+function findControls(runner: ConversionRunner): Controls {
   return {
     direction: element<HTMLSelectElement>("direction"),
     preset: element<HTMLSelectElement>("preset"),
@@ -140,7 +155,9 @@ function findControls(): Controls {
     configSection: element<HTMLDetailsElement>("configSection"),
     notices: [],
     previousDirection: element<HTMLSelectElement>("direction")
-      .value as Direction
+      .value as Direction,
+    runner,
+    latestRun: 0
   }
 }
 
@@ -161,9 +178,23 @@ function formState(controls: Controls): ConversionForm {
   }
 }
 
-function convert(controls: Controls): void {
+async function convert(controls: Controls): Promise<void> {
   const { input, output, error, warnings, direction, config } = controls
-  const result = runConversion(input.value, formState(controls), config.value)
+  // the placeholder describes the box, not the result, so it follows the
+  // direction immediately rather than waiting for the run to come back
+  input.placeholder = readsMarkdown(direction.value as Direction)
+    ? "Paste Markdown here…"
+    : "Paste Org here…"
+
+  const ticket = ++controls.latestRun
+  const result = await controls.runner.run(
+    input.value,
+    formState(controls),
+    config.value
+  )
+  if (ticket !== controls.latestRun) {
+    return // a newer run has been asked for; this output is already stale
+  }
   output.value = result.output
   error.hidden = !result.error
   error.textContent = result.error ?? ""
@@ -180,9 +211,25 @@ function convert(controls: Controls): void {
       return item
     })
   )
-  input.placeholder = readsMarkdown(direction.value as Direction)
-    ? "Paste Markdown here…"
-    : "Paste Org here…"
+}
+
+/**
+ * Runs a conversion without waiting for it. Every caller paints through
+ * `convert` itself, and a stale run is dropped there rather than thrown.
+ */
+function startConvert(controls: Controls): void {
+  void convert(controls)
+}
+
+/** Delays `run` until `wait` ms have passed without another call. */
+function debounce(run: () => void, wait: number): () => void {
+  let timer: ReturnType<typeof setTimeout> | undefined
+  return () => {
+    if (timer !== undefined) {
+      clearTimeout(timer)
+    }
+    timer = setTimeout(run, wait)
+  }
 }
 
 function persist(controls: Controls): void {
@@ -320,7 +367,7 @@ async function openFiles(
     controls.previousDirection = direction
   }
   persist(controls)
-  convert(controls)
+  await convert(controls)
 }
 
 function partition<T>(
@@ -491,12 +538,19 @@ function wireFileControls(controls: Controls): void {
 
 function wireListeners(controls: Controls): void {
   const { direction, config, input } = controls
+  // only the two textareas, which fire per keystroke — a select or a
+  // checkbox fires once per interaction, and delaying a click reads as lag.
+  // One shared timer, since typing in both boxes is still one intent to
+  // see the result.
+  const convertSoon = debounce(() => startConvert(controls), DEBOUNCE_MS)
   config.addEventListener("input", () => {
-    // typed by hand, so the panel is already open — only the mark matters
+    // typed by hand, so the panel is already open — only the mark matters.
+    // The mark and the form reflection stay immediate: they describe the
+    // config text itself, so lagging them behind the typing looks broken
     showConfig(controls, false)
     reflectConfig(controls)
     persist(controls)
-    convert(controls)
+    convertSoon()
   })
   const configSnippet = element<HTMLSelectElement>("configSnippet")
   configSnippet.addEventListener("change", () => {
@@ -509,7 +563,7 @@ function wireListeners(controls: Controls): void {
     config.value = snippet.toml
     reflectConfig(controls)
     persist(controls)
-    convert(controls)
+    startConvert(controls)
   })
   direction.addEventListener("change", () => {
     // an untouched demo follows the direction's input format
@@ -528,7 +582,7 @@ function wireListeners(controls: Controls): void {
   ]) {
     control.addEventListener("change", () => {
       persist(controls)
-      convert(controls)
+      startConvert(controls)
     })
   }
   input.addEventListener("input", () => {
@@ -538,19 +592,19 @@ function wireListeners(controls: Controls): void {
     // be kept on the chance that this is still the same document.
     controls.notices = []
     controls.openedFileName = undefined
-    convert(controls)
+    convertSoon()
   })
 }
 
-/** Wires the Embed Page form to `runConversion`. Idempotent per form. */
-export function init(): void {
+/** Wires the Embed Page form to a `ConversionRunner`. Idempotent per form. */
+export function init(runner: ConversionRunner = synchronousRunner): void {
   const form = element<HTMLFormElement>("converter")
   if (form.dataset.initialized) {
     return
   }
   form.dataset.initialized = "true"
 
-  const controls = findControls()
+  const controls = findControls(runner)
 
   renderVersion()
 
@@ -574,7 +628,7 @@ export function init(): void {
   if (!controls.input.value) {
     controls.input.value = demoFor(controls.direction.value as Direction)
   }
-  convert(controls)
+  startConvert(controls)
 }
 
 if (document.getElementById("converter")) {

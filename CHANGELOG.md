@@ -34,6 +34,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The Web UI converts once typing pauses (200 ms) rather than on every
+  keystroke. A full conversion per keystroke made a large document
+  painful to type into. Selects and checkboxes still convert
+  immediately — they fire once per interaction, and delaying a click
+  reads as lag. The conversion is now asynchronous, and a result that
+  a newer edit has overtaken is discarded instead of painted.
+
 - `.markdown` is no longer recognized as a Markdown extension in the
   Web UI. It never was in the CLI, and one extension table is now
   shared by both (`src/fileNames.ts`); the file picker still offers

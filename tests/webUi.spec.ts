@@ -3,6 +3,9 @@ import { readFileSync } from "node:fs"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { convertMarkdownToOrg } from "../src/markdownToOrg.js"
 import { convertOrgToMarkdown } from "../src/orgToMarkdown.js"
+import { DEBOUNCE_MS } from "../web/src/main.js"
+import { runConversion } from "../web/src/convert.js"
+import type { ConversionRunner } from "../web/src/runner.js"
 
 // Smoke check: the Embed Page markup wired by main.ts converts on input.
 function loadEmbedPageBody(): string {
@@ -11,10 +14,22 @@ function loadEmbedPageBody(): string {
   return body.replace(/<script[\s\S]*?<\/script>/g, "")
 }
 
-async function setUpPage() {
+async function setUpPage(runner?: ConversionRunner) {
   document.body.innerHTML = loadEmbedPageBody()
   const { init } = await import("../web/src/main.js")
-  init()
+  init(runner)
+  await settle()
+}
+
+/**
+ * Waits out the input debounce and lets the conversion promise settle.
+ * Conversions are asynchronous, so nothing an event triggers has been
+ * painted by the time the dispatch returns.
+ */
+async function settle(): Promise<void> {
+  await vi.advanceTimersByTimeAsync(DEBOUNCE_MS)
+  await Promise.resolve()
+  await Promise.resolve()
 }
 
 function element<T extends HTMLElement>(id: string): T {
@@ -33,6 +48,16 @@ function textFile(name: string, contents: string, size?: number) {
   }
 }
 
+/** Converts for real, recording the input of every run it is asked for. */
+function countingRunner(runs: string[]): ConversionRunner {
+  return {
+    run: (input, form, config) => {
+      runs.push(input)
+      return Promise.resolve(runConversion(input, form, config))
+    }
+  }
+}
+
 /** Drops files on the converter form, as a browser would. */
 async function drop(...files: ReturnType<typeof textFile>[]): Promise<void> {
   await dropOn(element("converter"), ...files)
@@ -47,8 +72,10 @@ async function dropOn(
     value: { types: ["Files"], files }
   })
   target.dispatchEvent(event)
+  // the file reads resolve first, then the conversion they trigger
   await Promise.resolve()
   await Promise.resolve()
+  await settle()
 }
 
 /** Dispatches a drag event carrying the given `dataTransfer.types`. */
@@ -107,11 +134,15 @@ function captureDownload() {
 describe("embed page", () => {
   beforeEach(async () => {
     localStorage.clear()
+    // the debounce is what the tests step over; the object-URL revoke in
+    // downloadOutput also takes a timer, and never firing it is harmless
+    vi.useFakeTimers()
     await setUpPage()
   })
 
   afterEach(() => {
     while (undoStubs.length) undoStubs.pop()?.()
+    vi.useRealTimers()
     vi.restoreAllMocks()
     vi.unstubAllGlobals()
   })
@@ -131,17 +162,64 @@ describe("embed page", () => {
     )
   })
 
-  it("converts input on typing", () => {
+  it("converts input on typing", async () => {
     const input = element<HTMLTextAreaElement>("input")
     input.value = "* Hello"
     input.dispatchEvent(new Event("input", { bubbles: true }))
+    await settle()
     expect(element<HTMLTextAreaElement>("output").value).toBe("# Hello\n")
   })
 
-  it("shows config errors", () => {
+  it("converts once for a burst of keystrokes", async () => {
+    // a full conversion per keystroke is what makes a large document
+    // unusable to type into
+    const runs: string[] = []
+    await setUpPage(countingRunner(runs))
+    runs.length = 0 // the load conversion, which is not what is under test
+    const input = element<HTMLTextAreaElement>("input")
+    for (const value of ["* H", "* He", "* Hello"]) {
+      input.value = value
+      input.dispatchEvent(new Event("input", { bubbles: true }))
+      await vi.advanceTimersByTimeAsync(DEBOUNCE_MS / 4)
+    }
+    expect(runs).toEqual([])
+
+    await settle()
+    expect(runs).toEqual(["* Hello"])
+    expect(element<HTMLTextAreaElement>("output").value).toBe("# Hello\n")
+  })
+
+  it("keeps a slow earlier conversion from painting over a newer one", async () => {
+    // a one-line edit finishes long before the 1 MB document it replaced;
+    // letting the older result land would show output for input that is
+    // no longer in the box
+    const pending: (() => void)[] = []
+    await setUpPage({
+      run: (input, form, config) =>
+        new Promise(resolve => {
+          pending.push(() => resolve(runConversion(input, form, config)))
+        })
+    })
+    const input = element<HTMLTextAreaElement>("input")
+    for (const value of ["* Slow", "* Fast"]) {
+      input.value = value
+      input.dispatchEvent(new Event("input", { bubbles: true }))
+      await settle()
+    }
+
+    // the load conversion, then the two edits — resolved newest first
+    pending.reverse().forEach(resolve => {
+      resolve()
+    })
+    await settle()
+    expect(element<HTMLTextAreaElement>("output").value).toBe("# Fast\n")
+  })
+
+  it("shows config errors", async () => {
     const config = element<HTMLTextAreaElement>("config")
     config.value = "tyop = true"
     config.dispatchEvent(new Event("input", { bubbles: true }))
+    await settle()
     const error = element<HTMLParagraphElement>("error")
     expect(error.hidden).toBe(false)
     expect(error.textContent).toMatch(/tyop/)
@@ -151,6 +229,7 @@ describe("embed page", () => {
     const snippet = element<HTMLSelectElement>("configSnippet")
     snippet.value = "prettier"
     snippet.dispatchEvent(new Event("change", { bubbles: true }))
+    // the snippet lands in the config synchronously; only the output waits
     expect(element<HTMLTextAreaElement>("config").value).toContain(
       'emphasis = "_"'
     )
@@ -158,7 +237,7 @@ describe("embed page", () => {
     expect(snippet.value).toBe("")
   })
 
-  it("interprets html via the interpretHtml checkbox", () => {
+  it("interprets html via the interpretHtml checkbox", async () => {
     const direction = element<HTMLSelectElement>("direction")
     direction.value = "md-to-org"
     direction.dispatchEvent(new Event("change", { bubbles: true }))
@@ -168,6 +247,7 @@ describe("embed page", () => {
     const interpretHtml = element<HTMLInputElement>("interpretHtml")
     interpretHtml.checked = true
     interpretHtml.dispatchEvent(new Event("change", { bubbles: true }))
+    await settle()
     expect(element<HTMLTextAreaElement>("output").value).toBe(
       "Some _underlined_ text.\n"
     )
@@ -270,6 +350,7 @@ describe("embed page", () => {
     const input = element<HTMLTextAreaElement>("input")
     input.value = "* Big edit"
     input.dispatchEvent(new Event("input", { bubbles: true }))
+    await settle()
     expect(warnings.textContent).not.toMatch(/vault\.org/)
   })
 
@@ -280,7 +361,7 @@ describe("embed page", () => {
       configurable: true
     })
     picker.dispatchEvent(new Event("change", { bubbles: true }))
-    await Promise.resolve()
+    await settle()
     expect(element<HTMLTextAreaElement>("input").value).toBe("# Picked")
     expect(element<HTMLSelectElement>("direction").value).toBe("md-to-org")
   })
@@ -365,17 +446,19 @@ describe("embed page", () => {
     expect(summary?.textContent).not.toMatch(/active/)
   })
 
-  it("disables copy and download while the conversion is failing", () => {
+  it("disables copy and download while the conversion is failing", async () => {
     // saving here writes an empty file — and under normalize that name is
     // one keystroke away from the source document's own
     const config = element<HTMLTextAreaElement>("config")
     config.value = "tyop = true"
     config.dispatchEvent(new Event("input", { bubbles: true }))
+    await settle()
     expect(element<HTMLButtonElement>("downloadOutput").disabled).toBe(true)
     expect(element<HTMLButtonElement>("copyOutput").disabled).toBe(true)
 
     config.value = ""
     config.dispatchEvent(new Event("input", { bubbles: true }))
+    await settle()
     expect(element<HTMLButtonElement>("downloadOutput").disabled).toBe(false)
     expect(element<HTMLButtonElement>("copyOutput").disabled).toBe(false)
   })
@@ -487,6 +570,7 @@ describe("embed page", () => {
     const config = element<HTMLTextAreaElement>("config")
     config.value = 'preset = "obsidian"'
     config.dispatchEvent(new Event("input", { bubbles: true }))
+    // persisting is not debounced — a reload must not lose the last keystroke
     expect(localStorage.getItem("morg-web")).toMatch(/obsidian/)
   })
 })
