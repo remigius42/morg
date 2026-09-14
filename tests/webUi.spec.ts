@@ -409,13 +409,13 @@ describe("embed page", () => {
     input.value = "* An entirely different document"
     input.dispatchEvent(new Event("input", { bubbles: true }))
     element<HTMLButtonElement>("downloadOutput").click()
-    expect(saved.name()).toBe("morg-output.md")
+    expect(saved.name()).toMatch(/^morg-output-\d{8}T\d{6}\.md$/)
   })
 
   it("names a paste-only download generically", () => {
     const saved = captureDownload()
     element<HTMLButtonElement>("downloadOutput").click()
-    expect(saved.name()).toBe("morg-output.md")
+    expect(saved.name()).toMatch(/^morg-output-\d{8}T\d{6}\.md$/)
   })
 
   it("says a file can be dropped, before any drag starts", () => {

@@ -34,18 +34,32 @@ export function directionForFile(name: string, current: Direction): Direction {
 }
 
 /**
+ * Basic-format ISO 8601, local time. The extended format's colons are
+ * illegal on Windows and rewritten by the browser's download sanitizer.
+ */
+function timestamp(now: Date): string {
+  const pad = (value: number) => String(value).padStart(2, "0")
+  const date = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}`
+  const time = `${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`
+  return `${date}T${time}`
+}
+
+/**
  * Name to save the output under, derived from the file that was opened.
- * A paste-only session has no source name and gets a generic one.
+ * Content with no source file — pasted, or edited since it was opened —
+ * gets a timestamped generic name instead: a paste-convert-save loop
+ * over several snippets would otherwise name every output the same.
  * Normalizing keeps the source format, so the name would otherwise match
  * the original exactly and invite saving over it; `.normalized` keeps the
  * two apart.
  */
 export function outputFileName(
   source: string | undefined,
-  direction: Direction
+  direction: Direction,
+  now = new Date()
 ): string {
   const extension = writesMarkdown(direction) ? "md" : "org"
-  const { stem } = splitFileName(source ?? "morg-output")
+  const { stem } = splitFileName(source ?? `morg-output-${timestamp(now)}`)
   const infix = normalizes(direction) ? ".normalized" : ""
   return `${stem}${infix}.${extension}`
 }

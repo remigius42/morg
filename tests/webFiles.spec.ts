@@ -62,9 +62,18 @@ describe("outputFileName", () => {
     expect(outputFileName("notes.org", "org-to-md")).toBe("notes.md")
   })
 
-  it("falls back to a generic name when nothing was opened", () => {
-    expect(outputFileName(undefined, "org-to-md")).toBe("morg-output.md")
-    expect(outputFileName(undefined, "md-to-org")).toBe("morg-output.org")
+  it("timestamps a generic name so repeated saves cannot collide", () => {
+    // a paste-convert-save loop over several snippets would otherwise
+    // name every single output morg-output.md
+    const at = new Date(2026, 8, 14, 19, 30, 15)
+    expect(outputFileName(undefined, "org-to-md", at)).toBe(
+      "morg-output-20260914T193015.md"
+    )
+    expect(outputFileName(undefined, "md-to-org", at)).toBe(
+      "morg-output-20260914T193015.org"
+    )
+    // colons would be illegal on Windows and rewritten by the browser
+    expect(outputFileName(undefined, "org-to-md")).not.toMatch(/:/)
   })
 
   it("appends the extension when the source had none", () => {
@@ -80,9 +89,9 @@ describe("outputFileName", () => {
     expect(outputFileName("notes.md", "normalize-md")).toBe(
       "notes.normalized.md"
     )
-    expect(outputFileName(undefined, "normalize-org")).toBe(
-      "morg-output.normalized.org"
-    )
+    expect(
+      outputFileName(undefined, "normalize-org", new Date(2026, 8, 14, 1, 2, 3))
+    ).toBe("morg-output-20260914T010203.normalized.org")
   })
 
   it("keeps a dotfile's name instead of stripping it", () => {
