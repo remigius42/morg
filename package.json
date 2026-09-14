@@ -40,6 +40,7 @@
     "build": "tsc -p tsconfig.build.json",
     "build:web": "vite build web",
     "dev:web": "vite web",
+    "preview:web": "vite preview web --port 4173 --strictPort",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "npm run lint:prettier && npm run lint:cspell && npm run lint:markdown && npm run lint:eslint && npm run lint:knip && npm run typecheck",
     "lint:knip": "knip",
@@ -52,7 +53,9 @@
     "lint:fix:eslint": "eslint --fix '**/*.{ts,mts,js}'",
     "test:unit": "vitest",
     "test:unit:ci": "vitest run --reporter default --coverage",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:report": "playwright show-report tests/e2e/reports/html"
   },
   "dependencies": {
     "orgast-util-to-string": "^1.1.0",
@@ -70,10 +73,12 @@
     "yaml": "^2.9.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
     "@eslint/js": "^10.0.1",
     "@picocss/pico": "^2.1.1",
+    "@playwright/test": "^1.63.0",
     "@types/mdast": "^4.0.4",
     "@types/node": "^24.3.0",
     "@types/unist": "^3.0.3",

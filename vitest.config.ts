@@ -1,4 +1,4 @@
-import { defineConfig } from "vitest/config"
+import { configDefaults, defineConfig } from "vitest/config"
 import { resolveVersion } from "./web/version.js"
 
 export default defineConfig({
@@ -8,6 +8,8 @@ export default defineConfig({
   },
   test: {
     include: ["tests/**/*.spec.ts"],
+    // the Playwright specs live under tests/ too, and match the pattern
+    exclude: [...configDefaults.exclude, "tests/e2e/**"],
     coverage: {
       // reporting only, no thresholds yet; lcov feeds the Codacy upload
       include: ["src/**", "web/src/**"],

@@ -11,5 +11,11 @@
   "vite": {
     "config": ["web/vite.config.ts"]
   },
+  "playwright": {
+    "config": ["playwright.config.ts"],
+    // the specs' shared fixture and helpers are not spec files themselves,
+    // and the plugin's default entry only covers the specs
+    "entry": ["tests/e2e/**/*.ts"]
+  },
   "ignoreDependencies": ["@picocss/pico"]
 }
