@@ -41,6 +41,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Web UI: the download kept the opened file's name after the input had
+  been replaced, so converting `notes.org`, saving `notes.md`, then
+  pasting an unrelated document and saving again wrote the second over
+  the first. The name is dropped as soon as the input is edited: an
+  edit and a paste of a different document cannot be told apart, so the
+  name is not kept on the chance that it is still the same document.
+  Content with no source file is now saved as
+  `morg-output-20260914T193015.md` — a timestamp, so a
+  paste-convert-save loop over several snippets cannot collide with
+  itself either.
 - Web UI: a file name whose extension collided with an `Object`
   property (`notes.constructor`, `notes.__proto__`) selected a
   nonexistent direction, blanking the dropdown and failing every later
