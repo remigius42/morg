@@ -33,13 +33,20 @@ function textFile(name: string, contents: string, size?: number) {
   }
 }
 
-/** Drops a file on the converter form, as a browser would. */
+/** Drops files on the converter form, as a browser would. */
 async function drop(...files: ReturnType<typeof textFile>[]): Promise<void> {
+  await dropOn(element("converter"), ...files)
+}
+
+async function dropOn(
+  target: EventTarget,
+  ...files: ReturnType<typeof textFile>[]
+): Promise<void> {
   const event = new Event("drop", { bubbles: true, cancelable: true })
   Object.defineProperty(event, "dataTransfer", {
     value: { types: ["Files"], files }
   })
-  element("converter").dispatchEvent(event)
+  target.dispatchEvent(event)
   await Promise.resolve()
   await Promise.resolve()
 }
@@ -166,6 +173,37 @@ describe("embed page", () => {
     expect(element<HTMLTextAreaElement>("input").value).toContain(
       "Paste your Org here"
     )
+  })
+
+  it("routes a document and a config dropped together", async () => {
+    // dropping a note next to its morg.toml is the natural gesture; taking
+    // only the first file discards the other silently
+    await drop(
+      textFile("notes.org", "* Dropped"),
+      textFile("morg.toml", 'preset = "obsidian"\n')
+    )
+    expect(element<HTMLTextAreaElement>("input").value).toBe("* Dropped")
+    expect(element<HTMLSelectElement>("preset").value).toBe("obsidian")
+  })
+
+  it("reports the files a drop could not use", async () => {
+    await drop(
+      textFile("notes.org", "* First"),
+      textFile("other.org", "* Second"),
+      textFile("photo.png", "")
+    )
+    expect(element<HTMLTextAreaElement>("input").value).toBe("* First")
+    const warnings = element<HTMLUListElement>("warnings")
+    expect(warnings.hidden).toBe(false)
+    expect(warnings.textContent).toMatch(/other\.org/)
+    expect(warnings.textContent).toMatch(/photo\.png/)
+  })
+
+  it("accepts a file dropped anywhere on the page", async () => {
+    // the converter form does not cover the viewport; a drop landing in
+    // the margin looked like a broken feature
+    await dropOn(document.body, textFile("dropped.md", "# Anywhere"))
+    expect(element<HTMLTextAreaElement>("input").value).toBe("# Anywhere")
   })
 
   it("warns about a large file until the input is edited by hand", async () => {

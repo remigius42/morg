@@ -254,23 +254,38 @@ function reflectConfig(controls: Controls): void {
 }
 
 /**
- * Loads an opened file. A `.toml` is a config wherever it was dropped —
- * morg never converts one — and the collapsed panel has to open, or the
- * file would take effect invisibly.
+ * Loads opened files. A `.toml` is a config wherever it was dropped —
+ * morg never converts one — so each file goes where its kind belongs,
+ * and the collapsed config panel has to open, or the file would take
+ * effect invisibly. Only one of each can be in force at a time; the rest
+ * are named in the warning list rather than dropped on the floor.
  */
-async function openFile(controls: Controls, file: TextFile): Promise<void> {
-  const contents = await file.text()
-  const notice = sizeWarning(file)
-  controls.notices = notice ? [notice] : []
-  if (isConfigFile(file.name)) {
-    controls.config.value = contents
+async function openFiles(
+  controls: Controls,
+  files: readonly TextFile[]
+): Promise<void> {
+  const [configs, documents] = partition(files, file => isConfigFile(file.name))
+  const [config] = configs
+  const [doc] = documents
+  const ignored = [...configs.slice(1), ...documents.slice(1)]
+
+  controls.notices = [
+    ...[config, doc].filter(file => file !== undefined).map(sizeWarning),
+    ...(ignored.length
+      ? [`Ignored ${ignored.map(file => file.name).join(", ")}.`]
+      : [])
+  ].filter(notice => notice !== undefined)
+
+  if (config) {
+    controls.config.value = await config.text()
     element<HTMLDetailsElement>("configSection").open = true
     reflectConfig(controls)
-  } else {
-    controls.openedFileName = file.name
-    controls.input.value = contents
+  }
+  if (doc) {
+    controls.openedFileName = doc.name
+    controls.input.value = await doc.text()
     const direction = directionForFile(
-      file.name,
+      doc.name,
       controls.direction.value as Direction
     )
     controls.direction.value = direction
@@ -278,6 +293,18 @@ async function openFile(controls: Controls, file: TextFile): Promise<void> {
   }
   persist(controls)
   convert(controls)
+}
+
+function partition<T>(
+  items: readonly T[],
+  matches: (item: T) => boolean
+): [matched: T[], rest: T[]] {
+  const matched: T[] = []
+  const rest: T[] = []
+  for (const item of items) {
+    ;(matches(item) ? matched : rest).push(item)
+  }
+  return [matched, rest]
 }
 
 /**
@@ -327,10 +354,7 @@ function wireFileControls(controls: Controls): void {
     picker.click()
   )
   picker.addEventListener("change", () => {
-    const file = picker.files?.[0]
-    if (file) {
-      void openFile(controls, file)
-    }
+    void openFiles(controls, [...(picker.files ?? [])])
     // so choosing the same file twice in a row still fires a change
     picker.value = ""
   })
@@ -348,10 +372,12 @@ function wireFileControls(controls: Controls): void {
     })
   }
 
-  element<HTMLFormElement>("converter").addEventListener("drop", event => {
-    const file = event.dataTransfer?.files[0]
-    if (file) {
-      void openFile(controls, file)
+  // the whole page is the drop target: the form does not cover the
+  // viewport, and a drop landing in the margin looked like a broken feature
+  document.addEventListener("drop", event => {
+    const files = event.dataTransfer?.files
+    if (files?.length) {
+      void openFiles(controls, [...files])
     }
   })
 }
