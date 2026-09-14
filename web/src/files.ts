@@ -17,6 +17,20 @@ export function isConfigFile(name: string): boolean {
 }
 
 /**
+ * Whether decoded text came from a file that was never text. A drop is
+ * routed by kind rather than by extension — documents worth converting
+ * turn up as `README` or `notes.txt`, which the picker's `accept` list
+ * does not cover — so the bytes are what is left to go on. UTF-8 decoding
+ * marks what it could not read, and neither marker survives in a document
+ * a converter should be handed.
+ */
+export function looksBinary(text: string): boolean {
+  // U+FFFD is where TextDecoder gave up on the bytes; a NUL is valid
+  // UTF-8 and still says the file was never text to begin with
+  return text.includes("\uFFFD") || text.includes("\u0000")
+}
+
+/**
  * Direction an opened file implies. A file name carries a format, not an
  * intent, so it flips the format half and leaves the convert/normalize
  * half alone; an unknown extension changes nothing.

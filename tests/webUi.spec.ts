@@ -448,6 +448,16 @@ describe("embed page", () => {
     expect(warnings.textContent).toMatch(/photo\.png/)
   })
 
+  it("refuses a dropped file that is not text", async () => {
+    // a drop takes any file — documents worth converting turn up as
+    // README or notes.txt, which the picker's accept list never covers —
+    // so nothing but the bytes says a png is not one of them
+    const before = element<HTMLTextAreaElement>("input").value
+    await drop(textFile("photo.png", "\uFFFDPNG\u0000"))
+    expect(element<HTMLTextAreaElement>("input").value).toBe(before)
+    expect(element("warnings").textContent).toMatch(/photo\.png/)
+  })
+
   it("reports a file it cannot read", async () => {
     // dropping a folder rejects here; swallowing it makes the drop look
     // like it simply did nothing

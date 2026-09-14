@@ -8,6 +8,7 @@ import { createRunner, type ConversionRunner } from "./runner.js"
 import {
   directionForFile,
   isConfigFile,
+  looksBinary,
   outputFileName,
   sizeWarning,
   type TextFile
@@ -416,31 +417,48 @@ async function openFiles(
   const [config] = configs
   const [doc] = documents
   const ignored = [...configs.slice(1), ...documents.slice(1)]
-
-  controls.notices = [
-    ...[config, doc].filter(file => file !== undefined).map(sizeWarning),
-    ...(ignored.length
-      ? [`Ignored ${ignored.map(file => file.name).join(", ")}.`]
-      : [])
-  ].filter(notice => notice !== undefined)
+  const notices: string[] = []
 
   if (config) {
+    notices.push(...[sizeWarning(config)].filter(n => n !== undefined))
     controls.config.value = await config.text()
     showConfig(controls)
     reflectConfig(controls)
   }
   if (doc) {
-    controls.openedFileName = doc.name
-    controls.input.value = await doc.text()
-    const direction = directionForFile(
-      doc.name,
-      controls.direction.value as Direction
-    )
-    controls.direction.value = direction
-    controls.previousDirection = direction
+    notices.push(...(await openDocument(controls, doc)))
   }
+  if (ignored.length) {
+    notices.push(`Ignored ${ignored.map(file => file.name).join(", ")}.`)
+  }
+  controls.notices = notices
   persist(controls)
   await convert(controls)
+}
+
+/**
+ * Puts an opened document in the input, or says why it stayed out.
+ * Whether a file is a document at all is only answerable once it has
+ * been read: a drop is not filtered by extension, so anything at all
+ * can arrive, and a png decoded as UTF-8 is not a document.
+ */
+async function openDocument(
+  controls: Controls,
+  doc: TextFile
+): Promise<string[]> {
+  const text = await doc.text()
+  if (looksBinary(text)) {
+    return [`Ignored ${doc.name} — it does not look like a text file.`]
+  }
+  controls.openedFileName = doc.name
+  controls.input.value = text
+  const direction = directionForFile(
+    doc.name,
+    controls.direction.value as Direction
+  )
+  controls.direction.value = direction
+  controls.previousDirection = direction
+  return [sizeWarning(doc)].filter(notice => notice !== undefined)
 }
 
 function partition<T>(
