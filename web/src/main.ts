@@ -532,8 +532,12 @@ function wireListeners(controls: Controls): void {
     })
   }
   input.addEventListener("input", () => {
-    // the notices described the opened files, not what is in the box now
+    // the notices and the download name both described the opened file,
+    // not what is in the box now. An edit and a paste of an entirely
+    // different document are indistinguishable here, so the name cannot
+    // be kept on the chance that this is still the same document.
     controls.notices = []
+    controls.openedFileName = undefined
     convert(controls)
   })
 }

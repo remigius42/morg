@@ -396,6 +396,22 @@ describe("embed page", () => {
     expect(saved.name()).toBe("notes.normalized.org")
   })
 
+  it("stops using the opened name once the input is replaced", async () => {
+    // the name outlived the document it described: convert notes.org,
+    // save notes.md, paste something else, save notes.md again — the
+    // second save lands on top of the first
+    const saved = captureDownload()
+    await drop(textFile("notes.org", "* Saved"))
+    element<HTMLButtonElement>("downloadOutput").click()
+    expect(saved.name()).toBe("notes.md")
+
+    const input = element<HTMLTextAreaElement>("input")
+    input.value = "* An entirely different document"
+    input.dispatchEvent(new Event("input", { bubbles: true }))
+    element<HTMLButtonElement>("downloadOutput").click()
+    expect(saved.name()).toBe("morg-output.md")
+  })
+
   it("names a paste-only download generically", () => {
     const saved = captureDownload()
     element<HTMLButtonElement>("downloadOutput").click()
