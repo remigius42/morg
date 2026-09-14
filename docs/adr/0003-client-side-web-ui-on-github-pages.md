@@ -30,6 +30,13 @@ postMessage protocol, self-contained layout at any iframe size.
   cannot be restricted: anyone may embed the Embed Page. Accepted —
   it is a free tool.
 - The deployed converter always matches `main`, not a tagged release.
+- Local file open and save keep the privacy stance intact (the browser
+  reads and writes the file itself), but they make the Embed Page
+  contract depend on two iframe attributes the host controls: a
+  `sandbox` without `allow-downloads` silently breaks Download, and a
+  cross-origin host without `allow="clipboard-write"` pushes Copy onto
+  its `execCommand` fallback. The converter's own page
+  (`convert.html`) sets what it needs.
 - Rejected: server-side conversion (infrastructure, privacy burden,
   no benefit — the library is small enough to ship to the client);
   postMessage-based iframe sizing/theming (complexity not yet

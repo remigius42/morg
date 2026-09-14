@@ -1,3 +1,4 @@
+Comeau
 andreas
 autolink
 autolinks
@@ -5,8 +6,8 @@ binarypoetry
 blockquotes
 canonicalizer
 codacy
-Comeau
 commitlint
+dotless
 filetags
 frontmatter
 iframable
@@ -37,11 +38,13 @@ stringifier
 stringifiers
 stringify
 tblfm
+textareas
 tseslint
 tyop
 uniorg
 unist
 unmappable
+unstub
 vite
 vitepress
 wikilink

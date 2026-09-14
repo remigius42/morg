@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { readFileSync } from "node:fs"
-import { beforeEach, describe, expect, it } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 import { convertMarkdownToOrg } from "../src/markdownToOrg.js"
 import { convertOrgToMarkdown } from "../src/orgToMarkdown.js"
 
@@ -23,6 +23,41 @@ function element<T extends HTMLElement>(id: string): T {
     throw new Error(`Missing element #${id}`)
   }
   return found as T
+}
+
+function textFile(name: string, contents: string, size?: number) {
+  return {
+    name,
+    size: size ?? contents.length,
+    text: () => Promise.resolve(contents)
+  }
+}
+
+/** Drops a file on the converter form, as a browser would. */
+async function drop(...files: ReturnType<typeof textFile>[]): Promise<void> {
+  const event = new Event("drop", { bubbles: true, cancelable: true })
+  Object.defineProperty(event, "dataTransfer", { value: { files } })
+  element("converter").dispatchEvent(event)
+  await Promise.resolve()
+}
+
+/** Intercepts the object-URL download so nothing touches the disk. */
+function captureDownload() {
+  let blob: Blob | undefined
+  let name = ""
+  const url = URL as unknown as Record<string, unknown>
+  url.createObjectURL = (value: Blob) => {
+    blob = value
+    return "blob:captured"
+  }
+  url.revokeObjectURL = () => undefined
+  HTMLAnchorElement.prototype.click = function (this: HTMLAnchorElement) {
+    name = this.download
+  }
+  return {
+    name: () => name,
+    contents: () => blob?.text() ?? Promise.resolve("")
+  }
 }
 
 describe("embed page", () => {
@@ -100,6 +135,124 @@ describe("embed page", () => {
     // the embed page is what sits on the host site, so it is where a
     // "which version is this?" question actually comes from
     expect(element("version").textContent).toMatch(/^v\d|^[0-9a-f]{7}/)
+  })
+
+  it("opens a dropped document and follows its extension", async () => {
+    element<HTMLSelectElement>("direction").value = "normalize-md"
+    await drop(textFile("notes.org", "* Dropped"))
+    expect(element<HTMLTextAreaElement>("input").value).toBe("* Dropped")
+    // the name carries a format, not an intent: normalize mode survives
+    expect(element<HTMLSelectElement>("direction").value).toBe("normalize-org")
+    expect(element<HTMLTextAreaElement>("output").value).toBe("* Dropped\n")
+  })
+
+  it("routes a dropped toml to the config panel and expands it", async () => {
+    await drop(
+      textFile(
+        "morg.toml",
+        'preset = "obsidian"\n\n[orgToMarkdown.markdownStyle]\nemphasis = "_"\n'
+      )
+    )
+    const config = element<HTMLTextAreaElement>("config")
+    expect(config.value).toMatch(/obsidian/)
+    expect(element<HTMLDetailsElement>("configSection").open).toBe(true)
+    // the panel is collapsed by default, so a dropped config must announce
+    // itself — and it must actually take effect
+    expect(element<HTMLSelectElement>("preset").value).toBe("obsidian")
+    expect(element<HTMLSelectElement>("emphasis").value).toBe("_")
+    expect(element<HTMLTextAreaElement>("input").value).toContain(
+      "Paste your Org here"
+    )
+  })
+
+  it("warns about a large file until the input is edited by hand", async () => {
+    await drop(textFile("vault.org", "* Big", 4_200_000))
+    const warnings = element<HTMLUListElement>("warnings")
+    expect(warnings.hidden).toBe(false)
+    expect(warnings.textContent).toMatch(/vault\.org/)
+
+    // convert() rebuilds the list on every keystroke — the notice has to
+    // outlive that, but not outlive the document it describes
+    const input = element<HTMLTextAreaElement>("input")
+    input.value = "* Big edit"
+    input.dispatchEvent(new Event("input", { bubbles: true }))
+    expect(warnings.textContent).not.toMatch(/vault\.org/)
+  })
+
+  it("opens a file chosen through the picker", async () => {
+    const picker = element<HTMLInputElement>("fileInput")
+    Object.defineProperty(picker, "files", {
+      value: [textFile("picked.md", "# Picked")],
+      configurable: true
+    })
+    picker.dispatchEvent(new Event("change", { bubbles: true }))
+    await Promise.resolve()
+    expect(element<HTMLTextAreaElement>("input").value).toBe("# Picked")
+    expect(element<HTMLSelectElement>("direction").value).toBe("md-to-org")
+  })
+
+  it("keeps the form buttons from submitting the page", () => {
+    // the form has no action; a default type="submit" would reload it
+    for (const id of ["openFile", "copyOutput", "downloadOutput"]) {
+      expect(element<HTMLButtonElement>(id).type).toBe("button")
+    }
+  })
+
+  it("copies the output to the clipboard", async () => {
+    const copied: string[] = []
+    vi.stubGlobal("navigator", {
+      clipboard: {
+        writeText: (text: string) => {
+          copied.push(text)
+          return Promise.resolve()
+        }
+      }
+    })
+    element<HTMLButtonElement>("copyOutput").click()
+    await Promise.resolve()
+    expect(copied).toEqual([element<HTMLTextAreaElement>("output").value])
+    vi.unstubAllGlobals()
+  })
+
+  it("falls back to execCommand when the clipboard is blocked", async () => {
+    // a cross-origin iframe without allow="clipboard-write" rejects here
+    vi.stubGlobal("navigator", {
+      clipboard: { writeText: () => Promise.reject(new Error("denied")) }
+    })
+    const commands: string[] = []
+    document.execCommand = (command: string) => {
+      commands.push(command)
+      return true
+    }
+    element<HTMLButtonElement>("copyOutput").click()
+    await Promise.resolve()
+    await Promise.resolve()
+    expect(commands).toEqual(["copy"])
+    vi.unstubAllGlobals()
+  })
+
+  it("downloads the output under the opened file's name", async () => {
+    const saved = captureDownload()
+    await drop(textFile("notes.org", "* Saved"))
+    element<HTMLButtonElement>("downloadOutput").click()
+    expect(saved.name()).toBe("notes.md")
+    expect(await saved.contents()).toBe("* Saved\n".replace("*", "#"))
+  })
+
+  it("names a paste-only download generically", () => {
+    const saved = captureDownload()
+    element<HTMLButtonElement>("downloadOutput").click()
+    expect(saved.name()).toBe("morg-output.md")
+  })
+
+  it("swallows a drop that misses the form", () => {
+    // the browser default is to navigate to the dropped file, which would
+    // replace the converter and discard whatever was typed
+    for (const type of ["dragover", "drop"]) {
+      const event = new Event(type, { bubbles: true, cancelable: true })
+      document.body.dispatchEvent(event)
+      expect(event.defaultPrevented).toBe(true)
+    }
   })
 
   it("persists the config in localStorage", () => {

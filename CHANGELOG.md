@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- The Web UI reads and writes local files instead of relying on the
+  clipboard alone: an "Open file…" picker, drag and drop anywhere on
+  the converter, and Copy / Download buttons for the result. A dropped
+  `.toml` goes to the config panel and expands it; a document goes to
+  the input, and its extension picks the conversion direction —
+  the format half only, so a Normalize mode survives (`notes.org`
+  dropped while normalizing Markdown selects "Normalize Org"). The
+  download is named after the opened file with the output extension
+  (`notes.md` → `notes.org`). Files over 1 MB load with a warning that
+  conversion may be slow. Nothing is uploaded: the browser reads and
+  writes the file itself.
+
 ## [0.2.0] - 2026-09-12
 
 ### Added

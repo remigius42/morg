@@ -1,0 +1,86 @@
+import { describe, expect, it } from "vitest"
+import {
+  directionForFile,
+  isConfigFile,
+  outputFileName,
+  sizeWarning,
+  LARGE_FILE_BYTES
+} from "../web/src/files.js"
+
+describe("directionForFile", () => {
+  it("keeps the normalize mode and swaps the format", () => {
+    expect(directionForFile("notes.org", "normalize-md")).toBe("normalize-org")
+  })
+
+  it("swaps the format of a conversion without normalizing", () => {
+    expect(directionForFile("notes.org", "md-to-org")).toBe("org-to-md")
+    expect(directionForFile("notes.md", "org-to-md")).toBe("md-to-org")
+  })
+
+  it("leaves the direction alone when the format is unknown", () => {
+    // a name carries no format here, so inferring one would be a guess
+    expect(directionForFile("notes.txt", "org-to-md")).toBe("org-to-md")
+    expect(directionForFile("LICENSE", "normalize-md")).toBe("normalize-md")
+    // a dotless name is not its own extension
+    expect(directionForFile("org", "md-to-org")).toBe("md-to-org")
+  })
+
+  it("matches the extension case-insensitively", () => {
+    expect(directionForFile("NOTES.ORG", "md-to-org")).toBe("org-to-md")
+    expect(directionForFile("notes.Markdown", "org-to-md")).toBe("md-to-org")
+  })
+})
+
+describe("isConfigFile", () => {
+  it("recognizes a toml file, whatever it is named", () => {
+    expect(isConfigFile("morg.toml")).toBe(true)
+    expect(isConfigFile("my-settings.TOML")).toBe(true)
+  })
+
+  it("treats documents as documents", () => {
+    expect(isConfigFile("notes.org")).toBe(false)
+    expect(isConfigFile("toml")).toBe(false)
+  })
+})
+
+describe("outputFileName", () => {
+  it("swaps the source extension for the output format", () => {
+    expect(outputFileName("notes.md", "md-to-org")).toBe("notes.org")
+    expect(outputFileName("notes.org", "org-to-md")).toBe("notes.md")
+  })
+
+  it("falls back to a generic name when nothing was opened", () => {
+    expect(outputFileName(undefined, "org-to-md")).toBe("morg-output.md")
+    expect(outputFileName(undefined, "md-to-org")).toBe("morg-output.org")
+  })
+
+  it("appends the extension when the source had none", () => {
+    expect(outputFileName("NOTES", "org-to-md")).toBe("NOTES.md")
+  })
+
+  it("keeps the extension when normalizing in place", () => {
+    expect(outputFileName("notes.org", "normalize-org")).toBe("notes.org")
+  })
+})
+
+describe("sizeWarning", () => {
+  it("warns that a large file will be slow", () => {
+    const warning = sizeWarning({
+      name: "vault.org",
+      size: 4_200_000,
+      text: () => Promise.resolve("")
+    })
+    expect(warning).toMatch(/vault\.org/)
+    expect(warning).toMatch(/slow|unresponsive/i)
+  })
+
+  it("stays quiet for an ordinary document", () => {
+    expect(
+      sizeWarning({
+        name: "notes.org",
+        size: LARGE_FILE_BYTES,
+        text: () => Promise.resolve("")
+      })
+    ).toBeUndefined()
+  })
+})

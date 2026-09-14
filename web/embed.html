@@ -36,6 +36,25 @@
             <option value="obsidian">Obsidian</option>
           </select>
         </div>
+        <div class="grid file-actions">
+          <div>
+            <button type="button" id="openFile" class="outline">
+              Open file…
+            </button>
+            <input
+              type="file"
+              id="fileInput"
+              accept=".org,.md,.markdown,.txt,.toml,text/*"
+              hidden
+            />
+          </div>
+          <div>
+            <button type="button" id="copyOutput" class="outline">Copy</button>
+            <button type="button" id="downloadOutput" class="outline">
+              Download
+            </button>
+          </div>
+        </div>
         <div class="grid">
           <textarea
             id="input"

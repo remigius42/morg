@@ -3,10 +3,18 @@ import { applyTheme, watchThemeChanges } from "./theme.js"
 import { renderVersion } from "./version.js"
 import { CONFIG_SNIPPETS } from "./snippets.js"
 import {
+  readsMarkdown,
   runConversion,
   type ConversionForm,
   type Direction
 } from "./convert.js"
+import {
+  directionForFile,
+  isConfigFile,
+  outputFileName,
+  sizeWarning,
+  type TextFile
+} from "./files.js"
 
 const STORAGE_KEY = "morg-web"
 const STYLE_KEYS = ["bullet", "emphasis", "strong", "fence", "rule"] as const
@@ -60,10 +68,6 @@ console.log("fenced code survives")
 
 [^1]: Footnotes survive the round trip.
 `
-
-function readsMarkdown(direction: Direction): boolean {
-  return direction === "md-to-org" || direction === "normalize-md"
-}
 
 function demoFor(direction: Direction): string {
   return readsMarkdown(direction) ? MD_DEMO : ORG_DEMO
@@ -134,15 +138,22 @@ function formState(controls: Controls): ConversionForm {
   }
 }
 
+// a notice about the opened file itself, e.g. its size; convert() rebuilds
+// the warning list from scratch, so it cannot live in the DOM alone
+let fileNotice: string | undefined
+
 function convert(controls: Controls): void {
   const { input, output, error, warnings, direction, config } = controls
   const result = runConversion(input.value, formState(controls), config.value)
   output.value = result.output
   error.hidden = !result.error
   error.textContent = result.error ?? ""
-  warnings.hidden = result.warnings.length === 0
+  const messages = fileNotice
+    ? [fileNotice, ...result.warnings]
+    : result.warnings
+  warnings.hidden = messages.length === 0
   warnings.replaceChildren(
-    ...result.warnings.map(message => {
+    ...messages.map(message => {
       const item = document.createElement("li")
       item.textContent = message
       return item
@@ -231,6 +242,105 @@ function reflectConfig(controls: Controls): void {
   }
 }
 
+// the demo swap compares against the direction the input was written for;
+// opening a file sets the direction outside the change listener, so the
+// baseline lives here rather than in that closure
+let previousDirection: Direction
+
+// name the download follows; undefined until a file has been opened
+let openedFileName: string | undefined
+
+/**
+ * Loads an opened file. A `.toml` is a config wherever it was dropped —
+ * morg never converts one — and the collapsed panel has to open, or the
+ * file would take effect invisibly.
+ */
+async function openFile(controls: Controls, file: TextFile): Promise<void> {
+  const contents = await file.text()
+  fileNotice = sizeWarning(file)
+  if (isConfigFile(file.name)) {
+    controls.config.value = contents
+    element<HTMLDetailsElement>("configSection").open = true
+    reflectConfig(controls)
+  } else {
+    openedFileName = file.name
+    controls.input.value = contents
+    const direction = directionForFile(
+      file.name,
+      controls.direction.value as Direction
+    )
+    controls.direction.value = direction
+    previousDirection = direction
+  }
+  persist(controls)
+  convert(controls)
+}
+
+/**
+ * Copies the output. The Clipboard API is unavailable in a cross-origin
+ * iframe without `allow="clipboard-write"`, so a selection copy stands in.
+ */
+async function copyOutput(output: HTMLTextAreaElement): Promise<void> {
+  try {
+    await navigator.clipboard.writeText(output.value)
+  } catch {
+    output.select()
+    document.execCommand("copy")
+  }
+}
+
+/** Saves the output locally; the blob never leaves the browser. */
+function downloadOutput(controls: Controls): void {
+  const blob = new Blob([controls.output.value], {
+    type: "text/plain;charset=utf-8"
+  })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement("a")
+  link.href = url
+  link.download = outputFileName(
+    openedFileName,
+    controls.direction.value as Direction
+  )
+  link.click()
+  URL.revokeObjectURL(url)
+}
+
+function wireFileControls(controls: Controls): void {
+  element<HTMLButtonElement>("copyOutput").addEventListener("click", () => {
+    void copyOutput(controls.output)
+  })
+  element<HTMLButtonElement>("downloadOutput").addEventListener("click", () =>
+    downloadOutput(controls)
+  )
+
+  const picker = element<HTMLInputElement>("fileInput")
+  element<HTMLButtonElement>("openFile").addEventListener("click", () =>
+    picker.click()
+  )
+  picker.addEventListener("change", () => {
+    const file = picker.files?.[0]
+    if (file) {
+      void openFile(controls, file)
+    }
+    // so choosing the same file twice in a row still fires a change
+    picker.value = ""
+  })
+
+  // the browser navigates to a dropped file unless the default is
+  // prevented, which would replace the converter and discard the input;
+  // dragover needs it too, or no drop event fires at all
+  for (const type of ["dragover", "drop"]) {
+    document.addEventListener(type, event => event.preventDefault())
+  }
+
+  element<HTMLFormElement>("converter").addEventListener("drop", event => {
+    const file = event.dataTransfer?.files[0]
+    if (file) {
+      void openFile(controls, file)
+    }
+  })
+}
+
 function wireListeners(controls: Controls): void {
   const { direction, config, input } = controls
   config.addEventListener("input", () => {
@@ -251,7 +361,7 @@ function wireListeners(controls: Controls): void {
     persist(controls)
     convert(controls)
   })
-  let previousDirection = direction.value as Direction
+  previousDirection = direction.value as Direction
   direction.addEventListener("change", () => {
     // an untouched demo follows the direction's input format
     if (input.value === demoFor(previousDirection)) {
@@ -272,7 +382,11 @@ function wireListeners(controls: Controls): void {
       convert(controls)
     })
   }
-  input.addEventListener("input", () => convert(controls))
+  input.addEventListener("input", () => {
+    // the notice described the opened file, not what is in the box now
+    fileNotice = undefined
+    convert(controls)
+  })
 }
 
 /** Wires the Embed Page form to `runConversion`. Idempotent per form. */
@@ -284,6 +398,8 @@ export function init(): void {
   form.dataset.initialized = "true"
 
   const controls = findControls()
+  openedFileName = undefined
+  fileNotice = undefined
 
   renderVersion()
 
@@ -296,6 +412,7 @@ export function init(): void {
   // untouched-demo swap matches the restored direction
   restore(controls)
   wireListeners(controls)
+  wireFileControls(controls)
 
   if (controls.config.value) {
     reflectConfig(controls)

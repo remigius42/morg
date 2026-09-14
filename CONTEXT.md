@@ -25,7 +25,9 @@ An Org construct with no native Markdown equivalent. Serialized during `org → 
 ## Web UI
 
 The client-side converter hosted on GitHub Pages. Conversions run
-entirely in the browser; no input ever leaves it.
+entirely in the browser; no input ever leaves it. Opening and saving
+files is the browser reading and writing local files, not a transfer —
+the UI therefore says "Open file" and "Download", never "Upload".
 
 ## Embed Page
 

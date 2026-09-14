@@ -104,10 +104,13 @@
       </nav>
     </header>
     <main class="container-fluid">
+      <!-- the Clipboard API needs an explicit grant in an iframe; without
+           it the Copy button falls back to a selection copy -->
       <iframe
         src="./embed.html"
         class="site-frame"
         title="morg converter"
+        allow="clipboard-write"
       ></iframe>
     </main>
     <footer class="container">
