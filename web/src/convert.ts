@@ -6,24 +6,7 @@ import { buildConversionOptions } from "../../src/conversionOptions.js"
 import type { MarkdownStyleOptions, Toggle } from "../../src/options.js"
 import { createPreset } from "../../src/presets/registry.js"
 import type { Preset } from "../../src/presets/types.js"
-
-export type Direction =
-  "md-to-org" | "org-to-md" | "normalize-md" | "normalize-org"
-
-/** Whether a direction reads Markdown (rather than Org) as its input. */
-export function readsMarkdown(direction: Direction): boolean {
-  return direction === "md-to-org" || direction === "normalize-md"
-}
-
-/** Whether a direction rewrites its input format rather than converting. */
-export function normalizes(direction: Direction): boolean {
-  return direction === "normalize-md" || direction === "normalize-org"
-}
-
-/** Whether a direction writes Markdown (rather than Org) as its output. */
-export function writesMarkdown(direction: Direction): boolean {
-  return direction === "org-to-md" || direction === "normalize-md"
-}
+import type { Direction } from "./direction.js"
 
 /** Form state of the Web UI; unset fields fall back to config, then defaults. */
 export interface ConversionForm {

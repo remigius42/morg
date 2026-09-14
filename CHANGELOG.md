@@ -34,6 +34,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The Web UI converts in a web worker, so the page no longer freezes
+  while a large document is converted. A browser that has no workers
+  falls back to converting in place, as before. The conversion pipeline
+  now loads with the worker rather than with the page: the converter's
+  own bundle dropped from 338 kB to 20 kB, and the fallback copy is
+  only fetched if it is actually needed. The large-file notice no
+  longer promises an unresponsive page, only a wait.
+
 - The Web UI converts once typing pauses (200 ms) rather than on every
   keystroke. A full conversion per keystroke made a large document
   painful to type into. Selects and checkboxes still convert

@@ -2,12 +2,9 @@ import { parseConfig } from "../../src/config.js"
 import { applyTheme, watchThemeChanges } from "./theme.js"
 import { renderVersion } from "./version.js"
 import { CONFIG_SNIPPETS } from "./snippets.js"
-import {
-  readsMarkdown,
-  type ConversionForm,
-  type Direction
-} from "./convert.js"
-import { synchronousRunner, type ConversionRunner } from "./runner.js"
+import type { ConversionForm } from "./convert.js"
+import { readsMarkdown, type Direction } from "./direction.js"
+import { createRunner, type ConversionRunner } from "./runner.js"
 import {
   directionForFile,
   isConfigFile,
@@ -597,7 +594,7 @@ function wireListeners(controls: Controls): void {
 }
 
 /** Wires the Embed Page form to a `ConversionRunner`. Idempotent per form. */
-export function init(runner: ConversionRunner = synchronousRunner): void {
+export function init(runner: ConversionRunner = createRunner()): void {
   const form = element<HTMLFormElement>("converter")
   if (form.dataset.initialized) {
     return

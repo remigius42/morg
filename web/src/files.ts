@@ -1,5 +1,5 @@
 import { formatFromFileName, splitFileName } from "../../src/fileNames.js"
-import { normalizes, writesMarkdown, type Direction } from "./convert.js"
+import { normalizes, writesMarkdown, type Direction } from "./direction.js"
 
 /** An opened file; structural, so a test needs no real `File`. */
 export interface TextFile {
@@ -65,13 +65,16 @@ export function outputFileName(
 }
 
 /**
- * Notice for a file big enough to make the UI sluggish — conversion is
- * synchronous and re-runs on every edit. Undefined for ordinary documents.
+ * Notice for a file big enough that the conversion takes visible time.
+ * The page stays responsive throughout — the conversion runs in a worker
+ * — but the result still keeps the reader waiting, and the round trip
+ * through the textarea costs more than the CLI's straight file read.
+ * Undefined for ordinary documents.
  */
 export function sizeWarning(file: TextFile): string | undefined {
   if (file.size <= LARGE_FILE_BYTES) {
     return undefined
   }
   const megabytes = (file.size / 1_000_000).toFixed(1)
-  return `${file.name} is ${megabytes} MB — converting it may be slow or leave the page unresponsive. The morg CLI handles large files better.`
+  return `${file.name} is ${megabytes} MB — converting it may take a while. The morg CLI handles large files better.`
 }

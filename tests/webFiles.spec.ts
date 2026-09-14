@@ -101,14 +101,17 @@ describe("outputFileName", () => {
 })
 
 describe("sizeWarning", () => {
-  it("warns that a large file will be slow", () => {
+  it("warns that a large file will take a while", () => {
     const warning = sizeWarning({
       name: "vault.org",
       size: 4_200_000,
       text: () => Promise.resolve("")
     })
     expect(warning).toMatch(/vault\.org/)
-    expect(warning).toMatch(/slow|unresponsive/i)
+    expect(warning).toMatch(/take a while/i)
+    // the conversion runs in a worker now; promising a frozen page would
+    // describe a UI that no longer exists
+    expect(warning).not.toMatch(/unresponsive/i)
   })
 
   it("stays quiet for an ordinary document", () => {

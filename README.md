@@ -59,8 +59,9 @@ as `notes.normalized.org`, so it never lands on top of its own source.
 Files are read and written by the browser itself; this is not an
 upload.
 
-Typing is converted once you pause, not once per keystroke, so a large
-document stays editable.
+Typing is converted once you pause, not once per keystroke, and the
+conversion itself runs in a web worker, so the page stays responsive
+even while a large document is being converted.
 
 ### CLI
 

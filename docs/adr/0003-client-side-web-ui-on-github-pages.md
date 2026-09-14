@@ -37,6 +37,13 @@ postMessage protocol, self-contained layout at any iframe size.
   cross-origin host without `allow="clipboard-write"` pushes Copy onto
   its `execCommand` fallback. The converter's own page
   (`convert.html`) sets what it needs.
+- Converting on the client means converting on the UI thread, which a
+  large document froze outright. The conversion runs in a web worker
+  instead, with an in-place fallback where workers are unavailable.
+  This adds a build-time obligation: the worker bundle must not reach
+  for the DOM, and a dependency's browser build that does will kill
+  the worker on startup and fall back silently. `web/vite.config.ts`
+  resolves the known offender away, and a test asserts the property.
 - Rejected: server-side conversion (infrastructure, privacy burden,
   no benefit — the library is small enough to ship to the client);
   postMessage-based iframe sizing/theming (complexity not yet
