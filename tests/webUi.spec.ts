@@ -641,6 +641,37 @@ describe("embed page", () => {
     expect(saved.name()).toMatch(/^morg-output-\d{8}T\d{6}\.md$/)
   })
 
+  it("stops using the opened name once the direction no longer fits", async () => {
+    // open notes.md and the direction follows it; switch to Org → Markdown
+    // and the output is Markdown again, so the derived name is notes.md —
+    // the source file, offered for overwriting. Nothing clears the name
+    // on the way: the demo swap sets the input in code, which fires no
+    // input event
+    const saved = captureDownload()
+    await drop(textFile("notes.md", "# Saved"))
+    const direction = element<HTMLSelectElement>("direction")
+    expect(direction.value).toBe("md-to-org")
+
+    direction.value = "org-to-md"
+    direction.dispatchEvent(new Event("change", { bubbles: true }))
+    await settle()
+    element<HTMLButtonElement>("downloadOutput").click()
+    expect(saved.name()).toMatch(/^morg-output-\d{8}T\d{6}\.md$/)
+  })
+
+  it("keeps the opened name while the direction still reads it", async () => {
+    // Markdown → Org and Normalize Markdown both read the file that was
+    // opened, so the name still describes what is being converted
+    const saved = captureDownload()
+    await drop(textFile("notes.md", "# Saved"))
+    const direction = element<HTMLSelectElement>("direction")
+    direction.value = "normalize-md"
+    direction.dispatchEvent(new Event("change", { bubbles: true }))
+    await settle()
+    element<HTMLButtonElement>("downloadOutput").click()
+    expect(saved.name()).toBe("notes.normalized.md")
+  })
+
   it("names a paste-only download generically", () => {
     const saved = captureDownload()
     element<HTMLButtonElement>("downloadOutput").click()

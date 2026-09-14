@@ -7,6 +7,7 @@ import { readsMarkdown, type Direction } from "./direction.js"
 import { createRunner, type ConversionRunner } from "./runner.js"
 import {
   directionForFile,
+  directionSuitsFile,
   isConfigFile,
   looksBinary,
   outputFileName,
@@ -663,6 +664,15 @@ function wireListeners(controls: Controls): void {
       input.value = demoFor(direction.value as Direction)
     }
     controls.previousDirection = direction.value as Direction
+    // the opened name described a document this direction no longer
+    // reads; kept, it would name the output after the wrong format —
+    // and where the output format matches, after the source file itself
+    if (
+      controls.openedFileName &&
+      !directionSuitsFile(controls.openedFileName, controls.previousDirection)
+    ) {
+      controls.openedFileName = undefined
+    }
   })
   for (const control of [
     direction,

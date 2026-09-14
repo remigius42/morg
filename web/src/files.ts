@@ -1,5 +1,10 @@
 import { formatFromFileName, splitFileName } from "../../src/fileNames.js"
-import { normalizes, writesMarkdown, type Direction } from "./direction.js"
+import {
+  normalizes,
+  readsMarkdown,
+  writesMarkdown,
+  type Direction
+} from "./direction.js"
 
 /** An opened file; structural, so a test needs no real `File`. */
 export interface TextFile {
@@ -45,6 +50,24 @@ export function directionForFile(name: string, current: Direction): Direction {
     return `normalize-${short}`
   }
   return short === "md" ? "md-to-org" : "org-to-md"
+}
+
+/**
+ * Whether a direction still reads the format the opened file is in.
+ * Once it does not, the name has stopped describing what is being
+ * converted — and where the output format matches the source extension,
+ * the derived name is the source file itself. An extension that carries
+ * no format says nothing either way, so it keeps the name.
+ */
+export function directionSuitsFile(
+  name: string,
+  direction: Direction
+): boolean {
+  const format = formatFromFileName(name)
+  if (!format) {
+    return true
+  }
+  return readsMarkdown(direction) === (format === "markdown")
 }
 
 /**
