@@ -36,7 +36,10 @@ guarantee is to be **semantically faithful and convergent** instead
   [mapping reference](docs/mappings.md) and reported as warnings.
 
 Round-trip fixture tests are the backbone of the test suite
-(`tests/roundtrip.spec.ts`).
+(`tests/roundtrip.spec.ts`). The Web UI is covered by vitest specs under
+happy-dom and by a Playwright suite (`tests/e2e/`) that drives the built
+pages in Chromium and WebKit, including axe accessibility audits in both
+color schemes.
 
 ## Usage
 

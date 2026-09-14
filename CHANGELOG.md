@@ -60,8 +60,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   shared by both (`src/fileNames.ts`); the file picker still offers
   `.markdown` files, it just leaves the direction to you.
 
+- An end-to-end suite (`tests/e2e/`, Playwright) covering the Web UI in
+  Chromium and WebKit against the built pages, plus axe accessibility
+  audits of every page in both color schemes and in the states only an
+  interaction reaches. It covers what the happy-dom specs cannot decide:
+  whether the conversion worker really starts, real file picking,
+  dropping and downloading, the clipboard and its selection-copy
+  fallback, and the theme crossing into the embedded frame.
+
 ### Fixed
 
+- Web UI: the "Try the converter" button failed WCAG AA contrast in
+  dark mode (4.27:1). Its label took the link color rather than the
+  page text, because Pico redefines `--pico-color` on every anchor.
+- Web UI: `convert.html` presented two `main` landmarks — its own and
+  the embedded converter's — with nothing to tell them apart, and the
+  drag-and-drop overlay was appended outside every landmark, where
+  landmark navigation skips it.
+- Web UI: inserting a config snippet left the config panel's summary
+  saying no config was in force, until the config was edited by hand.
 - A file name is now split on its last path segment, so a path the CLI
   is given (`docs/.org`) follows the same dotfile rule as a name the
   Web UI reads off a dropped file. `morg docs/.org` no longer infers a

@@ -14,9 +14,14 @@ participating you agree to abide by its terms.
 ```bash
 npm install
 npm run test:unit   # vitest watch mode (test:unit:ci for one-shot)
+npm run test:e2e    # playwright against the built Web UI
 npm run lint        # prettier, cspell, markdownlint, eslint, knip, typecheck
 npm run build       # tsc → dist/
 ```
+
+The end-to-end suite needs its browsers once:
+`npx playwright install chromium webkit`. It builds `web/` and serves it
+itself, so nothing needs to be running first.
 
 ## Development process
 
@@ -37,6 +42,13 @@ for what you submit.
   (`tests/roundtrip.spec.ts`): every mapping change needs a convergence
   fixture in `tests/fixtures/`, and behavior is developed red-green
   (failing test first).
+- Web UI behavior is covered twice, and the split is deliberate: the
+  vitest specs (`tests/web*.spec.ts`) drive the markup under happy-dom
+  and are where wiring belongs, while the Playwright specs
+  (`tests/e2e/`) cover what only a browser answers — the conversion
+  worker, real files and downloads, the clipboard, cross-frame theming
+  and the axe accessibility audits. Prefer the unit suite; reach for
+  e2e when happy-dom cannot tell a working feature from a broken one.
 - The guarantee is semantic faithfulness plus convergence, not
   byte-losslessness —
   read [ADR 0001](docs/adr/0001-convergence-over-losslessness.md)

@@ -34,6 +34,14 @@ the UI therefore says "Open file" and "Download", never "Upload".
 The chrome-less converter page of the Web UI, designed to be iframed —
 both by the Web UI's own converter page and by third-party sites.
 
+## End-to-End Test
+
+A Playwright spec under `tests/e2e/`, run against the _built_ Web UI
+served by `vite preview` — not the dev server and not happy-dom. It
+exists for what neither of those can answer: whether the conversion
+worker really runs, whether a real file, clipboard or download behaves,
+and what axe makes of the accessibility tree.
+
 ## Source Layout
 
 The `src/` root is the public library surface: everything `index.ts`
