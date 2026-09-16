@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The build version in the Web UI's page chrome is now linked: the tag
+  (`v0.3.0`) opens the changelog on `main` — not the tag's own copy,
+  which is missing everything a deploy ahead of the tag has added under
+  Unreleased — and the commit part (`g0a1b2c3`) opens that commit on
+  GitHub. The commit count and a `-dirty` marker stay plain text, and a
+  string that is not a version (the `unknown` fallback) is not linked at
+  all. The links open in a new tab, since the embed page runs inside its
+  host's iframe.
+
 ## [0.3.0] - 2026-09-16
 
 ### Added

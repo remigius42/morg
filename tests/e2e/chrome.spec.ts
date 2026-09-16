@@ -19,6 +19,12 @@ test.describe("page chrome", () => {
       await page.goto(url)
       await expect(page.locator("#version")).not.toBeEmpty()
       await expect(page.locator("#version")).not.toHaveText("unknown")
+      // the tag reaches the changelog on `main`, where a deploy ahead of
+      // the tag still finds its own entries under Unreleased
+      await expect(page.locator("#version a").first()).toHaveAttribute(
+        "href",
+        "https://github.com/remigius42/morg/blob/main/CHANGELOG.md"
+      )
     }
   })
 })

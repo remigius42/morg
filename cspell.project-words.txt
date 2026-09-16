@@ -26,6 +26,8 @@ mdism
 mdisms
 morg
 napi
+noopener
+noreferrer
 nvmrc
 obsidian
 orgast
