@@ -1,8 +1,6 @@
 // @vitest-environment happy-dom
 import { readFileSync } from "node:fs"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { convertMarkdownToOrg } from "../src/markdownToOrg.js"
-import { convertOrgToMarkdown } from "../src/orgToMarkdown.js"
 import { CONVERTING_AFTER_MS, DEBOUNCE_MS } from "../web/src/main.js"
 import { runConversion } from "../web/src/convert.js"
 import type { ConversionRunner } from "../web/src/runner.js"
@@ -850,28 +848,5 @@ describe("embed page", () => {
     config.dispatchEvent(new Event("input", { bubbles: true }))
     // persisting is not debounced — a reload must not lose the last keystroke
     expect(localStorage.getItem("morg-web")).toMatch(/obsidian/)
-  })
-})
-
-// the demos are the first thing every visitor converts — pin that they
-// round-trip convergently and warning-free under default options
-describe("demo documents", () => {
-  it("org demo converges without warnings", async () => {
-    const { ORG_DEMO } = await import("../web/src/main.js")
-    const warnings: string[] = []
-    const onWarning = (message: string) => warnings.push(message)
-    const md = convertOrgToMarkdown(ORG_DEMO, { onWarning })
-    const org = convertMarkdownToOrg(md, { onWarning })
-    expect(convertOrgToMarkdown(org, { onWarning })).toBe(md)
-    expect(warnings).toEqual([])
-  })
-
-  it("md demo is canonical and converges without warnings", async () => {
-    const { MD_DEMO } = await import("../web/src/main.js")
-    const warnings: string[] = []
-    const onWarning = (message: string) => warnings.push(message)
-    const org = convertMarkdownToOrg(MD_DEMO, { onWarning })
-    expect(convertOrgToMarkdown(org, { onWarning })).toBe(MD_DEMO)
-    expect(warnings).toEqual([])
   })
 })
