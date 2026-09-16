@@ -7,6 +7,7 @@ import { demoFor } from "./demos.js"
 import { wireDropZone } from "./dropZone.js"
 import { readsMarkdown, type Direction } from "./direction.js"
 import { copyOutput, downloadOutput } from "./outputActions.js"
+import { readState, writeState } from "./persistence.js"
 import { createRunner, type ConversionRunner } from "./runner.js"
 import {
   directionForFile,
@@ -16,8 +17,6 @@ import {
   sizeWarning,
   type TextFile
 } from "./files.js"
-
-const STORAGE_KEY = "morg-web"
 
 /**
  * How long typing pauses before the conversion runs. Long enough that a
@@ -31,16 +30,6 @@ export const DEBOUNCE_MS = 200
  * notice would appear and vanish within a frame or two of every pause.
  */
 export const CONVERTING_AFTER_MS = 150
-
-interface PersistedState {
-  direction?: string
-  preset?: string
-  useHtml?: boolean
-  interpretHtml?: boolean
-  taskCheckboxes?: boolean
-  style?: Record<string, string>
-  config?: string
-}
 
 function assign<T>(value: T | undefined, apply: (value: T) => void): void {
   if (value !== undefined) apply(value)
@@ -143,7 +132,7 @@ function debounce(run: () => void, wait: number): () => void {
 }
 
 function persist(controls: Controls): void {
-  const state: PersistedState = {
+  writeState({
     direction: controls.direction.value,
     preset: controls.preset.value,
     useHtml: controls.useHtml.checked,
@@ -153,23 +142,11 @@ function persist(controls: Controls): void {
       controls.styleSelects.map(select => [select.id, select.value])
     ),
     config: controls.config.value
-  }
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
-  } catch {
-    // storage may be unavailable (iframe partitioning, private mode)
-  }
+  })
 }
 
 function restore(controls: Controls): void {
-  let state: PersistedState
-  try {
-    state = JSON.parse(
-      localStorage.getItem(STORAGE_KEY) ?? "{}"
-    ) as PersistedState
-  } catch {
-    return
-  }
+  const state = readState()
   // a stale or hand-edited value would leave the select blank, so keep
   // the default unless the option actually exists
   if (state.direction) {

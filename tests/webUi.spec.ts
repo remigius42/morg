@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { CONVERTING_AFTER_MS, DEBOUNCE_MS } from "../web/src/main.js"
 import { runConversion } from "../web/src/convert.js"
+import { readState, writeState } from "../web/src/persistence.js"
 import type { ConversionRunner } from "../web/src/runner.js"
 
 // Smoke check: the Embed Page markup wired by main.ts converts on input.
@@ -202,7 +203,7 @@ describe("embed page", () => {
     // anyone who never left. A baseline read before the restore compares
     // against the markup's default and leaves the wrong dialect in the
     // box — converted as the other one on the very first interaction
-    localStorage.setItem("morg-web", JSON.stringify({ direction: "md-to-org" }))
+    writeState({ direction: "md-to-org" })
     await setUpPage()
     expect(element<HTMLTextAreaElement>("input").value).toContain(
       "Paste your Markdown here"
@@ -401,7 +402,7 @@ describe("embed page", () => {
   })
 
   it("ignores a persisted direction the select does not offer", async () => {
-    localStorage.setItem("morg-web", JSON.stringify({ direction: "bogus" }))
+    writeState({ direction: "bogus" })
     await setUpPage()
     const direction = element<HTMLSelectElement>("direction")
     expect(direction.value).not.toBe("")
@@ -563,10 +564,7 @@ describe("embed page", () => {
   })
 
   it("marks an active config without reopening the panel on load", async () => {
-    localStorage.setItem(
-      "morg-web",
-      JSON.stringify({ config: 'preset = "obsidian"' })
-    )
+    writeState({ config: 'preset = "obsidian"' })
     await setUpPage()
     const section = element<HTMLDetailsElement>("configSection")
     // the user collapsed it on purpose; reopening it every load overrides
@@ -730,6 +728,6 @@ describe("embed page", () => {
     config.value = 'preset = "obsidian"'
     config.dispatchEvent(new Event("input", { bubbles: true }))
     // persisting is not debounced — a reload must not lose the last keystroke
-    expect(localStorage.getItem("morg-web")).toMatch(/obsidian/)
+    expect(readState().config).toMatch(/obsidian/)
   })
 })
