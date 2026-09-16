@@ -373,16 +373,15 @@ describe("embed page", () => {
     expect(error.textContent).toMatch(/tyop/)
   })
 
-  it("inserts a formatter snippet into the config and applies it", () => {
+  it("wires the snippet picker to the page's own controls", () => {
+    // what a snippet does is tests/webConfigPanel.spec.ts; what this
+    // needs is that the picker in the markup reaches it, and lands on the
+    // real style selects rather than a fixture's
     const snippet = element<HTMLSelectElement>("configSnippet")
     snippet.value = "prettier"
     snippet.dispatchEvent(new Event("change", { bubbles: true }))
     // the snippet lands in the config synchronously; only the output waits
-    expect(element<HTMLTextAreaElement>("config").value).toContain(
-      'emphasis = "_"'
-    )
     expect(element<HTMLSelectElement>("emphasis").value).toBe("_")
-    expect(snippet.value).toBe("")
   })
 
   it("interprets html via the interpretHtml checkbox", async () => {
@@ -574,17 +573,16 @@ describe("embed page", () => {
     expect(element<HTMLSelectElement>("preset").value).toBe("obsidian")
   })
 
-  it("marks and unmarks the config panel as it is edited", () => {
+  it("marks the config panel on every keystroke, without opening it", () => {
+    // typed by hand, so the panel is already open — and the mark stays
+    // immediate rather than riding the conversion debounce, since it
+    // describes the config text itself and lagging it looks broken
     const config = element<HTMLTextAreaElement>("config")
-    const summary =
-      element<HTMLDetailsElement>("configSection").querySelector("summary")
+    const section = element<HTMLDetailsElement>("configSection")
     config.value = 'preset = "obsidian"'
     config.dispatchEvent(new Event("input", { bubbles: true }))
-    expect(summary?.textContent).toMatch(/active/)
-
-    config.value = ""
-    config.dispatchEvent(new Event("input", { bubbles: true }))
-    expect(summary?.textContent).not.toMatch(/active/)
+    expect(section.querySelector("summary")?.textContent).toMatch(/active/)
+    expect(section.open).toBe(false)
   })
 
   it("disables copy and download while the conversion is failing", async () => {

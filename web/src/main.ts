@@ -1,7 +1,6 @@
-import { parseConfig } from "../../src/config.js"
 import { applyTheme, watchThemeChanges } from "./theme.js"
 import { renderVersion } from "./version.js"
-import { CONFIG_SNIPPETS } from "./snippets.js"
+import { reflectConfig, showConfig, wireConfigSnippets } from "./configPanel.js"
 import { element, findControls, formState, type Controls } from "./controls.js"
 import { demoFor } from "./demos.js"
 import { wireDropZone } from "./dropZone.js"
@@ -169,53 +168,6 @@ function restore(controls: Controls): void {
   if (state.config) controls.config.value = state.config
 }
 
-// WYSIWYG precedence: a valid pasted config populates the form
-// controls for the fields they cover; the controls then always win
-function reflectConfig(controls: Controls): void {
-  let parsed
-  try {
-    parsed = parseConfig(controls.config.value)
-  } catch {
-    return // convert() reports the error
-  }
-  assign(parsed.preset, value => (controls.preset.value = value))
-  const orgToMd = parsed.orgToMarkdown
-  if (typeof orgToMd?.useHtml === "boolean")
-    controls.useHtml.checked = orgToMd.useHtml
-  assign(
-    parsed.markdownToOrg?.interpretHtml,
-    value => (controls.interpretHtml.checked = value)
-  )
-  assign(
-    orgToMd?.taskCheckboxes,
-    value => (controls.taskCheckboxes.checked = value)
-  )
-  for (const select of controls.styleSelects) {
-    const value =
-      orgToMd?.markdownStyle?.[select.id as keyof typeof orgToMd.markdownStyle]
-    if (typeof value === "string") select.value = value
-  }
-}
-
-/**
- * Makes an active config visible. A config that just arrived is opened,
- * since it changed the output under the user's hands and the panel is the
- * only place that shows why; a config already in force when the page loads
- * is only marked, so a deliberately collapsed panel stays collapsed.
- */
-function showConfig(controls: Controls, expand = true): void {
-  const active = Boolean(controls.config.value.trim())
-  const summary = controls.configSection.querySelector("summary")
-  if (summary) {
-    summary.textContent = active
-      ? "Config (morg.toml) — active"
-      : "Config (morg.toml)"
-  }
-  if (active && expand) {
-    controls.configSection.open = true
-  }
-}
-
 /**
  * Loads opened files. A `.toml` is a config wherever it was dropped —
  * morg never converts one — so each file goes where its kind belongs.
@@ -339,19 +291,7 @@ function wireListeners(controls: Controls): void {
     persist(controls)
     convertSoon()
   })
-  const configSnippet = element<HTMLSelectElement>("configSnippet")
-  configSnippet.addEventListener("change", () => {
-    const snippet =
-      CONFIG_SNIPPETS[configSnippet.value as keyof typeof CONFIG_SNIPPETS]
-    configSnippet.value = ""
-    if (!snippet) {
-      return
-    }
-    config.value = snippet.toml
-    // a snippet puts a config in force as surely as typing one does; the
-    // panel is already open, since the select is inside it
-    showConfig(controls, false)
-    reflectConfig(controls)
+  wireConfigSnippets(element("configSnippet"), controls, () => {
     persist(controls)
     startConvert(controls)
   })
