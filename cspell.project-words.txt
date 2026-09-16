@@ -11,6 +11,7 @@ convergently
 dotless
 dragenter
 dragleave
+emnapi
 filetags
 frontmatter
 iframable
@@ -24,6 +25,7 @@ mdast
 mdism
 mdisms
 morg
+napi
 nvmrc
 obsidian
 orgast
@@ -53,6 +55,7 @@ unmarks
 unstub
 vite
 vitepress
+wasi
 WCAG
 wikilink
 wikilinks

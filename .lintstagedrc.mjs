@@ -19,6 +19,10 @@ export default {
     const filtered = files.filter(file => !file.includes("tests/fixtures/"))
     return filtered.length ? `markdownlint-cli2 ${filtered.join(" ")}` : []
   },
+  // function form: the check is package.json <-> lock, so the staged file
+  // names are irrelevant; --dry-run reads neither node_modules nor the
+  // registry, which is what makes it cheap enough for a hook
+  "package{,-lock}.json": () => "npm ci --dry-run --ignore-scripts",
   "**/*.{ts,mts,js,mjs}": [
     async files => {
       const filesToLint = await removeIgnoredFiles(files)

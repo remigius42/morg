@@ -46,7 +46,18 @@ for what you submit.
 
 - Commits follow [Conventional Commits](https://www.conventionalcommits.org/),
   enforced via husky + commitlint; lint-staged runs the linters on
-  staged files.
+  staged files. Staging `package.json` or `package-lock.json` also runs
+  `npm ci --dry-run`, which rejects a lockfile CI would refuse to
+  install from — incremental `npm install` drops the hoisted entries for
+  platform-skipped optional packages, and a local `npm ci` passes anyway
+  because `node_modules` is already populated. Regenerate such a lock
+  with `rm -rf package-lock.json node_modules && npm install`.
+  The constellation that triggers it here is `knip` →
+  `oxc-resolver` → its wasm fallback binding
+  `@oxc-resolver/binding-wasm32-wasi` → `@napi-rs/wasm-runtime` →
+  `@emnapi/core`, `@emnapi/runtime`, `@emnapi/wasi-threads`: the native
+  binding wins on a normal dev machine, so that whole branch is
+  installed as optional-and-skipped and is what goes missing.
 - Round-trip fixture tests are the backbone of the test suite
   (`tests/roundtrip.spec.ts`): every mapping change needs a convergence
   fixture in `tests/fixtures/`, and behavior is developed red-green
