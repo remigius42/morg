@@ -7,6 +7,7 @@ canonicalizer
 codacy
 Comeau
 commitlint
+convergently
 dotless
 dragenter
 dragleave
@@ -48,6 +49,7 @@ tyop
 uniorg
 unist
 unmappable
+unmarks
 unstub
 vite
 vitepress
