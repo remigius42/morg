@@ -4,6 +4,7 @@ import { renderVersion } from "./version.js"
 import { CONFIG_SNIPPETS } from "./snippets.js"
 import { element, findControls, formState, type Controls } from "./controls.js"
 import { demoFor } from "./demos.js"
+import { wireDropZone } from "./dropZone.js"
 import { readsMarkdown, type Direction } from "./direction.js"
 import { copyOutput, downloadOutput } from "./outputActions.js"
 import { createRunner, type ConversionRunner } from "./runner.js"
@@ -310,50 +311,6 @@ function partition<T>(
 }
 
 /**
- * Announces the page-wide drop target while files are over it, and says
- * what the converter accepts. Built here rather than in the markup so
- * every page that wires main.ts gets it.
- */
-function wireDropOverlay(): void {
-  const overlay = document.createElement("div")
-  overlay.id = "dropOverlay"
-  overlay.className = "drop-overlay"
-  overlay.hidden = true
-  overlay.textContent = "Drop a document or a morg.toml"
-  // inside the landmark rather than on the body: content outside every
-  // landmark is skipped by landmark navigation, and the overlay is fixed
-  // so its parent has no say in where it paints
-  ;(document.querySelector("main") ?? document.body).append(overlay)
-
-  // dragleave fires on every element boundary the pointer crosses, so a
-  // plain show/hide pair flickers; only the outermost leave counts
-  let depth = 0
-  document.addEventListener("dragenter", event => {
-    if (!carriesFiles(event)) {
-      return
-    }
-    depth += 1
-    overlay.hidden = false
-  })
-  document.addEventListener("dragleave", event => {
-    if (!carriesFiles(event)) {
-      return
-    }
-    depth = Math.max(0, depth - 1)
-    overlay.hidden = depth === 0
-  })
-  document.addEventListener("drop", () => {
-    depth = 0
-    overlay.hidden = true
-  })
-}
-
-/** Whether a drag carries files rather than, say, a text selection. */
-function carriesFiles(event: DragEvent): boolean {
-  return event.dataTransfer?.types.includes("Files") ?? false
-}
-
-/**
  * Loads files, reporting a failed read rather than leaving the drop
  * looking like it did nothing — dropping a folder rejects here, and so
  * does a file moved or revoked between picking and reading.
@@ -366,7 +323,7 @@ function open(controls: Controls, files: readonly TextFile[]): void {
 }
 
 function wireFileControls(controls: Controls): void {
-  wireDropOverlay()
+  wireDropZone(files => open(controls, files))
   controls.copyButton.addEventListener("click", () => {
     void copyOutput(controls.output, controls.copyError)
   })
@@ -386,28 +343,6 @@ function wireFileControls(controls: Controls): void {
     open(controls, [...(picker.files ?? [])])
     // so choosing the same file twice in a row still fires a change
     picker.value = ""
-  })
-
-  // the browser navigates to a dropped file unless the default is
-  // prevented, which would replace the converter and discard the input;
-  // dragover needs it too, or no drop event fires at all. Only file drags
-  // qualify — cancelling a text drag would break dropping a selection
-  // into the textareas, which is native behavior worth keeping.
-  for (const type of ["dragover", "drop"]) {
-    document.addEventListener(type, event => {
-      if (carriesFiles(event as DragEvent)) {
-        event.preventDefault()
-      }
-    })
-  }
-
-  // the whole page is the drop target: the form does not cover the
-  // viewport, and a drop landing in the margin looked like a broken feature
-  document.addEventListener("drop", event => {
-    const files = event.dataTransfer?.files
-    if (files?.length) {
-      open(controls, [...files])
-    }
   })
 }
 

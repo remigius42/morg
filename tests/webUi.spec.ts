@@ -681,63 +681,12 @@ describe("embed page", () => {
     expect(element("openFile").parentElement?.textContent).toMatch(/drop/i)
   })
 
-  it("shows a drop overlay while files are dragged over the page", () => {
-    // the whole page is the drop target, so nothing on screen says a drop
-    // would do anything — or what the converter accepts
+  it("raises a drop zone over the page", () => {
+    // how the zone behaves is tests/webDropZone.spec.ts; what this needs
+    // is that init wires one at all — the converter markup carries no
+    // overlay, so a page without this call has no drop affordance
     dragEvent("dragenter", document.body, ["Files"])
-    const overlay = element("dropOverlay")
-    expect(overlay.hidden).toBe(false)
-    expect(overlay.textContent).toMatch(/morg\.toml/)
-  })
-
-  it("hides the overlay once the files land", async () => {
-    dragEvent("dragenter", document.body, ["Files"])
-    await drop(textFile("notes.org", "* Dropped"))
-    expect(element("dropOverlay").hidden).toBe(true)
-  })
-
-  it("keeps the overlay up while the drag crosses child elements", () => {
-    // dragleave fires on every boundary inside the page; hiding on the
-    // first one makes the overlay flicker away mid-drag
-    dragEvent("dragenter", document.body, ["Files"])
-    dragEvent("dragenter", element("input"), ["Files"])
-    dragEvent("dragleave", document.body, ["Files"])
     expect(element("dropOverlay").hidden).toBe(false)
-
-    dragEvent("dragleave", element("input"), ["Files"])
-    expect(element("dropOverlay").hidden).toBe(true)
-  })
-
-  it("stays out of the way of a text drag", () => {
-    dragEvent("dragenter", element("input"), ["text/plain"])
-    expect(element("dropOverlay").hidden).toBe(true)
-  })
-
-  it("swallows a file drop that misses the form", () => {
-    // the browser default is to navigate to the dropped file, which would
-    // replace the converter and discard whatever was typed
-    for (const type of ["dragover", "drop"]) {
-      const event = new Event(type, { bubbles: true, cancelable: true })
-      Object.defineProperty(event, "dataTransfer", {
-        value: { types: ["Files"], files: [] }
-      })
-      document.body.dispatchEvent(event)
-      expect(event.defaultPrevented).toBe(true)
-    }
-  })
-
-  it("lets a text drag land in the textarea", () => {
-    // dragging a selection into the input is a native textarea behavior;
-    // cancelling it makes the drag vanish with no feedback
-    const input = element<HTMLTextAreaElement>("input")
-    for (const type of ["dragover", "drop"]) {
-      const event = new Event(type, { bubbles: true, cancelable: true })
-      Object.defineProperty(event, "dataTransfer", {
-        value: { types: ["text/plain"], files: [] }
-      })
-      input.dispatchEvent(event)
-      expect(event.defaultPrevented).toBe(false)
-    }
   })
 
   it("builds no runner for a form already wired", async () => {
