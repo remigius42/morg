@@ -16,8 +16,8 @@ createAccessibilityTests("/embed.html", page =>
 /**
  * States the pages only reach after an interaction. They matter more than
  * the resting page does: the notices and the drop overlay are built in
- * JavaScript (web/src/main.ts) rather than marked up, so nothing reviews
- * them alongside the HTML.
+ * JavaScript (web/src/ui/controls.ts, web/src/ui/dropZone.ts) rather
+ * than marked up, so nothing reviews them alongside the HTML.
  */
 test.describe("Accessibility of transient states", () => {
   test("has no violations while an error is showing", async ({ page }) => {

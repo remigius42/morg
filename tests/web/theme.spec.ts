@@ -5,7 +5,7 @@ import {
   initThemeToggle,
   resolveTheme,
   watchThemeChanges
-} from "../web/src/theme.js"
+} from "../../web/src/theme.js"
 
 const THEME_KEY = "morg-theme"
 

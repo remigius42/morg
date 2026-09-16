@@ -11,7 +11,7 @@
  * only mean passing `Controls` under another name.
  */
 import { formState, type Controls } from "./controls.js"
-import { readsMarkdown, type Direction } from "./direction.js"
+import { readsMarkdown, type Direction } from "../direction.js"
 
 /**
  * How long typing pauses before the conversion runs. Long enough that a

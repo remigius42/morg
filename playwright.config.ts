@@ -2,7 +2,7 @@ import { defineConfig, devices } from "@playwright/test"
 
 /**
  * End-to-end coverage for the web UI. The unit suite drives the same
- * markup under happy-dom (tests/webUi.spec.ts); what only a browser can
+ * markup under happy-dom (tests/web/main.spec.ts); what only a browser can
  * answer is whether the conversion worker actually starts, whether a real
  * file, clipboard or download behaves, and what axe makes of the result.
  */

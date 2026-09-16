@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { runConversion } from "../web/src/convert.js"
+import { runConversion } from "../../../web/src/pipeline/convert.js"
 
 describe("runConversion", () => {
   it("converts markdown to org with defaults", () => {

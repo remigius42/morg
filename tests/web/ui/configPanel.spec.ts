@@ -5,7 +5,7 @@ import {
   showConfig,
   wireConfigSnippets,
   type ConfigControls
-} from "../web/src/configPanel.js"
+} from "../../../web/src/ui/configPanel.js"
 
 let controls: ConfigControls
 

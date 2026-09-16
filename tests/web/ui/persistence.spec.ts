@@ -4,7 +4,7 @@ import {
   readState,
   writeState,
   type PersistedState
-} from "../web/src/persistence.js"
+} from "../../../web/src/ui/persistence.js"
 
 const REMEMBERED: PersistedState = {
   direction: "md-to-org",

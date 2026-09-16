@@ -57,6 +57,19 @@ them: `conversionOptions.ts` layers explicit overrides over the config,
 and `presets/registry.ts` maps a preset name to a Preset. Duplicating
 one of those in an adapter is how the two drift apart.
 
+`web/src/` splits the same way, for a reason the bundler enforces.
+`web/src/pipeline/` is everything that reaches `src/`: `convert.ts`,
+the `runner.ts` that decides where a conversion happens, and the
+`worker.ts` it speaks to. The rule is about `convert.ts` specifically —
+no static import may reach it from the main bundle. `runner.ts` is
+light and statically imported, but gets to `convert.ts` through a
+dynamic `import()`, which is what keeps the embed bundle at 20 kB
+rather than 340. `web/src/ui/` is the converter page's controls, and
+imports `pipeline/` for types only. The entries (`main.ts`, `site.ts`)
+and `direction.ts` — the pipeline's vocabulary, deliberately free of
+the pipeline itself, because `ui/` reads it on every keystroke — sit at
+the root. `tests/web/` mirrors this.
+
 ## Preset
 
 A named bundle of dialect-specific transforms applied on top of the dialect-agnostic core (e.g. `logseq`). The core pipelines never contain dialect knowledge. Options that only have observable effect in a dialect (e.g. `nestUnderHeadings` for outline nesting) are scoped to their Preset, not the core.

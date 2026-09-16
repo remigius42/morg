@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { describe, expect, it } from "vitest"
-import { MORG_VERSION, renderVersion } from "../web/src/version.js"
+import { MORG_VERSION, renderVersion } from "../../web/src/version.js"
 
 describe("version display", () => {
   it("reports the build-time version", () => {

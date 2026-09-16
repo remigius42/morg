@@ -1,8 +1,9 @@
 /**
  * What the Web UI's direction select means, and the questions the page
- * asks of it. Its own module, with no imports: the page reads a direction
- * on every keystroke, but the conversion pipeline these describe lives in
- * the worker, and anything reachable from here lands in the main bundle.
+ * asks of it. Outside `pipeline/` and with no imports at all, though it
+ * is the pipeline's vocabulary: `ui/` reads a direction on every
+ * keystroke, and anything reachable from here lands in the main bundle
+ * — which is the one thing `pipeline/` must stay out of.
  */
 export type Direction =
   "md-to-org" | "org-to-md" | "normalize-md" | "normalize-org"

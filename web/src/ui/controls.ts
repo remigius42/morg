@@ -5,9 +5,9 @@
  * need each other to get it — main.ts owning it would make the wiring
  * file a dependency of everything it wires.
  */
-import type { ConversionForm } from "./convert.js"
-import type { Direction } from "./direction.js"
-import type { ConversionRunner } from "./runner.js"
+import type { ConversionForm } from "../pipeline/convert.js"
+import type { Direction } from "../direction.js"
+import type { ConversionRunner } from "../pipeline/runner.js"
 
 /** The Markdown style knobs, which are a select each, named by their id. */
 const STYLE_KEYS = ["bullet", "emphasis", "strong", "fence", "rule"] as const

@@ -6,7 +6,7 @@
  * click on an anchor outside the document. None of that is worth reading
  * past to follow how the page converts.
  */
-import type { Direction } from "./direction.js"
+import type { Direction } from "../direction.js"
 import { outputFileName } from "./files.js"
 
 /**

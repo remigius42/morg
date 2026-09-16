@@ -8,7 +8,7 @@
  * Takes the controls it touches rather than the whole `Controls`, so a
  * test needs six elements instead of the converter page.
  */
-import { parseConfig } from "../../src/config.js"
+import { parseConfig } from "../../../src/config.js"
 import { CONFIG_SNIPPETS } from "./snippets.js"
 
 /** The controls a config has anything to say about. */

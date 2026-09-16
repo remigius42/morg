@@ -19,7 +19,7 @@ import { resolveVersion } from "./version.js"
  * hook returning `resolve.conditions` does not reach the worker bundle
  * (tried under Vite 8 — the DOM build came back). Node's resolver takes
  * no conditions either, so the alternative is interpreting export maps
- * by hand. The next offender is caught by tests/webWorkerBundle.spec.ts
+ * by hand. The next offender is caught by tests/web/pipeline/workerBundle.spec.ts
  * instead, which is where the silence this guards against is closed.
  */
 function domFreeEntityDecoder(): Plugin {

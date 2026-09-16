@@ -1,6 +1,9 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { copyOutput, downloadOutput } from "../web/src/outputActions.js"
+import {
+  copyOutput,
+  downloadOutput
+} from "../../../web/src/ui/outputActions.js"
 
 let output: HTMLTextAreaElement
 let copyError: HTMLParagraphElement

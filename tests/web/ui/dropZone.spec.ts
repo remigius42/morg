@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
-import type { TextFile } from "../web/src/files.js"
-import { wireDropZone } from "../web/src/dropZone.js"
+import type { TextFile } from "../../../web/src/ui/files.js"
+import { wireDropZone } from "../../../web/src/ui/dropZone.js"
 
 let dropped: TextFile[][]
 

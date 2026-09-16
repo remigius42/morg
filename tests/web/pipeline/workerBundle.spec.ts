@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { build, type Rollup } from "vite"
-import config from "../web/vite.config.js"
+import config from "../../../web/vite.config.js"
 
 /**
  * The worker bundle has to survive having no DOM. A browser build of a
@@ -24,7 +24,7 @@ describe("conversion worker bundle", () => {
     try {
       built = (await build({
         ...config,
-        root: new URL("../web/", import.meta.url).pathname,
+        root: new URL("../../../web/", import.meta.url).pathname,
         configFile: false,
         logLevel: "silent",
         // vitest runs under NODE_ENV=test, and the dev resolution pulls in

@@ -1,14 +1,18 @@
 import { applyTheme, watchThemeChanges } from "./theme.js"
 import { renderVersion } from "./version.js"
-import { reflectConfig, showConfig, wireConfigSnippets } from "./configPanel.js"
-import { element, findControls, type Controls } from "./controls.js"
-import { demoFor } from "./demos.js"
-import { convert, debounce, DEBOUNCE_MS, startConvert } from "./runLoop.js"
-import { wireDropZone } from "./dropZone.js"
+import {
+  reflectConfig,
+  showConfig,
+  wireConfigSnippets
+} from "./ui/configPanel.js"
+import { element, findControls, type Controls } from "./ui/controls.js"
+import { demoFor } from "./ui/demos.js"
+import { convert, debounce, DEBOUNCE_MS, startConvert } from "./ui/runLoop.js"
+import { wireDropZone } from "./ui/dropZone.js"
 import type { Direction } from "./direction.js"
-import { copyOutput, downloadOutput } from "./outputActions.js"
-import { readState, writeState } from "./persistence.js"
-import { createRunner, type ConversionRunner } from "./runner.js"
+import { copyOutput, downloadOutput } from "./ui/outputActions.js"
+import { readState, writeState } from "./ui/persistence.js"
+import { createRunner, type ConversionRunner } from "./pipeline/runner.js"
 import {
   directionForFile,
   directionSuitsFile,
@@ -16,7 +20,7 @@ import {
   looksBinary,
   sizeWarning,
   type TextFile
-} from "./files.js"
+} from "./ui/files.js"
 
 function persist(controls: Controls): void {
   writeState({

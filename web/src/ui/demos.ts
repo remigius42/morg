@@ -4,10 +4,10 @@
  * text that say nothing about how the page works, sitting in the middle
  * of the file that does.
  */
-import { readsMarkdown, type Direction } from "./direction.js"
+import { readsMarkdown, type Direction } from "../direction.js"
 
 // the two demos are the same document in both dialects; convergence and
-// zero warnings are pinned by test (tests/webDemos.spec.ts)
+// zero warnings are pinned by test (tests/web/ui/demos.spec.ts)
 export const ORG_DEMO = `# Paste your Org here — or convert this demo
 
 * morg demo

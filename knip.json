@@ -5,7 +5,7 @@
     "src/cli.ts",
     "web/src/main.ts",
     "web/src/site.ts",
-    "web/src/worker.ts"
+    "web/src/pipeline/worker.ts"
   ],
   "project": ["src/**/*.ts", "web/src/**/*.ts"],
   "vite": {

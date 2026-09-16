@@ -1,10 +1,10 @@
 // @vitest-environment happy-dom
 import { readFileSync } from "node:fs"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { CONVERTING_AFTER_MS, DEBOUNCE_MS } from "../web/src/runLoop.js"
-import { runConversion } from "../web/src/convert.js"
-import { readState, writeState } from "../web/src/persistence.js"
-import type { ConversionRunner } from "../web/src/runner.js"
+import { CONVERTING_AFTER_MS, DEBOUNCE_MS } from "../../web/src/ui/runLoop.js"
+import { runConversion } from "../../web/src/pipeline/convert.js"
+import { readState, writeState } from "../../web/src/ui/persistence.js"
+import type { ConversionRunner } from "../../web/src/pipeline/runner.js"
 
 // Smoke check: the Embed Page markup wired by main.ts converts on input.
 function loadEmbedPageBody(): string {
@@ -26,7 +26,7 @@ async function setUpPage(runner?: ConversionRunner) {
     document.removeEventListener(type, listener)
   }
   document.body.innerHTML = loadEmbedPageBody()
-  const { init } = await import("../web/src/main.js")
+  const { init } = await import("../../web/src/main.js")
   const original = document.addEventListener.bind(document)
   document.addEventListener = (type: string, listener: EventListener) => {
     documentListeners.push([type, listener])
@@ -374,7 +374,7 @@ describe("embed page", () => {
   })
 
   it("wires the snippet picker to the page's own controls", () => {
-    // what a snippet does is tests/webConfigPanel.spec.ts; what this
+    // what a snippet does is tests/web/ui/configPanel.spec.ts; what this
     // needs is that the picker in the markup reaches it, and lands on the
     // real style selects rather than a fixture's
     const snippet = element<HTMLSelectElement>("configSnippet")
@@ -538,7 +538,7 @@ describe("embed page", () => {
   })
 
   it("wires Copy to the output, and keeps its notice off the error", async () => {
-    // how copying itself behaves is tests/webOutputActions.spec.ts; what
+    // how copying itself behaves is tests/web/ui/outputActions.spec.ts; what
     // this needs is that the button reaches it, and that a refusal lands
     // in its own slot — reported as a conversion error it reads as one,
     // and the next run wipes it before it can be acted on
@@ -678,7 +678,7 @@ describe("embed page", () => {
   })
 
   it("raises a drop zone over the page", () => {
-    // how the zone behaves is tests/webDropZone.spec.ts; what this needs
+    // how the zone behaves is tests/web/ui/dropZone.spec.ts; what this needs
     // is that init wires one at all — the converter markup carries no
     // overlay, so a page without this call has no drop affordance
     dragEvent("dragenter", document.body, ["Files"])
@@ -702,7 +702,7 @@ describe("embed page", () => {
         }
       }
     )
-    const { init } = await import("../web/src/main.js")
+    const { init } = await import("../../web/src/main.js")
     init()
     expect(constructed).toEqual([])
   })

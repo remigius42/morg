@@ -5,7 +5,7 @@ import {
   outputFileName,
   sizeWarning,
   LARGE_FILE_BYTES
-} from "../web/src/files.js"
+} from "../../../web/src/ui/files.js"
 
 describe("directionForFile", () => {
   it("keeps the normalize mode and swaps the format", () => {

@@ -1,8 +1,11 @@
 // @vitest-environment happy-dom
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { createRunner, synchronousRunner } from "../web/src/runner.js"
-import { handle } from "../web/src/worker.js"
-import type { WorkerRequest } from "../web/src/workerProtocol.js"
+import {
+  createRunner,
+  synchronousRunner
+} from "../../../web/src/pipeline/runner.js"
+import { handle } from "../../../web/src/pipeline/worker.js"
+import type { WorkerRequest } from "../../../web/src/pipeline/workerProtocol.js"
 
 type Listener = (event: { data: unknown }) => void
 
@@ -95,7 +98,9 @@ describe("createRunner", () => {
     expect(runner).not.toBe(synchronousRunner)
     // Vite rewrites the URL it recognizes (…?worker_file&type=module), so
     // the path is the part worth asserting on
-    expect(worker.constructed[0]?.url.pathname).toMatch(/web\/src\/worker\.ts$/)
+    expect(worker.constructed[0]?.url.pathname).toMatch(
+      /web\/src\/pipeline\/worker\.ts$/
+    )
     expect(await runner.run("* Hello", { direction: "org-to-md" })).toEqual({
       output: "# Hello\n",
       warnings: []
@@ -170,11 +175,12 @@ describe("createRunner", () => {
     // tab that stayed open, it never arrives. Both the dead worker and
     // its stand-in have failed by then, and the caller is still waiting
     vi.resetModules()
-    vi.doMock("../web/src/convert.js", () => {
+    vi.doMock("../../../web/src/pipeline/convert.js", () => {
       throw new Error("chunk gone")
     })
     try {
-      const { createRunner: create } = await import("../web/src/runner.js")
+      const { createRunner: create } =
+        await import("../../../web/src/pipeline/runner.js")
       const worker = useFakeWorker()
       const runner = create()
       const instance = worker.constructed[0]
@@ -187,7 +193,7 @@ describe("createRunner", () => {
       // vitest's mock loader, not to anything the runner produced
       await expect(inFlight).rejects.toThrow()
     } finally {
-      vi.doUnmock("../web/src/convert.js")
+      vi.doUnmock("../../../web/src/pipeline/convert.js")
       vi.resetModules()
     }
   })

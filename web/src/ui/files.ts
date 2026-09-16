@@ -1,10 +1,10 @@
-import { formatFromFileName, splitFileName } from "../../src/fileNames.js"
+import { formatFromFileName, splitFileName } from "../../../src/fileNames.js"
 import {
   normalizes,
   readsMarkdown,
   writesMarkdown,
   type Direction
-} from "./direction.js"
+} from "../direction.js"
 
 /** An opened file; structural, so a test needs no real `File`. */
 export interface TextFile {

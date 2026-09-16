@@ -3,7 +3,7 @@ import { format } from "prettier"
 import { describe, expect, it } from "vitest"
 import { parseConfig } from "../src/config.js"
 import { convertOrgToMarkdown } from "../src/orgToMarkdown.js"
-import { CONFIG_SNIPPETS } from "../web/src/snippets.js"
+import { CONFIG_SNIPPETS } from "../web/src/ui/snippets.js"
 
 const RICH_ORG = `* Heading
 

@@ -1,12 +1,12 @@
-import { convertMarkdownToOrg } from "../../src/markdownToOrg.js"
-import { convertOrgToMarkdown } from "../../src/orgToMarkdown.js"
-import { normalizeMarkdown, normalizeOrg } from "../../src/normalize.js"
-import { parseConfig, type MorgConfig } from "../../src/config.js"
-import { buildConversionOptions } from "../../src/conversionOptions.js"
-import type { MarkdownStyleOptions, Toggle } from "../../src/options.js"
-import { createPreset } from "../../src/presets/registry.js"
-import type { Preset } from "../../src/presets/types.js"
-import type { Direction } from "./direction.js"
+import { convertMarkdownToOrg } from "../../../src/markdownToOrg.js"
+import { convertOrgToMarkdown } from "../../../src/orgToMarkdown.js"
+import { normalizeMarkdown, normalizeOrg } from "../../../src/normalize.js"
+import { parseConfig, type MorgConfig } from "../../../src/config.js"
+import { buildConversionOptions } from "../../../src/conversionOptions.js"
+import type { MarkdownStyleOptions, Toggle } from "../../../src/options.js"
+import { createPreset } from "../../../src/presets/registry.js"
+import type { Preset } from "../../../src/presets/types.js"
+import type { Direction } from "../direction.js"
 
 /** Form state of the Web UI; unset fields fall back to config, then defaults. */
 export interface ConversionForm {
