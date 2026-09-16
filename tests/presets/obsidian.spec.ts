@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest"
-import { convertMarkdownToOrg } from "../src/markdownToOrg.js"
-import { convertOrgToMarkdown } from "../src/orgToMarkdown.js"
-import { obsidian } from "../src/presets/obsidian.js"
+import { convertMarkdownToOrg } from "../../src/markdownToOrg.js"
+import { convertOrgToMarkdown } from "../../src/orgToMarkdown.js"
+import { obsidian } from "../../src/presets/obsidian.js"
 
 describe("obsidian preset", () => {
   it("should convert org fuzzy links to wikilinks", () => {

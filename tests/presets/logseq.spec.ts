@@ -2,9 +2,9 @@ import { describe, it, expect } from "vitest"
 import {
   applyLogseqSpecificsToUniorgAst,
   logseq
-} from "../src/presets/logseq.js"
-import { convertMarkdownToOrg } from "../src/markdownToOrg.js"
-import { convertOrgToMarkdown } from "../src/orgToMarkdown.js"
+} from "../../src/presets/logseq.js"
+import { convertMarkdownToOrg } from "../../src/markdownToOrg.js"
+import { convertOrgToMarkdown } from "../../src/orgToMarkdown.js"
 import type { OrgData, Headline, PropertyDrawer } from "uniorg"
 
 describe("applyLogseqSpecificsToUniorgAst", () => {

@@ -62,8 +62,16 @@ for what you submit.
   (`tests/roundtrip.spec.ts`): every mapping change needs a convergence
   fixture in `tests/fixtures/`, and behavior is developed red-green
   (failing test first).
+- Specs mirror the tree they cover, so a module's tests are where you
+  would look for them: `tests/core/`, `tests/presets/` and
+  `tests/web/{ui,pipeline}/` against `src/core/`, `src/presets/` and
+  `web/src/{ui,pipeline}/`. Name the spec after the module and let the
+  path carry the rest — `tests/presets/logseq.spec.ts`, not
+  `logseqPreset.spec.ts`. Specs that genuinely span the tree
+  (`roundtrip`, `formatterCompat`) stay at the root, as do
+  `tests/fixtures/` and `tests/e2e/`.
 - Web UI behavior is covered twice, and the split is deliberate: the
-  vitest specs (`tests/web*.spec.ts`) drive the markup under happy-dom
+  vitest specs (`tests/web/`) drive the markup under happy-dom
   and are where wiring belongs, while the Playwright specs
   (`tests/e2e/`) cover what only a browser answers — the conversion
   worker, real files and downloads, the clipboard, cross-frame theming
