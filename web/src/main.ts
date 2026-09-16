@@ -5,13 +5,13 @@ import { CONFIG_SNIPPETS } from "./snippets.js"
 import { element, findControls, formState, type Controls } from "./controls.js"
 import { demoFor } from "./demos.js"
 import { readsMarkdown, type Direction } from "./direction.js"
+import { copyOutput, downloadOutput } from "./outputActions.js"
 import { createRunner, type ConversionRunner } from "./runner.js"
 import {
   directionForFile,
   directionSuitsFile,
   isConfigFile,
   looksBinary,
-  outputFileName,
   sizeWarning,
   type TextFile
 } from "./files.js"
@@ -310,71 +310,6 @@ function partition<T>(
 }
 
 /**
- * Copies the output. The Clipboard API is unavailable in a cross-origin
- * iframe without `allow="clipboard-write"`, so a selection copy stands in.
- */
-async function copyOutput(controls: Controls): Promise<void> {
-  const { output } = controls
-  controls.copyError.hidden = true
-  try {
-    await navigator.clipboard.writeText(output.value)
-    return
-  } catch {
-    // fall through to the selection copy
-  }
-  // not the conversion error: there it reads as a failed conversion, and
-  // the next keystroke takes the instruction away before it can be read
-  controls.copyError.hidden = selectionCopy(output)
-}
-
-/**
- * Copies via the output's own selection. iOS Safari refuses to select a
- * readonly textarea, so the attribute comes off for the duration.
- */
-function selectionCopy(output: HTMLTextAreaElement): boolean {
-  const wasReadOnly = output.readOnly
-  // copying takes the focus, and in an iframe without clipboard-write
-  // that is every copy; someone mid-sentence would be typing into
-  // nothing until they clicked back
-  const wasFocused = document.activeElement
-  output.readOnly = false
-  try {
-    output.focus()
-    output.setSelectionRange(0, output.value.length)
-    return document.execCommand("copy")
-  } catch {
-    return false
-  } finally {
-    output.readOnly = wasReadOnly
-    output.setSelectionRange(0, 0)
-    if (wasFocused instanceof HTMLElement) {
-      wasFocused.focus()
-    }
-  }
-}
-
-/** Saves the output locally; the blob never leaves the browser. */
-function downloadOutput(controls: Controls): void {
-  const blob = new Blob([controls.output.value], {
-    type: "text/plain;charset=utf-8"
-  })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement("a")
-  link.href = url
-  link.download = outputFileName(
-    controls.openedFileName,
-    controls.direction.value as Direction
-  )
-  // Firefox only acts on a click if the anchor is in the document, and
-  // revoking in the same task can invalidate the blob before the download
-  // task has read it
-  document.body.append(link)
-  link.click()
-  link.remove()
-  setTimeout(() => URL.revokeObjectURL(url), 0)
-}
-
-/**
  * Announces the page-wide drop target while files are over it, and says
  * what the converter accepts. Built here rather than in the markup so
  * every page that wires main.ts gets it.
@@ -433,10 +368,14 @@ function open(controls: Controls, files: readonly TextFile[]): void {
 function wireFileControls(controls: Controls): void {
   wireDropOverlay()
   controls.copyButton.addEventListener("click", () => {
-    void copyOutput(controls)
+    void copyOutput(controls.output, controls.copyError)
   })
   controls.downloadButton.addEventListener("click", () =>
-    downloadOutput(controls)
+    downloadOutput(
+      controls.output,
+      controls.openedFileName,
+      controls.direction.value as Direction
+    )
   )
 
   const picker = element<HTMLInputElement>("fileInput")

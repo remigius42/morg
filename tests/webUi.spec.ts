@@ -537,56 +537,11 @@ describe("embed page", () => {
     }
   })
 
-  it("copies the output to the clipboard", async () => {
-    const copied: string[] = []
-    vi.stubGlobal("navigator", {
-      clipboard: {
-        writeText: (text: string) => {
-          copied.push(text)
-          return Promise.resolve()
-        }
-      }
-    })
-    element<HTMLButtonElement>("copyOutput").click()
-    await Promise.resolve()
-    expect(copied).toEqual([element<HTMLTextAreaElement>("output").value])
-  })
-
-  it("falls back to execCommand when the clipboard is blocked", async () => {
-    // a cross-origin iframe without allow="clipboard-write" rejects here
-    vi.stubGlobal("navigator", {
-      clipboard: { writeText: () => Promise.reject(new Error("denied")) }
-    })
-    const commands: string[] = []
-    stub(document, "execCommand", (command: string) => {
-      commands.push(command)
-      return true
-    })
-    element<HTMLButtonElement>("copyOutput").click()
-    await Promise.resolve()
-    await Promise.resolve()
-    expect(commands).toEqual(["copy"])
-  })
-
-  it("leaves the caret where it was after a fallback copy", async () => {
-    // every Copy click takes this path in an iframe without
-    // allow="clipboard-write", and it selects the output to copy it —
-    // someone mid-edit would have to click back into the input to type
-    vi.stubGlobal("navigator", {
-      clipboard: { writeText: () => Promise.reject(new Error("denied")) }
-    })
-    stub(document, "execCommand", () => true)
-    const input = element<HTMLTextAreaElement>("input")
-    input.focus()
-    element<HTMLButtonElement>("copyOutput").click()
-    await Promise.resolve()
-    await Promise.resolve()
-    expect(document.activeElement).toBe(input)
-  })
-
-  it("says so when copying is refused outright", async () => {
-    // iOS Safari rejects the API and returns false from execCommand; with
-    // no feedback, "copied" and "did nothing" look identical
+  it("wires Copy to the output, and keeps its notice off the error", async () => {
+    // how copying itself behaves is tests/webOutputActions.spec.ts; what
+    // this needs is that the button reaches it, and that a refusal lands
+    // in its own slot — reported as a conversion error it reads as one,
+    // and the next run wipes it before it can be acted on
     vi.stubGlobal("navigator", {
       clipboard: { writeText: () => Promise.reject(new Error("denied")) }
     })
@@ -596,36 +551,15 @@ describe("embed page", () => {
     await Promise.resolve()
     const notice = element<HTMLParagraphElement>("copyError")
     expect(notice.hidden).toBe(false)
-    expect(notice.textContent).toMatch(/Ctrl\+C/)
-    // it is not a conversion error: reported in that slot it reads as one,
-    // and the next run wipes it before it can be acted on
     expect(element<HTMLParagraphElement>("error").hidden).toBe(true)
 
     const input = element<HTMLTextAreaElement>("input")
     input.value = "* Still there"
     input.dispatchEvent(new Event("input", { bubbles: true }))
     await settle()
+    // a conversion rebuilds the warning list; the copy notice is not part
+    // of it and must survive
     expect(notice.hidden).toBe(false)
-  })
-
-  it("takes the copy instruction down once copying works", async () => {
-    vi.stubGlobal("navigator", {
-      clipboard: { writeText: () => Promise.reject(new Error("denied")) }
-    })
-    stub(document, "execCommand", () => false)
-    const copy = element<HTMLButtonElement>("copyOutput")
-    copy.click()
-    await Promise.resolve()
-    await Promise.resolve()
-    expect(element("copyError").hidden).toBe(false)
-
-    vi.stubGlobal("navigator", {
-      clipboard: { writeText: () => Promise.resolve() }
-    })
-    copy.click()
-    await Promise.resolve()
-    await Promise.resolve()
-    expect(element("copyError").hidden).toBe(true)
   })
 
   it("marks an active config without reopening the panel on load", async () => {
