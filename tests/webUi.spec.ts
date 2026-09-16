@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { readFileSync } from "node:fs"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { CONVERTING_AFTER_MS, DEBOUNCE_MS } from "../web/src/main.js"
+import { CONVERTING_AFTER_MS, DEBOUNCE_MS } from "../web/src/runLoop.js"
 import { runConversion } from "../web/src/convert.js"
 import { readState, writeState } from "../web/src/persistence.js"
 import type { ConversionRunner } from "../web/src/runner.js"
