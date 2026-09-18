@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- The embed page reports its content height to the page that frames it,
+  as a `{ type: "morg:height", height }` message, so a host can size the
+  iframe to the converter instead of guessing at it. Every guess is
+  wrong in one of two ways — too short leaves a scrollbar inside the
+  frame, right next to the textareas' own, and too tall leaves dead
+  space — and no host can guess better, because the height is the
+  converter's to know: expanding Options or Config roughly doubles it,
+  and the input and output stack below 768px. The message carries a
+  number describing the page's own layout, never the document being
+  converted.
+
 ### Changed
 
 - The build version in the Web UI's page chrome is now linked: the tag

@@ -50,7 +50,23 @@ Try morg without installing anything at
 happens in your browser, nothing is uploaded (see [ADR
 0003](docs/adr/0003-client-side-web-ui-on-github-pages.md)). The
 chrome-less embed page (`/embed.html`, optionally with
-`?theme=dark|light`) can be iframed into other sites.
+`?theme=dark|light`) can be iframed into other sites. It posts its
+content height to the host on every change, so the frame can follow it
+rather than scrolling inside a page that already scrolls:
+
+```js
+addEventListener("message", event => {
+  if (event.origin !== "https://morg.binarypoetry.ch") return
+  if (event.data?.type === "morg:height") {
+    frame.style.height = `${event.data.height}px`
+  }
+})
+```
+
+Give the frame at least 768px of width if you can — below that the
+input and output stack, which doubles its height. `allow="clipboard-write"`
+lets the Copy button use the clipboard rather than falling back to
+selecting the output.
 
 Besides pasting, a file can be opened with the picker or dropped
 anywhere on the page — a `.toml` lands in the config panel, a document

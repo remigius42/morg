@@ -32,7 +32,15 @@ the UI therefore says "Open file" and "Download", never "Upload".
 ## Embed Page
 
 The chrome-less converter page of the Web UI, designed to be iframed —
-both by the Web UI's own converter page and by third-party sites.
+both by the Web UI's own converter page and by third-party sites. Its
+height is the host's to set but morg's to know, so it reports it (see
+Height Message) rather than leaving every host to guess the same number.
+
+## Height Message
+
+What the Embed Page posts to its host whenever its content height
+changes: `{ type: "morg:height", height }`. It is the page's own
+layout and nothing else — no host ever learns what is being converted.
 
 ## End-to-End Test
 

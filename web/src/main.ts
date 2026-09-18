@@ -1,3 +1,4 @@
+import { reportHeight } from "./embedHeight.js"
 import { applyTheme, watchThemeChanges } from "./theme.js"
 import { renderVersion } from "./version.js"
 import {
@@ -269,6 +270,10 @@ export function init(runner?: ConversionRunner): void {
     controls.input.value = demoFor(controls.direction.value as Direction)
   }
   startConvert(controls)
+
+  // last, so the first height it reports is of the form as restored
+  // rather than as the markup shipped it
+  reportHeight()
 }
 
 if (document.getElementById("converter")) {
