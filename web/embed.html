@@ -36,8 +36,12 @@
             <option value="obsidian">Obsidian</option>
           </select>
         </div>
-        <div class="grid file-actions">
-          <div>
+        <!-- one grid rather than a row of buttons above a row of boxes:
+             stacked, each set of buttons has to follow the box it acts
+             on, and Copy and Download two boxes above their output is
+             how they end up next to the input instead -->
+        <div class="panes">
+          <div class="input-actions">
             <button type="button" id="openFile" class="outline">
               Open file…
             </button>
@@ -49,14 +53,12 @@
             />
             <small class="drop-hint">or drop one anywhere on this page</small>
           </div>
-          <div>
+          <div class="output-actions">
             <button type="button" id="copyOutput" class="outline">Copy</button>
             <button type="button" id="downloadOutput" class="outline">
               Download
             </button>
           </div>
-        </div>
-        <div class="grid">
           <textarea
             id="input"
             rows="14"

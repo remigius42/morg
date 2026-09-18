@@ -235,6 +235,48 @@ nav li:has(> .theme-switch) {
   border: 2px dashed var(--pico-primary);
 }
 
-.file-actions > div:last-child {
+/* Pico's own breakpoint, so the panes stack with the rest of the form.
+   Side by side the two sets of buttons share a row, as a row of their
+   own would have them; stacked, each one leads the box it acts on. */
+.panes {
+  display: grid;
+  grid-column-gap: var(--pico-grid-column-gap);
+  grid-row-gap: var(--pico-grid-row-gap);
+  grid-template-areas:
+    "input-actions"
+    "input"
+    "output-actions"
+    "output";
+}
+
+@media (min-width: 768px) {
+  .panes {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "input-actions output-actions"
+      "input output";
+  }
+}
+
+/* what Pico's own `.grid` gives its children: a textarea's intrinsic
+   width would otherwise push its column past the share it was given */
+.panes > * {
+  min-width: 0;
+}
+
+.input-actions {
+  grid-area: input-actions;
+}
+
+.output-actions {
+  grid-area: output-actions;
   text-align: right;
+}
+
+.panes > #input {
+  grid-area: input;
+}
+
+.panes > #output {
+  grid-area: output;
 }

@@ -24,6 +24,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Narrow enough that the input and output stack, Copy and Download now
+  follow the input box and lead the output, instead of staying in a row
+  of buttons above both — where they sat next to the input and two
+  boxes away from the output they act on. Side by side nothing moves:
+  the buttons still share a row above the boxes.
+
 - The build version in the Web UI's page chrome is now linked: the tag
   (`v0.3.0`) opens the changelog on `main` — not the tag's own copy,
   which is missing everything a deploy ahead of the tag has added under
