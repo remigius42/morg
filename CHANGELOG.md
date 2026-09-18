@@ -22,6 +22,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   number describing the page's own layout, never the document being
   converted.
 
+- The converter page now follows that message with its own frame, which
+  had been fixed at 75% of the window: the converter no longer scrolls
+  inside a page that scrolls, and opening Options no longer has to be
+  read through a slot two thirds the size of what it opened. The 75%
+  stays as the height a browser that never delivers the message is
+  left with.
+
 ### Changed
 
 - Narrow enough that the input and output stack, Copy and Download now

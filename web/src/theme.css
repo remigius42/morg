@@ -204,6 +204,9 @@ nav li:has(> .theme-switch) {
   cursor: default;
 }
 
+/* the height stands only until the embed reports its own, which
+   site.ts then sets inline; it is what a browser that never delivers
+   the message is left with */
 .site-frame {
   width: 100%;
   height: 75vh;

@@ -97,3 +97,37 @@ test.describe("embed height", () => {
     await expect.poll(() => page.evaluate(lastHeight)).toBe(collapsed)
   })
 })
+
+/** The converter page is the first host of its own embed. */
+test.describe("converter page frame", () => {
+  const frameHeight = async (page: Page): Promise<number> => {
+    const box = await page.locator(".site-frame").boundingBox()
+    return box?.height ?? 0
+  }
+
+  test("sizes the frame to the converter inside it", async ({ page }) => {
+    await page.goto("/convert.html")
+    const content = page.frameLocator(".site-frame").locator("body")
+    const contentHeight = async (): Promise<number> =>
+      await content.evaluate(body =>
+        Math.ceil(body.getBoundingClientRect().height)
+      )
+
+    // both read on every attempt, so the gap is what the failure names
+    await expect
+      .poll(async () => (await frameHeight(page)) - (await contentHeight()))
+      .toBe(0)
+  })
+
+  test("grows the frame when a panel opens inside it", async ({ page }) => {
+    await page.goto("/convert.html")
+    await expect.poll(async () => await frameHeight(page)).toBeGreaterThan(0)
+    const collapsed = await frameHeight(page)
+
+    await page.frameLocator(".site-frame").locator("#options summary").click()
+
+    await expect
+      .poll(async () => await frameHeight(page))
+      .toBeGreaterThan(collapsed)
+  })
+})

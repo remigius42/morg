@@ -54,3 +54,21 @@ export function reportHeight(): void {
   // fires once on observe, which is the initial report
   new ResizeObserver(post).observe(document.body)
 }
+
+/**
+ * The host half: sizes `frame` to whatever the Embed Page inside it
+ * reports, which is what the converter page does with its own embed.
+ *
+ * The guard is `event.source`, not the origin — the embed is served
+ * from this very origin, so an origin check would let any other page
+ * of the site through while this one names the frame being sized.
+ */
+export function followFrameHeight(frame: HTMLIFrameElement): void {
+  addEventListener("message", event => {
+    if (event.source !== frame.contentWindow) return
+    const message = event.data as Partial<HeightMessage> | null | undefined
+    if (message?.type !== HEIGHT_MESSAGE) return
+    if (typeof message.height !== "number") return
+    frame.style.height = `${message.height}px`
+  })
+}

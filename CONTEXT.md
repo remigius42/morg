@@ -41,6 +41,8 @@ Height Message) rather than leaving every host to guess the same number.
 What the Embed Page posts to its host whenever its content height
 changes: `{ type: "morg:height", height }`. It is the page's own
 layout and nothing else — no host ever learns what is being converted.
+The converter page is its first host: it sizes its own frame to it,
+the same way the README asks a third-party host to.
 
 ## End-to-End Test
 
