@@ -1,5 +1,5 @@
 {
-  "name": "morg",
+  "name": "@remigius42/morg",
   "version": "0.3.0",
   "description": "Bidirectional Markdown ↔ Org-mode converter with round-trip convergence",
   "keywords": [
@@ -24,7 +24,10 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./dist/index.js"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   },
   "bin": {
     "morg": "./dist/cli.js"
@@ -32,11 +35,16 @@
   "files": [
     "dist"
   ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "engines": {
     "node": ">=20"
   },
   "scripts": {
     "prepare": "husky",
+    "prepack": "npm run build",
     "build": "tsc -p tsconfig.build.json",
     "build:web": "vite build web",
     "dev:web": "vite web",
@@ -44,6 +52,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "npm run lint:prettier && npm run lint:cspell && npm run lint:markdown && npm run lint:eslint && npm run lint:knip && npm run typecheck",
     "lint:knip": "knip",
+    "lint:packaging": "attw --pack . --ignore-rules cjs-resolves-to-esm",
     "lint:prettier": "prettier --no-error-on-unmatched-pattern --ignore-unknown --list-different '**/*'",
     "lint:cspell": "cspell --dot --no-must-find-files --no-progress '**/*'",
     "lint:markdown": "markdownlint-cli2 '**/*.md' '!node_modules/**'",
@@ -74,6 +83,7 @@
     "yaml": "^2.9.0"
   },
   "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.5",
     "@axe-core/playwright": "^4.13.0",
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",

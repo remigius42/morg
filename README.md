@@ -92,6 +92,13 @@ save the previous document's output.
 
 ### CLI
 
+Run it without installing, or install it globally:
+
+```bash
+npx @remigius42/morg --input notes.md --output notes.org
+npm install --global @remigius42/morg
+```
+
 ```bash
 # Formats inferred from file extensions
 morg --input notes.md --output notes.org
@@ -137,8 +144,18 @@ prettier and mdformat — is in
 
 ### Library
 
+```bash
+npm install @remigius42/morg
+```
+
+morg is ESM-only and ships its own type declarations:
+
 ```ts
-import { convertMarkdownToOrg, convertOrgToMarkdown, logseq } from "morg"
+import {
+  convertMarkdownToOrg,
+  convertOrgToMarkdown,
+  logseq
+} from "@remigius42/morg"
 
 const org = convertMarkdownToOrg("# Hello\n\nWorld.")
 const md = convertOrgToMarkdown(org)

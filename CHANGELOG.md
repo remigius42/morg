@@ -11,6 +11,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- morg is distributed on npm as `@remigius42/morg` — the bare `morg`
+  name is squatted — so `npx @remigius42/morg` runs the CLI without an
+  install. It ships as a single ESM build carrying its own type
+  declarations, with dependencies declared rather than bundled: the
+  production tree is 89 packages and 13 MB, which `npx` fetches once and
+  then caches, whereas inlining it would hand library consumers a frozen
+  private copy of unified and remark that they could neither deduplicate
+  nor upgrade. `exports` now names its `types` so `node16` and `bundler`
+  resolution find the declarations outright instead of falling back to
+  finding them beside the JavaScript. No compiled binaries: anyone with
+  Node is already covered, and a `bun build --compile` matrix would add
+  a second runtime and macOS notarization for the rest.
+
 - Opt-in `recordStyle` (`--record-style`, `[markdownToOrg]`) records the
   Markdown style a source was written in — bullet, emphasis, strong,
   fence and thematic-break markers — as a leading `#+MORG_MARKDOWN_STYLE:`
