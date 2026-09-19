@@ -31,6 +31,7 @@ export function buildConversionOptions(
     {
       taskCheckboxes: cli.taskCheckboxes,
       interpretHtml: cli.interpretHtml,
+      recordStyle: cli.recordStyle,
       markdownStyle
     },
     config,

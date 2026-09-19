@@ -12,6 +12,7 @@ export interface CliArgs {
   silent: boolean | undefined
   taskCheckboxes: boolean | undefined
   interpretHtml: boolean | undefined
+  recordStyle: boolean | undefined
   configPath: string | undefined
   markdownStyle: Record<string, string>
 }
@@ -33,6 +34,7 @@ export function parseArgs(args: string[]): CliArgs {
     silent: undefined,
     taskCheckboxes: undefined,
     interpretHtml: undefined,
+    recordStyle: undefined,
     configPath: undefined,
     markdownStyle: {}
   }
@@ -55,13 +57,15 @@ const VALUE_FLAGS = new Set([
   "--preset"
 ])
 
-type BooleanOption = "silent" | "taskCheckboxes" | "interpretHtml"
+type BooleanOption =
+  "silent" | "taskCheckboxes" | "interpretHtml" | "recordStyle"
 
 const BOOLEAN_FLAGS = new Map<string, BooleanOption>([
   ["-s", "silent"],
   ["--silent", "silent"],
   ["--task-checkboxes", "taskCheckboxes"],
-  ["--interpret-html", "interpretHtml"]
+  ["--interpret-html", "interpretHtml"],
+  ["--record-style", "recordStyle"]
 ])
 
 // a following flag means the value was forgotten; a lone `-` is a legitimate

@@ -91,6 +91,12 @@ describe("parseArgs", () => {
     expect(parseArgs(["--bullet", "-"]).markdownStyle.bullet).toBe("-")
   })
 
+  it("parses --record-style as a boolean flag", () => {
+    expect(parseArgs(["--record-style"]).recordStyle).toBe(true)
+    expect(parseArgs(["--record-style", "false"]).recordStyle).toBe(false)
+    expect(parseArgs([]).recordStyle).toBeUndefined()
+  })
+
   it("rejects unknown arguments", () => {
     expect(() => parseArgs(["--bogus"])).toThrow(CliError)
     expect(() => parseArgs(["--bogus"])).toThrow("Unknown argument: --bogus")
@@ -219,6 +225,19 @@ describe("buildConversionOptions", () => {
     })
   })
 
+  it("takes recordStyle from the config, and lets the flag override it", () => {
+    const config = { markdownToOrg: { recordStyle: true } }
+
+    expect(
+      buildConversionOptions(cli({}), config, undefined).mdToOrgOptions
+        .recordStyle
+    ).toBe(true)
+    expect(
+      buildConversionOptions(cli({ recordStyle: false }), config, undefined)
+        .mdToOrgOptions.recordStyle
+    ).toBe(false)
+  })
+
   it("converts ruleRepetition to a number", () => {
     const { orgToMdOptions } = buildConversionOptions(
       cli({ markdownStyle: { ruleRepetition: "5" } }),
@@ -277,6 +296,20 @@ describe("convert", () => {
     expect(convert("* Hello", "org", false, cli({}), {}, undefined)).toBe(
       "# Hello\n"
     )
+  })
+
+  it("records the source style when --record-style is given", () => {
+    const org = convert(
+      "* item\n",
+      "markdown",
+      false,
+      cli({ recordStyle: true }),
+      {},
+      undefined
+    )
+
+    expect(org).toContain('#+MORG_MARKDOWN_STYLE: {"bullet":"*"}')
+    expect(convert(org, "org", false, cli({}), {}, undefined)).toBe("* item\n")
   })
 
   it("normalizes both formats", () => {

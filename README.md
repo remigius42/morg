@@ -107,6 +107,11 @@ morg --input page.md --output page.org --preset logseq
 # morg.toml that sets it
 morg --input notes.md --output notes.org --silent
 
+# Record the source's own markdown style (bullet, emphasis, fence,
+# rule) in the org file, so the return trip restores it instead of
+# canonicalizing it; markers used inconsistently warn and are skipped
+morg --input notes.md --output notes.org --record-style
+
 # Normalize to canonical form (same format in and out); this
 # canonicalizes — the one-time reformat a first conversion would
 # apply anyway (ADR 0001) — it is not a style formatter like prettier
@@ -152,7 +157,7 @@ preset })` —
   native Org constructs — the inverse of `useHtml`: with both enabled
   the round trip is lossless, with `interpretHtml` alone it converges
   away from HTML (cleanup mode); other HTML preserves as usual;
-  `recordStyle` (default `false`) records the
+  `recordStyle` (default `false`, CLI `--record-style`) records the
   document-level markdown style as a `#+MORG_MARKDOWN_STYLE:` keyword so the
   round trip restores it (ADR 0004)
 - `convertOrgToMarkdown(org, { preserveOrgisms, useHtml, taskCheckboxes,

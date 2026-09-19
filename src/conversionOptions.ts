@@ -11,6 +11,7 @@ import type { Preset } from "./presets/types.js"
 export interface ConversionOverrides {
   taskCheckboxes?: boolean
   interpretHtml?: boolean
+  recordStyle?: boolean
   useHtml?: Toggle
   markdownStyle?: MarkdownStyleOptions
 }
@@ -45,6 +46,9 @@ export function buildConversionOptions(
     ...shared,
     ...(overrides.interpretHtml !== undefined && {
       interpretHtml: overrides.interpretHtml
+    }),
+    ...(overrides.recordStyle !== undefined && {
+      recordStyle: overrides.recordStyle
     })
   }
   const orgToMdOptions: OrgToMarkdownOptions & {
