@@ -376,3 +376,55 @@ Visit [Example](https://example.com).
     expect(orgOutput).toBe(expectedOrgMode)
   })
 })
+
+describe("recordStyle", () => {
+  it("should record the source bullet marker as a MORG_MARKDOWN_STYLE keyword", () => {
+    const orgOutput = convertMarkdownToOrg("* item\n* other\n", {
+      recordStyle: true
+    })
+
+    expect(orgOutput).toContain('#+MORG_MARKDOWN_STYLE: {"bullet":"*"}')
+  })
+
+  it("should record the source emphasis and strong markers", () => {
+    const orgOutput = convertMarkdownToOrg("_soft_ and __loud__\n", {
+      recordStyle: true
+    })
+
+    expect(orgOutput).toContain(
+      '#+MORG_MARKDOWN_STYLE: {"emphasis":"_","strong":"_"}'
+    )
+  })
+
+  it("should record the source fence marker", () => {
+    const orgOutput = convertMarkdownToOrg("~~~js\ncode()\n~~~\n", {
+      recordStyle: true
+    })
+
+    expect(orgOutput).toContain('#+MORG_MARKDOWN_STYLE: {"fence":"~"}')
+  })
+
+  it("should record the thematic break marker and its repetition", () => {
+    const orgOutput = convertMarkdownToOrg(`${"_".repeat(70)}\n`, {
+      recordStyle: true
+    })
+
+    expect(orgOutput).toContain(
+      '#+MORG_MARKDOWN_STYLE: {"rule":"_","ruleRepetition":70}'
+    )
+  })
+
+  it("should not record a marker the source uses inconsistently", () => {
+    const warnings: string[] = []
+
+    const orgOutput = convertMarkdownToOrg("* item\n\n\n- other\n", {
+      recordStyle: true,
+      onWarning: message => warnings.push(message)
+    })
+
+    expect(orgOutput).not.toContain("#+MORG_MARKDOWN_STYLE:")
+    expect(warnings).toEqual([
+      "bullet marker is not used consistently; not recorded"
+    ])
+  })
+})

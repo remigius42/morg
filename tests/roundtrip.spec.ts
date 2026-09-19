@@ -114,6 +114,32 @@ describe("markdownStyle", () => {
   })
 })
 
+describe("recordStyle", () => {
+  it("leaves a non-canonical but consistent document untouched", () => {
+    const markdown = "* item one\n* item two\n"
+
+    expect(
+      convertOrgToMarkdown(
+        convertMarkdownToOrg(markdown, { recordStyle: true })
+      )
+    ).toBe(markdown)
+  })
+
+  it("converges in both directions with a recorded style", () => {
+    const markdown =
+      "_italic_ and __bold__\n\n* item\n\n~~~js\ncode()\n~~~\n\n***\n"
+    const mdRoundTrip = (input: string): string =>
+      convertOrgToMarkdown(convertMarkdownToOrg(input, { recordStyle: true }))
+    const orgRoundTrip = (input: string): string =>
+      convertMarkdownToOrg(convertOrgToMarkdown(input), { recordStyle: true })
+
+    const md = mdRoundTrip(markdown)
+    expect(mdRoundTrip(md)).toBe(md)
+    const org = orgRoundTrip(convertMarkdownToOrg(markdown))
+    expect(orgRoundTrip(org)).toBe(org)
+  })
+})
+
 describe("taskCheckboxes", () => {
   it("task checkbox output is a fixed point", () => {
     const org = "* TODO Buy milk\n* DONE Call mom\n\nAfter.\n"

@@ -27,7 +27,11 @@ guarantee is to be **semantically faithful and convergent** instead
 
 - One round trip (`md → org → md` or `org → md → org`) may normalize formatting,
   but its output is a fixed point: converting again reproduces it byte-for-byte.
-- Input already in canonical form is a round-trip identity.
+- Input already in canonical form is a round-trip identity. Opt-in
+  `recordStyle` widens that set: a file whose bullet, emphasis, fence
+  and rule markers are used consistently has them recorded in the org
+  file and restored on the way back, so it is left untouched
+  ([ADR 0004](docs/adr/0004-record-source-markdown-style.md)).
 - `md → org` preserves Markdown-only constructs ("md-isms") as `morg_`-prefixed
   org properties; `org → md` serializes Org-only constructs ("org-isms") as
   `key:: value` conventions ([ADR
@@ -140,13 +144,17 @@ const logseqOrg = convertMarkdownToOrg(markdown, { preset: logseq() })
 
 Options (flags accept `boolean` or a per-construct `Record<string, boolean>`):
 
-- `convertMarkdownToOrg(md, { preserveMdisms, interpretHtml, preset })` —
+- `convertMarkdownToOrg(md, { preserveMdisms, interpretHtml, recordStyle,
+preset })` —
   `preserveMdisms` default `true`; `interpretHtml` (default `false`,
   CLI `--interpret-html`) interprets the HTML vocabulary morg itself
   emits under `useHtml` (bare `<u>`, `<sup>`, `<sub>`, `<dl>`) as
   native Org constructs — the inverse of `useHtml`: with both enabled
   the round trip is lossless, with `interpretHtml` alone it converges
-  away from HTML (cleanup mode); other HTML preserves as usual
+  away from HTML (cleanup mode); other HTML preserves as usual;
+  `recordStyle` (default `false`) records the
+  document-level markdown style as a `#+MORG_MARKDOWN_STYLE:` keyword so the
+  round trip restores it (ADR 0004)
 - `convertOrgToMarkdown(org, { preserveOrgisms, useHtml, taskCheckboxes,
 preset })` — `preserveOrgisms` default `true`; `useHtml` (default
   `false`) renders org-only markup as raw HTML (`<u>`, `<sup>`, `<sub>`,

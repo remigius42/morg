@@ -283,6 +283,21 @@ describe("convertOrgToMarkdown", () => {
     )
   })
 
+  it("should restore the style recorded in a MORG_MARKDOWN_STYLE keyword", () => {
+    const org =
+      '#+MORG_MARKDOWN_STYLE: {"bullet":"*"}\n\n- item one\n- item two\n'
+
+    expect(convertOrgToMarkdown(org)).toBe("* item one\n* item two\n")
+  })
+
+  it("should let explicit markdownStyle override a recorded style", () => {
+    const org = '#+MORG_MARKDOWN_STYLE: {"bullet":"*"}\n\n- item\n'
+
+    expect(convertOrgToMarkdown(org, { markdownStyle: { bullet: "+" } })).toBe(
+      "+ item\n"
+    )
+  })
+
   it("should honor markdownStyle.ruleRepetition (mdformat style)", () => {
     expect(
       convertOrgToMarkdown("-----\n", {

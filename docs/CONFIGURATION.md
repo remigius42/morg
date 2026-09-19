@@ -30,6 +30,12 @@ scheduled = "when"
 # <dl>/<dt>/<dd>) as native org constructs; see "HTML flag pairing"
 interpretHtml = false
 
+# record the source's own markdown style as a #+MORG_MARKDOWN_STYLE: keyword,
+# so the return trip restores it instead of canonicalizing it; a
+# marker the document uses inconsistently is skipped and warns
+# (ADR 0004)
+recordStyle = false
+
 # preserve markdown-only constructs during md → org; false or a
 # per-construct table (ADR 0002)
 [markdownToOrg.preserveMdisms]

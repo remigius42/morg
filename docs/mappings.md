@@ -109,10 +109,29 @@ footnotes (`[fn:: text]`, `[fn:label: text]`) normalize to a standard
 reference plus a definition hoisted to the document end (anonymous
 ones get generated numeric labels).
 
+## Recorded style (md → org, opt-in)
+
+With `recordStyle`, the markdown style the source was written in is
+detected and stored as a leading `#+MORG_MARKDOWN_STYLE:` keyword (JSON on one
+line), then restored by `org → md` instead of being canonicalized —
+which is what makes a consistently non-canonical file a round-trip
+identity rather than a one-time reformat (ADR 0004). Explicit
+`markdownStyle` options override a record; `morg normalize` drops it.
+
+Recorded: `bullet`, `emphasis`, `strong`, `fence`, `rule` and
+`ruleRepetition` — the document-level knobs `remark-stringify` takes.
+A marker the document uses two ways (`-` and `*` bullets, `_` and `*`
+emphasis) is _not_ recorded and reports via `onWarning`; per-node style
+— mixed bullets on sibling lists, reference vs. inline links, setext
+for some headings — is out of scope by design (ADR 0004).
+
+The record is inherited, not merely restored: a list added to the org
+file by hand is written out in the recorded style too.
+
 ## Normalizations
 
-One round trip lands on canonical form (ADR 0001); notable
-normalizations beyond formatting:
+One round trip lands on canonical form (ADR 0001), or on the recorded
+style where there is one; notable normalizations beyond formatting:
 
 - link text equal to its url → autolink / plain `[[url]]`
 - `[` and `]` in a link or image url → `%5B` / `%5D`: an org

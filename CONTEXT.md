@@ -14,6 +14,17 @@ The stable output shape morg produces for a format (default stringifier settings
 
 The core correctness guarantee: for any input `x`, `roundtrip(roundtrip(x)) === roundtrip(x)` byte-for-byte, in both directions. Corollary: input already in Canonical Form is a Round Trip identity (`roundtrip(x) === x`). Strict byte-losslessness for arbitrary input is explicitly a non-goal.
 
+## Recorded Style
+
+The document-level Markdown style knobs (bullet, emphasis, strong,
+fence, rule marker and repetition) detected in a Markdown source and
+stored in the org file as a `#+MORG_MARKDOWN_STYLE:` keyword, so `org → md`
+restores the source's own markers instead of Canonical Form. Opt-in
+(`recordStyle`), and document-wide: a marker the source uses two ways
+is not recorded, because there is no honest single answer. It does not
+weaken Convergence — it widens the set of inputs for which the Round
+Trip is already an identity (ADR 0004).
+
 ## Md-ism
 
 A Markdown construct with no native Org equivalent. Preserved during `md → org` as org properties so the Round Trip can restore it.

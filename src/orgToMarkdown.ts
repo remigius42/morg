@@ -5,6 +5,7 @@ import remarkGfm from "remark-gfm"
 import remarkFrontmatter from "remark-frontmatter"
 import remarkMath from "remark-math"
 import { transformUniorgAstToMdast } from "./core/uniorgToMdast/index.js"
+import { takeRecordedStyle } from "./core/markdownStyle.js"
 import type { OrgToMarkdownOptions } from "./options.js"
 
 /**
@@ -19,6 +20,10 @@ export function convertOrgToMarkdown(
 ): string {
   // Phase 1: Parse Org-mode to uniorg-ast
   let uniorgAst = unified().use(uniorgParse).parse(org)
+
+  // Phase 1b: a recorded style is morg's own (ADR 0004) — consume it so
+  // it does not travel on as frontmatter; explicit options still win
+  const recordedStyle = takeRecordedStyle(uniorgAst)
 
   // Phase 2: Extract dialect preset conventions, if any
   if (options.preset?.extractFromUniorg) {
@@ -48,6 +53,7 @@ export function convertOrgToMarkdown(
     .use(remarkStringify, {
       bullet: "-",
       rule: "-",
+      ...recordedStyle,
       ...options.markdownStyle,
       handlers: {
         // key:: value blocks and preset inline passthroughs (e.g.

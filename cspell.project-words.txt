@@ -8,6 +8,8 @@ codacy
 Comeau
 commitlint
 convergently
+desynchronize
+desynchronizes
 dotless
 dragenter
 dragleave
@@ -39,6 +41,7 @@ pico
 picocss
 remappable
 remigius
+setext
 sexp
 sexps
 smol

@@ -15,7 +15,8 @@ import type {
   Timestamp
 } from "uniorg"
 import { transformMdastToUniorgAst } from "./core/mdastToUniorg/index.js"
-import type { MarkdownToOrgOptions } from "./options.js"
+import { detectMarkdownStyle, STYLE_KEYWORD } from "./core/markdownStyle.js"
+import type { MarkdownStyleOptions, MarkdownToOrgOptions } from "./options.js"
 
 /**
  * Converts a Markdown string to an Org-mode string.
@@ -62,6 +63,15 @@ export function convertMarkdownToOrg(
   // lines between them, or org's parser merges them into one list.
   separateAdjacentLists(uniorgAst)
 
+  // Phase 2d: record the source's own style markers, so the return trip
+  // can reproduce them instead of morg's canonical ones (ADR 0004)
+  if (options.recordStyle) {
+    recordStyleKeyword(
+      uniorgAst,
+      detectMarkdownStyle(mdast, markdown, options.onWarning)
+    )
+  }
+
   // Phase 3: Apply dialect preset, if any
   if (options.preset?.applyToUniorg) {
     uniorgAst = options.preset.applyToUniorg(uniorgAst)
@@ -72,6 +82,21 @@ export function convertMarkdownToOrg(
   const orgContent = processor.stringify(uniorgAst)
 
   return orgContent
+}
+
+// leads the document so it survives the frontmatter keywords following it
+function recordStyleKeyword(
+  uniorgAst: OrgData,
+  style: MarkdownStyleOptions
+): void {
+  if (!Object.keys(style).length) {
+    return
+  }
+  uniorgAst.children.unshift({
+    type: "keyword",
+    key: STYLE_KEYWORD,
+    value: JSON.stringify(style)
+  } as OrgData["children"][number])
 }
 
 const KEY_VALUE_LINE_RE = /^([\w-]+):: (.*)$/

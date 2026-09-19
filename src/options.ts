@@ -37,6 +37,15 @@ export interface MarkdownToOrgOptions {
    */
   interpretHtml?: boolean
   /**
+   * Record the Markdown style knobs detected in the source as a
+   * `#+MORG_MARKDOWN_STYLE:` keyword, so the return trip restores the source's own
+   * markers instead of morg's canonical ones (ADR 0004). Widens the set
+   * of inputs the Round Trip leaves untouched; it does not replace
+   * Convergence. Knobs used inconsistently are not recorded and warn.
+   * Default: `false`.
+   */
+  recordStyle?: boolean
+  /**
    * Custom names for org-ism `key::` lines, canonical → custom (e.g.
    * `{ todo: "state" }`). Must match the mapping the file was written
    * with — Convergence is per-config (ADR 0002).

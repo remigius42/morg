@@ -36,6 +36,12 @@ describe("normalizeOrg", () => {
     expect(normalizeOrg(once)).toBe(once)
   })
 
+  it("drops a recorded style, canonicalizing what it held", () => {
+    const org = '#+MORG_MARKDOWN_STYLE: {"bullet":"*"}\n\n- item\n'
+
+    expect(normalizeOrg(org)).toBe("- item\n")
+  })
+
   it("keeps non-html export blocks with no warnings", () => {
     const warnings: string[] = []
     const org = "#+begin_export latex\n\\sloppy\n#+end_export\n"
