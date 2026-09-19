@@ -11,6 +11,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Opt-in `recordStyle` (`--record-style`, `[markdownToOrg]`) records the
+  Markdown style a source was written in — bullet, emphasis, strong,
+  fence and thematic-break markers — as a leading `#+MORG_MARKDOWN_STYLE:`
+  keyword, and `org → md` restores it. A file whose markers are used
+  consistently now survives the round trip untouched instead of being
+  reformatted once. This does not weaken convergence: the recorded
+  output is still a fixed point in both directions, and what grows is
+  the set of inputs the round trip already leaves alone.
+
+  Recording is document-wide, so a marker used two ways is skipped and
+  reported via `onWarning` rather than guessed at, and per-node style
+  (mixed bullets on sibling lists, reference vs. inline links) stays out
+  of scope — an inline node has no anchor to hang a record on, and a
+  positional side-table would desynchronize the first time the org file
+  is edited by hand. Opt-in because the keyword is a morg-specific line
+  in the format the user keeps and reads. `morg normalize` drops it.
+  See [ADR 0004](docs/adr/0004-record-source-markdown-style.md).
+
 - The embed page reports its content height to the page that frames it,
   as a `{ type: "morg:height", height }` message, so a host can size the
   iframe to the converter instead of guessing at it. Every guess is
