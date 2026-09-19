@@ -1,4 +1,4 @@
-# 0002 — Md-isms as `morg_`-prefixed properties, native org constructs preferred
+# 0002: Md-isms as `morg_`-prefixed properties, native org constructs preferred
 
 ## Status
 
@@ -20,4 +20,4 @@ Accepted (2026-09-10)
 
 - A user property coincidentally named `:heading:` survives conversion untouched; only the `morg_` namespace is morg's.
 - Files written under a custom mapping are not portable to other configs without reconversion.
-- Rejected: unprefixed names (`:html:`) — prettier but makes "restore vs user data" undecidable on the return trip, breaking Convergence.
+- Rejected: unprefixed names (`:html:`). Prettier, but it makes "restore vs user data" undecidable on the return trip, breaking Convergence.

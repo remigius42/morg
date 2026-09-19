@@ -22,7 +22,7 @@ stored in the org file as a `#+MORG_MARKDOWN_STYLE:` keyword, so `org → md`
 restores the source's own markers instead of Canonical Form. Opt-in
 (`recordStyle`), and document-wide: a marker the source uses two ways
 is not recorded, because there is no honest single answer. It does not
-weaken Convergence — it widens the set of inputs for which the Round
+weaken Convergence; it widens the set of inputs for which the Round
 Trip is already an identity (ADR 0004).
 
 ## Md-ism
@@ -37,12 +37,12 @@ An Org construct with no native Markdown equivalent. Serialized during `org → 
 
 The client-side converter hosted on GitHub Pages. Conversions run
 entirely in the browser; no input ever leaves it. Opening and saving
-files is the browser reading and writing local files, not a transfer —
-the UI therefore says "Open file" and "Download", never "Upload".
+files is the browser reading and writing local files, not a transfer.
+The UI therefore says "Open file" and "Download", never "Upload".
 
 ## Embed Page
 
-The chrome-less converter page of the Web UI, designed to be iframed —
+The chrome-less converter page of the Web UI, designed to be iframed,
 both by the Web UI's own converter page and by third-party sites. Its
 height is the host's to set but morg's to know, so it reports it (see
 Height Message) rather than leaving every host to guess the same number.
@@ -51,14 +51,14 @@ Height Message) rather than leaving every host to guess the same number.
 
 What the Embed Page posts to its host whenever its content height
 changes: `{ type: "morg:height", height }`. It is the page's own
-layout and nothing else — no host ever learns what is being converted.
+layout and nothing else: no host ever learns what is being converted.
 The converter page is its first host: it sizes its own frame to it,
 the same way the README asks a third-party host to.
 
 ## End-to-End Test
 
 A Playwright spec under `tests/e2e/`, run against the _built_ Web UI
-served by `vite preview` — not the dev server and not happy-dom. It
+served by `vite preview`, not the dev server and not happy-dom. It
 exists for what neither of those can answer: whether the conversion
 worker really runs, whether a real file, clipboard or download behaves,
 and what axe makes of the accessibility tree.
@@ -69,7 +69,7 @@ The `src/` root is the public library surface: everything `index.ts`
 exports lives there (the pipeline modules `markdownToOrg.ts` /
 `orgToMarkdown.ts`, their composition `normalize.ts`, plus `config.ts`
 and `options.ts`). `src/core/` is internal AST machinery, reachable
-only through the root pipelines — adapters (`src/cli/`, `web/`)
+only through the root pipelines: adapters (`src/cli/`, `web/`)
 import root modules, never `core/`. `src/presets/` holds the dialect
 plugins (see Preset) and their registry.
 
@@ -81,14 +81,14 @@ one of those in an adapter is how the two drift apart.
 `web/src/` splits the same way, for a reason the bundler enforces.
 `web/src/pipeline/` is everything that reaches `src/`: `convert.ts`,
 the `runner.ts` that decides where a conversion happens, and the
-`worker.ts` it speaks to. The rule is about `convert.ts` specifically —
+`worker.ts` it speaks to. The rule is about `convert.ts` specifically:
 no static import may reach it from the main bundle. `runner.ts` is
 light and statically imported, but gets to `convert.ts` through a
 dynamic `import()`, which is what keeps the embed bundle at 20 kB
 rather than 340. `web/src/ui/` is the converter page's controls, and
 imports `pipeline/` for types only. The entries (`main.ts`, `site.ts`)
-and `direction.ts` — the pipeline's vocabulary, deliberately free of
-the pipeline itself, because `ui/` reads it on every keystroke — sit at
+and `direction.ts` (the pipeline's vocabulary, deliberately free of
+the pipeline itself, because `ui/` reads it on every keystroke) sit at
 the root. `tests/web/` mirrors this.
 
 ## Preset

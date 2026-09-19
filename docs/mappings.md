@@ -30,7 +30,7 @@ blocks and are restored verbatim.
 Headline metadata serializes to `key:: value` lines directly below the
 heading (`todo::`, `priority::`, `tags::`, `scheduled::`, `deadline::`,
 `closed::`; property drawer entries keep their own keys) and is
-restored to native org syntax on the way back — known keys become TODO
+restored to native org syntax on the way back: known keys become TODO
 keywords, priorities, tags and planning lines, unknown keys become
 property drawer entries. A known key whose value org could not carry in
 that slot (a priority that is not a single letter, a drawer property
@@ -49,11 +49,11 @@ blocks and `@@backend:…@@` snippets. Statistics cookies (`[1/2]`) and
 
 Affiliated keywords (`#+CAPTION:`, `#+NAME:`, `#+ATTR_*`) travel as
 verbatim lines directly above their element and re-attach natively on
-the return trip — except on org tables, which discard them at parse
+the return trip, except on org tables, which discard them at parse
 time (upstream [uniorg#151](https://github.com/rasendubi/uniorg/issues/151)).
 
-Org comments (`# …`) map to HTML comments (`<!-- … -->`) and back —
-both are invisible in rendered output, so the mapping is lossless in
+Org comments (`# …`) map to HTML comments (`<!-- … -->`) and back.
+Both are invisible in rendered output, so the mapping is lossless in
 both directions. A `-->` inside the comment body is written as
 `--&gt;` (and decoded on the way back), since it would otherwise close
 the HTML comment early and leak the rest of the line into the page.
@@ -79,11 +79,11 @@ on the way back; `preserveMdisms` accepts `false` or a per-key record
 (e.g. `{ html: false }`) to drop them instead.
 
 Markdown YAML frontmatter maps to leading org keywords (`title: X` ↔
-`#+TITLE: X`) in both directions — both constructs are native to their
+`#+TITLE: X`) in both directions, both constructs being native to their
 format. Single-line scalar values pass through as-is; structured YAML
 values and multi-line scalars (block or folded) are JSON-encoded on a
 single line in org (ADR 0002's value rule) and restored to YAML on the
-way back — an org keyword is one line, so a raw newline would end it
+way back, because an org keyword is one line, so a raw newline ends it
 and push the rest of the value into the document body.
 
 A YAML sequence maps to a repeated keyword (`tags: [a, b]` ↔
@@ -94,13 +94,13 @@ plain scalar on the first round trip.
 
 Reference-style links and images resolve to inline form. A link text
 equal to its url becomes an autolink (`<url>`) and restores as a plain
-`[[url]]` — the common Logseq bookmark pattern.
+`[[url]]`, the common Logseq bookmark pattern.
 
 ## Math and footnotes
 
 LaTeX math maps natively (via remark-math): inline fragments (`$x$`,
 `\(x\)`) ↔ `$x$`, display fragments (`$$…$$`, `\[…\]`) and
-`\begin{…}` environments ↔ `$$…$$` math blocks — delimiters MathJax,
+`\begin{…}` environments ↔ `$$…$$` math blocks, delimiters MathJax,
 KaTeX, Obsidian and GitHub all understand.
 
 Footnotes convert between GFM (`[^label]` / `[^label]: …`) and org
@@ -113,7 +113,7 @@ ones get generated numeric labels).
 
 With `recordStyle`, the markdown style the source was written in is
 detected and stored as a leading `#+MORG_MARKDOWN_STYLE:` keyword (JSON on one
-line), then restored by `org → md` instead of being canonicalized —
+line), then restored by `org → md` instead of being canonicalized,
 which is what makes a consistently non-canonical file a round-trip
 identity rather than a one-time reformat (ADR 0004). Explicit
 `markdownStyle` options override a record; `morg normalize` drops it,
@@ -121,11 +121,11 @@ unless it is itself given `recordStyle`, which re-records the canonical
 form's own markers.
 
 Recorded: `bullet`, `emphasis`, `strong`, `fence`, `rule` and
-`ruleRepetition` — the document-level knobs `remark-stringify` takes.
+`ruleRepetition`, the document-level knobs `remark-stringify` takes.
 A marker the document uses two ways (`-` and `*` bullets, `_` and `*`
-emphasis) is _not_ recorded and reports via `onWarning`; per-node style
-— mixed bullets on sibling lists, reference vs. inline links, setext
-for some headings — is out of scope by design (ADR 0004).
+emphasis) is _not_ recorded and reports via `onWarning`. Per-node style
+(mixed bullets on sibling lists, reference vs. inline links, setext for
+some headings) is out of scope by design (ADR 0004).
 
 The record is inherited, not merely restored: a list added to the org
 file by hand is written out in the recorded style too.

@@ -1,4 +1,4 @@
-# 0001 — Convergence over byte-losslessness
+# 0001: Convergence over byte-losslessness
 
 ## Status
 
@@ -21,4 +21,4 @@ Semantic losslessness is layered on top: md→org stores md-isms as org properti
 
 - Round-trip fixture tests are the backbone of the test suite: convergence tests on arbitrary fixtures, identity tests on canonical fixtures.
 - The first pass over hand-written files normalizes formatting; users must accept a one-time reformat of non-canonical input (a `fmt` command falls out of this for free).
-- Alternatives rejected: strict byte identity (impossible); one-directional guarantee only (insufficient — org files must survive a detour through Markdown editors unchanged).
+- Alternatives rejected: strict byte identity (impossible); one-directional guarantee only (insufficient, since org files must survive a detour through Markdown editors unchanged).

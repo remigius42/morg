@@ -5,7 +5,7 @@ directory, or passed via `--config path`). Precedence: CLI flags >
 config file > defaults. Sections mirror the library options objects;
 unknown top-level keys are rejected so typos fail loudly.
 
-Boolean CLI flags take an optional value — `--silent` is shorthand for
+Boolean CLI flags take an optional value: `--silent` is shorthand for
 `--silent true`, and `--silent false` turns off a config that sets it,
 which is what makes the precedence above hold in both directions.
 
@@ -19,7 +19,7 @@ preset = "logseq"     # dialect preset: "logseq" | "obsidian"
 silent = false        # suppress dropped-construct warnings (CLI -s)
 
 # custom names for org-ism key:: lines (canonical = custom);
-# convergence is per-config — convert with the mapping a file
+# convergence is per-config: convert with the mapping a file
 # was written with (ADR 0002)
 [orgismKeys]
 todo = "state"
@@ -70,12 +70,12 @@ governed by `preserveMdisms` as usual. The four combinations:
 
 - **both off** (default): org-only markup stays verbatim org text in
   Markdown; HTML passes through preserved in both directions.
-- **both on**: lossless symmetric round trip — Markdown holds rendered
+- **both on**: lossless symmetric round trip; Markdown holds rendered
   HTML, Org holds native markup.
-- **`useHtml` only**: one-way door — org markup becomes HTML, and the
+- **`useHtml` only**: one-way door; org markup becomes HTML, and the
   return trip preserves it as an export block, never restoring the
   native construct.
-- **`interpretHtml` only**: HTML-cleanup mode — matching HTML in
+- **`interpretHtml` only**: HTML-cleanup mode; matching HTML in
   Markdown migrates to native org constructs, and the round trip
   converges away from HTML.
 

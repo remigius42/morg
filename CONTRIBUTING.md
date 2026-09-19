@@ -21,7 +21,7 @@ npm run build       # tsc → dist/
 
 The end-to-end suite needs its browsers once:
 `npx playwright install chromium webkit`. It builds `web/` and serves it
-itself, so nothing needs to be running first — but it will reuse a
+itself, so nothing needs to be running first, but it will reuse a
 server already listening on port 4173 rather than rebuilding, so kill
 any stray `vite preview` before testing a change to the build.
 
@@ -48,7 +48,7 @@ for what you submit.
   enforced via husky + commitlint; lint-staged runs the linters on
   staged files. Staging `package.json` or `package-lock.json` also runs
   `npm ci --dry-run`, which rejects a lockfile CI would refuse to
-  install from — incremental `npm install` drops the hoisted entries for
+  install from. Incremental `npm install` drops the hoisted entries for
   platform-skipped optional packages, and a local `npm ci` passes anyway
   because `node_modules` is already populated. Regenerate such a lock
   with `rm -rf package-lock.json node_modules && npm install`.
@@ -66,26 +66,26 @@ for what you submit.
   would look for them: `tests/core/`, `tests/presets/` and
   `tests/web/{ui,pipeline}/` against `src/core/`, `src/presets/` and
   `web/src/{ui,pipeline}/`. Name the spec after the module and let the
-  path carry the rest — `tests/presets/logseq.spec.ts`, not
+  path carry the rest: `tests/presets/logseq.spec.ts`, not
   `logseqPreset.spec.ts`. Specs that genuinely span the tree
   (`roundtrip`, `formatterCompat`) stay at the root, as do
   `tests/fixtures/` and `tests/e2e/`.
 - Web UI behavior is covered twice, and the split is deliberate: the
   vitest specs (`tests/web/`) drive the markup under happy-dom
   and are where wiring belongs, while the Playwright specs
-  (`tests/e2e/`) cover what only a browser answers — the conversion
+  (`tests/e2e/`) cover what only a browser answers: the conversion
   worker, real files and downloads, the clipboard, cross-frame theming
   and the axe accessibility audits. Prefer the unit suite; reach for
   e2e when happy-dom cannot tell a working feature from a broken one.
 - The guarantee is semantic faithfulness plus convergence, not
-  byte-losslessness —
-  read [ADR 0001](docs/adr/0001-convergence-over-losslessness.md)
+  byte-losslessness. Read
+  [ADR 0001](docs/adr/0001-convergence-over-losslessness.md)
   before changing mapping behavior, and
   [ADR 0002](docs/adr/0002-mdism-property-namespace.md) for how
   md-isms/org-isms are preserved.
 - Project vocabulary lives in [CONTEXT.md](CONTEXT.md); construct
   mappings are documented in [docs/mappings.md](docs/mappings.md) and
-  notable changes in [CHANGELOG.md](CHANGELOG.md) — keep both updated
+  notable changes in [CHANGELOG.md](CHANGELOG.md); keep both updated
   with behavior changes.
 - Core pipelines stay dialect-agnostic; anything Logseq- or
   Obsidian-specific belongs in a preset (`src/presets/`).
@@ -104,7 +104,7 @@ bump and the commit: the entries standing under `## [Unreleased]` get a
 `## [x.y.z] - YYYY-MM-DD` heading, the link definitions are rewritten,
 and the result is staged into the same commit npm is about to make. The
 tag therefore points at a commit whose changelog, `package.json` and
-lockfile already agree — which is what the workflow's version guard
+lockfile already agree, which is what the workflow's version guard
 checks, and what its release notes are read from.
 
 The script refuses rather than guesses: no `## [Unreleased]` heading, no
@@ -116,5 +116,5 @@ tree, so commit or stash first.
 The workflow re-runs lint, the unit tests and the build (a tag push does
 not trigger CI), publishes to npm with a provenance attestation, and
 opens the GitHub Release. Publishing needs the `NPM_TOKEN` repository
-secret — a granular automation token with publish rights on
+secret, a granular automation token with publish rights on
 `@remigius42/morg`.

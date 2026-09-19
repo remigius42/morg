@@ -1,4 +1,4 @@
-# 0003 — Fully client-side Web UI on GitHub Pages
+# 0003: Fully client-side Web UI on GitHub Pages
 
 ## Status
 
@@ -17,7 +17,7 @@ the browser as-is.
 The Web UI is a **static, fully client-side site on GitHub Pages** at
 `morg.binarypoetry.ch`, deployed from `main` by the CI workflow after
 checks pass. All conversion happens in the browser: no backend, no
-uploads, no telemetry, no cookies — persistence is limited to
+uploads, no telemetry, no cookies; persistence is limited to
 localStorage for UI state. The chrome-less Embed Page is the iframe
 contract: theming via a `?theme=dark|light` query parameter, no
 postMessage protocol, self-contained layout at any iframe size.
@@ -27,8 +27,8 @@ postMessage protocol, self-contained layout at any iframe size.
 - Zero infrastructure to run or secure; the privacy stance
   ("nothing leaves the browser") is structural, not a policy.
 - GitHub Pages cannot set response headers, so `frame-ancestors`
-  cannot be restricted: anyone may embed the Embed Page. Accepted —
-  it is a free tool.
+  cannot be restricted: anyone may embed the Embed Page. Accepted,
+  since it is a free tool.
 - The deployed converter always matches `main`, not a tagged release.
 - Local file open and save keep the privacy stance intact (the browser
   reads and writes the file itself), but they make the Embed Page
@@ -45,6 +45,6 @@ postMessage protocol, self-contained layout at any iframe size.
   the worker on startup and fall back silently. `web/vite.config.ts`
   resolves the known offender away, and a test asserts the property.
 - Rejected: server-side conversion (infrastructure, privacy burden,
-  no benefit — the library is small enough to ship to the client);
+  no benefit, the library being small enough to ship to the client);
   postMessage-based iframe sizing/theming (complexity not yet
   justified; the query parameter covers theming).

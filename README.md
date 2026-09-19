@@ -16,9 +16,9 @@ Bidirectional **Markdown ↔ Org-mode** converter, built on the
 [uniorg](https://github.com/rasendubi/uniorg) for Org).
 
 morg treats Org as a canonical plain-text format and Markdown (Obsidian,
-generic) as the interop surface. Dialect conventions — such as
-[Logseq](https://docs.logseq.com/)'s `heading::` properties and outline nesting
-— are supported via presets.
+generic) as the interop surface. Dialect conventions, such as
+[Logseq](https://docs.logseq.com/)'s `heading::` properties and outline
+nesting, are supported via presets.
 
 ## Round-trip convergence
 
@@ -51,7 +51,7 @@ color schemes.
 ### Web UI
 
 Try morg without installing anything at
-[morg.binarypoetry.ch](https://morg.binarypoetry.ch) — all conversion
+[morg.binarypoetry.ch](https://morg.binarypoetry.ch). All conversion
 happens in your browser, nothing is uploaded (see [ADR
 0003](docs/adr/0003-client-side-web-ui-on-github-pages.md)). The
 chrome-less embed page (`/embed.html`, optionally with
@@ -68,13 +68,13 @@ addEventListener("message", event => {
 })
 ```
 
-Give the frame at least 768px of width if you can — below that the
+Give the frame at least 768px of width if you can; below that the
 input and output stack, which doubles its height. `allow="clipboard-write"`
 lets the Copy button use the clipboard rather than falling back to
 selecting the output.
 
 Besides pasting, a file can be opened with the picker or dropped
-anywhere on the page — a `.toml` lands in the config panel, a document
+anywhere on the page: a `.toml` lands in the config panel, a document
 in the input, and the conversion direction follows the extension. Drop
 both at once and each goes where it belongs; an overlay names what is
 accepted while a drag is in flight, and anything that turns out not to
@@ -121,8 +121,8 @@ morg --input notes.md --output notes.org --silent
 morg --input notes.md --output notes.org --record-style
 
 # Normalize to canonical form (same format in and out); this
-# canonicalizes — the one-time reformat a first conversion would
-# apply anyway (ADR 0001) — it is not a style formatter like prettier
+# canonicalizes (the one-time reformat a first conversion would apply
+# anyway, ADR 0001); it is not a style formatter like prettier
 morg normalize --input notes.org --output notes.org
 ```
 
@@ -139,8 +139,8 @@ preset = "logseq"
 emphasis = "_" # align with prettier
 ```
 
-The full reference — all sections and compatibility snippets for
-prettier and mdformat — is in
+The full reference, covering all sections and compatibility snippets
+for prettier and mdformat, is in
 [docs/CONFIGURATION.md](docs/CONFIGURATION.md).
 
 ### Library
@@ -168,26 +168,26 @@ const logseqOrg = convertMarkdownToOrg(markdown, { preset: logseq() })
 Options (flags accept `boolean` or a per-construct `Record<string, boolean>`):
 
 - `convertMarkdownToOrg(md, { preserveMdisms, interpretHtml, recordStyle,
-preset })` —
+preset })`:
   `preserveMdisms` default `true`; `interpretHtml` (default `false`,
   CLI `--interpret-html`) interprets the HTML vocabulary morg itself
   emits under `useHtml` (bare `<u>`, `<sup>`, `<sub>`, `<dl>`) as
-  native Org constructs — the inverse of `useHtml`: with both enabled
+  native Org constructs, the inverse of `useHtml`: with both enabled
   the round trip is lossless, with `interpretHtml` alone it converges
   away from HTML (cleanup mode); other HTML preserves as usual;
   `recordStyle` (default `false`, CLI `--record-style`) records the
   document-level markdown style as a `#+MORG_MARKDOWN_STYLE:` keyword so the
   round trip restores it (ADR 0004)
 - `convertOrgToMarkdown(org, { preserveOrgisms, useHtml, taskCheckboxes,
-preset })` — `preserveOrgisms` default `true`; `useHtml` (default
+preset })`: `preserveOrgisms` default `true`; `useHtml` (default
   `false`) renders org-only markup as raw HTML (`<u>`, `<sup>`, `<sub>`,
   `<dl>`) instead of keeping it verbatim; `taskCheckboxes` (default
   `false`, CLI `--task-checkboxes`) is a lossy export mode that maps
   bare `TODO`/`DONE` leaf headlines to GFM task items (`- [ ]` /
-  `- [x]`) — headings become list items and do not restore on the
+  `- [x]`); headings become list items and do not restore on the
   return trip; anything with priority, tags or content keeps its
   heading and reports via `onWarning`
-- `logseq({ nestUnderHeadings })` — default `true`; content following a
+- `logseq({ nestUnderHeadings })`: default `true`; content following a
   heading nests as child blocks of that heading: paragraphs become child
   headlines one level deeper (in Logseq org every outline block is a
   headline), other constructs stay in the preceding block's body. The
@@ -200,22 +200,23 @@ preset })` — `preserveOrgisms` default `true`; `useHtml` (default
   fuzzy links `[[page][label]]`, block refs `[label](((uuid)))` ↔
   `[[((uuid))][label]]`, and `^^highlight^^` markup survives verbatim
   (it would otherwise re-parse as superscripts).
-- `obsidian()` — wikilinks `[[Page]]` / `[[Page|alias]]` ↔ org fuzzy links
+- `obsidian()`: wikilinks `[[Page]]` / `[[Page|alias]]` ↔ org fuzzy links
 
 - `normalizeMarkdown(md, { preset })` / `normalizeOrg(org, { preset })`
-  (CLI: `morg normalize`) — one full round trip to morg's canonical
+  (CLI: `morg normalize`): one full round trip to morg's canonical
   form, a fixed point. Canonicalization, not styling: org-isms and
   md-isms are rewritten exactly as a conversion would rewrite them.
-  Normalize with the same preset/config you will convert with —
+  Normalize with the same preset/config you will convert with, since
   convergence is per-config (ADR 0002).
 
 - `markdownStyle: { bullet, emphasis, strong, fence, rule, ruleRepetition }`
   (on `convertOrgToMarkdown` and `normalizeMarkdown`; CLI `--bullet`,
   `--emphasis`, `--strong`, `--fence`, `--rule`, `--rule-repetition`)
-  — Markdown output style knobs. Defaults match prettier except emphasis (`*italic*`);
-  `--emphasis _` aligns fully with prettier. Canonical form is
+  are Markdown output style knobs. Defaults match prettier except
+  emphasis (`*italic*`); `--emphasis _` aligns fully with prettier.
+  Canonical form is
   per-config (ADR 0001): round trips must use the same style. Note
-  CommonMark/GFM prescribe no style — these defaults are morg's
+  CommonMark/GFM prescribe no style; these defaults are morg's
   canonical choices, not a standard.
 
 Both convert functions also accept `onWarning: message => …`, called for
@@ -234,8 +235,8 @@ org → md:  uniorg-parse → preset extraction → uniorg→mdast (core) → re
 ```
 
 Formatting is controlled by shaping the AST (e.g. inserting newline text nodes),
-not by custom stringifier handlers — the default, battle-tested stringifiers do
-the rendering.
+not by custom stringifier handlers. The default, battle-tested
+stringifiers do the rendering.
 
 Project vocabulary lives in [CONTEXT.md](CONTEXT.md); design decisions in
 [docs/adr/](docs/adr/).
@@ -246,14 +247,14 @@ The core conversion surface is feature-complete and validated against
 real-world Logseq org vaults (edge cases found there live on as
 anonymized fixtures, e.g. `tests/fixtures/logseq-vault.org`); the
 client-side [Web UI](https://morg.binarypoetry.ch) is deployed from
-`main`. The npm package is `@remigius42/morg` — the bare `morg` name is
-taken — and pushing a `v*` tag publishes it. Most of the code is
+`main`. The npm package is `@remigius42/morg`, since the bare `morg`
+name is taken, and pushing a `v*` tag publishes it. Most of the code is
 written with an AI coding agent under human direction, test-first and
-CI-gated — see
+CI-gated. See
 the [contributing guide](CONTRIBUTING.md#development-process).
 
-How each construct maps — including deliberate normalizations and
-documented drops — is covered in the
+How each construct maps, including deliberate normalizations and
+documented drops, is covered in the
 [mapping reference](docs/mappings.md). Notable changes are tracked in
 the [changelog](CHANGELOG.md).
 
