@@ -9,6 +9,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `morg --help`, `morg -h` and a bare `morg` print usage: the
+  `normalize` command, every flag with its argument and a one-line
+  description, and a few worked examples. `morg --version` prints the
+  installed version. A bare invocation previously failed on formats it
+  could not determine, which told a first-time reader nothing about
+  what the CLI accepts; there was no way to ask at all.
+
+  The help text is rendered from the same table the parser dispatches
+  on, so it cannot document a flag that does not exist or omit one that
+  does.
+
+### Fixed
+
+- An unsupported format names the value it rejected, as in
+  `Unsupported format 'notes.md'`, rather than only the two it
+  accepts, and a value that has a file extension is answered with the
+  likely correction: `--from` and `--to` take a format name, and the
+  file belongs to `--input` or `--output`. They sit beside each other
+  and read alike, so a file name in the wrong one is an easy mistake that
+  the old message left the reader to find unaided. Failures that come
+  from the invocation now also point at `morg --help`.
+
 ## [0.4.0] - 2026-09-19
 
 ### Added
