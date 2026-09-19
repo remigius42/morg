@@ -1,6 +1,6 @@
 import type { CliArgs } from "./args.js"
 import { CliError } from "./error.js"
-import { formatFromFileName } from "../fileNames.js"
+import { formatFromFileName, splitFileName } from "../fileNames.js"
 
 export function inferFormats(
   cli: CliArgs
@@ -37,6 +37,16 @@ function inferMissingFormat(
   return [fromFormat, toFormat]
 }
 
+// --from and --to read like the file pair they usually accompany, so a file
+// name given to one is the likely mistake behind an unsupported format
+function fileNameHint(flag: "--from" | "--to", value: string): string {
+  if (splitFileName(value).extension === "") {
+    return ""
+  }
+  const fileFlag = flag === "--from" ? "--input" : "--output"
+  return `\n${flag} takes a format name; for a file use ${fileFlag} ${value}.`
+}
+
 export function validateFormats(
   fromFormat: string | undefined,
   toFormat: string | undefined,
@@ -49,13 +59,16 @@ export function validateFormats(
     )
   }
 
-  if (
-    !["markdown", "org"].includes(fromFormat) ||
-    !["markdown", "org"].includes(toFormat)
-  ) {
-    throw new CliError(
-      `Error: Unsupported format. Supported formats are 'markdown' and 'org'.`
-    )
+  for (const [flag, value] of [
+    ["--from", fromFormat],
+    ["--to", toFormat]
+  ] as const) {
+    if (!["markdown", "org"].includes(value)) {
+      throw new CliError(
+        `Error: Unsupported format '${value}'. Supported formats are ` +
+          `'markdown' and 'org'.${fileNameHint(flag, value)}`
+      )
+    }
   }
 
   if (!normalize && fromFormat === toFormat) {

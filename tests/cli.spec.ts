@@ -196,10 +196,24 @@ describe("validateFormats", () => {
     )
   })
 
-  it("rejects unsupported formats", () => {
+  it("rejects unsupported formats, naming the value", () => {
     expect(() => validateFormats("markdown", "asciidoc", false)).toThrow(
-      /Unsupported format/
+      /Unsupported format 'asciidoc'/
     )
+    expect(() => validateFormats("asciidoc", "org", false)).toThrow(
+      /Unsupported format 'asciidoc'/
+    )
+  })
+
+  it("points a file name at the flag that takes one", () => {
+    expect(() => validateFormats("notes.md", "org", false)).toThrow(
+      /--from takes a format name; for a file use --input notes\.md/
+    )
+    expect(() => validateFormats("markdown", "out.org", false)).toThrow(
+      /--to takes a format name; for a file use --output out\.org/
+    )
+    // a format name that is merely wrong has no file to suggest
+    expect(() => validateFormats("html", "org", false)).not.toThrow(/--input/)
   })
 
   it("rejects same source and target except for normalize", () => {
