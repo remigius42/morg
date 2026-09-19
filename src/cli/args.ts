@@ -3,6 +3,8 @@ import { FLAGS_BY_NAME } from "./flags.js"
 
 export interface CliArgs {
   normalize: boolean
+  help: boolean
+  version: boolean
   fromFormat: string | undefined
   toFormat: string | undefined
   inputFile: string | undefined
@@ -27,6 +29,8 @@ export function parseArgs(args: string[]): CliArgs {
   }
   const parsed: CliArgs = {
     normalize,
+    help: false,
+    version: false,
     fromFormat: undefined,
     toFormat: undefined,
     inputFile: undefined,
@@ -71,6 +75,9 @@ function parseFlags(parsed: CliArgs, args: string[]): void {
         parsed[spec.key] = value !== "false"
         break
       }
+      case "info":
+        parsed[spec.key] = true
+        break
       case "string":
         parsed[spec.key] = takeValue(args, i++)
         break

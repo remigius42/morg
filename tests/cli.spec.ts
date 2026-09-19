@@ -4,11 +4,16 @@ import * as os from "node:os"
 import * as path from "node:path"
 import { afterAll, describe, expect, it, vi } from "vitest"
 import { parseArgs } from "../src/cli/args.js"
+import { FLAGS } from "../src/cli/flags.js"
+import { HELP_TEXT } from "../src/cli/help.js"
 import { loadConfig } from "../src/cli/configFile.js"
 import { resolvePreset } from "../src/cli/presets.js"
 import { inferFormats, validateFormats } from "../src/cli/formats.js"
 import { buildConversionOptions, convert } from "../src/cli/conversion.js"
 import { CliError } from "../src/cli/error.js"
+
+const escapeRegExp = (value: string) =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 
 describe("parseArgs", () => {
   it("parses conversion flags", () => {
@@ -41,6 +46,22 @@ describe("parseArgs", () => {
       taskCheckboxes: true,
       interpretHtml: true
     })
+  })
+
+  it("recognizes the help and version flags", () => {
+    expect(parseArgs(["--help"]).help).toBe(true)
+    expect(parseArgs(["-h"]).help).toBe(true)
+    expect(parseArgs(["--version"]).version).toBe(true)
+    expect(parseArgs(["--from", "org"]).help).toBe(false)
+  })
+
+  it("treats help and version as flags, never as values", () => {
+    expect(() => parseArgs(["--bullet", "-h"])).toThrow(
+      "--bullet requires a value"
+    )
+    expect(() => parseArgs(["--from", "--help"])).toThrow(
+      "--from requires a value"
+    )
   })
 
   it("recognizes the normalize subcommand", () => {
@@ -100,6 +121,27 @@ describe("parseArgs", () => {
   it("rejects unknown arguments", () => {
     expect(() => parseArgs(["--bogus"])).toThrow(CliError)
     expect(() => parseArgs(["--bogus"])).toThrow("Unknown argument: --bogus")
+  })
+})
+
+describe("HELP_TEXT", () => {
+  it("lists every flag with its names, argument and description", () => {
+    for (const spec of FLAGS) {
+      const names = spec.names.join(", ")
+      const signature = spec.arg ? `${names} ${spec.arg}` : names
+      expect(HELP_TEXT).toMatch(
+        new RegExp(
+          `^ {2}${escapeRegExp(signature)} +${escapeRegExp(spec.description)}$`,
+          "m"
+        )
+      )
+    }
+  })
+
+  it("separates markdown style flags from the general options", () => {
+    const style = HELP_TEXT.indexOf("Markdown style:")
+    expect(HELP_TEXT.indexOf("--from")).toBeLessThan(style)
+    expect(HELP_TEXT.indexOf("--bullet")).toBeGreaterThan(style)
   })
 })
 
@@ -408,6 +450,30 @@ describe("cli process", () => {
     expect(result.code).toBe(1)
     expect(result.stderr).toMatch(/cannot be the same/)
     expect(result.stdout).toBe("")
+  })
+
+  it("prints usage on --help, -h and a bare invocation", async () => {
+    for (const args of [["--help"], ["-h"], []]) {
+      const result = await run(args)
+      expect(result.code).toBe(0)
+      expect(result.stdout).toMatch(/Usage: morg/)
+      expect(result.stderr).toBe("")
+    }
+  })
+
+  it("prints the package version on --version", async () => {
+    const { version } = JSON.parse(fs.readFileSync("package.json", "utf8")) as {
+      version: string
+    }
+    const result = await run(["--version"])
+    expect(result).toMatchObject({ stdout: `${version}\n`, code: 0 })
+  })
+
+  it("points at --help when usage is wrong", async () => {
+    const result = await run(["--from", "notes.md", "--to", "out.org"])
+    expect(result.code).toBe(1)
+    expect(result.stderr).toMatch(/Unsupported format/)
+    expect(result.stderr).toMatch(/morg --help/)
   })
 
   it("reports the failing config path with the underlying error", async () => {

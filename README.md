@@ -101,7 +101,11 @@ npm install --global @remigius42/morg
 ```
 
 ```bash
-# Formats inferred from file extensions
+# Every flag, with examples; also shown for a bare `morg`
+morg --help
+
+# Formats inferred from file extensions; --from and --to take a format
+# name (markdown or org), not a path
 morg --input notes.md --output notes.org
 
 # stdin/stdout with explicit format

@@ -7,6 +7,17 @@ import { resolvePreset } from "./cli/presets.js"
 import { inferFormats, validateFormats } from "./cli/formats.js"
 import { convert } from "./cli/conversion.js"
 import { CliError } from "./cli/error.js"
+import { HELP_TEXT } from "./cli/help.js"
+
+// both src/cli.ts and the built dist/cli.js sit one level below the package
+// root, so the manifest is at the same relative path either way
+function packageVersion(): string {
+  const manifest = fs.readFileSync(
+    new URL("../package.json", import.meta.url),
+    "utf8"
+  )
+  return (JSON.parse(manifest) as { version: string }).version
+}
 
 async function readInput(inputFile: string | undefined): Promise<string> {
   if (inputFile) {
@@ -26,7 +37,21 @@ async function readInput(inputFile: string | undefined): Promise<string> {
 }
 
 async function main() {
-  const cli = parseArgs(process.argv.slice(2))
+  const argv = process.argv.slice(2)
+  // a bare invocation has nothing to convert, so it asks for help
+  if (argv.length === 0) {
+    console.log(HELP_TEXT)
+    return
+  }
+  const cli = parseArgs(argv)
+  if (cli.help) {
+    console.log(HELP_TEXT)
+    return
+  }
+  if (cli.version) {
+    console.log(packageVersion())
+    return
+  }
   const config = loadConfig(cli.configPath)
   const preset = resolvePreset(cli.presetName ?? config.preset)
 
@@ -54,9 +79,11 @@ main().catch((error: unknown) => {
   if (error instanceof CliError) {
     // helpers throw instead of exiting; this is the only exit point
     if (error.cause !== undefined) {
+      // a cause means the input or environment failed, not the invocation
       console.error(error.message, error.cause)
     } else {
       console.error(error.message)
+      console.error("Run 'morg --help' for usage.")
     }
   } else {
     console.error("An unexpected error occurred:", error)
