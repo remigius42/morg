@@ -116,7 +116,9 @@ detected and stored as a leading `#+MORG_MARKDOWN_STYLE:` keyword (JSON on one
 line), then restored by `org → md` instead of being canonicalized —
 which is what makes a consistently non-canonical file a round-trip
 identity rather than a one-time reformat (ADR 0004). Explicit
-`markdownStyle` options override a record; `morg normalize` drops it.
+`markdownStyle` options override a record; `morg normalize` drops it,
+unless it is itself given `recordStyle`, which re-records the canonical
+form's own markers.
 
 Recorded: `bullet`, `emphasis`, `strong`, `fence`, `rule` and
 `ruleRepetition` — the document-level knobs `remark-stringify` takes.

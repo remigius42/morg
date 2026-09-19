@@ -38,14 +38,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   lint, the unit tests and the build because a tag push does not trigger
   CI.
 
-- Opt-in `recordStyle` (`--record-style`, `[markdownToOrg]`) records the
-  Markdown style a source was written in — bullet, emphasis, strong,
-  fence and thematic-break markers — as a leading `#+MORG_MARKDOWN_STYLE:`
-  keyword, and `org → md` restores it. A file whose markers are used
-  consistently now survives the round trip untouched instead of being
-  reformatted once. This does not weaken convergence: the recorded
-  output is still a fixed point in both directions, and what grows is
-  the set of inputs the round trip already leaves alone.
+- Opt-in `recordStyle` (`--record-style`, `[markdownToOrg]`, Web UI
+  checkbox) records the Markdown style a source was written in — bullet,
+  emphasis, strong, fence and thematic-break markers, and the rule's
+  length where it is longer than remark's own `---` — as a leading
+  `#+MORG_MARKDOWN_STYLE:` keyword, and `org → md` restores it. A file
+  whose markers are used consistently now survives the round trip
+  untouched instead of being reformatted once. This does not weaken
+  convergence: the recorded output is still a fixed point in both
+  directions, and what grows is the set of inputs the round trip
+  already leaves alone.
 
   Recording is document-wide, so a marker used two ways is skipped and
   reported via `onWarning` rather than guessed at, and per-node style
@@ -53,7 +55,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   of scope — an inline node has no anchor to hang a record on, and a
   positional side-table would desynchronize the first time the org file
   is edited by hand. Opt-in because the keyword is a morg-specific line
-  in the format the user keeps and reads. `morg normalize` drops it.
+  in the format the user keeps and reads. `morg normalize` drops the
+  keyword, since canonical form is the whole point of normalizing —
+  unless it is itself given `--record-style`, which re-records the
+  canonical form's own markers.
   See [ADR 0004](docs/adr/0004-record-source-markdown-style.md).
 
 - The embed page reports its content height to the page that frames it,
@@ -67,14 +72,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   number describing the page's own layout, never the document being
   converted.
 
+### Changed
+
 - The converter page now follows that message with its own frame, which
   had been fixed at 75% of the window: the converter no longer scrolls
   inside a page that scrolls, and opening Options no longer has to be
   read through a slot two thirds the size of what it opened. The 75%
   stays as the height a browser that never delivers the message is
   left with.
-
-### Changed
 
 - Narrow enough that the input and output stack, Copy and Download now
   follow the input box and lead the output, instead of staying in a row
