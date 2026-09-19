@@ -3,7 +3,7 @@ import { convertMarkdownToOrg } from "../../../src/markdownToOrg.js"
 import { convertOrgToMarkdown } from "../../../src/orgToMarkdown.js"
 import { demoFor, MD_DEMO, ORG_DEMO } from "../../../web/src/ui/demos.js"
 
-// the demos are the first thing every visitor converts — pin that they
+// the demos are the first thing every visitor converts, so pin that they
 // round-trip convergently and warning-free under default options
 describe("demo documents", () => {
   it("offers the demo in the format the direction reads", () => {

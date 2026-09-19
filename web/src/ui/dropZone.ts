@@ -2,7 +2,7 @@
  * The page-wide drop target: the overlay that announces it, the guards
  * that keep the browser from navigating away, and the routing of what
  * lands. Its own module because all three are one concern wired on the
- * document rather than on any control — and because what a drop *means*
+ * document rather than on any control, and because what a drop *means*
  * is the caller's business, not this file's.
  */
 import type { TextFile } from "./files.js"
@@ -18,7 +18,7 @@ export function wireDropZone(onFiles: (files: TextFile[]) => void): void {
   // the browser navigates to a dropped file unless the default is
   // prevented, which would replace the converter and discard the input;
   // dragover needs it too, or no drop event fires at all. Only file drags
-  // qualify — cancelling a text drag would break dropping a selection
+  // qualify; cancelling a text drag would break dropping a selection
   // into the textareas, which is native behavior worth keeping.
   for (const type of ["dragover", "drop"]) {
     document.addEventListener(type, event => {

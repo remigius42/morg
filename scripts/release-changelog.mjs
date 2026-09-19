@@ -10,7 +10,7 @@ const CHANGELOG = "CHANGELOG.md"
 
 const version = process.env.npm_package_version
 if (!version) {
-  throw new Error("npm_package_version is unset — run this via `npm version`")
+  throw new Error("npm_package_version is unset; run this via `npm version`")
 }
 
 const date = new Date().toISOString().slice(0, 10)

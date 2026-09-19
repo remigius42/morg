@@ -12,7 +12,7 @@ test.use({ permissions: ["clipboard-read", "clipboard-write"] })
  * Refuses `writeText` the way an embed without `allow="clipboard-write"`
  * does. Stubbed rather than staged in a real cross-origin frame: the
  * refusal is the fallback's entire input, and it is identical either way.
- * Only `writeText` goes — `readText` still has to answer the assertion.
+ * Only `writeText` goes; `readText` still has to answer the assertion.
  */
 async function blockTheClipboardApi(page: Page): Promise<void> {
   await page.addInitScript(() => {

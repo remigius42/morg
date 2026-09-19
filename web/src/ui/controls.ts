@@ -2,7 +2,7 @@
  * The converter's controls: the elements the page is driven through, and
  * the state a conversion carries between them. Its own module because
  * every other part of the page needs the type and none of them should
- * need each other to get it — main.ts owning it would make the wiring
+ * need each other to get it; main.ts owning it would make the wiring
  * file a dependency of everything it wires.
  */
 import type { ConversionForm } from "../pipeline/convert.js"
@@ -61,7 +61,7 @@ export interface Controls {
   runner: ConversionRunner
   /**
    * Ticket of the most recently requested conversion. Runs settle out of
-   * order — a one-line edit overtakes the 1 MB document it replaced — so
+   * order (a one-line edit overtakes the 1 MB document it replaced), so
    * a result only paints while it is still the newest one asked for.
    */
   latestRun: number
@@ -69,7 +69,7 @@ export interface Controls {
 
 /**
  * A notice built rather than marked up, so every page that wires main.ts
- * gets it — the same reason the drop overlay is built here. All of them
+ * gets it, the same reason the drop overlay is built here. All of them
  * sit by the error, since they answer the same question about why the
  * page is not doing what it was asked to.
  *

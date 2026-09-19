@@ -79,7 +79,7 @@ function countingRunner(runs: string[]): ConversionRunner {
 
 /**
  * Converts only when let go, so the window while a conversion is in
- * flight — which a real worker has and a synchronous run does not — can
+ * flight (which a real worker has and a synchronous run does not) can
  * be looked at. Each run appends its release to `release`, in order.
  */
 function deferredRunner(release: (() => void)[]): ConversionRunner {
@@ -124,7 +124,7 @@ function dragEvent(type: string, target: EventTarget, types: string[]): Event {
 }
 
 // happy-dom has no URL.createObjectURL to spy on, so these are defined
-// outright — and undone after every test, or the no-op anchor click and
+// outright, and undone after every test, or the no-op anchor click and
 // the stubbed execCommand would silently outlive the test that wanted them
 const undoStubs: (() => void)[] = []
 
@@ -202,7 +202,7 @@ describe("embed page", () => {
     // demo; switching away has to swap it, the same as it would for
     // anyone who never left. A baseline read before the restore compares
     // against the markup's default and leaves the wrong dialect in the
-    // box — converted as the other one on the very first interaction
+    // box, converted as the other one on the very first interaction
     writeState({ direction: "md-to-org" })
     await setUpPage()
     expect(element<HTMLTextAreaElement>("input").value).toContain(
@@ -257,7 +257,7 @@ describe("embed page", () => {
       await settle()
     }
 
-    // the load conversion, then the two edits — resolved newest first
+    // the load conversion, then the two edits, resolved newest first
     pending.reverse().forEach(resolve => {
       resolve()
     })
@@ -268,7 +268,7 @@ describe("embed page", () => {
   it("will not copy or save output a newer input has orphaned", async () => {
     // off the UI thread the output box keeps the last result while the
     // next one runs. Saving it writes the previous document's conversion
-    // under the current document's name — the freeze used to make that
+    // under the current document's name; the freeze used to make that
     // impossible by locking the page
     const saved = captureDownload()
     const release: (() => void)[] = []
@@ -295,8 +295,8 @@ describe("embed page", () => {
   })
 
   it("announces a conversion only once it has run long", async () => {
-    // off the UI thread nothing else marks a conversion — the freeze used
-    // to be the progress indicator — but an ordinary document converts in
+    // off the UI thread nothing else marks a conversion (the freeze used
+    // to be the progress indicator), but an ordinary document converts in
     // milliseconds, and announcing that is a blink on every pause
     const release: (() => void)[] = []
     await setUpPage(deferredRunner(release))
@@ -450,7 +450,7 @@ describe("embed page", () => {
     expect(config.value).toMatch(/obsidian/)
     expect(element<HTMLDetailsElement>("configSection").open).toBe(true)
     // the panel is collapsed by default, so a dropped config must announce
-    // itself — and it must actually take effect
+    // itself, and it must actually take effect
     expect(element<HTMLSelectElement>("preset").value).toBe("obsidian")
     expect(element<HTMLSelectElement>("emphasis").value).toBe("_")
     expect(element<HTMLTextAreaElement>("input").value).toContain(
@@ -483,8 +483,8 @@ describe("embed page", () => {
   })
 
   it("refuses a dropped file that is not text", async () => {
-    // a drop takes any file — documents worth converting turn up as
-    // README or notes.txt, which the picker's accept list never covers —
+    // a drop takes any file: documents worth converting turn up as
+    // README or notes.txt, which the picker's accept list never covers,
     // so nothing but the bytes says a png is not one of them
     const before = element<HTMLTextAreaElement>("input").value
     await drop(textFile("photo.png", "\uFFFDPNG\u0000"))
@@ -525,7 +525,7 @@ describe("embed page", () => {
     expect(warnings.hidden).toBe(false)
     expect(warnings.textContent).toMatch(/vault\.org/)
 
-    // convert() rebuilds the list on every keystroke — the notice has to
+    // convert() rebuilds the list on every keystroke; the notice has to
     // outlive that, but not outlive the document it describes
     const input = element<HTMLTextAreaElement>("input")
     input.value = "* Big edit"
@@ -556,7 +556,7 @@ describe("embed page", () => {
   it("wires Copy to the output, and keeps its notice off the error", async () => {
     // how copying itself behaves is tests/web/ui/outputActions.spec.ts; what
     // this needs is that the button reaches it, and that a refusal lands
-    // in its own slot — reported as a conversion error it reads as one,
+    // in its own slot: reported as a conversion error it reads as one,
     // and the next run wipes it before it can be acted on
     vi.stubGlobal("navigator", {
       clipboard: { writeText: () => Promise.reject(new Error("denied")) }
@@ -590,7 +590,7 @@ describe("embed page", () => {
   })
 
   it("marks the config panel on every keystroke, without opening it", () => {
-    // typed by hand, so the panel is already open — and the mark stays
+    // typed by hand, so the panel is already open, and the mark stays
     // immediate rather than riding the conversion debounce, since it
     // describes the config text itself and lagging it looks broken
     const config = element<HTMLTextAreaElement>("config")
@@ -602,7 +602,7 @@ describe("embed page", () => {
   })
 
   it("disables copy and download while the conversion is failing", async () => {
-    // saving here writes an empty file — and under normalize that name is
+    // saving here writes an empty file, and under normalize that name is
     // one keystroke away from the source document's own
     const config = element<HTMLTextAreaElement>("config")
     config.value = "tyop = true"
@@ -636,7 +636,7 @@ describe("embed page", () => {
 
   it("stops using the opened name once the input is replaced", async () => {
     // the name outlived the document it described: convert notes.org,
-    // save notes.md, paste something else, save notes.md again — the
+    // save notes.md, paste something else, save notes.md again; the
     // second save lands on top of the first
     const saved = captureDownload()
     await drop(textFile("notes.org", "* Saved"))
@@ -652,7 +652,7 @@ describe("embed page", () => {
 
   it("stops using the opened name once the direction no longer fits", async () => {
     // open notes.md and the direction follows it; switch to Org → Markdown
-    // and the output is Markdown again, so the derived name is notes.md —
+    // and the output is Markdown again, so the derived name is notes.md,
     // the source file, offered for overwriting. Nothing clears the name
     // on the way: the demo swap sets the input in code, which fires no
     // input event
@@ -695,7 +695,7 @@ describe("embed page", () => {
 
   it("raises a drop zone over the page", () => {
     // how the zone behaves is tests/web/ui/dropZone.spec.ts; what this needs
-    // is that init wires one at all — the converter markup carries no
+    // is that init wires one at all; the converter markup carries no
     // overlay, so a page without this call has no drop affordance
     dragEvent("dragenter", document.body, ["Files"])
     expect(element("dropOverlay").hidden).toBe(false)
@@ -703,7 +703,7 @@ describe("embed page", () => {
 
   it("builds no runner for a form already wired", async () => {
     // init is idempotent per form, but the runner was built by a default
-    // argument — evaluated before the guard reads it, so a second call
+    // argument, evaluated before the guard reads it, so a second call
     // started a worker and then walked away from it, leaving it running
     // and unreachable for the life of the page
     const constructed: unknown[] = []
@@ -726,7 +726,7 @@ describe("embed page", () => {
   it("wires the page once when it is set up again", async () => {
     // setUpPage replaces the body, but the drag and drop handlers live on
     // the document and survive it, still closed over the controls of a
-    // form that is no longer in the page. A drop would be opened twice —
+    // form that is no longer in the page. A drop would be opened twice:
     // two conversions, and the detached form persisting over the live
     // one's settings
     const runs: string[] = []
@@ -741,7 +741,7 @@ describe("embed page", () => {
     const config = element<HTMLTextAreaElement>("config")
     config.value = 'preset = "obsidian"'
     config.dispatchEvent(new Event("input", { bubbles: true }))
-    // persisting is not debounced — a reload must not lose the last keystroke
+    // persisting is not debounced; a reload must not lose the last keystroke
     expect(readState().config).toMatch(/obsidian/)
   })
 })

@@ -12,7 +12,7 @@ beforeEach(() => {
   document.body.innerHTML = `
     <textarea id="input"></textarea>
     <textarea id="output" readonly># converted</textarea>
-    <p id="copyError" hidden>Could not copy — press Ctrl+C.</p>
+    <p id="copyError" hidden>Could not copy. Press Ctrl+C.</p>
   `
   output = element<HTMLTextAreaElement>("output")
   copyError = element<HTMLParagraphElement>("copyError")
@@ -32,7 +32,7 @@ function element<T extends HTMLElement>(id: string): T {
 }
 
 // happy-dom has no URL.createObjectURL to spy on, so these are defined
-// outright — and undone after every test, or the no-op anchor click and
+// outright, and undone after every test, or the no-op anchor click and
 // the stubbed execCommand would silently outlive the test that wanted them
 const undoStubs: (() => void)[] = []
 
@@ -89,7 +89,7 @@ describe("copying the output", () => {
 
   it("leaves the output readonly after a fallback copy", async () => {
     // iOS Safari refuses to select a readonly textarea, so the attribute
-    // comes off to copy — and an output left writable invites editing a
+    // comes off to copy, and an output left writable invites editing a
     // result that the next conversion overwrites without warning
     blockClipboard()
     stub(document, "execCommand", () => true)
@@ -99,7 +99,7 @@ describe("copying the output", () => {
 
   it("leaves the caret where it was after a fallback copy", async () => {
     // every Copy click takes this path in an iframe without
-    // allow="clipboard-write", and it selects the output to copy it —
+    // allow="clipboard-write", and it selects the output to copy it;
     // someone mid-edit would have to click back into the input to type
     blockClipboard()
     stub(document, "execCommand", () => true)

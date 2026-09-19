@@ -7,7 +7,7 @@ const DOCUMENT_FORMATS = new Map<string, "markdown" | "org">([
 /**
  * Splits a file name into the part a derived name keeps and the extension
  * that carries its format. A dotless name and a dotfile both have no
- * extension — `org` is a file called org, and `.org` is a hidden file whose
+ * extension: `org` is a file called org, and `.org` is a hidden file whose
  * name happens to start with a dot.
  *
  * The extension comes from the last path segment, since the CLI is handed

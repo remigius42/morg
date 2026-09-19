@@ -8,7 +8,7 @@ import type { WorkerRequest, WorkerResponse } from "./workerProtocol.js"
  *
  * A conversion that failed on its input comes back as a result carrying
  * an `error`; the promise rejects only where no conversion could be run
- * at all. It always settles one way or the other — a caller left waiting
+ * at all. It always settles one way or the other: a caller left waiting
  * has no way to tell that it is waiting for nothing.
  */
 export interface ConversionRunner {
@@ -34,7 +34,7 @@ export const synchronousRunner: ConversionRunner = {
 
 /**
  * Converts off the main thread, so a large document no longer freezes the
- * page. Falls back to converting in place where a worker is unavailable —
+ * page. Falls back to converting in place where a worker is unavailable:
  * a blocked or unsupported worker must leave a working converter, and the
  * test environment (happy-dom) has no `Worker` at all.
  */
@@ -62,8 +62,8 @@ interface Pending {
 function workerRunner(worker: Worker): ConversionRunner {
   const pending = new Map<number, Pending>()
   let nextId = 0
-  // a runner has nobody to report a broken worker to — the page is already
-  // wired to it — so it converts in place from here on instead
+  // a runner has nobody to report a broken worker to (the page is already
+  // wired to it), so it converts in place from here on instead
   let broken = false
 
   worker.addEventListener("message", (event: MessageEvent<WorkerResponse>) => {

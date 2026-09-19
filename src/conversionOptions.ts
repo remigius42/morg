@@ -25,8 +25,8 @@ export interface SharedConversionOptions {
 
 /**
  * Layers explicit overrides over the config file, per direction. Used by
- * both adapters (CLI and Web UI) so the documented precedence — CLI or
- * form > config > defaults — means the same thing in each.
+ * both adapters (CLI and Web UI) so the documented precedence (CLI or
+ * form > config > defaults) means the same thing in each.
  * @param overrides Explicitly requested values; `undefined` defers to config.
  * @param config The parsed `morg.toml`.
  * @param shared Values that apply to both directions.

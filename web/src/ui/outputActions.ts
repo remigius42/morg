@@ -1,5 +1,5 @@
 /**
- * Getting a conversion out of the page — to the clipboard, or to disk.
+ * Getting a conversion out of the page, to the clipboard or to disk.
  * Its own module because both are mostly browser workarounds rather than
  * converter code: an iframe that refuses the clipboard, an iOS Safari
  * that refuses to select a readonly textarea, a Firefox that ignores a

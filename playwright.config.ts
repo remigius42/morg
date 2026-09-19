@@ -28,7 +28,7 @@ export default defineConfig({
       use: { ...devices["Desktop Safari"] },
       /* axe audits the DOM/ARIA tree, which is engine independent, and the
          clipboard specs need the permissions API and a readable system
-         clipboard — neither of which WebKit offers under Playwright. What
+         clipboard, neither of which WebKit offers under Playwright. What
          WebKit is here for is the file, download and fallback-copy paths,
          whose workarounds in web/src/main.ts exist for this engine. */
       testIgnore: ["**/a11y.spec.ts", "**/clipboard.spec.ts"]

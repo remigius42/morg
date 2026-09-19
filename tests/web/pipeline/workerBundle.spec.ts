@@ -6,7 +6,7 @@ import config from "../../../web/vite.config.js"
  * The worker bundle has to survive having no DOM. A browser build of a
  * transitive dependency that touches `document` at module scope throws on
  * worker startup, and the runner's fallback then quietly converts on the
- * main thread again — the page keeps working, and the freeze this whole
+ * main thread again: the page keeps working, and the freeze this whole
  * feature removes comes back with nothing to show for it.
  *
  * Built through the real config rather than a stand-in: it is the browser
@@ -16,7 +16,7 @@ import config from "../../../web/vite.config.js"
 describe("conversion worker bundle", () => {
   it("never reaches for the DOM", async () => {
     // the `development` export condition follows NODE_ENV, which vitest
-    // sets to "test" — leaving it there resolves dependencies the deploy
+    // sets to "test"; leaving it there resolves dependencies the deploy
     // never sees, and the build under test stops being the built one
     const nodeEnv = process.env.NODE_ENV
     process.env.NODE_ENV = "production"
@@ -28,7 +28,7 @@ describe("conversion worker bundle", () => {
         configFile: false,
         logLevel: "silent",
         // vitest runs under NODE_ENV=test, and the dev resolution pulls in
-        // debug's browser build — which is not what gets deployed
+        // debug's browser build, which is not what gets deployed
         mode: "production",
         build: { ...config.build, write: false }
       })) as Rollup.RollupOutput | Rollup.RollupOutput[]

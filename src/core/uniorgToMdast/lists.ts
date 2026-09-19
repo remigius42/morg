@@ -99,7 +99,7 @@ function transformUniorgListItem(
   item: ListItem
 ): MdastListItem {
   // md has no descriptive lists, so keep the ` :: ` syntax literally in the
-  // item text — the return trip re-parses it as a descriptive list
+  // item text; the return trip re-parses it as a descriptive list
   const tag = listItemTag(item)
   const children = transformNodes(
     ctx,

@@ -68,8 +68,8 @@ function restore(controls: Controls): void {
 }
 
 /**
- * Loads opened files. A `.toml` is a config wherever it was dropped —
- * morg never converts one — so each file goes where its kind belongs.
+ * Loads opened files. A `.toml` is a config wherever it was dropped,
+ * since morg never converts one, so each file goes where its kind belongs.
  * Only one of each can be in force at a time; the rest are named in the
  * warning list rather than dropped on the floor.
  */
@@ -140,7 +140,7 @@ function partition<T>(
 
 /**
  * Loads files, reporting a failed read rather than leaving the drop
- * looking like it did nothing — dropping a folder rejects here, and so
+ * looking like it did nothing: dropping a folder rejects here, and so
  * does a file moved or revoked between picking and reading.
  */
 function open(controls: Controls, files: readonly TextFile[]): void {
@@ -176,13 +176,13 @@ function wireFileControls(controls: Controls): void {
 
 function wireListeners(controls: Controls): void {
   const { direction, config, input } = controls
-  // only the two textareas, which fire per keystroke — a select or a
+  // only the two textareas, which fire per keystroke; a select or a
   // checkbox fires once per interaction, and delaying a click reads as lag.
   // One shared timer, since typing in both boxes is still one intent to
   // see the result.
   const convertSoon = debounce(() => startConvert(controls), DEBOUNCE_MS)
   config.addEventListener("input", () => {
-    // typed by hand, so the panel is already open — only the mark matters.
+    // typed by hand, so the panel is already open; only the mark matters.
     // The mark and the form reflection stay immediate: they describe the
     // config text itself, so lagging them behind the typing looks broken
     showConfig(controls, false)
@@ -201,7 +201,7 @@ function wireListeners(controls: Controls): void {
     }
     controls.previousDirection = direction.value as Direction
     // the opened name described a document this direction no longer
-    // reads; kept, it would name the output after the wrong format —
+    // reads; kept, it would name the output after the wrong format,
     // and where the output format matches, after the source file itself
     if (
       controls.openedFileName &&

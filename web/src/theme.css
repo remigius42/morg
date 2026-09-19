@@ -122,7 +122,7 @@ body > footer,
   );
   text-decoration: none;
   /* not --pico-color: Pico redefines it to the link color on every anchor,
-     so it resolves here to the brand amber rather than the page text —
+     so it resolves here to the brand amber rather than the page text,
      which fails AA against the button's own fill in dark mode */
   color: var(--form-element-text);
   user-select: none;

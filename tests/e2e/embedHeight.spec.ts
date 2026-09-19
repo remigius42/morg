@@ -8,7 +8,7 @@ import { expect, test } from "./baseFixture.js"
  * to do and applies it.
  *
  * Both halves are needed. A host that stays at its wrong height is the
- * one that can tell a measured height from an echoed one — a frame
+ * one that can tell a measured height from an echoed one: a frame
  * sized to the content makes a report that merely repeated the frame's
  * height look right. A host that follows is the only one that can tell
  * a height that shrinks from one that ratchets, because a page only
@@ -39,7 +39,7 @@ declare global {
 
 /**
  * Serves the host page from the preview server's own origin, so the
- * frame's relative `src` resolves — `setContent` would leave it on
+ * frame's relative `src` resolves; `setContent` would leave it on
  * `about:blank`, where it does not.
  */
 async function openHost(page: Page, follows = false): Promise<void> {
@@ -93,7 +93,7 @@ test.describe("embed height", () => {
 
     // the frame is as tall as the expanded page by now, so a height
     // taken off the viewport rather than off the content would stay
-    // there — a frame that can only ever grow
+    // there: a frame that can only ever grow
     await expect.poll(() => page.evaluate(lastHeight)).toBe(collapsed)
   })
 })

@@ -23,9 +23,9 @@ export function isConfigFile(name: string): boolean {
 
 /**
  * Whether decoded text came from a file that was never text. A drop is
- * routed by kind rather than by extension — documents worth converting
+ * routed by kind rather than by extension: documents worth converting
  * turn up as `README` or `notes.txt`, which the picker's `accept` list
- * does not cover — so the bytes are what is left to go on. UTF-8 decoding
+ * does not cover, so the bytes are what is left to go on. UTF-8 decoding
  * marks what it could not read, and neither marker survives in a document
  * a converter should be handed.
  */
@@ -55,7 +55,7 @@ export function directionForFile(name: string, current: Direction): Direction {
 /**
  * Whether a direction still reads the format the opened file is in.
  * Once it does not, the name has stopped describing what is being
- * converted — and where the output format matches the source extension,
+ * converted, and where the output format matches the source extension,
  * the derived name is the source file itself. An extension that carries
  * no format says nothing either way, so it keeps the name.
  */
@@ -83,7 +83,7 @@ function timestamp(now: Date): string {
 
 /**
  * Name to save the output under, derived from the file that was opened.
- * Content with no source file — pasted, or edited since it was opened —
+ * Content with no source file (pasted, or edited since it was opened)
  * gets a timestamped generic name instead: a paste-convert-save loop
  * over several snippets would otherwise name every output the same.
  * Normalizing keeps the source format, so the name would otherwise match
@@ -103,8 +103,8 @@ export function outputFileName(
 
 /**
  * Notice for a file big enough that the conversion takes visible time.
- * The page stays responsive throughout — the conversion runs in a worker
- * — but the result still keeps the reader waiting, and the round trip
+ * The page stays responsive throughout, the conversion running in a
+ * worker, but the result still keeps the reader waiting, and the round trip
  * through the textarea costs more than the CLI's straight file read.
  * Undefined for ordinary documents.
  */

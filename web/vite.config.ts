@@ -6,8 +6,8 @@ import { resolveVersion } from "./version.js"
 /**
  * Keeps the conversion worker off the DOM. `decode-named-character-
  * reference`, reached through remark's entity decoding, ships a browser
- * build that decodes entities by handing them to `document.createElement`
- * — which a worker does not have, so the bundle throws on the first line
+ * build that decodes entities by handing them to `document.createElement`,
+ * which a worker does not have, so the bundle throws on the first line
  * it runs and the converter silently falls back to blocking the page.
  * The package already publishes a DOM-free build for exactly this; Vite
  * resolves the worker bundle with the browser condition regardless, so
@@ -17,7 +17,7 @@ import { resolveVersion } from "./version.js"
  * condition, which would cover every package shipping one, is not a
  * preference: `worker.plugins` takes no resolve options, and a `config`
  * hook returning `resolve.conditions` does not reach the worker bundle
- * (tried under Vite 8 — the DOM build came back). Node's resolver takes
+ * (tried under Vite 8; the DOM build came back). Node's resolver takes
  * no conditions either, so the alternative is interpreting export maps
  * by hand. The next offender is caught by tests/web/pipeline/workerBundle.spec.ts
  * instead, which is where the silence this guards against is closed.

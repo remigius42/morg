@@ -1,8 +1,8 @@
 /**
  * Tells a host page how tall the Embed Page is, so it can size the
  * iframe to the content. A host that has to guess gets one of two bad
- * outcomes: a scrollbar inside the frame — a nested scroll, right next
- * to the textareas' own — or a band of dead space under it. Neither is
+ * outcomes: a scrollbar inside the frame (a nested scroll, right next
+ * to the textareas' own) or a band of dead space under it. Neither is
  * a guess a host can fix on its own, because the height depends on
  * what this page does: expanding Options or Config roughly doubles it.
  */
@@ -16,13 +16,13 @@ type HeightMessage = {
 }
 
 /**
- * The content's own height — neither of the two obvious readings is
- * that. `scrollHeight` reports the viewport height whenever the
+ * The content's own height, which is neither of the two obvious
+ * readings. `scrollHeight` reports the viewport height whenever the
  * content is shorter than it, and in a frame already sized to the
  * content the two are the same number, so a page reporting it could
  * grow but never shrink back. The rect's `bottom` is measured from the
  * viewport's top, so it drops by whatever the document happens to be
- * scrolled by — which is how a frame too short to hold its content
+ * scrolled by, which is how a frame too short to hold its content
  * would ask to be made shorter still.
  */
 function contentHeight(): number {
@@ -34,7 +34,7 @@ function contentHeight(): number {
  *
  * The target origin is `"*"`: the page cannot know its host, and being
  * embedded by other sites is what it is for. The message says how tall
- * this page's own chrome is and nothing else — never the document
+ * this page's own chrome is and nothing else, never the document
  * being converted, which does not leave the browser.
  */
 export function reportHeight(): void {
@@ -59,7 +59,7 @@ export function reportHeight(): void {
  * The host half: sizes `frame` to whatever the Embed Page inside it
  * reports, which is what the converter page does with its own embed.
  *
- * The guard is `event.source`, not the origin — the embed is served
+ * The guard is `event.source`, not the origin: the embed is served
  * from this very origin, so an origin check would let any other page
  * of the site through while this one names the frame being sized.
  */

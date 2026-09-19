@@ -234,7 +234,7 @@ function repairHighlights(uniorgAst: OrgData): void {
 
 // Logseq page and block references: [[page]] stays a wikilink,
 // [[page][label]] becomes [label]([[page]]), [[((uuid))][label]]
-// becomes [label](((uuid))) — emitted unescaped via verbatim-inline
+// becomes [label](((uuid))), emitted unescaped via verbatim-inline
 const BLOCK_REF_RE = /^\(\(.*\)\)$/
 
 function pageRefValue(label: string, target: string): string {

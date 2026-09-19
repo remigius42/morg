@@ -2,8 +2,8 @@
  * What the converter remembers between visits. Its own module, and the
  * only DOM-free one of the split: reading a form and writing a store are
  * two jobs, and keeping the store's half free of elements is what lets
- * the paths that only a broken browser reaches — a partitioned iframe, a
- * private window, a hand-edited entry — be tested at all.
+ * the paths that only a broken browser reaches (a partitioned iframe, a
+ * private window, a hand-edited entry) be tested at all.
  */
 const STORAGE_KEY = "morg-web"
 

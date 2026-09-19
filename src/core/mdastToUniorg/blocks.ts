@@ -122,7 +122,7 @@ export function transformMdastHtml(
 }
 
 // a bare <dl> whose body is nothing but attribute-less <dt>/<dd> pairs
-// (any whitespace between tags) becomes a ` :: ` list — the same
+// (any whitespace between tags) becomes a ` :: ` list, the same
 // markdown convention descriptive lists use without useHtml, so the
 // org side re-parses it as a native descriptive list; anything richer
 // stays a preserved md-ism

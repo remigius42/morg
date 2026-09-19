@@ -3,7 +3,7 @@ import type { ConversionForm, ConversionResult } from "./convert.js"
 /**
  * What crosses to the conversion worker and back. Its own module so the
  * worker and the runner that talks to it do not import each other.
- * Everything here is plain data — structured clone carries no classes,
+ * Everything here is plain data: structured clone carries no classes,
  * and `runConversion` returns an error string rather than throwing one.
  */
 export interface WorkerRequest {

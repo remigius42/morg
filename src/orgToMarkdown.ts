@@ -21,7 +21,7 @@ export function convertOrgToMarkdown(
   // Phase 1: Parse Org-mode to uniorg-ast
   let uniorgAst = unified().use(uniorgParse).parse(org)
 
-  // Phase 1b: a recorded style is morg's own (ADR 0004) — consume it so
+  // Phase 1b: a recorded style is morg's own (ADR 0004), so consume it so
   // it does not travel on as frontmatter; explicit options still win
   const recordedStyle = takeRecordedStyle(uniorgAst)
 

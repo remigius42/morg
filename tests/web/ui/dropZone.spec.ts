@@ -97,7 +97,7 @@ describe("routing what lands", () => {
 describe("the overlay", () => {
   it("shows while files are dragged over the page", () => {
     // the whole page is the drop target, so nothing on screen says a drop
-    // would do anything — or what the converter accepts
+    // would do anything, or what the converter accepts
     dragEvent("dragenter", document.body, ["Files"])
     const overlay = element("dropOverlay")
     expect(overlay.hidden).toBe(false)

@@ -84,7 +84,7 @@ export function transformMdastNodeToUniorgNode(
     case "paragraph": {
       // a paragraph of only #+KEY: lines is affiliated keywords (or
       // mid-file keywords) traveling verbatim; emit as raw text so they
-      // glue to the following element without a blank line — org only
+      // glue to the following element without a blank line: org only
       // attaches affiliated keywords when directly above their element
       const keywordLines = keywordOnlyLines(node)
       if (keywordLines) {

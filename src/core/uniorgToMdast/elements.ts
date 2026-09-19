@@ -250,7 +250,7 @@ function transformParagraph(
   const children = transformUniorgObjects(ctx, node.children)
   // md gives leading whitespace structural meaning (list
   // continuation, code); collapse per-line indentation inside
-  // paragraphs — insignificant in org and in rendered md alike
+  // paragraphs, insignificant in org and in rendered md alike
   children.forEach((child, index) => {
     if (child.type === "text") {
       child.value = child.value.replace(/\n[ \t]+/g, "\n")

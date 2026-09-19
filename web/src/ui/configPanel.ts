@@ -1,8 +1,8 @@
 /**
  * The config panel: whether a config is in force, whether that is
  * visible, and how a config that arrives moves the form controls it
- * covers. Its own module because these answer one question — what the
- * pasted TOML is doing to the page — that was previously answered in
+ * covers. Its own module because these answer one question, what the
+ * pasted TOML is doing to the page, that was previously answered in
  * three places, the panel mark, the reflection, and the snippet picker.
  *
  * Takes the controls it touches rather than the whole `Controls`, so a
@@ -80,8 +80,8 @@ function assign<T>(value: T | undefined, apply: (value: T) => void): void {
 
 /**
  * Wires the formatter-snippet picker. `afterInsert` is what the page
- * does about a config having changed — persisting it and converting
- * again — which is the caller's business rather than the panel's.
+ * does about a config having changed (persisting it and converting
+ * again), which is the caller's business rather than the panel's.
  */
 export function wireConfigSnippets(
   picker: HTMLSelectElement,

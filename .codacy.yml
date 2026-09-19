@@ -2,13 +2,13 @@
 # Tool enablement is UI-only in Codacy (Settings → Code patterns) and
 # cannot be expressed in this file; this file records those decisions
 # so they are visible in the repo:
-# - TSLint: disabled — deprecated tool; its default patterns conflict
+# - TSLint: disabled, a deprecated tool whose default patterns conflict
 #   with our Prettier config (trailingComma: none).
-# - ESLint (legacy): disabled — cannot use our flat eslint.config.js
+# - ESLint (legacy): disabled, as it cannot use our flat eslint.config.js
 #   and applies Codacy's own pattern set instead, incl. naming-
 #   heuristic rules like xss/no-mixed-html that false-positive on a
 #   markup-conversion library.
-# - ESLint v9: disabled — picks up eslint.config.js, but our
+# - ESLint v9: disabled. It picks up eslint.config.js, but our
 #   type-aware rules (recommendedTypeChecked) need installed
 #   dependencies to resolve types; Codacy's sandbox has none, so
 #   every imported type degrades to an unresolvable/error type and

@@ -24,7 +24,7 @@ describe("directionForFile", () => {
     // a dotless name is not its own extension
     expect(directionForFile("org", "md-to-org")).toBe("md-to-org")
     // .markdown is deliberately not inferred: the CLI does not accept it
-    // either, and the picker still lets you choose one — it just leaves
+    // either, and the picker still lets you choose one; it just leaves
     // the direction to the user
     expect(directionForFile("notes.markdown", "org-to-md")).toBe("org-to-md")
   })

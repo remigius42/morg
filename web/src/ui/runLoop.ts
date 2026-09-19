@@ -44,7 +44,7 @@ export async function convert(controls: Controls): Promise<void> {
       config.value
     )
   } catch (cause) {
-    // the conversion did not fail, it never ran — a dead worker whose
+    // the conversion did not fail, it never ran: a dead worker whose
     // stand-in could not be loaded. Nothing else will take the notice
     // down, and a page that stays "Converting…" for good is worse than
     // one that says what went wrong
@@ -80,7 +80,7 @@ export async function convert(controls: Controls): Promise<void> {
 /**
  * Marks a conversion as in flight. The output box still holds the last
  * result, which belongs to a document that is no longer in the input, so
- * Copy and Download come off until it has been replaced — saving stale
+ * Copy and Download come off until it has been replaced; saving stale
  * output is the same silent data loss as saving under a stale name.
  *
  * Off the UI thread there is nothing else to notice a conversion by: the

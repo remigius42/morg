@@ -48,7 +48,7 @@ export interface MarkdownToOrgOptions {
   /**
    * Custom names for org-ism `key::` lines, canonical → custom (e.g.
    * `{ todo: "state" }`). Must match the mapping the file was written
-   * with — Convergence is per-config (ADR 0002).
+   * with, since Convergence is per-config (ADR 0002).
    */
   orgismKeys?: Record<string, string>
   /** Called for each construct dropped without an equivalent. */
@@ -62,7 +62,7 @@ export interface MarkdownToOrgOptions {
  * Canonical form is parameterized by these (see ADR 0001): round trips
  * must use the same style, and files formatted under one style are not
  * a fixed point under another. Defaults: `-` bullet, `*` emphasis /
- * `*` strong (i.e. `**bold**`), backtick fences, `-` rule — prettier's
+ * `*` strong (i.e. `**bold**`), backtick fences, `-` rule: prettier's
  * choices except emphasis (`emphasis: "_"` aligns with prettier).
  */
 export interface MarkdownStyleOptions {
@@ -95,7 +95,7 @@ export interface OrgToMarkdownOptions {
    * Render Org constructs without a Markdown equivalent as raw HTML
    * (`<u>`, `<sup>`, `<sub>`, `<dl>`) instead of keeping their org markup
    * verbatim. HTML round-trips as a preserved md-ism (export blocks and
-   * snippets), not back to native org markup — a one-way door unless
+   * snippets), not back to native org markup, a one-way door unless
    * the return trip enables its inverse, `interpretHtml`.
    * Default: `false`.
    */

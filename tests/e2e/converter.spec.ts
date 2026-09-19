@@ -5,7 +5,7 @@ test.describe("converter", () => {
     // the worker starts while the page loads, so the listeners go on first.
     // That one was *constructed* proves nothing: construction never throws,
     // and a worker whose module dies on its first line is created, reports
-    // an error, and is terminated — after which createRunner() converts on
+    // an error, and is terminated, after which createRunner() converts on
     // the main thread and paints the very same output. Being terminated is
     // what tells the two apart, and it is the regression the DOM-free
     // entity decoder in web/vite.config.ts exists to prevent.

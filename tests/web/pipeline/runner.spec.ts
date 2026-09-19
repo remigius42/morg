@@ -80,7 +80,7 @@ describe("worker handle", () => {
 describe("createRunner", () => {
   it("converts in place where there is no Worker", async () => {
     // happy-dom ships none, which is also what a browser that blocks
-    // workers looks like — the converter has to keep working either way
+    // workers looks like; the converter has to keep working either way
     expect(globalThis.Worker).toBeUndefined()
     expect(createRunner()).toBe(synchronousRunner)
     expect(

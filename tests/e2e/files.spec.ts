@@ -4,7 +4,7 @@ import { expect, test } from "./baseFixture.js"
 /**
  * Builds a drag payload in the page. A drop cannot be faked from the test
  * side: `DataTransfer` is a browser object, and what the page reads off it
- * — `types`, `files` — is what decides whether the drop is handled at all.
+ * (`types`, `files`) is what decides whether the drop is handled at all.
  */
 function dragging(
   page: Page,

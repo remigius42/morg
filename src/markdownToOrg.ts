@@ -59,7 +59,7 @@ export function convertMarkdownToOrg(
   )
   restoreOrgisms(uniorgAst, canonicalKeys)
 
-  // Phase 2c: formatting-as-structure — adjacent lists need two blank
+  // Phase 2c: formatting-as-structure. Adjacent lists need two blank
   // lines between them, or org's parser merges them into one list.
   separateAdjacentLists(uniorgAst)
 
