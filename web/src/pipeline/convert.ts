@@ -15,6 +15,7 @@ export interface ConversionForm {
   preset?: string
   useHtml?: Toggle
   interpretHtml?: boolean
+  recordStyle?: boolean
   taskCheckboxes?: boolean
   markdownStyle?: MarkdownStyleOptions
 }
@@ -90,6 +91,7 @@ export function runConversion(
   const { mdToOrgOptions, orgToMdOptions } = buildConversionOptions(
     {
       interpretHtml: form.interpretHtml,
+      recordStyle: form.recordStyle,
       useHtml: form.useHtml,
       taskCheckboxes: form.taskCheckboxes,
       markdownStyle: form.markdownStyle

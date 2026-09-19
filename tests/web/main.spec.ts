@@ -400,6 +400,22 @@ describe("embed page", () => {
     )
   })
 
+  it("records the source style via the recordStyle checkbox", async () => {
+    const direction = element<HTMLSelectElement>("direction")
+    direction.value = "md-to-org"
+    direction.dispatchEvent(new Event("change", { bubbles: true }))
+    const input = element<HTMLTextAreaElement>("input")
+    input.value = "* item\n"
+    input.dispatchEvent(new Event("input", { bubbles: true }))
+    const recordStyle = element<HTMLInputElement>("recordStyle")
+    recordStyle.checked = true
+    recordStyle.dispatchEvent(new Event("change", { bubbles: true }))
+    await settle()
+    expect(element<HTMLTextAreaElement>("output").value).toContain(
+      '#+MORG_MARKDOWN_STYLE: {"bullet":"*"}'
+    )
+  })
+
   it("ignores a persisted direction the select does not offer", async () => {
     writeState({ direction: "bogus" })
     await setUpPage()

@@ -26,6 +26,7 @@ export interface Controls {
   preset: HTMLSelectElement
   useHtml: HTMLInputElement
   interpretHtml: HTMLInputElement
+  recordStyle: HTMLInputElement
   taskCheckboxes: HTMLInputElement
   config: HTMLTextAreaElement
   input: HTMLTextAreaElement
@@ -94,6 +95,7 @@ export function findControls(runner: ConversionRunner): Controls {
     preset: element<HTMLSelectElement>("preset"),
     useHtml: element<HTMLInputElement>("useHtml"),
     interpretHtml: element<HTMLInputElement>("interpretHtml"),
+    recordStyle: element<HTMLInputElement>("recordStyle"),
     taskCheckboxes: element<HTMLInputElement>("taskCheckboxes"),
     config: element<HTMLTextAreaElement>("config"),
     input: element<HTMLTextAreaElement>("input"),
@@ -124,6 +126,7 @@ export function formState(controls: Controls): ConversionForm {
     preset: controls.preset.value,
     useHtml: controls.useHtml.checked,
     interpretHtml: controls.interpretHtml.checked,
+    recordStyle: controls.recordStyle.checked,
     taskCheckboxes: controls.taskCheckboxes.checked,
     markdownStyle: Object.fromEntries(
       controls.styleSelects.map(select => [select.id, select.value])

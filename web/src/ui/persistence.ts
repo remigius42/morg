@@ -16,6 +16,7 @@ export interface PersistedState {
   preset?: string
   useHtml?: boolean
   interpretHtml?: boolean
+  recordStyle?: boolean
   taskCheckboxes?: boolean
   style?: Record<string, string>
   config?: string

@@ -8,7 +8,7 @@
  * Takes the controls it touches rather than the whole `Controls`, so a
  * test needs six elements instead of the converter page.
  */
-import { parseConfig } from "../../../src/config.js"
+import { parseConfig, type MorgConfig } from "../../../src/config.js"
 import { CONFIG_SNIPPETS } from "./snippets.js"
 
 /** The controls a config has anything to say about. */
@@ -18,6 +18,7 @@ export interface ConfigControls {
   preset: HTMLSelectElement
   useHtml: HTMLInputElement
   interpretHtml: HTMLInputElement
+  recordStyle: HTMLInputElement
   taskCheckboxes: HTMLInputElement
   styleSelects: HTMLSelectElement[]
 }
@@ -54,18 +55,22 @@ export function reflectConfig(controls: ConfigControls): void {
   const orgToMd = parsed.orgToMarkdown
   if (typeof orgToMd?.useHtml === "boolean")
     controls.useHtml.checked = orgToMd.useHtml
-  assign(
-    parsed.markdownToOrg?.interpretHtml,
-    value => (controls.interpretHtml.checked = value)
-  )
-  assign(
-    orgToMd?.taskCheckboxes,
-    value => (controls.taskCheckboxes.checked = value)
-  )
+  reflectCheckboxes(controls, parsed)
   for (const select of controls.styleSelects) {
     const value =
       orgToMd?.markdownStyle?.[select.id as keyof typeof orgToMd.markdownStyle]
     if (typeof value === "string") select.value = value
+  }
+}
+
+function reflectCheckboxes(controls: ConfigControls, parsed: MorgConfig): void {
+  const checkboxes: [boolean | undefined, HTMLInputElement][] = [
+    [parsed.markdownToOrg?.interpretHtml, controls.interpretHtml],
+    [parsed.markdownToOrg?.recordStyle, controls.recordStyle],
+    [parsed.orgToMarkdown?.taskCheckboxes, controls.taskCheckboxes]
+  ]
+  for (const [value, control] of checkboxes) {
+    assign(value, checked => (control.checked = checked))
   }
 }
 

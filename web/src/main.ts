@@ -29,6 +29,7 @@ function persist(controls: Controls): void {
     preset: controls.preset.value,
     useHtml: controls.useHtml.checked,
     interpretHtml: controls.interpretHtml.checked,
+    recordStyle: controls.recordStyle.checked,
     taskCheckboxes: controls.taskCheckboxes.checked,
     style: Object.fromEntries(
       controls.styleSelects.map(select => [select.id, select.value])
@@ -54,6 +55,7 @@ function restore(controls: Controls): void {
   assign(state.preset, value => (controls.preset.value = value))
   assign(state.useHtml, value => (controls.useHtml.checked = value))
   assign(state.interpretHtml, value => (controls.interpretHtml.checked = value))
+  assign(state.recordStyle, value => (controls.recordStyle.checked = value))
   assign(
     state.taskCheckboxes,
     value => (controls.taskCheckboxes.checked = value)
@@ -213,6 +215,7 @@ function wireListeners(controls: Controls): void {
     controls.preset,
     controls.useHtml,
     controls.interpretHtml,
+    controls.recordStyle,
     controls.taskCheckboxes,
     ...controls.styleSelects
   ]) {

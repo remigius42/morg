@@ -22,6 +22,7 @@ beforeEach(() => {
     </select>
     <input id="useHtml" type="checkbox" />
     <input id="interpretHtml" type="checkbox" />
+    <input id="recordStyle" type="checkbox" />
     <input id="taskCheckboxes" type="checkbox" />
     <select id="bullet"><option value="-">-</option><option value="*">*</option></select>
   `
@@ -31,6 +32,7 @@ beforeEach(() => {
     preset: element<HTMLSelectElement>("preset"),
     useHtml: element<HTMLInputElement>("useHtml"),
     interpretHtml: element<HTMLInputElement>("interpretHtml"),
+    recordStyle: element<HTMLInputElement>("recordStyle"),
     taskCheckboxes: element<HTMLInputElement>("taskCheckboxes"),
     styleSelects: [element<HTMLSelectElement>("bullet")]
   }
