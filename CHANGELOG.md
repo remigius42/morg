@@ -22,6 +22,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   on, so it cannot document a flag that does not exist or omit one that
   does.
 
+### Changed
+
+- The site names the npm package and links it. The landing page says
+  morg is also a CLI and a library, published as `@remigius42/morg`,
+  and shows the `npx` line that runs it without an install; both pages
+  carry an npm link in the nav beside GitHub. Until now the only route
+  from the Web UI to the package was the repository, which documents it
+  but does not hand it over.
+
+  The nav had fit 320px exactly, so a fourth item would have put the
+  whole page into a horizontal scroll: the nav lists now wrap, which
+  costs a second row on the narrowest phones and leaves every wider
+  viewport as it was.
+
 ### Fixed
 
 - An unsupported format names the value it rejected, as in
