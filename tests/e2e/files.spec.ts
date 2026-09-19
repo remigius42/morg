@@ -63,7 +63,7 @@ test.describe("opening files", () => {
 
     await expect(page.locator("#configSection")).toHaveAttribute("open", "")
     await expect(page.locator("#configSection summary")).toHaveText(
-      "Config (morg.toml) — active"
+      "Config (morg.toml), active"
     )
     // the config did not just land in the box, it took effect
     await expect(page.locator("#bullet")).toHaveValue("+")
@@ -80,7 +80,7 @@ test.describe("opening files", () => {
     await page.dispatchEvent("body", "drop", { dataTransfer: transfer })
 
     await expect(page.locator("#warnings")).toContainText(
-      "Ignored picture.png — it does not look like a text file."
+      "Ignored picture.png: it does not look like a text file."
     )
   })
 

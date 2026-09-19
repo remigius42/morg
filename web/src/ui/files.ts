@@ -113,5 +113,5 @@ export function sizeWarning(file: TextFile): string | undefined {
     return undefined
   }
   const megabytes = (file.size / 1_000_000).toFixed(1)
-  return `${file.name} is ${megabytes} MB — converting it may take a while. The morg CLI handles large files better.`
+  return `${file.name} is ${megabytes} MB; converting it may take a while. The morg CLI handles large files better.`
 }

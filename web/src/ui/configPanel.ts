@@ -34,7 +34,7 @@ export function showConfig(controls: ConfigControls, expand = true): void {
   const summary = controls.configSection.querySelector("summary")
   if (summary) {
     summary.textContent = active
-      ? "Config (morg.toml) — active"
+      ? "Config (morg.toml), active"
       : "Config (morg.toml)"
   }
   if (active && expand) {

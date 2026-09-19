@@ -110,7 +110,7 @@ export function findControls(runner: ConversionRunner): Controls {
     converting: notice("converting", "Converting…"),
     copyError: notice(
       "copyError",
-      "Could not copy — select the output and press Ctrl+C."
+      "Could not copy. Select the output and press Ctrl+C."
     ),
     previousDirection: element<HTMLSelectElement>("direction")
       .value as Direction,

@@ -8,7 +8,7 @@ import { readsMarkdown, type Direction } from "../direction.js"
 
 // the two demos are the same document in both dialects; convergence and
 // zero warnings are pinned by test (tests/web/ui/demos.spec.ts)
-export const ORG_DEMO = `# Paste your Org here — or convert this demo
+export const ORG_DEMO = `# Paste your Org here, or convert this demo
 
 * morg demo
 ** TODO Try the [[https://github.com/remigius42/morg][converter]]
@@ -30,7 +30,7 @@ console.log("fenced code survives")
 [fn:1] Footnotes survive the round trip.
 `
 
-export const MD_DEMO = `<!-- Paste your Markdown here — or convert this demo -->
+export const MD_DEMO = `<!-- Paste your Markdown here, or convert this demo -->
 
 # morg demo
 

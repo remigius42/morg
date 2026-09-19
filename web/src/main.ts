@@ -113,7 +113,7 @@ async function openDocument(
 ): Promise<string[]> {
   const text = await doc.text()
   if (looksBinary(text)) {
-    return [`Ignored ${doc.name} — it does not look like a text file.`]
+    return [`Ignored ${doc.name}: it does not look like a text file.`]
   }
   controls.openedFileName = doc.name
   controls.input.value = text

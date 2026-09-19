@@ -57,7 +57,7 @@ test.describe("converter", () => {
 
     await expect(page.locator("#config")).not.toHaveValue("")
     await expect(page.locator("#configSection summary")).toHaveText(
-      "Config (morg.toml) — active"
+      "Config (morg.toml), active"
     )
     await expect(page.locator("#error")).toBeHidden()
   })
