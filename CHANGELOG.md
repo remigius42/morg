@@ -30,13 +30,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   package manager does not hoist it — pnpm's strict layout, Yarn PnP —
   could not resolve `mdast` and lost the types for the whole module.
 
-- Pushing a `v*` tag builds, verifies and publishes the package with a
-  provenance attestation, then opens a GitHub Release whose notes are
-  this file's section for that version. A tag that disagrees with
-  `package.json`, or a version with no changelog section, fails the
-  release before anything reaches the registry, and the workflow re-runs
-  lint, the unit tests and the build because a tag push does not trigger
-  CI.
+- Published versions carry a provenance attestation, so what is on the
+  registry can be traced back to the commit and the workflow run that
+  built it, and each has a GitHub Release whose notes are this file's
+  section for that version.
 
 - Opt-in `recordStyle` (`--record-style`, `[markdownToOrg]`, Web UI
   checkbox) records the Markdown style a source was written in — bullet,
