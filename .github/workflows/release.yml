@@ -50,14 +50,20 @@ jobs:
       # the changelog is hand-written, so the release notes are lifted from it
       # rather than generated; a missing section means the entry was forgotten
       - name: Extract release notes from changelog
+        # the version goes through the environment rather than into the
+        # script text: interpolating an expression into a `run:` block is
+        # the shape that lets a value execute as shell, and a guard is
+        # worth more than the argument that this particular value is safe
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
-          awk -v heading="## [${{ steps.version.outputs.version }}]" '
+          awk -v heading="## [$VERSION]" '
             index($0, heading) == 1 { inside = 1; next }
             inside && /^## \[/ { exit }
             inside { print }
           ' CHANGELOG.md > "$RUNNER_TEMP/release-notes.md"
           if [ ! -s "$RUNNER_TEMP/release-notes.md" ]; then
-            echo "::error::CHANGELOG.md has no section for ${{ steps.version.outputs.version }}"
+            echo "::error::CHANGELOG.md has no section for $VERSION"
             exit 1
           fi
       # publish first: a failed publish then leaves no orphaned GitHub Release
