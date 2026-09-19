@@ -160,6 +160,13 @@ body > footer,
   outline-offset: 2px;
 }
 
+/* the nav fit 320px exactly until the npm link was added; wrapping
+   costs a second row on the narrowest phones instead of scrolling the
+   whole page sideways, and leaves every wider viewport as it was */
+nav ul {
+  flex-wrap: wrap;
+}
+
 /* flex removes inline baseline alignment, which would lift the
    taller glyph boxes above the neighboring nav links */
 nav li:has(> .theme-switch) {
