@@ -1,4 +1,5 @@
 import { CliError } from "./error.js"
+import { FLAGS_BY_NAME } from "./flags.js"
 
 export interface CliArgs {
   normalize: boolean
@@ -42,42 +43,12 @@ export function parseArgs(args: string[]): CliArgs {
   return parsed
 }
 
-const VALUE_FLAGS = new Set([
-  "--config",
-  "--bullet",
-  "--emphasis",
-  "--strong",
-  "--fence",
-  "--rule",
-  "--rule-repetition",
-  "--from",
-  "--to",
-  "--input",
-  "--output",
-  "--preset"
-])
-
-type BooleanOption =
-  "silent" | "taskCheckboxes" | "interpretHtml" | "recordStyle"
-
-const BOOLEAN_FLAGS = new Map<string, BooleanOption>([
-  ["-s", "silent"],
-  ["--silent", "silent"],
-  ["--task-checkboxes", "taskCheckboxes"],
-  ["--interpret-html", "interpretHtml"],
-  ["--record-style", "recordStyle"]
-])
-
 // a following flag means the value was forgotten; a lone `-` is a legitimate
 // bullet or rule character, so only recognized flag tokens disqualify
 function takeValue(args: string[], index: number): string {
   const flag = args[index]
   const value = args[index + 1]
-  if (
-    value === undefined ||
-    VALUE_FLAGS.has(value) ||
-    BOOLEAN_FLAGS.has(value)
-  ) {
+  if (value === undefined || FLAGS_BY_NAME.has(value)) {
     throw new CliError(`${flag} requires a value`)
   }
   return value
@@ -86,47 +57,26 @@ function takeValue(args: string[], index: number): string {
 function parseFlags(parsed: CliArgs, args: string[]): void {
   for (let i = 0; i < args.length; i++) {
     const arg = args[i] ?? ""
-    // boolean flags take an optional `true`/`false`; bare means true
-    const option = BOOLEAN_FLAGS.get(arg)
-    if (option) {
-      const value = args[i + 1]
-      if (value === "true" || value === "false") {
-        i++
-      }
-      parsed[option] = value !== "false"
-      continue
+    const spec = FLAGS_BY_NAME.get(arg)
+    if (!spec) {
+      throw new CliError(`Unknown argument: ${arg}`)
     }
-    switch (arg) {
-      case "--config":
-        parsed.configPath = takeValue(args, i++)
+    switch (spec.kind) {
+      case "boolean": {
+        // boolean flags take an optional `true`/`false`; bare means true
+        const value = args[i + 1]
+        if (value === "true" || value === "false") {
+          i++
+        }
+        parsed[spec.key] = value !== "false"
         break
-      case "--bullet":
-      case "--emphasis":
-      case "--strong":
-      case "--fence":
-      case "--rule":
-        parsed.markdownStyle[arg.slice(2)] = takeValue(args, i++)
+      }
+      case "string":
+        parsed[spec.key] = takeValue(args, i++)
         break
-      case "--rule-repetition":
-        parsed.markdownStyle.ruleRepetition = takeValue(args, i++)
+      case "style":
+        parsed.markdownStyle[spec.key] = takeValue(args, i++)
         break
-      case "--from":
-        parsed.fromFormat = takeValue(args, i++)
-        break
-      case "--to":
-        parsed.toFormat = takeValue(args, i++)
-        break
-      case "--input":
-        parsed.inputFile = takeValue(args, i++)
-        break
-      case "--output":
-        parsed.outputFile = takeValue(args, i++)
-        break
-      case "--preset":
-        parsed.presetName = takeValue(args, i++)
-        break
-      default:
-        throw new CliError(`Unknown argument: ${arg}`)
     }
   }
 }
