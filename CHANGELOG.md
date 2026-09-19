@@ -24,6 +24,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Node is already covered, and a `bun build --compile` matrix would add
   a second runtime and macOS notarization for the rest.
 
+- `@types/mdast` is a runtime dependency rather than a dev dependency:
+  the declarations for the exported `transformMdastToUniorgAst` and
+  `transformUniorgAstToMdast` name mdast's `Root`, so a consumer whose
+  package manager does not hoist it — pnpm's strict layout, Yarn PnP —
+  could not resolve `mdast` and lost the types for the whole module.
+
 - Pushing a `v*` tag builds, verifies and publishes the package with a
   provenance attestation, then opens a GitHub Release whose notes are
   this file's section for that version. A tag that disagrees with

@@ -68,6 +68,7 @@
     "test:e2e:report": "playwright show-report tests/e2e/reports/html"
   },
   "dependencies": {
+    "@types/mdast": "^4.0.4",
     "orgast-util-to-string": "^1.1.0",
     "remark-frontmatter": "^5.0.0",
     "remark-gfm": "^4.0.1",
@@ -90,7 +91,6 @@
     "@eslint/js": "^10.0.1",
     "@picocss/pico": "^2.1.1",
     "@playwright/test": "^1.63.0",
-    "@types/mdast": "^4.0.4",
     "@types/node": "^24.3.0",
     "@types/unist": "^3.0.3",
     "@vitest/coverage-v8": "^5.0.0",
