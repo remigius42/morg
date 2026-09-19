@@ -56,7 +56,7 @@
     "lint:prettier": "prettier --no-error-on-unmatched-pattern --ignore-unknown --list-different '**/*'",
     "lint:cspell": "cspell --dot --no-must-find-files --no-progress '**/*'",
     "lint:markdown": "markdownlint-cli2 '**/*.md' '!node_modules/**'",
-    "lint:eslint": "eslint --max-warnings=0 '**/*.{ts,mts,js}'",
+    "lint:eslint": "eslint --max-warnings=0 '**/*.{ts,mts,js,mjs}'",
     "lint:fix": "npm run lint:fix:prettier && npm run lint:fix:eslint",
     "lint:fix:prettier": "prettier --write '**/*'",
     "lint:fix:eslint": "eslint --fix '**/*.{ts,mts,js}'",
