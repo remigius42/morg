@@ -45,6 +45,7 @@
   "scripts": {
     "prepare": "husky",
     "prepack": "npm run build",
+    "version": "node scripts/release-changelog.mjs && git add CHANGELOG.md",
     "build": "tsc -p tsconfig.build.json",
     "build:web": "vite build web",
     "dev:web": "vite web",
