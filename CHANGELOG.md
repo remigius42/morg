@@ -24,6 +24,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Node is already covered, and a `bun build --compile` matrix would add
   a second runtime and macOS notarization for the rest.
 
+- Pushing a `v*` tag builds, verifies and publishes the package with a
+  provenance attestation, then opens a GitHub Release whose notes are
+  this file's section for that version. A tag that disagrees with
+  `package.json`, or a version with no changelog section, fails the
+  release before anything reaches the registry, and the workflow re-runs
+  lint, the unit tests and the build because a tag push does not trigger
+  CI.
+
 - Opt-in `recordStyle` (`--record-style`, `[markdownToOrg]`) records the
   Markdown style a source was written in — bullet, emphasis, strong,
   fence and thematic-break markers — as a leading `#+MORG_MARKDOWN_STYLE:`

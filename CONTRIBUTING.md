@@ -89,3 +89,23 @@ for what you submit.
   with behavior changes.
 - Core pipelines stay dialect-agnostic; anything Logseq- or
   Obsidian-specific belongs in a preset (`src/presets/`).
+
+## Releasing
+
+Releases are cut from `main` by pushing a tag; the
+[release workflow](.github/workflows/release.yml) does the rest.
+
+1. Move the `## [Unreleased]` entries into a `## [x.y.z] - YYYY-MM-DD`
+   section in [CHANGELOG.md](CHANGELOG.md) and update the link
+   definitions at the bottom. The workflow lifts its release notes from
+   this section verbatim and fails if it is missing.
+2. `npm version x.y.z` — this commits the bump and creates the matching
+   `vx.y.z` tag. The workflow refuses a tag that disagrees with
+   `package.json`.
+3. `git push --follow-tags`.
+
+The workflow re-runs lint, the unit tests and the build (a tag push does
+not trigger CI), publishes to npm with a provenance attestation, and
+opens the GitHub Release. Publishing needs the `NPM_TOKEN` repository
+secret — a granular automation token with publish rights on
+`@remigius42/morg`.

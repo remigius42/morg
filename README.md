@@ -245,8 +245,10 @@ The core conversion surface is feature-complete and validated against
 real-world Logseq org vaults (edge cases found there live on as
 anonymized fixtures, e.g. `tests/fixtures/logseq-vault.org`); the
 client-side [Web UI](https://morg.binarypoetry.ch) is deployed from
-`main`; not yet published to npm. Most of the code is written with an
-AI coding agent under human direction, test-first and CI-gated — see
+`main`. The npm package is `@remigius42/morg` — the bare `morg` name is
+taken — and pushing a `v*` tag publishes it. Most of the code is
+written with an AI coding agent under human direction, test-first and
+CI-gated — see
 the [contributing guide](CONTRIBUTING.md#development-process).
 
 How each construct maps — including deliberate normalizations and

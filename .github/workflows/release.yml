@@ -1,0 +1,76 @@
+name: "Release"
+on:
+  push:
+    tags: ["v*"]
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      # creating the GitHub Release
+      contents: write
+      # minting the provenance attestation `publishConfig.provenance` asks for
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: "npm"
+          # writes the .npmrc that makes `npm publish` read NODE_AUTH_TOKEN
+          registry-url: "https://registry.npmjs.org"
+      - name: Install NPM packages
+        run: npm ci
+      # a tag that disagrees with package.json would publish a version nobody
+      # can trace back to a commit, so fail before anything is pushed anywhere
+      - name: Check tag matches package version
+        id: version
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          if [ "$GITHUB_REF_NAME" != "v$version" ]; then
+            echo "::error::tag $GITHUB_REF_NAME does not match package.json version $version"
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      # the tag push does not re-run CI, so the release re-verifies what it is
+      # about to ship. The web UI and its e2e suite are not in the tarball and
+      # are covered by CI on `main`, hence only lint, unit tests and the build.
+      - name: Lint
+        run: npm run lint
+      - name: Test
+        run: npm run test:unit:ci
+      - name: Build
+        run: npm run build
+      - name: Check package type resolution
+        run: npm run lint:packaging
+      - name: Smoke-test CLI
+        run: |
+          echo "# Hello" | node dist/cli.js --from markdown | grep -q '^\* Hello'
+          printf '* Hello\n' | node dist/cli.js --from org | grep -q '^# Hello'
+      # the changelog is hand-written, so the release notes are lifted from it
+      # rather than generated; a missing section means the entry was forgotten
+      - name: Extract release notes from changelog
+        run: |
+          awk -v heading="## [${{ steps.version.outputs.version }}]" '
+            index($0, heading) == 1 { inside = 1; next }
+            inside && /^## \[/ { exit }
+            inside { print }
+          ' CHANGELOG.md > "$RUNNER_TEMP/release-notes.md"
+          if [ ! -s "$RUNNER_TEMP/release-notes.md" ]; then
+            echo "::error::CHANGELOG.md has no section for ${{ steps.version.outputs.version }}"
+            exit 1
+          fi
+      # publish first: a failed publish then leaves no orphaned GitHub Release
+      # behind, whereas the reverse order would advertise a package that is not
+      # on the registry
+      - name: Publish to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --title "$GITHUB_REF_NAME" \
+            --notes-file "$RUNNER_TEMP/release-notes.md"
