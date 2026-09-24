@@ -1,6 +1,7 @@
 import type { Parent } from "unist"
 import { unified } from "unified"
 import uniorgParse from "uniorg-parse"
+import { uniorgStringify } from "uniorg-stringify"
 import { SKIP, visit } from "unist-util-visit"
 
 // the org manual's escape character: a zero-width space is a valid
@@ -55,8 +56,10 @@ function allowsMarkupBefore(node: Node | undefined): boolean {
  * neighbor is no valid boundary (`a~x~s`), which would stay literal.
  */
 export function escapeOrgMarkup(tree: Parent): void {
-  defuseLiteralMarkers(tree)
+  // the separators are valid markup boundaries, so literal markers are
+  // checked next to them
   separateMarkupBoundaries(tree)
+  defuseLiteralMarkers(tree)
 }
 
 /**
@@ -100,27 +103,79 @@ function markupOffsets(text: string): number[] {
   return offsets
 }
 
+const stringifier = unified().use(uniorgStringify).freeze()
+
+// how org sees an inline node within its line
+function render(node: Node): string {
+  if (node.type === "text") {
+    return node.value ?? ""
+  }
+  return String(
+    stringifier.stringify({
+      type: "org-data",
+      children: [{ type: "paragraph", children: [node] }]
+    } as Parameters<typeof stringifier.stringify>[0])
+  ).replace(/\n$/, "")
+}
+
+function holdsMarker(node: Node): boolean {
+  return node.type === "text" && /[*/_=~+]/.test(node.value ?? "")
+}
+
+// [child index, offset in its rendering] of each opening marker org
+// reads as markup that lies in a text child, i.e. is a literal marker
+function literalMarkers(
+  children: Node[],
+  rendered: string[]
+): [number, number][] {
+  let end = 0
+  const ends = rendered.map(part => (end += part.length))
+  return markupOffsets(rendered.join("")).flatMap(offset => {
+    const i = ends.findIndex(partEnd => partEnd > offset)
+    const start = (ends[i] ?? 0) - (rendered[i]?.length ?? 0)
+    return children[i]?.type === "text"
+      ? [[i, offset - start] as [number, number]]
+      : []
+  })
+}
+
 // a zero-width space after an opening marker leaves org nothing to read
 // as markup (content may not start with one). Defusing an outer pair can
 // expose an inner one, hence the rounds; each defuses at least one
 // marker, so there are at most as many rounds as markers
+function defuseRendered(children: Node[], rendered: string[]): void {
+  let rounds = rendered.join("").match(MARKERS_RE)?.length ?? 0
+  let markers
+  while (
+    rounds-- > 0 &&
+    (markers = literalMarkers(children, rendered)).length
+  ) {
+    for (const [i, offset] of markers.reverse()) {
+      const part = rendered[i] ?? ""
+      rendered[i] =
+        part.slice(0, offset + 1) + ZERO_WIDTH_SPACE + part.slice(offset + 1)
+    }
+  }
+}
+
+// checked on the rendered line, not per text node: another inline node
+// may split a literal pair (`*b ~x~ c*`)
 function defuseLiteralMarkers(tree: Parent): void {
-  visit(tree, "text", (node: Node) => {
-    let value = node.value ?? ""
-    if (!MAY_HOLD_MARKUP_RE.test(value)) {
+  visit(tree, (node: Node | Parent) => {
+    if (!("children" in node) || !node.children.some(holdsMarker)) {
       return
     }
-    let rounds = value.match(MARKERS_RE)?.length ?? 0
-    let offsets
-    while (rounds-- > 0 && (offsets = markupOffsets(value)).length) {
-      for (const offset of offsets.reverse()) {
-        value =
-          value.slice(0, offset + 1) +
-          ZERO_WIDTH_SPACE +
-          value.slice(offset + 1)
+    const children = node.children as Node[]
+    const rendered = children.map(render)
+    if (!MAY_HOLD_MARKUP_RE.test(rendered.join(""))) {
+      return
+    }
+    defuseRendered(children, rendered)
+    for (const [i, child] of children.entries()) {
+      if (child.type === "text") {
+        child.value = rendered[i]
       }
     }
-    node.value = value
   })
 }
 

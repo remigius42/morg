@@ -197,6 +197,14 @@ describe("inline code edge whitespace", () => {
   })
 })
 
+describe("literal org markers", () => {
+  it("stay literal next to markup", () => {
+    // the zero-width space separating the markup is a valid boundary
+    const markdown = "**a**/b/ c, /b/**a** c, a *b*+c+ d and a **b**=c= d\n"
+    expect(mdRoundTrip(markdown)).toBe(markdown)
+  })
+})
+
 describe("org line syntax in paragraph text", () => {
   it("stays text through a round trip", () => {
     const markdown = "\\* a\n1\\. b\n\\- c\n\\# d\n\\| e |\n"

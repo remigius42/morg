@@ -50,6 +50,14 @@ This is a paragraph.
     )
   })
 
+  it("should keep a literal marker pair split by another node literal", () => {
+    const markdown = "a \\*b `x` c\\* d, a /b [l](u) c/ d, a =b **c** d= e\n"
+
+    expect(convertMarkdownToOrg(markdown)).toBe(
+      "a *\u200Bb ~x~ c* d, a /\u200Bb [[file:u][l]] c/ d, a =\u200Bb *c* d= e\n"
+    )
+  })
+
   it("should keep bare underscores and carets out of org scripts", () => {
     // ^:{} limits org sub/superscripts to the braced form morg emits
     const markdown = "see a_b_c and x^y\n"
