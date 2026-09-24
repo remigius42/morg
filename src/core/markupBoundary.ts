@@ -1,8 +1,8 @@
 import type { Parent } from "unist"
 import { unified } from "unified"
 import uniorgParse from "uniorg-parse"
-import { uniorgStringify } from "uniorg-stringify"
 import { SKIP, visit } from "unist-util-visit"
+import { locate, renderChildren, type Node } from "./render.js"
 
 // the org manual's escape character: a zero-width space is a valid
 // markup boundary (uniorg lists it in its emphasis regexp components)
@@ -22,8 +22,6 @@ const MARKUP_TYPES = new Set([
 // marker (uniorg's emphasisRegexpComponents pre / post)
 const PRE_RE = /[-–—\s\u200B('’"“”{]$/
 const POST_RE = /^[-–—\s\u200B.,:!?;'’"“”)}[]/
-
-type Node = Parent["children"][number] & { value?: string }
 
 function isMarkup(node: Node | undefined): boolean {
   return MARKUP_TYPES.has(node?.type ?? "")
@@ -72,7 +70,8 @@ export function unescapeOrgMarkup(tree: Parent): void {
   })
 }
 
-const MARKERS_RE = /[*/_=~+]/g
+const MARKER_RE = /[*/_=~+]/
+const MARKERS_RE = new RegExp(MARKER_RE.source, "g")
 // org's emphasis rule, loosened: a marker, a non-blank after it, the
 // same marker closing after a non-blank, then an allowed char, a table
 // cell border or the end. The char before the opening marker is left
@@ -103,58 +102,8 @@ function markupOffsets(text: string): number[] {
   return offsets
 }
 
-const stringifier = unified().use(uniorgStringify).freeze()
-
-// uniorg's inline node types; anything else is a block element (in a
-// list item's flattened content: a nested list or code block)
-export const INLINE_TYPES = new Set([
-  "text",
-  "bold",
-  "italic",
-  "underline",
-  "strike-through",
-  "code",
-  "verbatim",
-  "link",
-  "footnote-reference",
-  "latex-fragment",
-  "entity",
-  "timestamp",
-  "subscript",
-  "superscript",
-  "export-snippet",
-  "statistics-cookie",
-  "citation",
-  "line-break"
-])
-
-// ends the rendering, so the paragraph's own trailing newline and
-// whitespace trimming stay out of it
-const SENTINEL = "\u0000"
-
-/**
- * How org renders an inline node within its line.
- */
-export function renderInline(node: Node): string {
-  if (node.type === "text") {
-    return node.value ?? ""
-  }
-  const rendered = String(
-    stringifier.stringify({
-      type: "org-data",
-      children: [
-        {
-          type: "paragraph",
-          children: [node, { type: "text", value: SENTINEL }]
-        }
-      ]
-    } as Parameters<typeof stringifier.stringify>[0])
-  )
-  return rendered.slice(0, rendered.lastIndexOf(SENTINEL))
-}
-
 function holdsMarker(node: Node): boolean {
-  return node.type === "text" && /[*/_=~+]/.test(node.value ?? "")
+  return node.type === "text" && MARKER_RE.test(node.value ?? "")
 }
 
 // [child index, offset in its rendering] of each opening marker org
@@ -163,15 +112,9 @@ function literalMarkers(
   children: Node[],
   rendered: string[]
 ): [number, number][] {
-  let end = 0
-  const ends = rendered.map(part => (end += part.length))
-  return markupOffsets(rendered.join("")).flatMap(offset => {
-    const i = ends.findIndex(partEnd => partEnd > offset)
-    const start = (ends[i] ?? 0) - (rendered[i]?.length ?? 0)
-    return children[i]?.type === "text"
-      ? [[i, offset - start] as [number, number]]
-      : []
-  })
+  return markupOffsets(rendered.join(""))
+    .map(offset => locate(rendered, offset))
+    .filter(([i]) => children[i]?.type === "text")
 }
 
 // a zero-width space after an opening marker leaves org nothing to read
@@ -201,7 +144,7 @@ function defuseLiteralMarkers(tree: Parent): void {
       return
     }
     const children = node.children as Node[]
-    const rendered = children.map(renderInline)
+    const rendered = renderChildren(children)
     if (!MAY_HOLD_MARKUP_RE.test(rendered.join(""))) {
       return
     }

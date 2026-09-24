@@ -1,18 +1,9 @@
 import type { Parent } from "unist"
-import { unified } from "unified"
-import uniorgParse from "uniorg-parse"
 import { visit } from "unist-util-visit"
 // a line starting with a zero-width space is no org line syntax (list
 // item, headline, comment, keyword, table, ...), but renders as text
-import {
-  INLINE_TYPES,
-  renderInline,
-  ZERO_WIDTH_SPACE
-} from "./markupBoundary.js"
-
-type Node = Parent["children"][number] & { value?: string }
-
-const orgParser = unified().use(uniorgParse).freeze()
+import { ZERO_WIDTH_SPACE } from "./markupBoundary.js"
+import { locate, orgParser, renderChildren, type Node } from "./render.js"
 
 // org line syntax starts with one of a few punctuation chars (`- `,
 // `+ `, `* `, `# `, `| `, `:`, `[fn:`, `\begin`, `%%(`) or with a word
@@ -43,9 +34,7 @@ interface LineStart {
 // footnote definition's first paragraph, follows the bullet or label
 // instead; a block element (nested list, code block) ends a line
 function lineStarts(children: Node[], afterBullet: boolean): LineStart[] {
-  const rendered = children.map(child =>
-    INLINE_TYPES.has(child.type) ? renderInline(child) : "\n"
-  )
+  const rendered = renderChildren(children)
   const content = rendered.join("")
   const breaks = afterBullet ? [] : [0]
   for (
@@ -55,24 +44,22 @@ function lineStarts(children: Node[], afterBullet: boolean): LineStart[] {
   ) {
     breaks.push(i + 1)
   }
-  let end = 0
-  const ends = rendered.map(part => (end += part.length))
   return breaks.flatMap(lineBreak => {
     // org keeps a continuation line's indentation in the text
     const [, indent = "", line = ""] =
       /^([ \t]*)(.*)/.exec(content.slice(lineBreak)) ?? []
-    const start = lineBreak + indent.length
-    const index = ends.findIndex(partEnd => partEnd > start)
-    const offset = start - (ends[index] ?? 0) + (rendered[index]?.length ?? 0)
+    const [index, offset] = locate(rendered, lineBreak + indent.length)
     return line ? [{ index, offset, line }] : []
   })
 }
 
 // calls `rewrite` on every paragraph, and every list item whose inline
-// content md→org flattens, with its children and their line starts
+// content md→org flattens, with its children and their line starts;
+// `applies` skips the rendering where there is nothing to rewrite
 function rewriteLines(
   tree: Parent,
-  rewrite: (children: Node[], starts: LineStart[]) => void
+  rewrite: (children: Node[], starts: LineStart[]) => void,
+  applies: (children: Node[]) => boolean = () => true
 ): void {
   visit(tree, (node: Node | Parent, index, parent: Parent | undefined) => {
     if (node.type !== "paragraph" && node.type !== "list-item") {
@@ -84,7 +71,9 @@ function rewriteLines(
         (parent?.type === "list-item" ||
           parent?.type === "footnote-definition"))
     const children = (node as Parent).children as Node[]
-    rewrite(children, lineStarts(children, afterBullet))
+    if (applies(children)) {
+      rewrite(children, lineStarts(children, afterBullet))
+    }
   })
 }
 
@@ -120,13 +109,21 @@ export function escapeLineSyntax(tree: Parent): void {
  * inserts.
  */
 export function unescapeLineSyntax(tree: Parent): void {
-  rewriteLines(tree, (children, starts) => {
-    for (const { index, offset } of starts.reverse()) {
-      const child = children[index]
-      const value = child?.value ?? ""
-      if (child?.type === "text" && value[offset] === ZERO_WIDTH_SPACE) {
-        child.value = value.slice(0, offset) + value.slice(offset + 1)
+  rewriteLines(
+    tree,
+    (children, starts) => {
+      for (const { index, offset } of starts.reverse()) {
+        const child = children[index]
+        const value = child?.value ?? ""
+        if (child?.type === "text" && value[offset] === ZERO_WIDTH_SPACE) {
+          child.value = value.slice(0, offset) + value.slice(offset + 1)
+        }
       }
-    }
-  })
+    },
+    children =>
+      children.some(
+        child =>
+          child.type === "text" && child.value?.includes(ZERO_WIDTH_SPACE)
+      )
+  )
 }

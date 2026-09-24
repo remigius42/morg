@@ -3,7 +3,7 @@ import type { Parent } from "unist"
 import { unified } from "unified"
 import uniorgParse from "uniorg-parse"
 import { EXIT, visit } from "unist-util-visit"
-import { INLINE_TYPES, renderInline } from "./markupBoundary.js"
+import { isInline, orgParser, renderChildren, type Node } from "./render.js"
 
 // org's `#+OPTIONS: ^:{}` limits sub/superscripts to the braced form
 // (`H_{2}O`), so a bare underscore or caret (`a_b`, `x^y`) stays text.
@@ -14,15 +14,12 @@ const BRACED_SCRIPTS = "^:{}"
 type Keyword = OrgData["children"][number] & { key: string; value: string }
 
 // built once: constructing a processor per parse dominates the cost
-const scriptsParser = unified().use(uniorgParse).freeze()
 const bracedScriptsParser = unified()
   .use(uniorgParse, { useSubSuperscripts: "{}" })
   .freeze()
 
-type Node = Parent["children"][number] & { value?: string }
-
 function countScripts(text: string, braced: boolean): number {
-  const tree = (braced ? bracedScriptsParser : scriptsParser).parse(text)
+  const tree = (braced ? bracedScriptsParser : orgParser).parse(text)
   let count = 0
   visit(tree as Parent, node => {
     if (node.type === "subscript" || node.type === "superscript") {
@@ -36,15 +33,13 @@ function countScripts(text: string, braced: boolean): number {
 // (a list item's nested list) only ends a line
 function renderedContent(node: Node | Parent): string | undefined {
   if (
-    INLINE_TYPES.has(node.type) ||
+    isInline(node) ||
     !("children" in node) ||
-    !node.children.some(child => INLINE_TYPES.has(child.type))
+    !node.children.some(isInline)
   ) {
     return undefined
   }
-  return (node.children as Node[])
-    .map(child => (INLINE_TYPES.has(child.type) ? renderInline(child) : "\n"))
-    .join("")
+  return renderChildren(node.children).join("")
 }
 
 // whether org reads a script in the text that `^:{}` would keep text.
@@ -138,5 +133,5 @@ export function parseOrg(org: string): OrgData {
       return uniorgAst
     }
   }
-  return scriptsParser.parse(org)
+  return orgParser.parse(org)
 }
