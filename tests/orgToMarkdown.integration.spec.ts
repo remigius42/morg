@@ -41,6 +41,14 @@ describe("convertOrgToMarkdown", () => {
     )
   })
 
+  it("should keep the space before markup in a table cell", () => {
+    const org = "| a |\n|-|\n| of ~c~ |\n"
+
+    expect(convertOrgToMarkdown(org)).toBe(
+      "| a      |\n| ------ |\n| of `c` |\n"
+    )
+  })
+
   it("should convert src and example blocks to fenced code", () => {
     const org =
       '#+begin_src js\nconsole.log("hi")\n#+end_src\n\n#+begin_example\nplain\n#+end_example\n'

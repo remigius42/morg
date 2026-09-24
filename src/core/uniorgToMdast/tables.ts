@@ -23,12 +23,18 @@ function isAlignmentCookieRow(row: TableRow): boolean {
 }
 
 // org cell content keeps the aligning whitespace padding; markdown
-// cells are re-padded by the stringifier
-function trimCellPadding(node: PhrasingContent): PhrasingContent {
-  if (node.type === "text") {
-    node.value = node.value.trim()
+// cells are re-padded by the stringifier. Only the cell's edges are
+// padding: a space between text and markup is content
+function trimCellPadding(children: PhrasingContent[]): PhrasingContent[] {
+  const first = children[0]
+  if (first?.type === "text") {
+    first.value = first.value.trimStart()
   }
-  return node
+  const last = children.at(-1)
+  if (last?.type === "text") {
+    last.value = last.value.trimEnd()
+  }
+  return children
 }
 
 export function transformTable(
@@ -73,9 +79,7 @@ export function transformTable(
         type: "tableRow",
         children: (row.children || []).map(cell => ({
           type: "tableCell",
-          children: transformUniorgObjects(ctx, cell.children).map(
-            trimCellPadding
-          )
+          children: trimCellPadding(transformUniorgObjects(ctx, cell.children))
         }))
       }))
   } as unknown as RootContent
