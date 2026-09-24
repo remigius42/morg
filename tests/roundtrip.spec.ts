@@ -199,6 +199,10 @@ describe("org line syntax in paragraph text", () => {
 })
 
 describe("normalizations", () => {
+  it("underscores inside words get escaped (remark's canonical form)", () => {
+    expect(mdRoundTrip("see a_b\n")).toBe("see a\\_b\n")
+  })
+
   it("org verbatim becomes code (md has one inline code)", () => {
     expect(orgRoundTrip("Use =bar= here.\n")).toBe("Use ~bar~ here.\n")
   })

@@ -173,6 +173,9 @@ style where there is one; notable normalizations beyond formatting:
   code becomes plain text and reports via `onWarning`
 - org `=verbatim=` → `~code~`: Markdown has a single inline code
   construct, and org's own HTML export renders both as `<code>`
+- `_` inside a word → `\_` in Markdown: remark's own canonical form
+  escapes it; same meaning, and wikilink targets are emitted verbatim,
+  so file names in `[[…]]` keep theirs
 - org entities → UTF-8 characters
 - inline footnotes → reference + definition
 - superscript/subscript → braced form (`^{2}`, `_{2}`)
