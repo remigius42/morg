@@ -12,6 +12,22 @@ export type Node = Parent["children"][number] & { value?: string }
 export const orgParser = unified().use(uniorgParse).freeze()
 const stringifier = unified().use(uniorgStringify).freeze()
 
+/**
+ * Parses `text` as an org document, or returns undefined where uniorg
+ * throws: it takes a line starting `_.` or `_)` for a bullet, then
+ * fails to read it (org has no such bullet).
+ */
+export function tryParse(
+  text: string,
+  parser: { parse(text: string): unknown } = orgParser
+): Parent | undefined {
+  try {
+    return parser.parse(text) as Parent
+  } catch {
+    return undefined
+  }
+}
+
 // uniorg's inline node types; anything else is a block element (in a
 // list item's flattened content: a nested list or code block)
 const INLINE_TYPES = new Set([

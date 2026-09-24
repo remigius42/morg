@@ -3,7 +3,13 @@ import type { Parent } from "unist"
 import { unified } from "unified"
 import uniorgParse from "uniorg-parse"
 import { EXIT, visit } from "unist-util-visit"
-import { isInline, orgParser, renderChildren, type Node } from "./render.js"
+import {
+  isInline,
+  orgParser,
+  renderChildren,
+  tryParse,
+  type Node
+} from "./render.js"
 
 // org's `#+OPTIONS: ^:{}` limits sub/superscripts to the braced form
 // (`H_{2}O`), so a bare underscore or caret (`a_b`, `x^y`) stays text.
@@ -18,10 +24,14 @@ const bracedScriptsParser = unified()
   .use(uniorgParse, { useSubSuperscripts: "{}" })
   .freeze()
 
+// a text uniorg fails to read counts as holding none
 function countScripts(text: string, braced: boolean): number {
-  const tree = (braced ? bracedScriptsParser : orgParser).parse(text)
+  const tree = tryParse(text, braced ? bracedScriptsParser : orgParser)
+  if (!tree) {
+    return 0
+  }
   let count = 0
-  visit(tree as Parent, node => {
+  visit(tree, node => {
     if (node.type === "subscript" || node.type === "superscript") {
       count++
     }

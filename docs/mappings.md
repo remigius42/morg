@@ -48,7 +48,9 @@ spaces directly next to markup or after a marker again.
 A paragraph line org would read as line syntax (an escaped `1\.`,
 `\-`, `\*` or `\#`, or a lazy continuation line starting that way)
 gets a leading zero-width space too, or it would turn into a list
-item, headline, comment or table; org → md drops it.
+item, headline, comment or table; org → md drops it. So does a line
+starting `_.` or `_)`: org reads it as text, but uniorg takes it for a
+bullet and fails to parse the document.
 
 Markdown text has no sub/superscripts, but org reads a bare `a_b` or
 `x^y` as one. md → org therefore adds `^:{}` to `#+OPTIONS:` (org's

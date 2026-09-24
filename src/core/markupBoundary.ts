@@ -2,7 +2,7 @@ import type { Parent } from "unist"
 import { unified } from "unified"
 import uniorgParse from "uniorg-parse"
 import { SKIP, visit } from "unist-util-visit"
-import { locate, renderChildren, type Node } from "./render.js"
+import { locate, renderChildren, tryParse, type Node } from "./render.js"
 
 // the org manual's escape character: a zero-width space is a valid
 // markup boundary (uniorg lists it in its emphasis regexp components)
@@ -86,10 +86,14 @@ const positionParser = unified()
   .freeze()
 
 // offsets of the opening markers of the outermost markup org reads in
-// `text`
+// `text`; none where uniorg fails to read it
 function markupOffsets(text: string): number[] {
+  const tree = tryParse(text, positionParser)
+  if (!tree) {
+    return []
+  }
   const offsets: number[] = []
-  visit(positionParser.parse(text) as Parent, (node: Node) => {
+  visit(tree, (node: Node) => {
     if (!isMarkup(node)) {
       return undefined
     }

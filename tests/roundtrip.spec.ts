@@ -218,6 +218,15 @@ describe("org line syntax in paragraph text", () => {
     expect(mdRoundTrip(markdown)).toBe("a\n1\\.\nb\n")
   })
 
+  it("stays text when uniorg fails to read an underscore bullet", () => {
+    // uniorg throws on `_.` and `_)` bullets; org has none
+    const markdown = "_.\na::).\n"
+    expect(convertMarkdownToOrg(markdown)).toBe("\u200B_.\na::).\n")
+    const once = mdRoundTrip(markdown)
+    expect(once).toBe("\\_.\na::).\n")
+    expect(mdRoundTrip(once)).toBe(once)
+  })
+
   it("stays text inside a list item", () => {
     const markdown = "- a\n  1\\. b\n  \\# c\n"
     expect(mdRoundTrip(markdown)).toBe(markdown)

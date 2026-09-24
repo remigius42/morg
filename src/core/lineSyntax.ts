@@ -7,16 +7,17 @@ import {
   delimiters,
   isInline,
   locate,
-  orgParser,
   renderInline,
+  tryParse,
   type Node
 } from "./render.js"
 
 // org line syntax starts with one of a few punctuation chars (`- `,
 // `+ `, `* `, `# `, `| `, `:`, `[fn:`, `\begin`, `%%(`) or with a word
-// followed by `.`, `)` or `:` (`1.`, `a)`, `CLOCK:`); any other line
-// (one starting with a link or code, say) is text, and skips the parse
-const MAY_BE_LINE_SYNTAX_RE = /^[-+*#|:[\\%]|^[\p{L}\p{N}]+[.):]/u
+// followed by `.`, `)` or `:` (`1.`, `a)`, `CLOCK:`, `_.`); any other
+// line (one starting with a link or code, say) is text, and skips the
+// parse
+const MAY_BE_LINE_SYNTAX_RE = /^[-+*#|:[\\%]|^[\p{L}\p{N}_]+[.):]/u
 
 // whether org reads `line` as anything but a plain paragraph
 function readsAsLineSyntax(line: string): boolean {
@@ -24,7 +25,12 @@ function readsAsLineSyntax(line: string): boolean {
     return false
   }
   // with its newline: a bullet ending the line (`1.`) needs one
-  const [first, ...rest] = orgParser.parse(`${line}\n`).children
+  const tree = tryParse(`${line}\n`)
+  if (!tree) {
+    // escaped, uniorg reads the line as text too
+    return true
+  }
+  const [first, ...rest] = tree.children
   return first?.type !== "paragraph" || rest.length > 0
 }
 

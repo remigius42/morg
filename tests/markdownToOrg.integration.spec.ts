@@ -117,6 +117,15 @@ This is a paragraph.
     expect(convertMarkdownToOrg("\\*` x`\n")).toBe("\u200B* ~x~\n")
   })
 
+  it("should survive uniorg failing to read a heading or table cell", () => {
+    // parsed alone, `_. a` throws in uniorg (it takes `_.` for a bullet)
+    expect(convertMarkdownToOrg("# _. a\n")).toBe("* _. a\n")
+    // unchecked, so a literal marker pair stays as is
+    expect(convertMarkdownToOrg("| _. /b/ |\n| - |\n")).toBe(
+      "| _. /b/ |\n|-|\n"
+    )
+  })
+
   it("should keep a heading inside a list item as text, with a warning", () => {
     // org headlines cannot live inside a list item
     const warnings: string[] = []
