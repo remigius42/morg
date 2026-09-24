@@ -30,4 +30,15 @@ describe("obsidian preset", () => {
     expect(roundTrip(once)).toBe(once)
     expect(once).toContain("[[Page]]")
   })
+
+  it("escapes the alias pipe of a wikilink inside a table cell", () => {
+    // Obsidian's own convention; a bare | would split the cell
+    const org = "| a |\n|-|\n| [[Page][alias]] |\n"
+    const markdown = convertOrgToMarkdown(org, { preset: obsidian() })
+
+    expect(markdown).toBe(
+      "| a               |\n| --------------- |\n| [[Page\\|alias]] |\n"
+    )
+    expect(convertMarkdownToOrg(markdown, { preset: obsidian() })).toBe(org)
+  })
 })

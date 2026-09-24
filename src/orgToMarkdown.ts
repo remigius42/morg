@@ -63,9 +63,17 @@ export function convertOrgToMarkdown(
       ...options.markdownStyle,
       handlers: {
         // key:: value blocks and preset inline passthroughs (e.g.
-        // wikilinks) are emitted verbatim, unescaped
+        // wikilinks) are emitted verbatim, unescaped; only a pipe inside
+        // a table cell is escaped, or it would split the cell
         keyValue: (node: { value: string }) => node.value,
-        verbatimInline: (node: { value: string }) => node.value
+        verbatimInline: (
+          node: { value: string },
+          _parent: unknown,
+          state: { stack: string[] }
+        ) =>
+          state.stack.includes("tableCell")
+            ? node.value.replaceAll("|", "\\|")
+            : node.value
       }
     } as Parameters<typeof remarkStringify>[0])
     .use(remarkGfm)

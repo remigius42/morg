@@ -176,4 +176,6 @@ markup and hiccup (`[:div …]`) survive verbatim, emitted unescaped in
 Markdown.
 
 `obsidian`: wikilinks `[[Page]]` / `[[Page|alias]]` ↔ org fuzzy links,
-emitted unescaped in Markdown.
+emitted unescaped in Markdown, except for the alias pipe inside a
+table cell, written `\|` as Obsidian does, since a bare `|` would
+split the cell.
