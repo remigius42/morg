@@ -211,6 +211,13 @@ describe("org line syntax in paragraph text", () => {
     expect(mdRoundTrip(markdown)).toBe(markdown)
   })
 
+  it("stays text when a bullet ends the line", () => {
+    const markdown = "a\n1.\nb\n"
+    expect(convertMarkdownToOrg(markdown)).toBe("a\n\u200B1.\nb\n")
+    // remark escapes the bullet
+    expect(mdRoundTrip(markdown)).toBe("a\n1\\.\nb\n")
+  })
+
   it("stays text inside a list item", () => {
     const markdown = "- a\n  1\\. b\n  \\# c\n"
     expect(mdRoundTrip(markdown)).toBe(markdown)

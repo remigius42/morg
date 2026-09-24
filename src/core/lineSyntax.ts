@@ -23,7 +23,8 @@ function readsAsLineSyntax(line: string): boolean {
   if (!MAY_BE_LINE_SYNTAX_RE.test(line)) {
     return false
   }
-  const [first, ...rest] = orgParser.parse(line).children
+  // with its newline: a bullet ending the line (`1.`) needs one
+  const [first, ...rest] = orgParser.parse(`${line}\n`).children
   return first?.type !== "paragraph" || rest.length > 0
 }
 
