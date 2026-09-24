@@ -216,6 +216,22 @@ describe("org line syntax in paragraph text", () => {
     expect(mdRoundTrip(markdown)).toBe(markdown)
   })
 
+  it("follows the label in a footnote definition, unescaped", () => {
+    // org reads `[fn:1] 1. a` as a paragraph; only lines below it start
+    const markdown = "a[^1]\n\n[^1]: 1\\. b\n    2\\. c\n"
+    expect(convertMarkdownToOrg(markdown)).toBe(
+      "a[fn:1]\n\n[fn:1] 1. b\n\u200B2. c\n"
+    )
+    expect(mdRoundTrip(markdown)).toBe(markdown)
+  })
+
+  it("stays text when the line starts with, or spans, another node", () => {
+    // the code's edge whitespace moves outside it
+    expect(mdRoundTrip("[^1] a\n\n\\*` x`\n\n[^1]: n\n")).toBe(
+      "[^1] a\n\n\\* `x`\n\n[^1]: n\n"
+    )
+  })
+
   it("stays text after a nested list or code block in a list item", () => {
     const afterList = "- a\n  - b\n\n  1\\. c\n"
     expect(convertMarkdownToOrg(afterList)).toBe("- a\n  - b\n  \u200B1. c\n")

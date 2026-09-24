@@ -99,6 +99,14 @@ This is a paragraph.
     )
   })
 
+  it("should check line syntax on the rendered line, not the first text", () => {
+    // [fn:1] at line start is a footnote definition; `* ~x~` a headline
+    expect(convertMarkdownToOrg("[^1] a\n\n[^1]: n\n")).toBe(
+      "\u200B[fn:1] a\n\n[fn:1] n\n"
+    )
+    expect(convertMarkdownToOrg("\\*` x`\n")).toBe("\u200B* ~x~\n")
+  })
+
   it("should keep a heading inside a list item as text, with a warning", () => {
     // org headlines cannot live inside a list item
     const warnings: string[] = []

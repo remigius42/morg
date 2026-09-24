@@ -105,17 +105,29 @@ function markupOffsets(text: string): number[] {
 
 const stringifier = unified().use(uniorgStringify).freeze()
 
-// how org sees an inline node within its line
-function render(node: Node): string {
+// ends the rendering, so the paragraph's own trailing newline and
+// whitespace trimming stay out of it
+const SENTINEL = "\u0000"
+
+/**
+ * How org renders an inline node within its line.
+ */
+export function renderInline(node: Node): string {
   if (node.type === "text") {
     return node.value ?? ""
   }
-  return String(
+  const rendered = String(
     stringifier.stringify({
       type: "org-data",
-      children: [{ type: "paragraph", children: [node] }]
+      children: [
+        {
+          type: "paragraph",
+          children: [node, { type: "text", value: SENTINEL }]
+        }
+      ]
     } as Parameters<typeof stringifier.stringify>[0])
-  ).replace(/\n$/, "")
+  )
+  return rendered.slice(0, rendered.lastIndexOf(SENTINEL))
 }
 
 function holdsMarker(node: Node): boolean {
@@ -166,7 +178,7 @@ function defuseLiteralMarkers(tree: Parent): void {
       return
     }
     const children = node.children as Node[]
-    const rendered = children.map(render)
+    const rendered = children.map(renderInline)
     if (!MAY_HOLD_MARKUP_RE.test(rendered.join(""))) {
       return
     }
