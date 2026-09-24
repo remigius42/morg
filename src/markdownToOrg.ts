@@ -17,6 +17,7 @@ import type {
 import { transformMdastToUniorgAst } from "./core/mdastToUniorg/index.js"
 import { detectMarkdownStyle, STYLE_KEYWORD } from "./core/markdownStyle.js"
 import { escapeOrgMarkup } from "./core/markupBoundary.js"
+import { escapeLineSyntax } from "./core/lineSyntax.js"
 import { requireBracedScripts } from "./core/bracedScripts.js"
 import type { MarkdownStyleOptions, MarkdownToOrgOptions } from "./options.js"
 
@@ -84,8 +85,10 @@ export function convertMarkdownToOrg(
   // rewrites (wikilink aliases) org parses too
   requireBracedScripts(uniorgAst)
 
-  // Phase 3c: literal markers org would read as markup, and markup
-  // touching a word character, need a zero-width space escape
+  // Phase 3c: paragraph lines org would read as line syntax, literal
+  // markers org would read as markup, and markup touching a word
+  // character, need a zero-width space escape
+  escapeLineSyntax(uniorgAst)
   escapeOrgMarkup(uniorgAst)
 
   // Phase 4: Render uniorg-ast to Org-mode string

@@ -186,6 +186,18 @@ describe("inline code edge whitespace", () => {
   })
 })
 
+describe("org line syntax in paragraph text", () => {
+  it("stays text through a round trip", () => {
+    const markdown = "\\* a\n1\\. b\n\\- c\n\\# d\n\\| e |\n"
+    expect(mdRoundTrip(markdown)).toBe(markdown)
+  })
+
+  it("stays text inside a list item", () => {
+    const markdown = "- a\n  1\\. b\n  \\# c\n"
+    expect(mdRoundTrip(markdown)).toBe(markdown)
+  })
+})
+
 describe("normalizations", () => {
   it("org verbatim becomes code (md has one inline code)", () => {
     expect(orgRoundTrip("Use =bar= here.\n")).toBe("Use ~bar~ here.\n")

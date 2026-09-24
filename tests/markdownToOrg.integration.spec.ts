@@ -72,6 +72,16 @@ This is a paragraph.
     expect(warnings).toEqual(["whitespace-only inline code kept as text"])
   })
 
+  it("should keep paragraph lines that look like org syntax text", () => {
+    // a zero-width space at line start keeps org from reading a list
+    // item, headline, comment or table there
+    const markdown = "\\* a\n1\\. b\n\\- c\n\\# d\n\\| e |\n"
+
+    expect(convertMarkdownToOrg(markdown)).toBe(
+      "\u200B* a\n\u200B1. b\n\u200B- c\n\u200B# d\n\u200B| e |\n"
+    )
+  })
+
   it("should convert fenced code blocks to src blocks", () => {
     const markdown = '```js\nconsole.log("hi")\n```\n'
 
