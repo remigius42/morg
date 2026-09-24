@@ -7,7 +7,7 @@ import type {
   List,
   ListItem
 } from "uniorg"
-import type { TransformContext } from "./context.js"
+import { warn, type TransformContext } from "./context.js"
 import { transformPhrasingChildren } from "./phrasing.js"
 // circular import with index.js is fine in ESM: both sides only export
 // hoisted function declarations called after module initialization
@@ -55,7 +55,11 @@ function transformMdastListItem(
       if (child.type === "list") {
         return [transformMdastList(ctx, child, indent + bullet.length)]
       }
-      if (child.type === "paragraph") {
+      if (child.type === "heading") {
+        // org headlines cannot live inside a list item; the text stays
+        warn(ctx, "heading inside a list item became text")
+      }
+      if (child.type === "paragraph" || child.type === "heading") {
         return [
           ...transformPhrasingChildren(ctx, child.children),
           { type: "text", value: "\n" }

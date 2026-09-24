@@ -82,6 +82,17 @@ This is a paragraph.
     )
   })
 
+  it("should keep a heading inside a list item as text, with a warning", () => {
+    // org headlines cannot live inside a list item
+    const warnings: string[] = []
+    const markdown = "- item\n\n  ## Head [l](u)\n\n  text\n"
+
+    expect(
+      convertMarkdownToOrg(markdown, { onWarning: m => warnings.push(m) })
+    ).toBe("- item\n  Head [[u][l]]\n  text\n")
+    expect(warnings).toEqual(["heading inside a list item became text"])
+  })
+
   it("should convert fenced code blocks to src blocks", () => {
     const markdown = '```js\nconsole.log("hi")\n```\n'
 

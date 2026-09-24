@@ -114,6 +114,10 @@ Reference-style links and images resolve to inline form. A link text
 equal to its url becomes an autolink (`<url>`) and restores as a plain
 `[[url]]`, the common Logseq bookmark pattern.
 
+A heading inside a list item has no org equivalent (a headline cannot
+live inside a list); its text stays as a line of the item, without the
+heading level, and reports via `onWarning`.
+
 ## Math and footnotes
 
 LaTeX math maps natively (via remark-math): inline fragments (`$x$`,
