@@ -57,6 +57,16 @@ describe("convertOrgToMarkdown", () => {
     )
   })
 
+  it("should map an image file link with a search option to an image", () => {
+    expect(convertOrgToMarkdown("[[file:i.svg::frag][a]]\n")).toBe(
+      "![a](i.svg#frag)\n"
+    )
+    // only a file link has one: in a url, :: is part of the address
+    expect(convertOrgToMarkdown("[[http://%5B::1%5D/a.png]]\n")).toBe(
+      "![](http://%5B::1%5D/a.png)\n"
+    )
+  })
+
   it("should convert src and example blocks to fenced code", () => {
     const org =
       '#+begin_src js\nconsole.log("hi")\n#+end_src\n\n#+begin_example\nplain\n#+end_example\n'

@@ -124,8 +124,11 @@ function transformUniorgLink(
   const descriptionText = orgastToString(node)
   const url = markdownUrl(node)
   // org has no dedicated image syntax; the common convention is a
-  // link to an image file, so map those to markdown images
-  if (IMAGE_EXTENSION_RE.test(node.rawLink)) {
+  // link to an image file, so map those to markdown images; a file
+  // link's ::search option is no part of the file name
+  const path =
+    node.linkType === "file" ? node.rawLink.replace(/::.*$/s, "") : node.rawLink
+  if (IMAGE_EXTENSION_RE.test(path)) {
     return { type: "image", url, alt: descriptionText }
   }
   // a description equal to the url (a common Logseq pattern) is no
