@@ -43,8 +43,10 @@ export function isInline(node: Node | Parent): boolean {
 // whitespace trimming stay out of it
 const SENTINEL = "\u0000"
 
-// how org renders an inline node within its line
-function renderInline(node: Node): string {
+/**
+ * How org renders an inline node within its line.
+ */
+export function renderInline(node: Node): string {
   if (node.type === "text") {
     return node.value ?? ""
   }
@@ -60,6 +62,21 @@ function renderInline(node: Node): string {
     } as Parameters<typeof stringifier.stringify>[0])
   )
   return rendered.slice(0, rendered.lastIndexOf(SENTINEL))
+}
+
+// stands in for an inline node's content
+const CONTENT = "\u0001"
+
+/**
+ * An inline node's delimiters around its children, as org renders them
+ * (`*` and `*`, `[[url][` and `]]`).
+ */
+export function delimiters(node: Node): [string, string] {
+  const [open = "", close = ""] = renderInline({
+    ...node,
+    children: [{ type: "text", value: CONTENT }]
+  } as Node).split(CONTENT)
+  return [open, close]
 }
 
 /**

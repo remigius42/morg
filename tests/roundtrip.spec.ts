@@ -216,6 +216,13 @@ describe("org line syntax in paragraph text", () => {
     expect(mdRoundTrip(markdown)).toBe(markdown)
   })
 
+  it("stays text when the line starts inside markup or a link", () => {
+    expect(convertMarkdownToOrg("**a\n\\# b**\n")).toBe("*a\n\u200B# b*\n")
+    const markdown =
+      "**a\n\\- b**, *a\n2\\. b* and [a\n2\\. b](https://x.com)\n"
+    expect(mdRoundTrip(markdown)).toBe(markdown)
+  })
+
   it("follows the label in a footnote definition, unescaped", () => {
     // org reads `[fn:1] 1. a` as a paragraph; only lines below it start
     const markdown = "a[^1]\n\n[^1]: 1\\. b\n    2\\. c\n"
