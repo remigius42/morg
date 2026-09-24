@@ -1,12 +1,12 @@
 import type { Parent } from "unist"
 import { unified } from "unified"
 import uniorgParse from "uniorg-parse"
-import { EXIT, visit } from "unist-util-visit"
+import { SKIP, visit } from "unist-util-visit"
 
 // the org manual's escape character: a zero-width space is a valid
 // markup boundary (uniorg lists it in its emphasis regexp components)
 // but renders as nothing
-const ZERO_WIDTH_SPACE = "\u200B"
+export const ZERO_WIDTH_SPACE = "\u200B"
 
 const MARKUP_TYPES = new Set([
   "bold",
@@ -69,42 +69,56 @@ export function unescapeOrgMarkup(tree: Parent): void {
   })
 }
 
-const MARKER_RE = /[*/_=~+]/
+const MARKERS_RE = /[*/_=~+]/g
+// org's emphasis rule, loosened: a marker, a non-blank after it, the
+// same marker closing after a non-blank, then an allowed char, a table
+// cell border or the end. The char before the opening marker is left
+// open, as uniorg does not always check it. Text this does not match
+// cannot hold markup, and skips the parse
+const MAY_HOLD_MARKUP_RE =
+  /([*/_=~+])[^\s\u200B](?:[\s\S]*?[^\s\u200B])?\1(?:$|[-–—\s\u200B.,:!?;'’"“”)}[|])/
 const DEFUSED_MARKER_RE = /([*/_=~+])\u200B/g
 
-// offset of the opening marker of the first markup org reads in `text`
-function firstMarkupOffset(text: string): number | undefined {
-  const tree = unified().use(uniorgParse, { trackPosition: true }).parse(text)
-  let offset: number | undefined
-  visit(tree as Parent, (node: Node) => {
-    if (isMarkup(node)) {
-      offset = node.position?.start.offset
-      return EXIT
+const positionParser = unified()
+  .use(uniorgParse, { trackPosition: true })
+  .freeze()
+
+// offsets of the opening markers of the outermost markup org reads in
+// `text`
+function markupOffsets(text: string): number[] {
+  const offsets: number[] = []
+  visit(positionParser.parse(text) as Parent, (node: Node) => {
+    if (!isMarkup(node)) {
+      return undefined
     }
-    return undefined
+    const offset = node.position?.start.offset
+    if (offset !== undefined) {
+      offsets.push(offset)
+    }
+    return SKIP
   })
-  return offset
+  return offsets
 }
 
 // a zero-width space after an opening marker leaves org nothing to read
-// as markup (content may not start with one); one marker per pass, as
-// defusing an outer pair can expose an inner one
+// as markup (content may not start with one). Defusing an outer pair can
+// expose an inner one, hence the rounds; each defuses at least one
+// marker, so there are at most as many rounds as markers
 function defuseLiteralMarkers(tree: Parent): void {
   visit(tree, "text", (node: Node) => {
     let value = node.value ?? ""
-    if (!MARKER_RE.test(value)) {
+    if (!MAY_HOLD_MARKUP_RE.test(value)) {
       return
     }
-    let offset
-    let previous = -1
-    // each pass must move forward, whatever uniorg makes of the escape
-    while (
-      (offset = firstMarkupOffset(value)) !== undefined &&
-      offset > previous
-    ) {
-      previous = offset
-      value =
-        value.slice(0, offset + 1) + ZERO_WIDTH_SPACE + value.slice(offset + 1)
+    let rounds = value.match(MARKERS_RE)?.length ?? 0
+    let offsets
+    while (rounds-- > 0 && (offsets = markupOffsets(value)).length) {
+      for (const offset of offsets.reverse()) {
+        value =
+          value.slice(0, offset + 1) +
+          ZERO_WIDTH_SPACE +
+          value.slice(offset + 1)
+      }
     }
     node.value = value
   })

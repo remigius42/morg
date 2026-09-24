@@ -12,10 +12,14 @@ const BRACED_SCRIPTS = "^:{}"
 
 type Keyword = OrgData["children"][number] & { key: string; value: string }
 
+// built once: constructing a processor per parse dominates the cost
+const scriptsParser = unified().use(uniorgParse).freeze()
+const bracedScriptsParser = unified()
+  .use(uniorgParse, { useSubSuperscripts: "{}" })
+  .freeze()
+
 function countScripts(text: string, braced: boolean): number {
-  const tree = unified()
-    .use(uniorgParse, braced ? { useSubSuperscripts: "{}" } : {})
-    .parse(text)
+  const tree = (braced ? bracedScriptsParser : scriptsParser).parse(text)
   let count = 0
   visit(tree as Parent, node => {
     if (node.type === "subscript" || node.type === "superscript") {
@@ -91,9 +95,7 @@ function takeBracedScripts(uniorgAst: OrgData): void {
  */
 export function parseOrg(org: string): OrgData {
   const braced = usesBracedScripts(org)
-  const uniorgAst = unified()
-    .use(uniorgParse, braced ? { useSubSuperscripts: "{}" } : {})
-    .parse(org)
+  const uniorgAst = (braced ? bracedScriptsParser : scriptsParser).parse(org)
   if (braced) {
     takeBracedScripts(uniorgAst)
   }

@@ -2,16 +2,25 @@ import type { Parent } from "unist"
 import { unified } from "unified"
 import uniorgParse from "uniorg-parse"
 import { visit } from "unist-util-visit"
-
 // a line starting with a zero-width space is no org line syntax (list
 // item, headline, comment, keyword, table, ...), but renders as text
-const ZERO_WIDTH_SPACE = "\u200B"
+import { ZERO_WIDTH_SPACE } from "./markupBoundary.js"
 
 type Node = Parent["children"][number] & { value?: string }
 
+const orgParser = unified().use(uniorgParse).freeze()
+
+// org line syntax starts with punctuation (`- `, `* `, `# `, `| `, `:`,
+// `[fn:`, `\begin`) or with a word followed by `.`, `)` or `:` (`1.`,
+// `a)`, `CLOCK:`); any other line is text, and skips the parse
+const MAY_BE_LINE_SYNTAX_RE = /^(?![\p{L}\p{N}])|^[\p{L}\p{N}]+[.):]/u
+
 // whether org reads `line` as anything but a plain paragraph
 function readsAsLineSyntax(line: string): boolean {
-  const [first, ...rest] = unified().use(uniorgParse).parse(line).children
+  if (!MAY_BE_LINE_SYNTAX_RE.test(line)) {
+    return false
+  }
+  const [first, ...rest] = orgParser.parse(line).children
   return first?.type !== "paragraph" || rest.length > 0
 }
 
