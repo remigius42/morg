@@ -55,6 +55,23 @@ This is a paragraph.
     )
   })
 
+  it("should move edge whitespace of inline code outside the markers", () => {
+    // org markup may not start or end with whitespace
+    const markdown = "a ``x` `` b\n"
+
+    expect(convertMarkdownToOrg(markdown)).toBe("a ~x`~  b\n")
+  })
+
+  it("should keep whitespace-only inline code as text, with a warning", () => {
+    // org has no empty code markup
+    const warnings: string[] = []
+
+    expect(
+      convertMarkdownToOrg("a ` ` b\n", { onWarning: m => warnings.push(m) })
+    ).toBe("a   b\n")
+    expect(warnings).toEqual(["whitespace-only inline code kept as text"])
+  })
+
   it("should convert fenced code blocks to src blocks", () => {
     const markdown = '```js\nconsole.log("hi")\n```\n'
 

@@ -177,6 +177,15 @@ describe("braced scripts", () => {
   })
 })
 
+describe("inline code edge whitespace", () => {
+  it("converges once the whitespace sits outside the code", () => {
+    const once = mdRoundTrip("a ``x` `` b\n")
+    // remark pads both ends of code that ends in a backtick
+    expect(once).toBe("a `` x` ``  b\n")
+    expect(mdRoundTrip(once)).toBe(once)
+  })
+})
+
 describe("normalizations", () => {
   it("org verbatim becomes code (md has one inline code)", () => {
     expect(orgRoundTrip("Use =bar= here.\n")).toBe("Use ~bar~ here.\n")

@@ -53,6 +53,10 @@ export function transformPhrasingChildren(
       i = pair.end
       continue
     }
+    if (node.type === "inlineCode") {
+      result.push(...transformMdastInlineCode(ctx, node.value))
+      continue
+    }
     const transformed = transformMdastPhrasingContentToUniorgObject(ctx, node)
     if (transformed) {
       result.push(transformed)
@@ -146,6 +150,28 @@ function transformMdastImage(
   } as unknown as ObjectType
 }
 
+// org markup spans at most two lines; CommonMark renders a line ending
+// inside a code span as a space, so nothing is lost. Org markup may not
+// start or end with whitespace either: edge whitespace moves outside
+// the markers, a one-space shift in the rendered output
+function transformMdastInlineCode(
+  ctx: TransformContext,
+  value: string
+): ObjectType[] {
+  const [, before = "", code = "", after = ""] =
+    /^(\s*)(.*?)(\s*)$/s.exec(value.replaceAll("\n", " ")) ?? []
+  if (!code) {
+    // org has no empty code markup
+    warn(ctx, "whitespace-only inline code kept as text")
+    return [{ type: "text", value: before }]
+  }
+  return [
+    ...(before ? [{ type: "text", value: before } as ObjectType] : []),
+    { type: "code", value: code },
+    ...(after ? [{ type: "text", value: after } as ObjectType] : [])
+  ]
+}
+
 function transformMdastInlineMath(node: PhrasingContent): ObjectType {
   const value = (node as unknown as { value: string }).value
   return {
@@ -183,10 +209,6 @@ function transformMdastPhrasingContentToUniorgObject(
       return transformMdastLinkReference(ctx, node)
     case "imageReference":
       return transformMdastImageReference(ctx, node)
-    case "inlineCode":
-      // org markup spans at most two lines; CommonMark renders a line
-      // ending inside a code span as a space, so nothing is lost
-      return { type: "code", value: node.value.replaceAll("\n", " ") }
     case "inlineMath" as PhrasingContent["type"]:
       return transformMdastInlineMath(node)
     case "break":
