@@ -49,8 +49,9 @@ Markdown text has no sub/superscripts, but org reads a bare `a_b` or
 `x^y` as one. md → org therefore adds `^:{}` to `#+OPTIONS:` (org's
 own switch limiting scripts to the braced `a_{b}` form, which morg
 emits) whenever the text needs it; org → md honors `^:{}` in a
-top-level `#+OPTIONS:` and consumes it, keeping any other options as
-frontmatter.
+top-level `#+OPTIONS:` and consumes it whenever the text needs it,
+keeping any other options as frontmatter. Where the text does not
+need it, it is the author's own and stays.
 
 Tables: GFM ↔ org, including column alignment via org `<l>/<r>/<c>`
 cookie rows. `table.el` tables travel as `table.el`-tagged fenced
@@ -195,6 +196,8 @@ style where there is one; notable normalizations beyond formatting:
 - org entities → UTF-8 characters
 - inline footnotes → reference + definition
 - superscript/subscript → braced form (`^{2}`, `_{2}`)
+- an author's own md `options: ^:{}` is dropped where the text needs
+  it: it is then indistinguishable from the one md → org adds
 
 ## Presets
 

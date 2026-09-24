@@ -75,31 +75,41 @@ function mayUseBracedScripts(org: string): boolean {
   )
 }
 
+function usesBracedScripts(uniorgAst: OrgData): boolean {
+  return uniorgAst.children.some(
+    node => isOptions(node) && node.value.split(/\s+/).includes(BRACED_SCRIPTS)
+  )
+}
+
 // drops `^:{}` from the top-level `#+OPTIONS:`, the whole keyword if
 // nothing else is left; md text has no scripts, so the return trip
-// re-adds it wherever it is needed. Returns whether there was one
-function takeBracedScripts(uniorgAst: OrgData): boolean {
-  let taken = false
+// re-adds it wherever it is needed
+function takeBracedScripts(uniorgAst: OrgData): void {
   uniorgAst.children = uniorgAst.children.filter(node => {
     if (!isOptions(node)) {
       return true
     }
-    const items = node.value.split(/\s+/)
-    node.value = items.filter(item => item && item !== BRACED_SCRIPTS).join(" ")
-    taken ||= items.includes(BRACED_SCRIPTS)
+    node.value = node.value
+      .split(/\s+/)
+      .filter(item => item && item !== BRACED_SCRIPTS)
+      .join(" ")
     return node.value !== ""
   })
-  return taken
 }
 
 /**
- * org→md: parses org, honoring and then consuming `^:{}`.
+ * org→md: parses org, honoring `^:{}`, and consuming it where the text
+ * needs it: md→org adds it only then, so anywhere else it is the
+ * author's own setting.
  */
 export function parseOrg(org: string): OrgData {
   if (mayUseBracedScripts(org)) {
     // keywords parse the same either way
     const uniorgAst = bracedScriptsParser.parse(org)
-    if (takeBracedScripts(uniorgAst)) {
+    if (usesBracedScripts(uniorgAst)) {
+      if (readsBareScripts(uniorgAst)) {
+        takeBracedScripts(uniorgAst)
+      }
       return uniorgAst
     }
   }

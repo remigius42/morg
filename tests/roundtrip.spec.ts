@@ -175,6 +175,11 @@ describe("braced scripts", () => {
     const org = "#+OPTIONS: toc:nil ^:{}\nsee a_b_c\n"
     expect(orgRoundTrip(org)).toBe(org)
   })
+
+  it("an author's own ^:{} survives in markdown", () => {
+    const markdown = "---\noptions: ^:{}\n---\n\ntext\n"
+    expect(mdRoundTrip(markdown)).toBe(markdown)
+  })
 })
 
 describe("inline code edge whitespace", () => {
