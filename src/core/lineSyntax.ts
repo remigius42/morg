@@ -24,6 +24,29 @@ function readsAsLineSyntax(line: string): boolean {
   return first?.type !== "paragraph" || rest.length > 0
 }
 
+// inline nodes a list item's flattened content may hold; anything else
+// is a block element (nested list, code block), ending its line
+const INLINE_TYPES = new Set([
+  "text",
+  "bold",
+  "italic",
+  "underline",
+  "strike-through",
+  "code",
+  "verbatim",
+  "link",
+  "footnote-reference",
+  "latex-fragment",
+  "entity",
+  "timestamp",
+  "subscript",
+  "superscript",
+  "export-snippet",
+  "statistics-cookie",
+  "citation",
+  "line-break"
+])
+
 // whether the node at `index` starts on a fresh line; the first child
 // of a list item (or of its first paragraph) follows the bullet instead
 function startsLine(
@@ -35,7 +58,7 @@ function startsLine(
   if (!previous) {
     return !afterBullet
   }
-  if (previous.type === "line-break") {
+  if (previous.type === "line-break" || !INLINE_TYPES.has(previous.type)) {
     return true
   }
   return previous.type === "text" && Boolean(previous.value?.endsWith("\n"))

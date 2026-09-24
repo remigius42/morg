@@ -215,6 +215,13 @@ describe("org line syntax in paragraph text", () => {
     const markdown = "- a\n  1\\. b\n  \\# c\n"
     expect(mdRoundTrip(markdown)).toBe(markdown)
   })
+
+  it("stays text after a nested list or code block in a list item", () => {
+    const afterList = "- a\n  - b\n\n  1\\. c\n"
+    expect(convertMarkdownToOrg(afterList)).toBe("- a\n  - b\n  \u200B1. c\n")
+    const afterCode = "- a\n\n  ```\n  x\n  ```\n\n  1\\. c\n"
+    expect(convertMarkdownToOrg(afterCode)).toContain("\n  \u200B1. c\n")
+  })
 })
 
 describe("relative links", () => {
