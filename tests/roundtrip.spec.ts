@@ -205,6 +205,19 @@ describe("org line syntax in paragraph text", () => {
 })
 
 describe("relative links", () => {
+  it("keep # and % in org file paths and search options", () => {
+    const org = "[[file:C# notes.md::100% done][x]]\n"
+    expect(convertOrgToMarkdown(org)).toBe(
+      "[x](C%23%20notes.md#100%25%20done)\n"
+    )
+    expect(orgRoundTrip(org)).toBe(org)
+  })
+
+  it("keep percent escapes of # and % in markdown urls", () => {
+    const markdown = "[x](C%23.md) and [y](a%2520b.md)\n"
+    expect(mdRoundTrip(markdown)).toBe(markdown)
+  })
+
   it("survive as markdown links", () => {
     const markdown = "[t](a%20b.md#My%20H), [f](f.md) and ![a](i.png)\n"
     expect(mdRoundTrip(markdown)).toBe(markdown)

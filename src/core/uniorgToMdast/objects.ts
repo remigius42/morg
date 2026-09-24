@@ -91,20 +91,30 @@ function transformUniorgObjectToMdastPhrasingContent(
   }
 }
 
-// an org file: link (or a ./ path) is a relative markdown link: the
-// search option becomes the #anchor, and spaces, which a markdown url
-// cannot hold bare, are percent-encoded (md→org decodes them again)
+// the inverse of md→org's decoding: % and # would be read as an escape
+// or the anchor, and a markdown url cannot hold a bare space. `[`/`]`
+// travel percent-encoded in org paths (see mdastToUniorg), so they are
+// decoded first rather than escaped twice
+function encodeUrlPart(part: string): string {
+  return part
+    .replaceAll("%5B", "[")
+    .replaceAll("%5D", "]")
+    .replaceAll("%", "%25")
+    .replaceAll("#", "%23")
+    .replaceAll(" ", "%20")
+}
+
+// an org file: link (or a ./ path) is a relative markdown link, the
+// search option becoming the #anchor
 function markdownUrl(node: Extract<ObjectType, { type: "link" }>): string {
   if (node.linkType !== "file") {
     return node.rawLink
   }
   const target = node.rawLink.replace(/^file:/, "")
   const search = target.indexOf("::")
-  const url =
-    search === -1
-      ? target
-      : `${target.slice(0, search)}#${target.slice(search + 2)}`
-  return url.replaceAll(" ", "%20")
+  return search === -1
+    ? encodeUrlPart(target)
+    : `${encodeUrlPart(target.slice(0, search))}#${encodeUrlPart(target.slice(search + 2))}`
 }
 
 function transformUniorgLink(

@@ -28,7 +28,8 @@ decoded and the `#anchor` as org's search option
 (`[[file:notes.md::Some Heading]]`), which Emacs resolves to a
 `<<target>>` or a headline of that name; a GitHub-style slug anchor
 (`#some-heading`) round-trips, but finds no headline. org → md
-reverses it, org's `./path` links included, encoding spaces as `%20`.
+reverses it, org's `./path` links included, percent-encoding `%`,
+`#` and spaces.
 Urls starting with `[` or `(` are dialect references (Logseq's
 `[[page]]`), not paths.
 
@@ -169,11 +170,12 @@ One round trip lands on canonical form (ADR 0001), or on the recorded
 style where there is one; notable normalizations beyond formatting:
 
 - link text equal to its url → autolink / plain `[[url]]`
-- `[` and `]` in a link or image url → `%5B` / `%5D`: an org
+- `[` and `]` in a url with a scheme → `%5B` / `%5D`: an org
   bracket-link path cannot hold them, and org's own backslash escaping
   is not read back by uniorg. Equivalent for query strings like
   `?a[]=1`; an IPv6 literal host (`http://[::1]/…`) does not survive
-  this and is better written as a hostname
+  this and is better written as a hostname. A relative path carries
+  them the same way in org, but gets them back in Markdown
 - per-line leading whitespace inside paragraphs is collapsed
   (insignificant in org and rendered md, but structurally meaningful
   to md parsers)
