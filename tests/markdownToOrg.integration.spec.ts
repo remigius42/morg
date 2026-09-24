@@ -89,6 +89,16 @@ This is a paragraph.
     expect(convertMarkdownToOrg("a **`x `** b\n")).toBe("a *~x~*  b\n")
   })
 
+  it("should keep inline code no org markup can hold as text, with a warning", () => {
+    // a `~` would end ~code~ early, a `=` =verbatim=
+    const warnings: string[] = []
+
+    expect(
+      convertMarkdownToOrg("`a~ b= c`\n", { onWarning: m => warnings.push(m) })
+    ).toBe("a~ b= c\n")
+    expect(warnings).toEqual(["inline code holding both ~ and = kept as text"])
+  })
+
   it("should keep whitespace-only inline code as text, with a warning", () => {
     // org has no empty code markup
     const warnings: string[] = []

@@ -258,19 +258,27 @@ function transformMdastInlineCode(
     warn(ctx, "whitespace-only inline code kept as text")
     return [{ type: "text", value: before }]
   }
+  const type = codeType(code)
+  if (!type) {
+    warn(ctx, "inline code holding both ~ and = kept as text")
+    return [{ type: "text", value: before + code + after }]
+  }
   return [
     ...(before ? [{ type: "text", value: before } as ObjectType] : []),
-    { type: codeType(code), value: code },
+    { type, value: code },
     ...(after ? [{ type: "text", value: after } as ObjectType] : [])
   ]
 }
 
 // org ends code at the first `~` it may close on (`~a~ b~`); verbatim
-// keeps such code whole, and comes back as md code too
-function codeType(code: string): "code" | "verbatim" {
-  return code.includes("~") && !readsWhole({ type: "code", value: code })
-    ? "verbatim"
-    : "code"
+// keeps such code whole, and comes back as md code too, unless a `=`
+// ends it early in turn
+function codeType(code: string): "code" | "verbatim" | undefined {
+  return (["code", "verbatim"] as const).find(
+    type =>
+      !code.includes(type === "code" ? "~" : "=") ||
+      readsWhole({ type, value: code })
+  )
 }
 
 // whether org reads `node`, rendered, back as the same node
