@@ -21,6 +21,9 @@ silently changed text.
   drops it again.
 - Literal text org would read as markup, such as the path `/etc/` or an
   escaped `\*b\*`, stays literal instead of turning italic or bold.
+- A paragraph line that starts like org line syntax, such as an
+  escaped `1\.`, `\-` or `\#`, or a lazy continuation line, stays text
+  instead of turning into a list item, headline, comment or table.
 - Bare underscores and carets (`my_notes_2021.md`, `x^y`) are no
   longer read as org sub/superscripts. md → org adds `^:{}` to
   `#+OPTIONS:` when the text needs it; org → md honors it and consumes
