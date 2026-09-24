@@ -17,6 +17,7 @@ import type {
 import { transformMdastToUniorgAst } from "./core/mdastToUniorg/index.js"
 import { detectMarkdownStyle, STYLE_KEYWORD } from "./core/markdownStyle.js"
 import { escapeOrgMarkup } from "./core/markupBoundary.js"
+import { requireBracedScripts } from "./core/bracedScripts.js"
 import type { MarkdownStyleOptions, MarkdownToOrgOptions } from "./options.js"
 
 /**
@@ -64,7 +65,11 @@ export function convertMarkdownToOrg(
   // lines between them, or org's parser merges them into one list.
   separateAdjacentLists(uniorgAst)
 
-  // Phase 2d: record the source's own style markers, so the return trip
+  // Phase 2d: md text has no sub/superscripts; keep org from reading
+  // bare underscores and carets as such
+  requireBracedScripts(uniorgAst)
+
+  // Phase 2e: record the source's own style markers, so the return trip
   // can reproduce them instead of morg's canonical ones (ADR 0004)
   if (options.recordStyle) {
     recordStyleKeyword(

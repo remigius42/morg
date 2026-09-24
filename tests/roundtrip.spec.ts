@@ -168,6 +168,15 @@ describe("lists", () => {
   })
 })
 
+describe("braced scripts", () => {
+  it("bare underscores survive both round trips", () => {
+    // remark's canonical form escapes underscores inside words
+    expect(mdRoundTrip("see a\\_b\\_c\n")).toBe("see a\\_b\\_c\n")
+    const org = "#+OPTIONS: toc:nil ^:{}\nsee a_b_c\n"
+    expect(orgRoundTrip(org)).toBe(org)
+  })
+})
+
 describe("normalizations", () => {
   it("org verbatim becomes code (md has one inline code)", () => {
     expect(orgRoundTrip("Use =bar= here.\n")).toBe("Use ~bar~ here.\n")

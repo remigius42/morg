@@ -46,6 +46,15 @@ This is a paragraph.
     )
   })
 
+  it("should keep bare underscores and carets out of org scripts", () => {
+    // ^:{} limits org sub/superscripts to the braced form morg emits
+    const markdown = "see a_b_c and x^y\n"
+
+    expect(convertMarkdownToOrg(markdown)).toBe(
+      "#+OPTIONS: ^:{}\nsee a_b_c and x^y\n"
+    )
+  })
+
   it("should convert fenced code blocks to src blocks", () => {
     const markdown = '```js\nconsole.log("hi")\n```\n'
 

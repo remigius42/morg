@@ -28,6 +28,12 @@ reverse, literal md text org would read as markup (`/etc/`, `\*b\*`),
 gets one after the opening marker. org → md drops the zero-width
 spaces directly next to markup or after a marker again.
 
+Markdown text has no sub/superscripts, but org reads a bare `a_b` or
+`x^y` as one. md → org therefore adds `^:{}` to `#+OPTIONS:` (org's
+own switch limiting scripts to the braced `a_{b}` form, which morg
+emits) whenever the text needs it; org → md honors `^:{}` and
+consumes it, keeping any other options as frontmatter.
+
 Tables: GFM ↔ org, including column alignment via org `<l>/<r>/<c>`
 cookie rows. `table.el` tables travel as `table.el`-tagged fenced
 blocks and are restored verbatim.

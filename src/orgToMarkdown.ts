@@ -1,5 +1,4 @@
 import { unified } from "unified"
-import uniorgParse from "uniorg-parse"
 import remarkStringify from "remark-stringify"
 import remarkGfm from "remark-gfm"
 import remarkFrontmatter from "remark-frontmatter"
@@ -7,6 +6,7 @@ import remarkMath from "remark-math"
 import { transformUniorgAstToMdast } from "./core/uniorgToMdast/index.js"
 import { takeRecordedStyle } from "./core/markdownStyle.js"
 import { unescapeOrgMarkup } from "./core/markupBoundary.js"
+import { parseOrg } from "./core/bracedScripts.js"
 import type { OrgToMarkdownOptions } from "./options.js"
 
 /**
@@ -20,7 +20,9 @@ export function convertOrgToMarkdown(
   options: OrgToMarkdownOptions = {}
 ): string {
   // Phase 1: Parse Org-mode to uniorg-ast
-  let uniorgAst = unified().use(uniorgParse).parse(org)
+  // md text has no scripts, so ^:{} is implied there and consumed here
+  // (see markdownToOrg)
+  let uniorgAst = parseOrg(org)
 
   // Phase 1b: a recorded style is morg's own (ADR 0004), so consume it so
   // it does not travel on as frontmatter; explicit options still win

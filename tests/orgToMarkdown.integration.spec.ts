@@ -33,6 +33,14 @@ describe("convertOrgToMarkdown", () => {
     expect(convertOrgToMarkdown(org)).toBe("see /etc/, a \\*b\\* and x =y= z\n")
   })
 
+  it("should read ^:{} and consume it (md has no scripts)", () => {
+    const org = "#+OPTIONS: toc:nil ^:{}\nsee a_b and H_{2}O\n"
+
+    expect(convertOrgToMarkdown(org)).toBe(
+      "---\noptions: toc:nil\n---\n\nsee a\\_b and H\\_{2}O\n"
+    )
+  })
+
   it("should convert src and example blocks to fenced code", () => {
     const org =
       '#+begin_src js\nconsole.log("hi")\n#+end_src\n\n#+begin_example\nplain\n#+end_example\n'
