@@ -167,3 +167,9 @@ describe("lists", () => {
     expect(convertMarkdownToOrg(input)).toBe("1. one\n2. two\n3. three\n")
   })
 })
+
+describe("normalizations", () => {
+  it("org verbatim becomes code (md has one inline code)", () => {
+    expect(orgRoundTrip("Use =bar= here.\n")).toBe("Use ~bar~ here.\n")
+  })
+})

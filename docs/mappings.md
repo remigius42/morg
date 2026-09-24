@@ -144,6 +144,8 @@ style where there is one; notable normalizations beyond formatting:
 - per-line leading whitespace inside paragraphs is collapsed
   (insignificant in org and rendered md, but structurally meaningful
   to md parsers)
+- org `=verbatim=` → `~code~`: Markdown has a single inline code
+  construct, and org's own HTML export renders both as `<code>`
 - org entities → UTF-8 characters
 - inline footnotes → reference + definition
 - superscript/subscript → braced form (`^{2}`, `_{2}`)
