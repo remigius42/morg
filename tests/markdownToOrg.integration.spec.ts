@@ -37,6 +37,15 @@ This is a paragraph.
     )
   })
 
+  it("should keep literal org markers in text literal", () => {
+    // a zero-width space after the opening marker leaves no markup
+    const markdown = "see /etc/, a \\*b\\* and x =y= z\n"
+
+    expect(convertMarkdownToOrg(markdown)).toBe(
+      "see /\u200Betc/, a *\u200Bb* and x =\u200By= z\n"
+    )
+  })
+
   it("should convert fenced code blocks to src blocks", () => {
     const markdown = '```js\nconsole.log("hi")\n```\n'
 

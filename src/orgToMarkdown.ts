@@ -6,7 +6,7 @@ import remarkFrontmatter from "remark-frontmatter"
 import remarkMath from "remark-math"
 import { transformUniorgAstToMdast } from "./core/uniorgToMdast/index.js"
 import { takeRecordedStyle } from "./core/markdownStyle.js"
-import { dropMarkupBoundaries } from "./core/markupBoundary.js"
+import { unescapeOrgMarkup } from "./core/markupBoundary.js"
 import type { OrgToMarkdownOptions } from "./options.js"
 
 /**
@@ -26,8 +26,8 @@ export function convertOrgToMarkdown(
   // it does not travel on as frontmatter; explicit options still win
   const recordedStyle = takeRecordedStyle(uniorgAst)
 
-  // Phase 1c: markdown needs no markup boundaries (inverse of md→org)
-  dropMarkupBoundaries(uniorgAst)
+  // Phase 1c: markdown needs no zero-width space escapes (inverse of md→org)
+  unescapeOrgMarkup(uniorgAst)
 
   // Phase 2: Extract dialect preset conventions, if any
   if (options.preset?.extractFromUniorg) {

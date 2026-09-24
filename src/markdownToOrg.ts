@@ -16,7 +16,7 @@ import type {
 } from "uniorg"
 import { transformMdastToUniorgAst } from "./core/mdastToUniorg/index.js"
 import { detectMarkdownStyle, STYLE_KEYWORD } from "./core/markdownStyle.js"
-import { separateMarkupBoundaries } from "./core/markupBoundary.js"
+import { escapeOrgMarkup } from "./core/markupBoundary.js"
 import type { MarkdownStyleOptions, MarkdownToOrgOptions } from "./options.js"
 
 /**
@@ -78,9 +78,9 @@ export function convertMarkdownToOrg(
     uniorgAst = options.preset.applyToUniorg(uniorgAst)
   }
 
-  // Phase 3b: markup touching a word character needs an explicit
-  // boundary in org, or its markers stay literal text
-  separateMarkupBoundaries(uniorgAst)
+  // Phase 3b: literal markers org would read as markup, and markup
+  // touching a word character, need a zero-width space escape
+  escapeOrgMarkup(uniorgAst)
 
   // Phase 4: Render uniorg-ast to Org-mode string
   const processor = unified().use(uniorgStringify)

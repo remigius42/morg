@@ -1,5 +1,7 @@
 import type { Parent } from "unist"
-import { visit } from "unist-util-visit"
+import { unified } from "unified"
+import uniorgParse from "uniorg-parse"
+import { EXIT, visit } from "unist-util-visit"
 
 // the org manual's escape character: a zero-width space is a valid
 // markup boundary (uniorg lists it in its emphasis regexp components)
@@ -48,11 +50,67 @@ function allowsMarkupBefore(node: Node | undefined): boolean {
 }
 
 /**
- * md→org: separates markup from a neighbor org would not accept as its
- * boundary (`a~x~s`, `[[u]]/i/`) with a zero-width space, which would
- * otherwise leave the markers as literal text.
+ * md→org: escapes with zero-width spaces what org would otherwise misread:
+ * literal markers in text that form markup (`/etc/`), and markup whose
+ * neighbor is no valid boundary (`a~x~s`), which would stay literal.
  */
-export function separateMarkupBoundaries(tree: Parent): void {
+export function escapeOrgMarkup(tree: Parent): void {
+  defuseLiteralMarkers(tree)
+  separateMarkupBoundaries(tree)
+}
+
+/**
+ * org→md: drops the zero-width spaces `escapeOrgMarkup` inserts.
+ */
+export function unescapeOrgMarkup(tree: Parent): void {
+  dropMarkupBoundaries(tree)
+  visit(tree, "text", (node: Node) => {
+    node.value = node.value?.replace(DEFUSED_MARKER_RE, "$1")
+  })
+}
+
+const MARKER_RE = /[*/_=~+]/
+const DEFUSED_MARKER_RE = /([*/_=~+])\u200B/g
+
+// offset of the opening marker of the first markup org reads in `text`
+function firstMarkupOffset(text: string): number | undefined {
+  const tree = unified().use(uniorgParse, { trackPosition: true }).parse(text)
+  let offset: number | undefined
+  visit(tree as Parent, (node: Node) => {
+    if (isMarkup(node)) {
+      offset = node.position?.start.offset
+      return EXIT
+    }
+    return undefined
+  })
+  return offset
+}
+
+// a zero-width space after an opening marker leaves org nothing to read
+// as markup (content may not start with one); one marker per pass, as
+// defusing an outer pair can expose an inner one
+function defuseLiteralMarkers(tree: Parent): void {
+  visit(tree, "text", (node: Node) => {
+    let value = node.value ?? ""
+    if (!MARKER_RE.test(value)) {
+      return
+    }
+    let offset
+    let previous = -1
+    // each pass must move forward, whatever uniorg makes of the escape
+    while (
+      (offset = firstMarkupOffset(value)) !== undefined &&
+      offset > previous
+    ) {
+      previous = offset
+      value =
+        value.slice(0, offset + 1) + ZERO_WIDTH_SPACE + value.slice(offset + 1)
+    }
+    node.value = value
+  })
+}
+
+function separateMarkupBoundaries(tree: Parent): void {
   visit(tree, (node: Node | Parent) => {
     if (!("children" in node) || !node.children.some(isMarkup)) {
       return
@@ -71,11 +129,7 @@ export function separateMarkupBoundaries(tree: Parent): void {
   })
 }
 
-/**
- * org→md: drops the zero-width spaces that only separate markup from its
- * neighbors, the inverse of `separateMarkupBoundaries`.
- */
-export function dropMarkupBoundaries(tree: Parent): void {
+function dropMarkupBoundaries(tree: Parent): void {
   visit(tree, "text", (node: Node, index, parent: Parent | undefined) => {
     if (index === undefined || !parent) {
       return

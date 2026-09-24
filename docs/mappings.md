@@ -23,8 +23,10 @@ for metadata-shaped md-isms).
 
 Markup touching a word character (`` `x`s ``, `foo**bar**baz`) has no
 valid org boundary; md → org inserts a zero-width space (U+200B, the
-org manual's escape character) between marker and neighbor, and
-org → md drops the zero-width spaces directly next to markup again.
+org manual's escape character) between marker and neighbor. The
+reverse, literal md text org would read as markup (`/etc/`, `\*b\*`),
+gets one after the opening marker. org → md drops the zero-width
+spaces directly next to markup or after a marker again.
 
 Tables: GFM ↔ org, including column alignment via org `<l>/<r>/<c>`
 cookie rows. `table.el` tables travel as `table.el`-tagged fenced

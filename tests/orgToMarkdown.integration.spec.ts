@@ -27,6 +27,12 @@ describe("convertOrgToMarkdown", () => {
     )
   })
 
+  it("should drop zero-width spaces that only defuse a marker", () => {
+    const org = "see /\u200Betc/, a *\u200Bb* and x =\u200By= z\n"
+
+    expect(convertOrgToMarkdown(org)).toBe("see /etc/, a \\*b\\* and x =y= z\n")
+  })
+
   it("should convert src and example blocks to fenced code", () => {
     const org =
       '#+begin_src js\nconsole.log("hi")\n#+end_src\n\n#+begin_example\nplain\n#+end_example\n'
