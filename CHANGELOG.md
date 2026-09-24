@@ -20,30 +20,41 @@ silently changed text.
   zero-width space, the org manual's escape character, and org → md
   drops it again.
 - Literal text org would read as markup, such as the path `/etc/` or an
-  escaped `\*b\*`, stays literal instead of turning italic or bold.
+  escaped `\*b\*`, stays literal instead of turning italic or bold,
+  also when another inline node sits between the markers
+  (``\*b `x` c\*``).
 - Relative links and images (`[t](notes.md#Some%20Heading)`) become
   org `file:` links (`[[file:notes.md::Some Heading][t]]`) and come
   back as the same Markdown links. They used to become bare org paths,
   which org reads as a heading search rather than a file, so Emacs
   would not open them and the `obsidian` preset turned them into
-  wikilinks.
+  wikilinks. A path holding a literal `%5B`, `%5D` or `::` keeps it
+  instead of pointing at another file.
 - A heading inside a list item keeps its text as a line of the item
   and reports via `onWarning`, instead of silently coming back as
   literal `\*\* …`: org has no headline inside a list.
 - A paragraph line that starts like org line syntax, such as an
   escaped `1\.`, `\-` or `\#`, or a lazy continuation line, stays text
-  instead of turning into a list item, headline, comment or table.
-- Bare underscores and carets (`my_notes_2021.md`, `x^y`) are no
-  longer read as org sub/superscripts. md → org adds `^:{}` to
-  `#+OPTIONS:` when the text needs it; org → md honors it and consumes
-  it.
+  instead of turning into a list item, headline, comment or table. This
+  includes a line starting with a footnote reference (`[^1] text`,
+  which org reads as a footnote definition), one following a nested
+  list or code block inside a list item, and one inside bold or a link
+  text spanning two lines.
+- Bare underscores and carets (`my_notes_2021.md`, `x^y`, also right
+  after markup or a link: `**a**_b`) are no longer read as org
+  sub/superscripts. md → org adds `^:{}` to `#+OPTIONS:` when the text
+  needs it; org → md honors it in a top-level `#+OPTIONS:` and consumes
+  it where the text needs it, so an author's own `options: ^:{}` stays.
 - Inline code spanning three or more lines converts to org; its line
-  endings become spaces, which is how CommonMark renders them anyway.
+  endings (LF, CRLF or CR) become spaces, which is how CommonMark
+  renders them anyway.
 - Inline code with whitespace at either end, as a padding typo easily
   leaves, converts to org instead of breaking the rest of the
   paragraph: org markup may not start or end with whitespace, so the
   whitespace moves just outside the code. Whitespace-only code stays
   plain text and reports via `onWarning`.
+- An image with an anchor (`![a](i.svg#part)`) comes back as an image
+  instead of a plain link.
 - A space between text and markup inside an org table cell is kept;
   only the cell's alignment padding is trimmed.
 - With the `obsidian` preset, an aliased wikilink in a table cell is
