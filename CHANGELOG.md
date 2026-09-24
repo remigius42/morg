@@ -21,6 +21,12 @@ silently changed text.
   drops it again.
 - Literal text org would read as markup, such as the path `/etc/` or an
   escaped `\*b\*`, stays literal instead of turning italic or bold.
+- Relative links and images (`[t](notes.md#Some%20Heading)`) become
+  org `file:` links (`[[file:notes.md::Some Heading][t]]`) and come
+  back as the same Markdown links. They used to become bare org paths,
+  which org reads as a heading search rather than a file, so Emacs
+  would not open them and the `obsidian` preset turned them into
+  wikilinks.
 - A heading inside a list item keeps its text as a line of the item
   and reports via `onWarning`, instead of silently coming back as
   literal `\*\* …`: org has no headline inside a list.
