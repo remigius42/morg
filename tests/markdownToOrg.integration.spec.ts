@@ -28,6 +28,10 @@ This is a paragraph.
     expect(convertMarkdownToOrg(markdown)).toBe("a ~x y z~ b\n")
   })
 
+  it("should join CRLF and CR line endings in inline code too", () => {
+    expect(convertMarkdownToOrg("a `x\r\ny\rz` b\n")).toBe("a ~x y z~ b\n")
+  })
+
   it("should separate markup from adjacent word characters", () => {
     // org markup needs a boundary; U+200B is org's own escape for it
     const markdown = "a `x`s, foo**bar**baz and [l](u)*i*\n"

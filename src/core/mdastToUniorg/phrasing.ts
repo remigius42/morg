@@ -245,7 +245,7 @@ function transformMdastInlineCode(
   value: string
 ): ObjectType[] {
   const [, before = "", code = "", after = ""] =
-    /^(\s*)(.*?)(\s*)$/s.exec(value.replaceAll("\n", " ")) ?? []
+    /^(\s*)(.*?)(\s*)$/s.exec(value.replace(/\r\n?|\n/g, " ")) ?? []
   if (!code) {
     // org has no empty code markup
     warn(ctx, "whitespace-only inline code kept as text")
