@@ -160,6 +160,12 @@ describe("lists", () => {
     expect(once).toContain("child")
   })
 
+  it("keeps item text after a nested list out of the nested list", () => {
+    // without the blank line, md reads `c` as a lazy continuation of `b`
+    const markdown = "- a\n  - b\n\n  c\n"
+    expect(mdRoundTrip(markdown)).toBe(markdown)
+  })
+
   it("ordered list keeps its numbering through a round trip", () => {
     const input = "1. one\n2. two\n3. three\n"
     const once = mdRoundTrip(input)

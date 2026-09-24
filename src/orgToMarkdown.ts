@@ -14,6 +14,20 @@ import {
 } from "./core/underscoreBullets.js"
 import type { OrgToMarkdownOptions } from "./options.js"
 
+// a list item's paragraph after its nested list needs a blank line, or
+// md reads it as a lazy continuation of the nested list's last item
+function separateTextAfterNestedList(
+  left: { type: string },
+  right: { type: string },
+  parent: { type: string }
+): number | undefined {
+  return parent.type === "listItem" &&
+    left.type === "list" &&
+    right.type === "paragraph"
+    ? 1
+    : undefined
+}
+
 /**
  * Converts an Org-mode string to a Markdown string.
  * @param org The Org-mode string to convert.
@@ -68,6 +82,7 @@ export function convertOrgToMarkdown(
       rule: "-",
       ...recordedStyle,
       ...options.markdownStyle,
+      join: [separateTextAfterNestedList],
       handlers: {
         // key:: value blocks and preset inline passthroughs (e.g.
         // wikilinks) are emitted verbatim, unescaped; only a pipe inside

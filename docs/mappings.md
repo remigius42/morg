@@ -140,6 +140,10 @@ A heading inside a list item has no org equivalent (a headline cannot
 live inside a list); its text stays as a line of the item, without the
 heading level, and reports via `onWarning`.
 
+Org ends a nested list at a line indented like its parent item's text;
+md would read that line as a lazy continuation of the nested list's
+last item. org → md separates it with a blank line.
+
 ## Math and footnotes
 
 LaTeX math maps natively (via remark-math): inline fragments (`$x$`,
