@@ -184,7 +184,9 @@ function transformMdastPhrasingContentToUniorgObject(
     case "imageReference":
       return transformMdastImageReference(ctx, node)
     case "inlineCode":
-      return { type: "code", value: node.value }
+      // org markup spans at most two lines; CommonMark renders a line
+      // ending inside a code span as a space, so nothing is lost
+      return { type: "code", value: node.value.replaceAll("\n", " ") }
     case "inlineMath" as PhrasingContent["type"]:
       return transformMdastInlineMath(node)
     case "break":

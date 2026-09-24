@@ -20,6 +20,14 @@ This is a paragraph.
     expect(convertMarkdownToOrg(markdown)).toBe("Use ~foo~ here.\n")
   })
 
+  it("should join multi-line inline code with spaces", () => {
+    // org markup spans at most two lines; CommonMark renders a line
+    // ending in a code span as a space anyway
+    const markdown = "a `x\ny\nz` b\n"
+
+    expect(convertMarkdownToOrg(markdown)).toBe("a ~x y z~ b\n")
+  })
+
   it("should convert fenced code blocks to src blocks", () => {
     const markdown = '```js\nconsole.log("hi")\n```\n'
 
