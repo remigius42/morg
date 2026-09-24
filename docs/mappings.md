@@ -204,7 +204,9 @@ style where there is one; notable normalizations beyond formatting:
   since org markup may not start or end with whitespace; whitespace-only
   code becomes plain text and reports via `onWarning`
 - org `=verbatim=` → `~code~`: Markdown has a single inline code
-  construct, and org's own HTML export renders both as `<code>`
+  construct, and org's own HTML export renders both as `<code>`. md
+  code holding a `~` that would end org code early (`` `a~ b` ``)
+  becomes `=a~ b=` instead
 - `_` inside a word → `\_` in Markdown: remark's own canonical form
   escapes it; same meaning, and wikilink targets are emitted verbatim,
   so file names in `[[…]]` keep theirs

@@ -203,6 +203,14 @@ describe("inline code edge whitespace", () => {
   })
 })
 
+describe("inline code holding a tilde", () => {
+  it("becomes org verbatim where a tilde would end the code", () => {
+    const markdown = "`a~ b` and `~/x`\n"
+    expect(convertMarkdownToOrg(markdown)).toBe("=a~ b= and ~~/x~\n")
+    expect(mdRoundTrip(markdown)).toBe(markdown)
+  })
+})
+
 describe("literal org markers", () => {
   it("stay literal next to markup", () => {
     // the zero-width space separating the markup is a valid boundary

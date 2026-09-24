@@ -2,6 +2,7 @@ import type { PhrasingContent } from "mdast"
 import type { ObjectType } from "uniorg"
 import { mdismEnabled, warn, type TransformContext } from "./context.js"
 import { escapeOrgPath } from "../orgPath.js"
+import { orgParser, renderInline, type Node } from "../render.js"
 
 // html tags morg itself emits under useHtml; with interpretHtml a bare
 // open/close pair becomes the corresponding native org object
@@ -259,9 +260,25 @@ function transformMdastInlineCode(
   }
   return [
     ...(before ? [{ type: "text", value: before } as ObjectType] : []),
-    { type: "code", value: code },
+    { type: codeType(code), value: code },
     ...(after ? [{ type: "text", value: after } as ObjectType] : [])
   ]
+}
+
+// org ends code at the first `~` it may close on (`~a~ b~`); verbatim
+// keeps such code whole, and comes back as md code too
+function codeType(code: string): "code" | "verbatim" {
+  return code.includes("~") && !readsWhole({ type: "code", value: code })
+    ? "verbatim"
+    : "code"
+}
+
+// whether org reads `node`, rendered, back as the same node
+function readsWhole(node: Node): boolean {
+  const [paragraph] = orgParser.parse(renderInline(node)).children as Node[]
+  const [first, ...rest] =
+    paragraph && "children" in paragraph ? (paragraph.children as Node[]) : []
+  return !rest.length && first?.type === node.type && first.value === node.value
 }
 
 function transformMdastInlineMath(node: PhrasingContent): ObjectType {
