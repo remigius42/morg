@@ -50,7 +50,9 @@ silently changed text.
 - A literal `\[fn:1]` in Markdown text stays text instead of becoming a
   footnote reference.
 - Inline code holding a `~` that ends org code early (`` `a~ b` ``)
-  becomes org `=a~ b=` instead of breaking the rest of the line.
+  becomes org `=a~ b=` instead of breaking the rest of the line. Code
+  that a `=` would end early too stays plain text and reports via
+  `onWarning`.
 - An escaped `\|` in a Markdown table cell becomes org's `\vert{}`
   entity instead of splitting the cell, and comes back as `\|`.
 - Bare underscores and carets (`my_notes_2021.md`, `x^y`, also right
