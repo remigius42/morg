@@ -27,6 +27,11 @@ silently changed text.
   it.
 - Inline code spanning three or more lines converts to org; its line
   endings become spaces, which is how CommonMark renders them anyway.
+- Inline code with whitespace at either end, as a padding typo easily
+  leaves, converts to org instead of breaking the rest of the
+  paragraph: org markup may not start or end with whitespace, so the
+  whitespace moves just outside the code. Whitespace-only code stays
+  plain text and reports via `onWarning`.
 - A space between text and markup inside an org table cell is kept;
   only the cell's alignment padding is trimmed.
 - With the `obsidian` preset, an aliased wikilink in a table cell is
