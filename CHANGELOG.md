@@ -40,9 +40,19 @@ silently changed text.
   which org reads as a footnote definition), one following a nested
   list or code block inside a list item, one inside bold or a link
   text spanning two lines, and one ending in a bare bullet (`1.`).
-- A Markdown line starting `_.` or `_)` converts to org that converts
-  back: uniorg, morg's org parser, took it for a list bullet and failed
-  on the whole document. Org input holding such a line still fails.
+- A line starting `_.` or `_)` converts in both directions: uniorg,
+  morg's org parser, took it for a list bullet and failed on the whole
+  document, or, when a list followed, silently dropped the line. Org
+  reads it as text, and so does morg now.
+- List item text after a nested list (`- a\n  - b\n\n  c`) stays in
+  the outer item instead of moving into the nested one on the next
+  round trip: org → md keeps the blank line Markdown needs there.
+- A literal `\[fn:1]` in Markdown text stays text instead of becoming a
+  footnote reference.
+- Inline code holding a `~` that ends org code early (`` `a~ b` ``)
+  becomes org `=a~ b=` instead of breaking the rest of the line.
+- An escaped `\|` in a Markdown table cell becomes org's `\vert{}`
+  entity instead of splitting the cell, and comes back as `\|`.
 - Bare underscores and carets (`my_notes_2021.md`, `x^y`, also right
   after markup or a link: `**a**_b`) are no longer read as org
   sub/superscripts. md → org adds `^:{}` to `#+OPTIONS:` when the text
