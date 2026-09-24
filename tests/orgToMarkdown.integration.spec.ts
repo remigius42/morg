@@ -49,6 +49,14 @@ describe("convertOrgToMarkdown", () => {
     )
   })
 
+  it("should convert org file links to relative markdown links", () => {
+    const org = "[[file:a b.md::My H][t]], [[file:x.png]] and [[./r.md][r]]\n"
+
+    expect(convertOrgToMarkdown(org)).toBe(
+      "[t](a%20b.md#My%20H), ![](x.png) and [r](./r.md)\n"
+    )
+  })
+
   it("should convert src and example blocks to fenced code", () => {
     const org =
       '#+begin_src js\nconsole.log("hi")\n#+end_src\n\n#+begin_example\nplain\n#+end_example\n'

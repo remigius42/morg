@@ -91,15 +91,32 @@ function transformUniorgObjectToMdastPhrasingContent(
   }
 }
 
+// an org file: link (or a ./ path) is a relative markdown link: the
+// search option becomes the #anchor, and spaces, which a markdown url
+// cannot hold bare, are percent-encoded (md→org decodes them again)
+function markdownUrl(node: Extract<ObjectType, { type: "link" }>): string {
+  if (node.linkType !== "file") {
+    return node.rawLink
+  }
+  const target = node.rawLink.replace(/^file:/, "")
+  const search = target.indexOf("::")
+  const url =
+    search === -1
+      ? target
+      : `${target.slice(0, search)}#${target.slice(search + 2)}`
+  return url.replaceAll(" ", "%20")
+}
+
 function transformUniorgLink(
   ctx: TransformContext,
   node: Extract<ObjectType, { type: "link" }>
 ): PhrasingContent {
   const descriptionText = orgastToString(node)
+  const url = markdownUrl(node)
   // org has no dedicated image syntax; the common convention is a
   // link to an image file, so map those to markdown images
   if (IMAGE_EXTENSION_RE.test(node.rawLink)) {
-    return { type: "image", url: node.rawLink, alt: descriptionText }
+    return { type: "image", url, alt: descriptionText }
   }
   // a description equal to the url (a common Logseq pattern) is no
   // description: text === url makes remark-stringify emit an
@@ -123,8 +140,8 @@ function transformUniorgLink(
   ) {
     return {
       type: "link",
-      url: node.rawLink,
-      children: [{ type: "text", value: node.rawLink }]
+      url,
+      children: [{ type: "text", value: url }]
     }
   }
   const children = transformUniorgObjects(ctx, node.children)
@@ -135,7 +152,7 @@ function transformUniorgLink(
   )
     ? [{ type: "text", value: descriptionText } as PhrasingContent]
     : children
-  return { type: "link", url: node.rawLink, children: flattened }
+  return { type: "link", url, children: flattened }
 }
 
 function transformScriptMarkup(

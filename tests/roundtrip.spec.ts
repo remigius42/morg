@@ -198,6 +198,13 @@ describe("org line syntax in paragraph text", () => {
   })
 })
 
+describe("relative links", () => {
+  it("survive as markdown links", () => {
+    const markdown = "[t](a%20b.md#My%20H), [f](f.md) and ![a](i.png)\n"
+    expect(mdRoundTrip(markdown)).toBe(markdown)
+  })
+})
+
 describe("normalizations", () => {
   it("underscores inside words get escaped (remark's canonical form)", () => {
     expect(mdRoundTrip("see a_b\n")).toBe("see a\\_b\n")

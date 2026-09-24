@@ -21,6 +21,17 @@ md images, alt text ↔ link description. Image title attributes
 has no sensible `morg_` property anchor (ADR 0002 reserves properties
 for metadata-shaped md-isms).
 
+Relative links: a md url without a scheme (`notes.md#Some%20Heading`,
+`img/a.png`) is a path, but a bare org path is a fuzzy link, a
+heading search. They map to org `file:` links instead, percent escapes
+decoded and the `#anchor` as org's search option
+(`[[file:notes.md::Some Heading]]`), which Emacs resolves to a
+`<<target>>` or a headline of that name; a GitHub-style slug anchor
+(`#some-heading`) round-trips, but finds no headline. org → md
+reverses it, org's `./path` links included, encoding spaces as `%20`.
+Urls starting with `[` or `(` are dialect references (Logseq's
+`[[page]]`), not paths.
+
 Markup touching a word character (`` `x`s ``, `foo**bar**baz`) has no
 valid org boundary; md → org inserts a zero-width space (U+200B, the
 org manual's escape character) between marker and neighbor. The
@@ -176,6 +187,7 @@ style where there is one; notable normalizations beyond formatting:
 - `_` inside a word → `\_` in Markdown: remark's own canonical form
   escapes it; same meaning, and wikilink targets are emitted verbatim,
   so file names in `[[…]]` keep theirs
+- org `./path` links → `file:./path`
 - org entities → UTF-8 characters
 - inline footnotes → reference + definition
 - superscript/subscript → braced form (`^{2}`, `_{2}`)

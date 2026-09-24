@@ -49,4 +49,11 @@ describe("obsidian preset", () => {
       "#+OPTIONS: ^:{}\n[[a_b.md][a_b]]\n"
     )
   })
+
+  it("keeps relative markdown links as links, not wikilinks", () => {
+    const markdown = "[t](file.md) and [[Page]]\n"
+    const org = convertMarkdownToOrg(markdown, { preset: obsidian() })
+
+    expect(convertOrgToMarkdown(org, { preset: obsidian() })).toBe(markdown)
+  })
 })

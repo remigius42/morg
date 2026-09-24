@@ -73,6 +73,40 @@ function orgSafeUrl(url: string): string {
   return url.replaceAll("[", "%5B").replaceAll("]", "%5D")
 }
 
+// a url without a scheme is a relative path in markdown, but a bare org
+// path is a fuzzy link (a heading search); org's file: type keeps it a
+// file. A #anchor becomes org's search option, which finds a
+// <<target>> or a headline of that name. `[[page]]` / `((uuid))` urls
+// are dialect references (logseq), not paths
+const SCHEME_RE = /^[a-z][a-z0-9+.-]*:/i
+
+function isRelativePath(url: string): boolean {
+  return url !== "" && !SCHEME_RE.test(url) && !/^(#|\/\/|\[|\()/.test(url)
+}
+
+// md urls are percent-encoded, org paths are not; a malformed escape
+// stays as written
+function decodeUrlPart(part: string): string {
+  try {
+    return decodeURIComponent(part)
+  } catch {
+    return part
+  }
+}
+
+function orgLinkTarget(url: string): {
+  rawLink: string
+  linkType: "file" | "url"
+} {
+  if (!isRelativePath(url)) {
+    return { rawLink: orgSafeUrl(url), linkType: "url" }
+  }
+  const hash = url.indexOf("#")
+  const path = decodeUrlPart(hash === -1 ? url : url.slice(0, hash))
+  const search = hash === -1 ? "" : `::${decodeUrlPart(url.slice(hash + 1))}`
+  return { rawLink: orgSafeUrl(`file:${path}${search}`), linkType: "file" }
+}
+
 function transformMdastLink(
   ctx: TransformContext,
   linkNode: Extract<PhrasingContent, { type: "link" }>
@@ -87,13 +121,13 @@ function transformMdastLink(
       ? []
       : transformPhrasingChildren(ctx, linkNode.children)
   // rawLink should just be the URL, uniorg-stringify adds the brackets
-  const url = orgSafeUrl(linkNode.url)
+  const { rawLink, linkType } = orgLinkTarget(linkNode.url)
   return {
     type: "link",
     format: "bracket", // Assuming bracket format for Markdown links
-    linkType: "url",
-    rawLink: url,
-    path: url,
+    linkType,
+    rawLink,
+    path: rawLink,
     children: linkChildren
   }
 }
@@ -139,13 +173,13 @@ function transformMdastImage(
   if (node.title) {
     warn(ctx, `dropped image title "${node.title}" (${node.url})`)
   }
-  const url = orgSafeUrl(node.url)
+  const { rawLink } = orgLinkTarget(node.url)
   return {
     type: "link",
     format: "bracket",
     linkType: "file",
-    rawLink: url,
-    path: url,
+    rawLink,
+    path: rawLink,
     children: node.alt ? [{ type: "text", value: node.alt }] : []
   } as unknown as ObjectType
 }

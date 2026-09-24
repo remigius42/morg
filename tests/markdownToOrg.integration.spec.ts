@@ -33,7 +33,7 @@ This is a paragraph.
     const markdown = "a `x`s, foo**bar**baz and [l](u)*i*\n"
 
     expect(convertMarkdownToOrg(markdown)).toBe(
-      "a ~x~\u200Bs, foo\u200B*bar*\u200Bbaz and [[u][l]]\u200B/i/\n"
+      "a ~x~\u200Bs, foo\u200B*bar*\u200Bbaz and [[file:u][l]]\u200B/i/\n"
     )
   })
 
@@ -89,8 +89,18 @@ This is a paragraph.
 
     expect(
       convertMarkdownToOrg(markdown, { onWarning: m => warnings.push(m) })
-    ).toBe("- item\n  Head [[u][l]]\n  text\n")
+    ).toBe("- item\n  Head [[file:u][l]]\n  text\n")
     expect(warnings).toEqual(["heading inside a list item became text"])
+  })
+
+  it("should convert relative links and images to org file links", () => {
+    // a bare org path is a fuzzy link (a heading search), not a file
+    const markdown =
+      "[K3s](kubernetes.md#Using%20MetalLB), ![a](i.png) and [w](https://e.com)\n"
+
+    expect(convertMarkdownToOrg(markdown)).toBe(
+      "[[file:kubernetes.md::Using MetalLB][K3s]], [[file:i.png][a]] and [[https://e.com][w]]\n"
+    )
   })
 
   it("should convert fenced code blocks to src blocks", () => {
@@ -121,7 +131,7 @@ This is a paragraph.
     const markdown = "![](image.png)\n\n![A diagram](diagram.svg)\n"
 
     expect(convertMarkdownToOrg(markdown)).toBe(
-      "[[image.png]]\n\n[[diagram.svg][A diagram]]\n"
+      "[[file:image.png]]\n\n[[file:diagram.svg][A diagram]]\n"
     )
   })
 
@@ -131,14 +141,16 @@ This is a paragraph.
       "[[http://e.com/?a%5B%5D=1][x]]\n"
     )
     expect(convertMarkdownToOrg("![a](i[1].png)\n")).toBe(
-      "[[i%5B1%5D.png][a]]\n"
+      "[[file:i%5B1%5D.png][a]]\n"
     )
   })
 
   it("should drop image title attributes (documented)", () => {
     const markdown = '![A diagram](diagram.svg "The title")\n'
 
-    expect(convertMarkdownToOrg(markdown)).toBe("[[diagram.svg][A diagram]]\n")
+    expect(convertMarkdownToOrg(markdown)).toBe(
+      "[[file:diagram.svg][A diagram]]\n"
+    )
   })
 
   it("should report dropped constructs via onWarning", () => {
@@ -370,7 +382,7 @@ This is a paragraph.
       "A [reference][ref] and ![alt][img].\n\n[ref]: https://example.com\n\n[img]: image.png\n"
 
     expect(convertMarkdownToOrg(markdown)).toBe(
-      "A [[https://example.com][reference]] and [[image.png][alt]].\n"
+      "A [[https://example.com][reference]] and [[file:image.png][alt]].\n"
     )
   })
 
