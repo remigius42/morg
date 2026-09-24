@@ -8,6 +8,10 @@ import { takeRecordedStyle } from "./core/markdownStyle.js"
 import { unescapeOrgMarkup } from "./core/markupBoundary.js"
 import { unescapeLineSyntax } from "./core/lineSyntax.js"
 import { parseOrg } from "./core/bracedScripts.js"
+import {
+  dropUnderscoreBulletGuards,
+  guardUnderscoreBullets
+} from "./core/underscoreBullets.js"
 import type { OrgToMarkdownOptions } from "./options.js"
 
 /**
@@ -22,8 +26,9 @@ export function convertOrgToMarkdown(
 ): string {
   // Phase 1: Parse Org-mode to uniorg-ast
   // md text has no scripts, so ^:{} is implied there and consumed here
-  // (see markdownToOrg)
-  let uniorgAst = parseOrg(org)
+  // (see markdownToOrg); uniorg misreads `_.` lines (see underscoreBullets)
+  let uniorgAst = parseOrg(guardUnderscoreBullets(org))
+  dropUnderscoreBulletGuards(uniorgAst)
 
   // Phase 1b: a recorded style is morg's own (ADR 0004), so consume it so
   // it does not travel on as frontmatter; explicit options still win

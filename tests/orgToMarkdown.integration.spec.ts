@@ -33,6 +33,17 @@ describe("convertOrgToMarkdown", () => {
     expect(convertOrgToMarkdown(org)).toBe("see /etc/, a \\*b\\* and x =y= z\n")
   })
 
+  it("should read a line starting `_.` as text, as org does", () => {
+    // uniorg takes `_.` for a bullet and throws
+    expect(convertOrgToMarkdown("_. a\n")).toBe("\\_. a\n")
+    // followed by a list, uniorg used to drop it silently
+    expect(convertOrgToMarkdown("_. a\n- b\n")).toBe("\\_. a\n\n- b\n")
+    // the guard does not stick where uniorg reads no text
+    expect(convertOrgToMarkdown("#+begin_src\n_. a\n#+end_src\n")).toBe(
+      "```\n_. a\n```\n"
+    )
+  })
+
   it("should read ^:{} and consume it (md has no scripts)", () => {
     const org = "#+OPTIONS: toc:nil ^:{}\nsee a_b and H_{2}O\n"
 

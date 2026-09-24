@@ -50,7 +50,8 @@ A paragraph line org would read as line syntax (an escaped `1\.`,
 gets a leading zero-width space too, or it would turn into a list
 item, headline, comment or table; org → md drops it. So does a line
 starting `_.` or `_)`: org reads it as text, but uniorg takes it for a
-bullet and fails to parse the document.
+bullet and fails to parse the document (or drops the line), so org →
+md guards such lines the same way before parsing.
 
 Markdown text has no sub/superscripts, but org reads a bare `a_b` or
 `x^y` as one. md → org therefore adds `^:{}` to `#+OPTIONS:` (org's

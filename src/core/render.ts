@@ -15,7 +15,7 @@ const stringifier = unified().use(uniorgStringify).freeze()
 /**
  * Parses `text` as an org document, or returns undefined where uniorg
  * throws: it takes a line starting `_.` or `_)` for a bullet, then
- * fails to read it (org has no such bullet).
+ * fails to read it (org has no such bullet; see underscoreBullets).
  */
 export function tryParse(
   text: string,
