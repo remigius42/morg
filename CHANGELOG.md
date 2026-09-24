@@ -21,6 +21,9 @@ silently changed text.
   drops it again.
 - Literal text org would read as markup, such as the path `/etc/` or an
   escaped `\*b\*`, stays literal instead of turning italic or bold.
+- A heading inside a list item keeps its text as a line of the item
+  and reports via `onWarning`, instead of silently coming back as
+  literal `\*\* …`: org has no headline inside a list.
 - A paragraph line that starts like org line syntax, such as an
   escaped `1\.`, `\-` or `\#`, or a lazy continuation line, stays text
   instead of turning into a list item, headline, comment or table.
