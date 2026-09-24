@@ -269,6 +269,16 @@ describe("org line syntax in paragraph text", () => {
   })
 })
 
+describe("literal footnote references", () => {
+  it("stay text through a round trip", () => {
+    const markdown = "a\n\\[fn:1] b, \\[fn::c] d\n"
+    expect(convertMarkdownToOrg(markdown)).toBe(
+      "a\n[\u200Bfn:1] b, [\u200Bfn::c] d\n"
+    )
+    expect(mdRoundTrip(markdown)).toBe(markdown)
+  })
+})
+
 describe("relative links", () => {
   it("keep # and % in org file paths and search options", () => {
     const org = "[[file:C# notes.md::100% done][x]]\n"

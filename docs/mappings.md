@@ -53,6 +53,10 @@ starting `_.` or `_)`: org reads it as text, but uniorg takes it for a
 bullet and fails to parse the document (or drops the line), so org →
 md guards such lines the same way before parsing.
 
+A literal `[fn:` in md text (`\[fn:1]`) would be a footnote reference
+in org; md → org puts a zero-width space after its `[`, org → md drops
+it.
+
 Markdown text has no sub/superscripts, but org reads a bare `a_b` or
 `x^y` as one. md → org therefore adds `^:{}` to `#+OPTIONS:` (org's
 own switch limiting scripts to the braced `a_{b}` form, which morg

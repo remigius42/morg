@@ -7,6 +7,7 @@ import { transformUniorgAstToMdast } from "./core/uniorgToMdast/index.js"
 import { takeRecordedStyle } from "./core/markdownStyle.js"
 import { unescapeOrgMarkup } from "./core/markupBoundary.js"
 import { unescapeLineSyntax } from "./core/lineSyntax.js"
+import { unescapeFootnoteReferences } from "./core/footnoteReferences.js"
 import { parseOrg } from "./core/bracedScripts.js"
 import {
   dropUnderscoreBulletGuards,
@@ -51,6 +52,7 @@ export function convertOrgToMarkdown(
   // Phase 1c: markdown needs no zero-width space escapes (inverse of md→org)
   unescapeOrgMarkup(uniorgAst)
   unescapeLineSyntax(uniorgAst)
+  unescapeFootnoteReferences(uniorgAst)
 
   // Phase 2: Extract dialect preset conventions, if any
   if (options.preset?.extractFromUniorg) {

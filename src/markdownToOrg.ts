@@ -18,6 +18,7 @@ import { transformMdastToUniorgAst } from "./core/mdastToUniorg/index.js"
 import { detectMarkdownStyle, STYLE_KEYWORD } from "./core/markdownStyle.js"
 import { escapeOrgMarkup } from "./core/markupBoundary.js"
 import { escapeLineSyntax } from "./core/lineSyntax.js"
+import { escapeFootnoteReferences } from "./core/footnoteReferences.js"
 import { requireBracedScripts } from "./core/bracedScripts.js"
 import type { MarkdownStyleOptions, MarkdownToOrgOptions } from "./options.js"
 
@@ -80,9 +81,10 @@ export function convertMarkdownToOrg(
     uniorgAst = options.preset.applyToUniorg(uniorgAst)
   }
 
-  // Phase 3b: paragraph lines org would read as line syntax, literal
-  // markers org would read as markup, and markup touching a word
-  // character, need a zero-width space escape
+  // Phase 3b: literal footnote references, paragraph lines org would
+  // read as line syntax, literal markers org would read as markup, and
+  // markup touching a word character, need a zero-width space escape
+  escapeFootnoteReferences(uniorgAst)
   escapeLineSyntax(uniorgAst)
   escapeOrgMarkup(uniorgAst)
 
