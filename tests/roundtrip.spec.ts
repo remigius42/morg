@@ -261,6 +261,15 @@ describe("relative links", () => {
     expect(mdRoundTrip(markdown)).toBe(markdown)
   })
 
+  it("keep literal %5B, %5D and :: in paths", () => {
+    // org reads those as morg's bracket escapes and the search option
+    const markdown =
+      "[x](a%255B.md), [y](a%255D.md#b%255B), [z](a%3A%3Ab.md) and [w](a%3A#b)\n"
+    expect(mdRoundTrip(markdown)).toBe(markdown)
+    const once = convertMarkdownToOrg(markdown)
+    expect(convertMarkdownToOrg(convertOrgToMarkdown(once))).toBe(once)
+  })
+
   it("survive as markdown links", () => {
     const markdown = "[t](a%20b.md#My%20H), [f](f.md) and ![a](i.png)\n"
     expect(mdRoundTrip(markdown)).toBe(markdown)

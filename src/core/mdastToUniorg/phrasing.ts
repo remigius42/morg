@@ -1,6 +1,7 @@
 import type { PhrasingContent } from "mdast"
 import type { ObjectType } from "uniorg"
 import { mdismEnabled, warn, type TransformContext } from "./context.js"
+import { escapeOrgPath } from "../orgPath.js"
 
 // html tags morg itself emits under useHtml; with interpretHtml a bare
 // open/close pair becomes the corresponding native org object
@@ -154,9 +155,14 @@ function orgLinkTarget(url: string): {
     return { rawLink: orgSafeUrl(url), linkType: "url" }
   }
   const hash = url.indexOf("#")
-  const path = decodeUrlPart(hash === -1 ? url : url.slice(0, hash))
-  const search = hash === -1 ? "" : `::${decodeUrlPart(url.slice(hash + 1))}`
-  return { rawLink: orgSafeUrl(`file:${path}${search}`), linkType: "file" }
+  const path = escapeOrgPath(
+    decodeUrlPart(hash === -1 ? url : url.slice(0, hash))
+  )
+  const search =
+    hash === -1
+      ? ""
+      : `::${escapeOrgPath(decodeUrlPart(url.slice(hash + 1)), true)}`
+  return { rawLink: `file:${path}${search}`, linkType: "file" }
 }
 
 function transformMdastLink(

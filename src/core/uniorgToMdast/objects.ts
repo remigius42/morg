@@ -8,6 +8,7 @@ import {
   type TransformContext
 } from "./shared.js"
 import { transformFootnoteReference } from "./footnotes.js"
+import { unescapeOrgPath } from "../orgPath.js"
 
 const IMAGE_EXTENSION_RE = /\.(png|jpe?g|gif|svg|webp|avif|bmp|ico)$/i
 
@@ -92,16 +93,21 @@ function transformUniorgObjectToMdastPhrasingContent(
 }
 
 // the inverse of md→org's decoding: % and # would be read as an escape
-// or the anchor, and a markdown url cannot hold a bare space. `[`/`]`
-// travel percent-encoded in org paths (see mdastToUniorg), so they are
-// decoded first rather than escaped twice
+// or the anchor, and a markdown url cannot hold a bare space. Org path
+// escapes (`[`, `]`, `:`) are undone first rather than escaped twice
 function encodeUrlPart(part: string): string {
-  return part
-    .replaceAll("%5B", "[")
-    .replaceAll("%5D", "]")
+  return unescapeOrgPath(part)
     .replaceAll("%", "%25")
     .replaceAll("#", "%23")
     .replaceAll(" ", "%20")
+}
+
+// a path starting like `a:` would read as a url scheme in markdown
+function encodeUrlPath(path: string): string {
+  const encoded = encodeUrlPart(path)
+  return /^[a-z][a-z0-9+.-]*:/i.test(encoded)
+    ? encoded.replaceAll(":", "%3A")
+    : encoded
 }
 
 // an org file: link (or a ./ path) is a relative markdown link, the
@@ -113,8 +119,8 @@ function markdownUrl(node: Extract<ObjectType, { type: "link" }>): string {
   const target = node.rawLink.replace(/^file:/, "")
   const search = target.indexOf("::")
   return search === -1
-    ? encodeUrlPart(target)
-    : `${encodeUrlPart(target.slice(0, search))}#${encodeUrlPart(target.slice(search + 2))}`
+    ? encodeUrlPath(target)
+    : `${encodeUrlPath(target.slice(0, search))}#${encodeUrlPart(target.slice(search + 2))}`
 }
 
 function transformUniorgLink(

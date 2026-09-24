@@ -30,6 +30,11 @@ decoded and the `#anchor` as org's search option
 (`#some-heading`) round-trips, but finds no headline. org → md
 reverses it, org's `./path` links included, percent-encoding `%`,
 `#` and spaces.
+In the org path, `[`, `]` and a colon before another colon or the
+path's end are percent-encoded (`%5B`, `%5D`, `%3A`), since org reads
+brackets as link syntax and `::` as the search option; a literal `%`
+in front of such an escape gets `25` added (`a%5B.md` → `a%255B.md`),
+so the encoding stays reversible.
 Urls starting with `[` or `(` are dialect references (Logseq's
 `[[page]]`), not paths.
 
