@@ -9,6 +9,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+Found by round-tripping a real Obsidian vault, where each of these
+silently changed text.
+
+- Markup touching a word character (`` `x`s ``, `foo**bar**baz`) no
+  longer comes back with literal markers. Org only reads markup next to
+  whitespace or punctuation, so md → org now separates the two with a
+  zero-width space, the org manual's escape character, and org → md
+  drops it again.
+- Literal text org would read as markup, such as the path `/etc/` or an
+  escaped `\*b\*`, stays literal instead of turning italic or bold.
+- Bare underscores and carets (`my_notes_2021.md`, `x^y`) are no
+  longer read as org sub/superscripts. md → org adds `^:{}` to
+  `#+OPTIONS:` when the text needs it; org → md honors it and consumes
+  it.
+- Inline code spanning three or more lines converts to org; its line
+  endings become spaces, which is how CommonMark renders them anyway.
+- A space between text and markup inside an org table cell is kept;
+  only the cell's alignment padding is trimmed.
+- With the `obsidian` preset, an aliased wikilink in a table cell is
+  written `[[Page\|alias]]`, as Obsidian does, instead of splitting the
+  cell.
+
 ## [0.5.0] - 2026-09-19
 
 ### Added
