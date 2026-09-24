@@ -38,8 +38,11 @@ silently changed text.
   instead of turning into a list item, headline, comment or table. This
   includes a line starting with a footnote reference (`[^1] text`,
   which org reads as a footnote definition), one following a nested
-  list or code block inside a list item, and one inside bold or a link
-  text spanning two lines.
+  list or code block inside a list item, one inside bold or a link
+  text spanning two lines, and one ending in a bare bullet (`1.`).
+- A Markdown line starting `_.` or `_)` converts to org that converts
+  back: uniorg, morg's org parser, took it for a list bullet and failed
+  on the whole document. Org input holding such a line still fails.
 - Bare underscores and carets (`my_notes_2021.md`, `x^y`, also right
   after markup or a link: `**a**_b`) are no longer read as org
   sub/superscripts. md → org adds `^:{}` to `#+OPTIONS:` when the text
