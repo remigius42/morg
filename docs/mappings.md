@@ -67,7 +67,9 @@ need it, it is the author's own and stays.
 
 Tables: GFM ↔ org, including column alignment via org `<l>/<r>/<c>`
 cookie rows. `table.el` tables travel as `table.el`-tagged fenced
-blocks and are restored verbatim.
+blocks and are restored verbatim. An escaped `\|` in a cell becomes
+org's `\vert{}` entity (org has no escaped `|`), which comes back as
+`\|`.
 
 ## Org-isms (org → md)
 

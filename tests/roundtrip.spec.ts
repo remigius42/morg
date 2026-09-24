@@ -211,6 +211,16 @@ describe("inline code holding a tilde", () => {
   })
 })
 
+describe("a pipe in a table cell", () => {
+  it("stays in its cell through a round trip", () => {
+    const markdown = "| a          |\n| ---------- |\n| x \\| *y\\|* |\n"
+    expect(convertMarkdownToOrg(markdown)).toBe(
+      "| a |\n|-|\n| x \\vert{} /y\\vert{}/ |\n"
+    )
+    expect(mdRoundTrip(markdown)).toBe(markdown)
+  })
+})
+
 describe("literal org markers", () => {
   it("stay literal next to markup", () => {
     // the zero-width space separating the markup is a valid boundary
