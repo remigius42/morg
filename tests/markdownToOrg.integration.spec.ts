@@ -67,6 +67,16 @@ This is a paragraph.
     )
   })
 
+  it.each(["**a**_b", "`x`_b", "[l](u)_b", "**a**^b"])(
+    "should keep a script after another inline node out: %s",
+    markdown => {
+      // org reads the script in the rendered line, marker or ] before it
+      expect(convertMarkdownToOrg(`${markdown}\n`)).toMatch(
+        /^#\+OPTIONS: \^:\{\}\n/
+      )
+    }
+  )
+
   it("should move edge whitespace of inline code outside the markers", () => {
     // org markup may not start or end with whitespace
     const markdown = "a ``x` `` b\n"

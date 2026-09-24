@@ -105,6 +105,29 @@ function markupOffsets(text: string): number[] {
 
 const stringifier = unified().use(uniorgStringify).freeze()
 
+// uniorg's inline node types; anything else is a block element (in a
+// list item's flattened content: a nested list or code block)
+export const INLINE_TYPES = new Set([
+  "text",
+  "bold",
+  "italic",
+  "underline",
+  "strike-through",
+  "code",
+  "verbatim",
+  "link",
+  "footnote-reference",
+  "latex-fragment",
+  "entity",
+  "timestamp",
+  "subscript",
+  "superscript",
+  "export-snippet",
+  "statistics-cookie",
+  "citation",
+  "line-break"
+])
+
 // ends the rendering, so the paragraph's own trailing newline and
 // whitespace trimming stay out of it
 const SENTINEL = "\u0000"

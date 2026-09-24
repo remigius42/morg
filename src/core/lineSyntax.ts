@@ -4,7 +4,11 @@ import uniorgParse from "uniorg-parse"
 import { visit } from "unist-util-visit"
 // a line starting with a zero-width space is no org line syntax (list
 // item, headline, comment, keyword, table, ...), but renders as text
-import { renderInline, ZERO_WIDTH_SPACE } from "./markupBoundary.js"
+import {
+  INLINE_TYPES,
+  renderInline,
+  ZERO_WIDTH_SPACE
+} from "./markupBoundary.js"
 
 type Node = Parent["children"][number] & { value?: string }
 
@@ -24,29 +28,6 @@ function readsAsLineSyntax(line: string): boolean {
   const [first, ...rest] = orgParser.parse(line).children
   return first?.type !== "paragraph" || rest.length > 0
 }
-
-// uniorg's inline node types; anything else in a list item's flattened
-// content is a block element (nested list, code block), ending its line
-const INLINE_TYPES = new Set([
-  "text",
-  "bold",
-  "italic",
-  "underline",
-  "strike-through",
-  "code",
-  "verbatim",
-  "link",
-  "footnote-reference",
-  "latex-fragment",
-  "entity",
-  "timestamp",
-  "subscript",
-  "superscript",
-  "export-snippet",
-  "statistics-cookie",
-  "citation",
-  "line-break"
-])
 
 interface LineStart {
   // the child the line starts in, and the offset in its rendering

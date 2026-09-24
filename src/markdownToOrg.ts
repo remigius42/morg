@@ -80,16 +80,17 @@ export function convertMarkdownToOrg(
     uniorgAst = options.preset.applyToUniorg(uniorgAst)
   }
 
-  // Phase 3b: md text has no sub/superscripts; keep org from reading
-  // bare underscores and carets as such. After the preset, whose text
-  // rewrites (wikilink aliases) org parses too
-  requireBracedScripts(uniorgAst)
-
-  // Phase 3c: paragraph lines org would read as line syntax, literal
+  // Phase 3b: paragraph lines org would read as line syntax, literal
   // markers org would read as markup, and markup touching a word
   // character, need a zero-width space escape
   escapeLineSyntax(uniorgAst)
   escapeOrgMarkup(uniorgAst)
+
+  // Phase 3c: md text has no sub/superscripts; keep org from reading
+  // bare underscores and carets as such. Checked on the text as
+  // rendered: after the preset, whose text rewrites (wikilink aliases)
+  // org parses too, and after the escapes, next to which org reads them
+  requireBracedScripts(uniorgAst)
 
   // Phase 4: Render uniorg-ast to Org-mode string
   const processor = unified().use(uniorgStringify)

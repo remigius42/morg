@@ -2,7 +2,8 @@ import type { OrgData } from "uniorg"
 import type { Parent } from "unist"
 import { unified } from "unified"
 import uniorgParse from "uniorg-parse"
-import { visit } from "unist-util-visit"
+import { EXIT, visit } from "unist-util-visit"
+import { INLINE_TYPES, renderInline } from "./markupBoundary.js"
 
 // org's `#+OPTIONS: ^:{}` limits sub/superscripts to the braced form
 // (`H_{2}O`), so a bare underscore or caret (`a_b`, `x^y`) stays text.
@@ -18,6 +19,8 @@ const bracedScriptsParser = unified()
   .use(uniorgParse, { useSubSuperscripts: "{}" })
   .freeze()
 
+type Node = Parent["children"][number] & { value?: string }
+
 function countScripts(text: string, braced: boolean): number {
   const tree = (braced ? bracedScriptsParser : scriptsParser).parse(text)
   let count = 0
@@ -29,12 +32,34 @@ function countScripts(text: string, braced: boolean): number {
   return count
 }
 
+// a block's inline content as org renders it; a block element inside
+// (a list item's nested list) only ends a line
+function renderedContent(node: Node | Parent): string | undefined {
+  if (
+    INLINE_TYPES.has(node.type) ||
+    !("children" in node) ||
+    !node.children.some(child => INLINE_TYPES.has(child.type))
+  ) {
+    return undefined
+  }
+  return (node.children as Node[])
+    .map(child => (INLINE_TYPES.has(child.type) ? renderInline(child) : "\n"))
+    .join("")
+}
+
+// whether org reads a script in the text that `^:{}` would keep text.
+// Checked per block as rendered, not per text node: the char before a
+// `_` or `^` may belong to a neighbor (a marker, a link's `]`, an
+// escape); a script never spans blocks
 function readsBareScripts(tree: Parent): boolean {
   let found = false
-  visit(tree, "text", (node: { value: string }) => {
-    if (/[_^]/.test(node.value)) {
-      found ||= countScripts(node.value, false) > countScripts(node.value, true)
-    }
+  visit(tree, (node: Node | Parent) => {
+    const content = renderedContent(node)
+    found =
+      content !== undefined &&
+      /[_^]/.test(content) &&
+      countScripts(content, false) > countScripts(content, true)
+    return found ? EXIT : undefined
   })
   return found
 }
