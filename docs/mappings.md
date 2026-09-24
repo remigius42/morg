@@ -180,7 +180,8 @@ style where there is one; notable normalizations beyond formatting:
 - line endings inside md inline code → spaces: org markup spans at
   most two lines, and CommonMark renders them as spaces anyway
 - whitespace at either end of md inline code → just outside the org
-  markers, which may not start or end with whitespace; whitespace-only
+  markers, and outside any bold, italic or strikethrough ending there,
+  since org markup may not start or end with whitespace; whitespace-only
   code becomes plain text and reports via `onWarning`
 - org `=verbatim=` → `~code~`: Markdown has a single inline code
   construct, and org's own HTML export renders both as `<code>`

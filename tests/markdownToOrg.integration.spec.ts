@@ -62,6 +62,11 @@ This is a paragraph.
     expect(convertMarkdownToOrg(markdown)).toBe("a ~x`~  b\n")
   })
 
+  it("should move code edge whitespace out of enclosing markup too", () => {
+    // bold may not end with whitespace either
+    expect(convertMarkdownToOrg("a **`x `** b\n")).toBe("a *~x~*  b\n")
+  })
+
   it("should keep whitespace-only inline code as text, with a warning", () => {
     // org has no empty code markup
     const warnings: string[] = []

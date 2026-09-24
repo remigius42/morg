@@ -178,6 +178,12 @@ describe("braced scripts", () => {
 })
 
 describe("inline code edge whitespace", () => {
+  it("stays inside bold at the start of a line", () => {
+    const once = mdRoundTrip("**` x`** rest\n")
+    expect(once).toBe("**`x`** rest\n")
+    expect(mdRoundTrip(once)).toBe(once)
+  })
+
   it("converges once the whitespace sits outside the code", () => {
     const once = mdRoundTrip("a ``x` `` b\n")
     // remark pads both ends of code that ends in a backtick

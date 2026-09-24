@@ -43,13 +43,15 @@ export function transformPhrasingChildren(
       ? matchInlineHtmlPair(children, i)
       : null
     if (pair) {
-      result.push({
-        type: pair.orgType,
-        children: transformPhrasingChildren(
-          ctx,
-          children.slice(i + 1, pair.end)
-        )
-      } as ObjectType)
+      result.push(
+        ...hoistEdgeWhitespace({
+          type: pair.orgType,
+          children: transformPhrasingChildren(
+            ctx,
+            children.slice(i + 1, pair.end)
+          )
+        } as ObjectType)
+      )
       i = pair.end
       continue
     }
@@ -59,10 +61,60 @@ export function transformPhrasingChildren(
     }
     const transformed = transformMdastPhrasingContentToUniorgObject(ctx, node)
     if (transformed) {
-      result.push(transformed)
+      result.push(...hoistEdgeWhitespace(transformed))
     }
   }
   return result
+}
+
+const CONTAINER_MARKUP = new Set([
+  "bold",
+  "italic",
+  "strike-through",
+  "underline"
+])
+
+// strips the whitespace at the edges of `children`, returning it
+function takeEdgeWhitespace(children: ObjectType[]): {
+  before: string
+  after: string
+} {
+  const first = children[0]
+  const last = children.at(-1)
+  let before = ""
+  let after = ""
+  if (first?.type === "text") {
+    before = /^\s*/.exec(first.value)?.[0] ?? ""
+    first.value = first.value.slice(before.length)
+  }
+  if (last?.type === "text") {
+    after = /\s*$/.exec(last.value)?.[0] ?? ""
+    last.value = last.value.slice(0, last.value.length - after.length)
+  }
+  return { before, after }
+}
+
+// org markup may not start or end with whitespace, which a code span's
+// moved-out edge whitespace (see transformMdastInlineCode) can leave
+// inside it; it moves out further, to the markup's siblings
+function hoistEdgeWhitespace(node: ObjectType): ObjectType[] {
+  if (!CONTAINER_MARKUP.has(node.type) || !("children" in node)) {
+    return [node]
+  }
+  const { before, after } = takeEdgeWhitespace(node.children)
+  if (!before && !after) {
+    return [node]
+  }
+  const content = node.children.filter(
+    child => child.type !== "text" || child.value !== ""
+  )
+  const text = (value: string): ObjectType[] =>
+    value ? [{ type: "text", value }] : []
+  return [
+    ...text(before),
+    ...(content.length ? [{ ...node, children: content } as ObjectType] : []),
+    ...text(after)
+  ]
 }
 
 // an org bracket-link path cannot contain [ or ]; percent-encoding keeps
