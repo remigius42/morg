@@ -28,6 +28,15 @@ This is a paragraph.
     expect(convertMarkdownToOrg(markdown)).toBe("a ~x y z~ b\n")
   })
 
+  it("should separate markup from adjacent word characters", () => {
+    // org markup needs a boundary; U+200B is org's own escape for it
+    const markdown = "a `x`s, foo**bar**baz and [l](u)*i*\n"
+
+    expect(convertMarkdownToOrg(markdown)).toBe(
+      "a ~x~\u200Bs, foo\u200B*bar*\u200Bbaz and [[u][l]]\u200B/i/\n"
+    )
+  })
+
   it("should convert fenced code blocks to src blocks", () => {
     const markdown = '```js\nconsole.log("hi")\n```\n'
 

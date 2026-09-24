@@ -21,6 +21,11 @@ md images, alt text ↔ link description. Image title attributes
 has no sensible `morg_` property anchor (ADR 0002 reserves properties
 for metadata-shaped md-isms).
 
+Markup touching a word character (`` `x`s ``, `foo**bar**baz`) has no
+valid org boundary; md → org inserts a zero-width space (U+200B, the
+org manual's escape character) between marker and neighbor, and
+org → md drops the zero-width spaces directly next to markup again.
+
 Tables: GFM ↔ org, including column alignment via org `<l>/<r>/<c>`
 cookie rows. `table.el` tables travel as `table.el`-tagged fenced
 blocks and are restored verbatim.

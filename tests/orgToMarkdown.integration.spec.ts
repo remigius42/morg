@@ -19,6 +19,14 @@ describe("convertOrgToMarkdown", () => {
     expect(convertOrgToMarkdown(org)).toBe("Use `foo` or `bar` here.\n")
   })
 
+  it("should drop zero-width spaces that only separate markup", () => {
+    const org = "a ~x~\u200Bs, foo\u200B*bar*\u200Bbaz and [[u][l]]\u200B/i/\n"
+
+    expect(convertOrgToMarkdown(org)).toBe(
+      "a `x`s, foo**bar**baz and [l](u)*i*\n"
+    )
+  })
+
   it("should convert src and example blocks to fenced code", () => {
     const org =
       '#+begin_src js\nconsole.log("hi")\n#+end_src\n\n#+begin_example\nplain\n#+end_example\n'
