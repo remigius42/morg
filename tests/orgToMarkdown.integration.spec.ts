@@ -41,6 +41,17 @@ describe("convertOrgToMarkdown", () => {
     )
   })
 
+  it("should honor ^:{} only in a top-level #+OPTIONS:", () => {
+    // morg consumes only top-level keywords; one in a section stays
+    // verbatim, one in a src block is code
+    expect(convertOrgToMarkdown("* H\n#+OPTIONS: ^:{}\na_b\n")).toBe(
+      "# H\n\n#+OPTIONS: ^:{}\n\na\\_{b}\n"
+    )
+    expect(
+      convertOrgToMarkdown("#+begin_src org\n#+OPTIONS: ^:{}\n#+end_src\na_b\n")
+    ).toBe("```org\n#+OPTIONS: ^:{}\n```\n\na\\_{b}\n")
+  })
+
   it("should keep the space before markup in a table cell", () => {
     const org = "| a |\n|-|\n| of ~c~ |\n"
 

@@ -66,38 +66,42 @@ export function requireBracedScripts(uniorgAst: OrgData): void {
   }
 }
 
-// whether the document limits scripts to the braced form, which the
-// parser has to know up front
-function usesBracedScripts(org: string): boolean {
+// whether the document may limit scripts to the braced form, which the
+// parser has to know up front; only a top-level keyword counts, which
+// takes a parse to tell
+function mayUseBracedScripts(org: string): boolean {
   return [...org.matchAll(/^[ \t]*#\+options:(.*)$/gim)].some(([, value]) =>
     (value ?? "").split(/\s+/).includes(BRACED_SCRIPTS)
   )
 }
 
-// drops `^:{}` from `#+OPTIONS:`, the whole keyword if nothing else is
-// left; md text has no scripts, so the return trip re-adds it wherever
-// it is needed
-function takeBracedScripts(uniorgAst: OrgData): void {
+// drops `^:{}` from the top-level `#+OPTIONS:`, the whole keyword if
+// nothing else is left; md text has no scripts, so the return trip
+// re-adds it wherever it is needed. Returns whether there was one
+function takeBracedScripts(uniorgAst: OrgData): boolean {
+  let taken = false
   uniorgAst.children = uniorgAst.children.filter(node => {
     if (!isOptions(node)) {
       return true
     }
-    node.value = node.value
-      .split(/\s+/)
-      .filter(item => item && item !== BRACED_SCRIPTS)
-      .join(" ")
+    const items = node.value.split(/\s+/)
+    node.value = items.filter(item => item && item !== BRACED_SCRIPTS).join(" ")
+    taken ||= items.includes(BRACED_SCRIPTS)
     return node.value !== ""
   })
+  return taken
 }
 
 /**
  * org→md: parses org, honoring and then consuming `^:{}`.
  */
 export function parseOrg(org: string): OrgData {
-  const braced = usesBracedScripts(org)
-  const uniorgAst = (braced ? bracedScriptsParser : scriptsParser).parse(org)
-  if (braced) {
-    takeBracedScripts(uniorgAst)
+  if (mayUseBracedScripts(org)) {
+    // keywords parse the same either way
+    const uniorgAst = bracedScriptsParser.parse(org)
+    if (takeBracedScripts(uniorgAst)) {
+      return uniorgAst
+    }
   }
-  return uniorgAst
+  return scriptsParser.parse(org)
 }

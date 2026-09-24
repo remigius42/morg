@@ -48,8 +48,9 @@ item, headline, comment or table; org → md drops it.
 Markdown text has no sub/superscripts, but org reads a bare `a_b` or
 `x^y` as one. md → org therefore adds `^:{}` to `#+OPTIONS:` (org's
 own switch limiting scripts to the braced `a_{b}` form, which morg
-emits) whenever the text needs it; org → md honors `^:{}` and
-consumes it, keeping any other options as frontmatter.
+emits) whenever the text needs it; org → md honors `^:{}` in a
+top-level `#+OPTIONS:` and consumes it, keeping any other options as
+frontmatter.
 
 Tables: GFM ↔ org, including column alignment via org `<l>/<r>/<c>`
 cookie rows. `table.el` tables travel as `table.el`-tagged fenced
