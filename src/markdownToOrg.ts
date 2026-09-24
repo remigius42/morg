@@ -65,11 +65,7 @@ export function convertMarkdownToOrg(
   // lines between them, or org's parser merges them into one list.
   separateAdjacentLists(uniorgAst)
 
-  // Phase 2d: md text has no sub/superscripts; keep org from reading
-  // bare underscores and carets as such
-  requireBracedScripts(uniorgAst)
-
-  // Phase 2e: record the source's own style markers, so the return trip
+  // Phase 2d: record the source's own style markers, so the return trip
   // can reproduce them instead of morg's canonical ones (ADR 0004)
   if (options.recordStyle) {
     recordStyleKeyword(
@@ -83,7 +79,12 @@ export function convertMarkdownToOrg(
     uniorgAst = options.preset.applyToUniorg(uniorgAst)
   }
 
-  // Phase 3b: literal markers org would read as markup, and markup
+  // Phase 3b: md text has no sub/superscripts; keep org from reading
+  // bare underscores and carets as such. After the preset, whose text
+  // rewrites (wikilink aliases) org parses too
+  requireBracedScripts(uniorgAst)
+
+  // Phase 3c: literal markers org would read as markup, and markup
   // touching a word character, need a zero-width space escape
   escapeOrgMarkup(uniorgAst)
 

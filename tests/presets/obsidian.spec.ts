@@ -41,4 +41,12 @@ describe("obsidian preset", () => {
     )
     expect(convertMarkdownToOrg(markdown, { preset: obsidian() })).toBe(org)
   })
+
+  it("keeps underscores in a wikilink alias out of org scripts", () => {
+    const markdown = "[[a_b.md|a_b]]\n"
+
+    expect(convertMarkdownToOrg(markdown, { preset: obsidian() })).toBe(
+      "#+OPTIONS: ^:{}\n[[a_b.md][a_b]]\n"
+    )
+  })
 })
