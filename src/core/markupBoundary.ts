@@ -76,13 +76,12 @@ export function unescapeOrgMarkup(tree: Parent): void {
 
 const MARKER_RE = /[*/_=~+]/
 const MARKERS_RE = new RegExp(MARKER_RE.source, "g")
-// org's emphasis rule, loosened: a marker, a non-blank after it, the
-// same marker closing after a non-blank, then an allowed char, a table
-// cell border or the end. The char before the opening marker is left
-// open, as uniorg does not always check it. Text this does not match
-// cannot hold markup, and skips the parse
-const MAY_HOLD_MARKUP_RE =
-  /([*/_=~+])[^\s\u200B](?:[\s\S]*?[^\s\u200B])?\1(?:$|[-–—\s\u200B.,:!?;'’"“”)}[|])/
+// org's emphasis rule, loosened, from an opening marker on: a non-blank
+// after it, the same marker closing after a non-blank, then an allowed
+// char, a table cell border or the end (the char before the marker is
+// checked apart)
+const MAY_OPEN_MARKUP_RE =
+  /([*/_=~+])[^\s\u200B](?:[\s\S]*?[^\s\u200B])?\1(?:$|[-–—\s\u200B.,:!?;'’"“”)}[|])/y
 const DEFUSED_MARKER_RE = /([*/_=~+])\u200B/g
 
 // offsets of the opening markers of the outermost markup org reads in
@@ -121,6 +120,40 @@ function literalMarkers(
     .filter(([i]) => children[i]?.type === "text")
 }
 
+// whether a marker in a text child may open markup, by the rule above:
+// a marker another node renders (bold's `*`) needs no escape, so
+// neither it nor a marker org cannot read as markup takes a parse
+function mayHoldLiteralMarkup(children: Node[], rendered: string[]): boolean {
+  const line = rendered.join("")
+  let start = 0
+  return rendered.some((part, i) => {
+    const offset = start
+    start += part.length
+    return (
+      children[i]?.type === "text" &&
+      [...part.matchAll(MARKERS_RE)].some(({ index }) => {
+        MAY_OPEN_MARKUP_RE.lastIndex = offset + index
+        return mayOpenAt(part, index) && MAY_OPEN_MARKUP_RE.test(line)
+      })
+    )
+  })
+}
+
+// uniorg checks the char before an opening marker (`a/b/` is no
+// markup), unless there is none in the text it parses: a char of another
+// node's rendering counts as none. It reads a marker after one (`#**x*`)
+// by backing off onto the first, which then opens without that check
+function mayOpenAt(text: string, index: number): boolean {
+  const before = text[index - 1]
+  return (
+    before === undefined ||
+    PRE_RE.test(before) ||
+    // uniorg opens after a table cell border too, found by fuzzing
+    before === "|" ||
+    MARKER_RE.test(text[index + 1] ?? "")
+  )
+}
+
 // a zero-width space after an opening marker leaves org nothing to read
 // as markup (content may not start with one). Defusing an outer pair can
 // expose an inner one, hence the rounds; each defuses at least one
@@ -130,6 +163,7 @@ function defuseRendered(children: Node[], rendered: string[]): void {
   let markers
   while (
     rounds-- > 0 &&
+    mayHoldLiteralMarkup(children, rendered) &&
     (markers = literalMarkers(children, rendered)).length
   ) {
     for (const [i, offset] of markers.reverse()) {
@@ -149,9 +183,6 @@ function defuseLiteralMarkers(tree: Parent): void {
     }
     const children = node.children as Node[]
     const rendered = renderChildren(children)
-    if (!MAY_HOLD_MARKUP_RE.test(rendered.join(""))) {
-      return
-    }
     defuseRendered(children, rendered)
     for (const [i, child] of children.entries()) {
       if (child.type === "text") {
