@@ -94,6 +94,13 @@ function transformUniorgList(ctx: TransformContext, node: List): MdastList[] {
   })
 }
 
+// uniorg keeps a list item's indentation in its code blocks' values;
+// md indents them itself. Only that much is dropped, as uniorg-stringify
+// does, so the code keeps its own
+function outdent(value: string, level: number): string {
+  return value.replace(new RegExp(`^ {0,${level}}`, "gm"), "")
+}
+
 function transformUniorgListItem(
   ctx: TransformContext,
   item: ListItem
@@ -105,6 +112,11 @@ function transformUniorgListItem(
     ctx,
     (item.children || []).filter(child => child !== tag)
   ) as (BlockContent | DefinitionContent)[]
+  for (const child of children) {
+    if (child.type === "code") {
+      child.value = outdent(child.value, item.indent + item.bullet.length)
+    }
+  }
   if (tag) {
     const term: PhrasingContent = {
       type: "text",
