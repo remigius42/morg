@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Conversion is slower than in 0.5.0: md → org takes about 1.6 to 2.8
+  times as long, org → md about 10 % longer. The escapes below have to
+  check how org reads the output, which takes org parses of the text
+  concerned; org → md guards `_.` lines and drops the escapes again.
+  A performance check in CI now keeps it from growing unnoticed.
+
 ### Fixed
 
 Found by round-tripping a real Obsidian vault, where each of these
