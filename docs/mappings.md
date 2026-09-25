@@ -151,7 +151,8 @@ equal to its url becomes an autolink (`<url>`) and restores as a plain
 
 A heading inside a list item has no org equivalent (a headline cannot
 live inside a list); its text stays as a line of the item, without the
-heading level, and reports via `onWarning`.
+heading level, and reports via `onWarning`. The same goes for a
+heading inside a blockquote: Emacs ends a quote block at a headline.
 
 Org ends a nested list at a line indented like its parent item's text;
 md would read that line as a lazy continuation of the nested list's

@@ -154,6 +154,18 @@ This is a paragraph.
     expect(warnings).toEqual(["heading inside a list item became text"])
   })
 
+  it("should keep a heading inside a blockquote as text, with a warning", () => {
+    // Emacs ends a quote block at a headline
+    const warnings: string[] = []
+
+    expect(
+      convertMarkdownToOrg("> ## H\n>\n> text\n", {
+        onWarning: m => warnings.push(m)
+      })
+    ).toBe("#+begin_quote\nH\n\ntext\n#+end_quote\n")
+    expect(warnings).toEqual(["heading inside a blockquote became text"])
+  })
+
   it("should convert relative links and images to org file links", () => {
     // a bare org path is a fuzzy link (a heading search), not a file
     const markdown =

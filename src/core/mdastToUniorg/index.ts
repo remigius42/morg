@@ -117,7 +117,10 @@ export function transformMdastNodeToUniorgNode(
     case "blockquote":
       return {
         type: "quote-block",
-        children: transformBlockChildren(ctx, node.children)
+        children: transformBlockChildren(
+          ctx,
+          node.children.map(child => quotedHeadingAsText(ctx, child))
+        )
       } as unknown as ElementType
     case "code":
       return transformMdastCode(node)
@@ -131,4 +134,16 @@ export function transformMdastNodeToUniorgNode(
       warn(ctx, `dropped md ${node.type}`)
       return null
   }
+}
+
+// Emacs ends a quote block at a headline; the text stays
+function quotedHeadingAsText(
+  ctx: TransformContext,
+  node: RootContent
+): RootContent {
+  if (node.type !== "heading") {
+    return node
+  }
+  warn(ctx, "heading inside a blockquote became text")
+  return { type: "paragraph", children: node.children }
 }
