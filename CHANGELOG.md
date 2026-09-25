@@ -39,7 +39,13 @@ silently changed text.
   includes a line starting with a footnote reference (`[^1] text`,
   which org reads as a footnote definition), one following a nested
   list or code block inside a list item, one inside bold or a link
-  text spanning two lines, and one ending in a bare bullet (`1.`).
+  text spanning two lines, one ending in a bare bullet (`1.`), and one
+  in a `logseq` block below its first line. The same goes for line
+  syntax spanning lines (an escaped `\#+begin_src` … `\#+end_src`) or
+  depending on the heading above (`SCHEDULED: <…>`). A paragraph that
+  is exactly one of the org constructs morg writes into Markdown
+  verbatim (drawers, fixed-width lines, clocks, …) still comes back as
+  org.
 - A line starting `_.` or `_)` converts in both directions: uniorg,
   morg's org parser, took it for a list bullet and failed on the whole
   document, or, when a list followed, silently dropped the line. Org
@@ -53,6 +59,13 @@ silently changed text.
   becomes org `=a~ b=` instead of breaking the rest of the line. Code
   that a `=` would end early too stays plain text and reports via
   `onWarning`.
+- `#+OPTIONS: ^:nil` is honored on org → md: `a_b` stays `a_b`
+  instead of becoming `a\_{b}`, and the option stays.
+- Bold, italic or strikethrough spanning more than two lines keeps its
+  markup: org markup spans at most two lines, so its line endings
+  become spaces, as Markdown renders them anyway.
+- A heading inside a blockquote keeps its text as a line of the quote
+  and reports via `onWarning`: Emacs ends a quote block at a headline.
 - An escaped `\|` in a Markdown table cell becomes org's `\vert{}`
   entity instead of splitting the cell, and comes back as `\|`.
 - Bare underscores and carets (`my_notes_2021.md`, `x^y`, also right
