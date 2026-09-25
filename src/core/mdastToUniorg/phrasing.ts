@@ -1,6 +1,8 @@
 import type { PhrasingContent } from "mdast"
 import type { ObjectType } from "uniorg"
 import { mdismEnabled, warn, type TransformContext } from "./context.js"
+import type { Parent } from "unist"
+import { visit } from "unist-util-visit"
 import { escapeOrgPath } from "../orgPath.js"
 import { orgParser, renderInline, type Node } from "../render.js"
 
@@ -46,13 +48,15 @@ export function transformPhrasingChildren(
       : null
     if (pair) {
       result.push(
-        ...hoistEdgeWhitespace({
-          type: pair.orgType,
-          children: transformPhrasingChildren(
-            ctx,
-            children.slice(i + 1, pair.end)
-          )
-        } as ObjectType)
+        ...hoistEdgeWhitespace(
+          joinLines({
+            type: pair.orgType,
+            children: transformPhrasingChildren(
+              ctx,
+              children.slice(i + 1, pair.end)
+            )
+          } as ObjectType)
+        )
       )
       i = pair.end
       continue
@@ -63,7 +67,7 @@ export function transformPhrasingChildren(
     }
     const transformed = transformMdastPhrasingContentToUniorgObject(ctx, node)
     if (transformed) {
-      result.push(...hoistEdgeWhitespace(transformed))
+      result.push(...hoistEdgeWhitespace(joinLines(transformed)))
     }
   }
   return result
@@ -75,6 +79,30 @@ const CONTAINER_MARKUP = new Set([
   "strike-through",
   "underline"
 ])
+
+// org markup spans at most two lines; beyond that its line endings
+// become spaces, as CommonMark renders them anyway (see
+// transformMdastInlineCode)
+function joinLines(node: ObjectType): ObjectType {
+  if (!CONTAINER_MARKUP.has(node.type)) {
+    return node
+  }
+  const texts: { value: string }[] = []
+  visit(node as Parent, "text", (text: { value: string }) => {
+    texts.push(text)
+  })
+  const lineEndings =
+    texts
+      .map(text => text.value)
+      .join("")
+      .split("\n").length - 1
+  if (lineEndings > 1) {
+    for (const text of texts) {
+      text.value = text.value.replaceAll("\n", " ")
+    }
+  }
+  return node
+}
 
 // strips the whitespace at the edges of `children`, returning it
 function takeEdgeWhitespace(children: ObjectType[]): {

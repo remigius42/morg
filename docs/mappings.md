@@ -206,8 +206,10 @@ style where there is one; notable normalizations beyond formatting:
 - per-line leading whitespace inside paragraphs is collapsed
   (insignificant in org and rendered md, but structurally meaningful
   to md parsers)
-- line endings inside md inline code → spaces: org markup spans at
-  most two lines, and CommonMark renders them as spaces anyway
+- line endings inside md inline code, or inside bold, italic or
+  strikethrough spanning more than two lines → spaces: org markup
+  spans at most two lines, and CommonMark renders them as spaces
+  anyway
 - whitespace at either end of md inline code → just outside the org
   markers, and outside any bold, italic or strikethrough ending there,
   since org markup may not start or end with whitespace; whitespace-only

@@ -28,6 +28,13 @@ This is a paragraph.
     expect(convertMarkdownToOrg(markdown)).toBe("a ~x y z~ b\n")
   })
 
+  it("should join the lines of markup spanning more than two", () => {
+    // org markup spans at most two lines
+    expect(convertMarkdownToOrg("**a\nb\nc** d\n*e\nf*\n")).toBe(
+      "*a b c* d\n/e\nf/\n"
+    )
+  })
+
   it("should join CRLF and CR line endings in inline code too", () => {
     expect(convertMarkdownToOrg("a `x\r\ny\rz` b\n")).toBe("a ~x y z~ b\n")
   })
