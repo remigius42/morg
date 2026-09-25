@@ -68,7 +68,9 @@ own switch limiting scripts to the braced `a_{b}` form, which morg
 emits) whenever the text needs it; org → md honors `^:{}` in a
 top-level `#+OPTIONS:` and consumes it whenever the text needs it,
 keeping any other options as frontmatter. Where the text does not
-need it, it is the author's own and stays.
+need it, it is the author's own and stays. org → md honors the other
+`^:` settings too (`nil`: no scripts at all, `t`: org's default), and
+keeps them.
 
 Tables: GFM ↔ org, including column alignment via org `<l>/<r>/<c>`
 cookie rows. `table.el` tables travel as `table.el`-tagged fenced

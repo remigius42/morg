@@ -96,18 +96,33 @@ export function requireBracedScripts(uniorgAst: OrgData): void {
   }
 }
 
-// whether the document may limit scripts to the braced form, which the
-// parser has to know up front; only a top-level keyword counts, which
-// takes a parse to tell
-function mayUseBracedScripts(org: string): boolean {
-  return [...org.matchAll(/^[ \t]*#\+options:(.*)$/gim)].some(([, value]) =>
-    (value ?? "").split(/\s+/).includes(BRACED_SCRIPTS)
+// the `^:` setting in an `#+OPTIONS:` value, if any
+function scriptsSetting(options: string): string | undefined {
+  const items = options.split(/\s+/).filter(item => item.startsWith("^:"))
+  return items.at(-1)?.slice(2)
+}
+
+// org→md honors every `^:` setting: `{}` limits scripts to the braced
+// form, `nil` turns them off, `t` (org's default) keeps them on
+const scriptsParsers: Record<string, { parse(org: string): unknown }> = {
+  "{}": bracedScriptsParser,
+  nil: unified().use(uniorgParse, { useSubSuperscripts: false }).freeze()
+}
+
+// the settings the document may use, which the parser has to know up
+// front; only a top-level keyword counts, which takes a parse to tell
+function mayUseScripts(org: string): string[] {
+  const settings = [...org.matchAll(/^[ \t]*#\+options:(.*)$/gim)].map(
+    ([, value]) => scriptsSetting(value ?? "")
+  )
+  return [...new Set(settings)].filter(
+    (setting): setting is string => setting !== undefined
   )
 }
 
-function usesBracedScripts(uniorgAst: OrgData): boolean {
+function usesScripts(uniorgAst: OrgData, setting: string): boolean {
   return uniorgAst.children.some(
-    node => isOptions(node) && node.value.split(/\s+/).includes(BRACED_SCRIPTS)
+    node => isOptions(node) && scriptsSetting(node.value) === setting
   )
 }
 
@@ -128,16 +143,20 @@ function takeBracedScripts(uniorgAst: OrgData): void {
 }
 
 /**
- * org→md: parses org, honoring `^:{}`, and consuming it where the text
- * needs it: md→org adds it only then, so anywhere else it is the
- * author's own setting.
+ * org→md: parses org, honoring its `^:` setting, and consuming `^:{}`
+ * where the text needs it: md→org adds it only then, so anywhere else
+ * it is the author's own setting.
  */
 export function parseOrg(org: string): OrgData {
-  if (mayUseBracedScripts(org)) {
+  for (const setting of mayUseScripts(org)) {
+    const parser = scriptsParsers[setting]
+    if (!parser) {
+      continue
+    }
     // keywords parse the same either way
-    const uniorgAst = bracedScriptsParser.parse(org)
-    if (usesBracedScripts(uniorgAst)) {
-      if (readsBareScripts(uniorgAst)) {
+    const uniorgAst = parser.parse(org) as OrgData
+    if (usesScripts(uniorgAst, setting)) {
+      if (setting === "{}" && readsBareScripts(uniorgAst)) {
         takeBracedScripts(uniorgAst)
       }
       return uniorgAst

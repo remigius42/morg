@@ -182,6 +182,14 @@ describe("braced scripts", () => {
     expect(orgRoundTrip(org)).toBe(org)
   })
 
+  it("^:nil keeps underscores and carets text, and stays", () => {
+    const org = "#+OPTIONS: ^:nil\na_b and x^{2}\n"
+    expect(convertOrgToMarkdown(org)).toBe(
+      "---\noptions: ^:nil\n---\n\na\\_b and x^{2}\n"
+    )
+    expect(orgRoundTrip(org)).toBe(org)
+  })
+
   it("an author's own ^:{} survives in markdown", () => {
     const markdown = "---\noptions: ^:{}\n---\n\ntext\n"
     expect(mdRoundTrip(markdown)).toBe(markdown)
