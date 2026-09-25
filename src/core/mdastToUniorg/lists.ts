@@ -40,6 +40,21 @@ export function transformMdastList(
   } as unknown as List
 }
 
+// uniorg-stringify re-indents a list item's block by stripping up to
+// the item's indentation from each line first: a code block's value
+// has to carry that indentation (as uniorg's parser reads it), or its
+// own indentation shrinks
+function indentCode<T>(node: T, level: number): T {
+  const block = node as { type?: string; value?: string } | null
+  if (
+    (block?.type === "src-block" || block?.type === "example-block") &&
+    block.value !== undefined
+  ) {
+    block.value = block.value.replace(/^(?=.)/gm, " ".repeat(level))
+  }
+  return node
+}
+
 function transformMdastListItem(
   ctx: TransformContext,
   item: MdastListItem,
@@ -65,7 +80,12 @@ function transformMdastListItem(
           { type: "text", value: "\n" }
         ]
       }
-      return [transformMdastNodeToUniorgNode(ctx, child)]
+      return [
+        indentCode(
+          transformMdastNodeToUniorgNode(ctx, child),
+          indent + bullet.length
+        )
+      ]
     })
     .filter(Boolean)
   return {

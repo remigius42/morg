@@ -184,6 +184,14 @@ This is a paragraph.
     )
   })
 
+  it("should keep the indentation of code inside a list item", () => {
+    const markdown = "- a\n\n  ```py\n  if x:\n      y()\n  ```\n"
+
+    expect(convertMarkdownToOrg(markdown)).toBe(
+      "- a\n  #+begin_src py\n  if x:\n      y()\n  #+end_src\n"
+    )
+  })
+
   it("should convert fenced code blocks without language to example blocks", () => {
     const markdown = "```\nplain text\n```\n"
 
