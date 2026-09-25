@@ -10,6 +10,9 @@ export type Node = Parent["children"][number] & { value?: string }
 
 // built once: constructing a processor per parse dominates the cost
 export const orgParser = unified().use(uniorgParse).freeze()
+export const positionParser = unified()
+  .use(uniorgParse, { trackPosition: true })
+  .freeze()
 const stringifier = unified().use(uniorgStringify).freeze()
 
 /**

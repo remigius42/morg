@@ -269,6 +269,30 @@ describe("org line syntax in paragraph text", () => {
     expect(mdRoundTrip(once)).toBe(once)
   })
 
+  it("stays text when it spans several lines", () => {
+    const markdown = "\\#+begin_src\nx\n\\#+end_src\n"
+    // `n_s` is a bare underscore once no src block
+    expect(convertMarkdownToOrg(markdown)).toBe(
+      "#+OPTIONS: ^:{}\n\u200B#+begin_src\nx\n#+end_src\n"
+    )
+    const once = mdRoundTrip(markdown)
+    expect(once).toBe("\\#+begin\\_src\nx\n\\#+end\\_src\n")
+    expect(mdRoundTrip(once)).toBe(once)
+    const math = "\\begin{equation}\nx\n\\end{equation}\n"
+    expect(convertMarkdownToOrg(math)).toBe(
+      "\u200B\\begin{equation}\nx\n\\end{equation}\n"
+    )
+  })
+
+  it("stays text where it depends on the headline above", () => {
+    const markdown =
+      "# H\n\nSCHEDULED: <2026-01-01 Thu>\n\n# I\n\n:PROPERTIES:\n:END:\n"
+    expect(convertMarkdownToOrg(markdown)).toBe(
+      "* H\n\u200BSCHEDULED: <2026-01-01 Thu>\n\n* I\n:PROPERTIES:\n\u200B:END:\n"
+    )
+    expect(mdRoundTrip(markdown)).toBe(markdown)
+  })
+
   it("stays text inside a list item", () => {
     const markdown = "- a\n  1\\. b\n  \\# c\n"
     expect(mdRoundTrip(markdown)).toBe(markdown)

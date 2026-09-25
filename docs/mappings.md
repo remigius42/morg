@@ -48,7 +48,10 @@ spaces directly next to markup or after a marker again.
 A paragraph line org would read as line syntax (an escaped `1\.`,
 `\-`, `\*` or `\#`, or a lazy continuation line starting that way)
 gets a leading zero-width space too, or it would turn into a list
-item, headline, comment or table; org → md drops it. So does a line
+item, headline, comment or table; org → md drops it. The same goes for
+the first line of line syntax spanning lines (an escaped
+`\#+begin_src`…`\#+end_src`, `\begin{equation}`…) or depending on
+the headline above (`SCHEDULED: <…>`). So does a line
 starting `_.` or `_)`: org reads it as text, but uniorg takes it for a
 bullet and fails to parse the document (or drops the line), so org →
 md guards such lines the same way before parsing. A paragraph org

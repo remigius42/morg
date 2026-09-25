@@ -1,8 +1,12 @@
 import type { Parent } from "unist"
-import { unified } from "unified"
-import uniorgParse from "uniorg-parse"
 import { SKIP, visit } from "unist-util-visit"
-import { locate, renderChildren, tryParse, type Node } from "./render.js"
+import {
+  locate,
+  positionParser,
+  renderChildren,
+  tryParse,
+  type Node
+} from "./render.js"
 
 // the org manual's escape character: a zero-width space is a valid
 // markup boundary (uniorg lists it in its emphasis regexp components)
@@ -80,10 +84,6 @@ const MARKERS_RE = new RegExp(MARKER_RE.source, "g")
 const MAY_HOLD_MARKUP_RE =
   /([*/_=~+])[^\s\u200B](?:[\s\S]*?[^\s\u200B])?\1(?:$|[-–—\s\u200B.,:!?;'’"“”)}[|])/
 const DEFUSED_MARKER_RE = /([*/_=~+])\u200B/g
-
-const positionParser = unified()
-  .use(uniorgParse, { trackPosition: true })
-  .freeze()
 
 // offsets of the opening markers of the outermost markup org reads in
 // `text`; none where uniorg fails to read it

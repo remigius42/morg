@@ -7,6 +7,7 @@ import {
   delimiters,
   isInline,
   locate,
+  positionParser,
   renderInline,
   tryParse,
   type Node
@@ -73,19 +74,30 @@ interface LineStart {
   segment: Segment
   offset: number
   line: string
+  // the line's index in the content
+  number: number
 }
 
-// the lines of a paragraph's, or of a list item's flattened, inline
-// content as org renders it, not per text node: a line may start with
-// another node (`[fn:1] a`) or its syntax span nodes (`* ~x~`). The
-// first line of a list item (or of its first paragraph), or of a
-// footnote definition's first paragraph, follows the bullet or label
-// instead
-function lineStarts(children: Node[], afterBullet: boolean): LineStart[] {
+// where a paragraph's, or a list item's flattened, inline content sits:
+// the first line of a list item (or of its first paragraph), or of a
+// footnote definition's first paragraph, follows the bullet or label;
+// a paragraph right below a headline may read as its planning
+interface Context {
+  afterBullet: boolean
+  afterHeadline: boolean
+}
+
+// the lines of the content as org renders it, not per text node: a
+// line may start with another node (`[fn:1] a`) or its syntax span
+// nodes (`* ~x~`). A line following a bullet or label has no start
+function lineStarts(
+  children: Node[],
+  { afterBullet }: Context
+): { starts: LineStart[]; lines: string[] } {
   const parts = segments(children)
   const rendered = parts.map(part => part.text)
   const content = rendered.join("")
-  const breaks = afterBullet ? [] : [0]
+  const breaks = [0]
   for (
     let i = content.indexOf("\n");
     i !== -1;
@@ -93,38 +105,51 @@ function lineStarts(children: Node[], afterBullet: boolean): LineStart[] {
   ) {
     breaks.push(i + 1)
   }
-  return breaks.flatMap(lineBreak => {
+  const starts = breaks.flatMap((lineBreak, number) => {
     // org keeps a continuation line's indentation in the text
     const [, indent = "", line = ""] =
       /^([ \t]*)(.*)/.exec(content.slice(lineBreak)) ?? []
     const [index, offset] = locate(rendered, lineBreak + indent.length)
     const segment = parts[index]
-    return line && segment ? [{ segment, offset, line }] : []
+    return line && segment && !(afterBullet && number === 0)
+      ? [{ segment, offset, line, number }]
+      : []
   })
+  return { starts, lines: content.split("\n") }
 }
 
 // calls `rewrite` on every paragraph, and every list item whose inline
-// content md→org flattens, with its line starts;
+// content md→org flattens, with its context;
 // `applies` skips the rendering where there is nothing to rewrite
 function rewriteLines(
   tree: Parent,
-  rewrite: (starts: LineStart[], afterBullet: boolean) => void,
+  rewrite: (children: Node[], context: Context) => void,
   applies: (children: Node[]) => boolean = () => true
 ): void {
   visit(tree, (node: Node | Parent, index, parent: Parent | undefined) => {
     if (node.type !== "paragraph" && node.type !== "list-item") {
       return
     }
-    const afterBullet =
+    const children = (node as Parent).children as Node[]
+    if (applies(children)) {
+      rewrite(children, contextOf(node, index ?? 0, parent))
+    }
+  })
+}
+
+function contextOf(
+  node: Node | Parent,
+  index: number,
+  parent: Parent | undefined
+): Context {
+  return {
+    afterBullet:
       node.type === "list-item" ||
       (index === 0 &&
         (parent?.type === "list-item" ||
-          parent?.type === "footnote-definition"))
-    const children = (node as Parent).children as Node[]
-    if (applies(children)) {
-      rewrite(lineStarts(children, afterBullet), afterBullet)
-    }
-  })
+          parent?.type === "footnote-definition")),
+    afterHeadline: parent?.children[index - 1]?.type === "headline"
+  }
 }
 
 /**
@@ -133,9 +158,10 @@ function rewriteLines(
  * space, or it would turn into a list item, headline, comment or table.
  */
 export function escapeLineSyntax(tree: Parent): void {
-  rewriteLines(tree, (starts, afterBullet) => {
+  rewriteLines(tree, (children, context) => {
+    const { starts } = lineStarts(children, context)
     // passthrough is a paragraph of its own
-    if (!afterBullet && isPassthrough(starts)) {
+    if (!context.afterBullet && isPassthrough(starts)) {
       return
     }
     // back to front, so earlier offsets and indices stay valid
@@ -144,6 +170,7 @@ export function escapeLineSyntax(tree: Parent): void {
         escapeLineStart(segment, offset)
       }
     }
+    escapeElementStarts(children, context)
   })
 }
 
@@ -175,6 +202,46 @@ function isPassthrough(starts: LineStart[]): boolean {
   return !rest.length && PASSTHROUGH_TYPES.has(only?.type ?? "")
 }
 
+// line syntax spanning lines (`#+begin_src`…`#+end_src`, a drawer) or
+// depending on context (planning below a headline) shows only in the
+// whole content as org reads it; each round escapes the first line of
+// an element org reads there, as long as that exposes another
+function escapeElementStarts(children: Node[], context: Context): void {
+  const escaped = new Set<number>()
+  for (;;) {
+    const { starts, lines } = lineStarts(children, context)
+    if (!starts.some(({ line }) => MAY_BE_LINE_SYNTAX_RE.test(line))) {
+      return
+    }
+    const number = elementLine(lines, context)
+    const start = starts.find(candidate => candidate.number === number)
+    if (number === undefined || !start || escaped.has(number)) {
+      return
+    }
+    escaped.add(number)
+    escapeLineStart(start.segment, start.offset)
+  }
+}
+
+// the index of the first content line org reads as the start of an
+// element other than a paragraph, if any
+function elementLine(lines: string[], context: Context): number | undefined {
+  // a line after a bullet only continues the item's text
+  const content = context.afterBullet ? ["x", ...lines.slice(1)] : lines
+  const prefix = context.afterHeadline ? ["* x"] : []
+  const tree = tryParse([...prefix, ...content, ""].join("\n"), positionParser)
+  const elements = (tree?.children ?? []).flatMap(node =>
+    node.type === "section" && "children" in node
+      ? (node.children as Node[])
+      : [node]
+  )
+  const element = elements.find(
+    node => node.type !== "paragraph" && node.type !== "headline"
+  )
+  const line = element?.position?.start.line
+  return line === undefined ? undefined : line - 1 - prefix.length
+}
+
 function escapeLineStart(
   { node, siblings, index, opens }: Segment,
   offset: number
@@ -194,7 +261,8 @@ function escapeLineStart(
 export function unescapeLineSyntax(tree: Parent): void {
   rewriteLines(
     tree,
-    starts => {
+    (children, context) => {
+      const { starts } = lineStarts(children, context)
       for (const { segment, offset } of starts.reverse()) {
         const { node } = segment
         const value = node.value ?? ""
