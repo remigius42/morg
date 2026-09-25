@@ -49,6 +49,10 @@ jobs:
         run: |
           echo "# Hello" | node dist/cli.js --from markdown | grep -q '^\* Hello'
           printf '* Hello\n' | node dist/cli.js --from org | grep -q '^# Hello'
+      # normalized against plain parsing in the same run, so the runner's
+      # speed cancels out (see CONTRIBUTING.md)
+      - name: Performance gate
+        run: node scripts/perf/perf.mjs
       - name: Build web UI
         run: npm run build:web
       # a step rather than a job: it runs only once lint, the unit tests and

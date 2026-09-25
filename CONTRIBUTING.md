@@ -32,6 +32,24 @@ other than the Ubuntu it is built for may not carry, and
 launch, run `npm run test:e2e:chromium` and leave WebKit to CI, which
 covers it on every pull request.
 
+## Performance
+
+`npm run perf` builds and runs the performance gate on seeded synthetic
+documents (`scripts/perf/`): per conversion, HEAD may take at most 1.25
+times the last tag's normalized time, and no more uniorg parses. Times
+are divided by what plain remark and uniorg parsing of the same
+documents takes in the same run, so numbers recorded on one machine
+hold on another. CI runs the gate on every push and pull request.
+
+A change that needs more on purpose sets its numbers in the `head` entry
+of `scripts/perf/timings.json`, with a reason, so the cost shows up in
+review. After a release, record the new tag
+(`npm run perf:record vX.Y.Z`) and drop the `head` entry.
+
+The recorded numbers hold for the generated documents only, and a test
+pins their hash: after changing the generator, record the tags again
+(`npm run perf:record v0.3.0 v0.4.0 …`) and update the hash.
+
 ## Development process
 
 Most of this codebase is written with an AI coding agent (Claude

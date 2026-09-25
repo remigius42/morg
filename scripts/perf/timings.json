@@ -54,5 +54,24 @@
         "uniorgParses": 1
       }
     }
+  },
+  "head": {
+    "reason": "escape passes check how org reads the output; org→md guards `_.` lines and drops the escapes",
+    "md-org": {
+      "normalizedTime": 0.75,
+      "uniorgParses": 68
+    },
+    "md-org obsidian": {
+      "normalizedTime": 0.77,
+      "uniorgParses": 68
+    },
+    "org-md": {
+      "normalizedTime": 0.98,
+      "uniorgParses": 1
+    },
+    "org-md obsidian": {
+      "normalizedTime": 1.0,
+      "uniorgParses": 1
+    }
   }
 }
