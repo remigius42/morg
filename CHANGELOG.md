@@ -66,6 +66,10 @@ silently changed text.
   become spaces, as Markdown renders them anyway.
 - A heading inside a blockquote keeps its text as a line of the quote
   and reports via `onWarning`: Emacs ends a quote block at a headline.
+- A fenced code block inside a list item keeps its indentation in both
+  directions. md → org used to shrink the code's own indentation by up
+  to the item's (`if x:\n    y()` lost two spaces), and org → md added
+  the item's indentation to every line.
 - An escaped `\|` in a Markdown table cell becomes org's `\vert{}`
   entity instead of splitting the cell, and comes back as `\|`.
 - Bare underscores and carets (`my_notes_2021.md`, `x^y`, also right
