@@ -70,6 +70,16 @@ describe("logseq outline nesting", () => {
     expect(roundTrip(once)).toBe(once)
   })
 
+  it("keeps a block's lines that look like org syntax text", () => {
+    // a block headline's title lines below the first are its body
+    const org = convertMarkdownToOrg("a\n1\\. b\n", { preset: logseq() })
+    expect(org).toBe("* a\n\u200B1. b\n")
+    // the body comes back as a paragraph of its own
+    expect(convertOrgToMarkdown(org, { preset: logseq() })).toBe(
+      "a\n\n1\\. b\n"
+    )
+  })
+
   it("emits hiccup blocks unescaped in markdown", () => {
     const org =
       '* foo\n:PROPERTIES:\n:heading: 1\n:END:\n** [:div {:class "note"} "hi"]\n'

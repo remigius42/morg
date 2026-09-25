@@ -81,10 +81,13 @@ interface LineStart {
 // where a paragraph's, or a list item's flattened, inline content sits:
 // the first line of a list item (or of its first paragraph), or of a
 // footnote definition's first paragraph, follows the bullet or label;
-// a paragraph right below a headline may read as its planning
+// a paragraph right below a headline may read as its planning. A
+// headline's title spanning lines (a logseq preset block) has the
+// lines below the first as its body
 interface Context {
   afterBullet: boolean
   afterHeadline: boolean
+  headline: boolean
 }
 
 // the lines of the content as org renders it, not per text node: a
@@ -118,8 +121,9 @@ function lineStarts(
   return { starts, lines: content.split("\n") }
 }
 
-// calls `rewrite` on every paragraph, and every list item whose inline
-// content md→org flattens, with its context;
+// calls `rewrite` on every paragraph, every list item whose inline
+// content md→org flattens, and every headline (a logseq block's title
+// may span lines), with its context;
 // `applies` skips the rendering where there is nothing to rewrite
 function rewriteLines(
   tree: Parent,
@@ -127,7 +131,7 @@ function rewriteLines(
   applies: (children: Node[]) => boolean = () => true
 ): void {
   visit(tree, (node: Node | Parent, index, parent: Parent | undefined) => {
-    if (node.type !== "paragraph" && node.type !== "list-item") {
+    if (!["paragraph", "list-item", "headline"].includes(node.type)) {
       return
     }
     const children = (node as Parent).children as Node[]
@@ -145,10 +149,12 @@ function contextOf(
   return {
     afterBullet:
       node.type === "list-item" ||
+      node.type === "headline" ||
       (index === 0 &&
         (parent?.type === "list-item" ||
           parent?.type === "footnote-definition")),
-    afterHeadline: parent?.children[index - 1]?.type === "headline"
+    afterHeadline: parent?.children[index - 1]?.type === "headline",
+    headline: node.type === "headline"
   }
 }
 
@@ -227,7 +233,8 @@ function escapeElementStarts(children: Node[], context: Context): void {
 // element other than a paragraph, if any
 function elementLine(lines: string[], context: Context): number | undefined {
   // a line after a bullet only continues the item's text
-  const content = context.afterBullet ? ["x", ...lines.slice(1)] : lines
+  const first = context.headline ? "* x" : "x"
+  const content = context.afterBullet ? [first, ...lines.slice(1)] : lines
   const prefix = context.afterHeadline ? ["* x"] : []
   const tree = tryParse([...prefix, ...content, ""].join("\n"), positionParser)
   const elements = (tree?.children ?? []).flatMap(node =>

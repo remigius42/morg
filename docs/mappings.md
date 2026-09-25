@@ -228,7 +228,8 @@ style where there is one; notable normalizations beyond formatting:
 ## Presets
 
 `logseq`: `:heading:` property drawers; outline nesting (paragraphs ↔
-child block headlines); `TODO`/`DONE` text markers and `[#A]`
+child block headlines, whose lines below the first get the line-start
+escape and come back as a paragraph of their own); `TODO`/`DONE` text markers and `[#A]`
 priorities ↔ org keywords/priorities; page references `[[page]]` and
 labeled forms `[label]([[page]])` ↔ org fuzzy links `[[page][label]]`;
 block refs `[label](((uuid)))` ↔ `[[((uuid))][label]]`; `^^highlight^^`
