@@ -84,6 +84,27 @@ This is a paragraph.
     }
   )
 
+  it.each(["[l](https://a.b/c_d^e)", "[[a_b|c]]", "`a_b`", "H_{2}O x^{2}"])(
+    "should need no braced scripts where org reads none bare: %s",
+    markdown => {
+      expect(convertMarkdownToOrg(`${markdown}\n`)).not.toMatch(/OPTIONS/)
+    }
+  )
+
+  it.each([
+    "1\\_[[^1][x](u_v)",
+    "- |[[a_b|c]]",
+    "a_{https://a.b/c}x^1",
+    "\\[\\[a_b\\]\\[\\]\\]"
+  ])(
+    "should keep a script out of brackets org reads as no link: %s",
+    markdown => {
+      expect(convertMarkdownToOrg(`${markdown}\n`)).toMatch(
+        /^#\+OPTIONS: \^:\{\}\n/
+      )
+    }
+  )
+
   it("should move edge whitespace of inline code outside the markers", () => {
     // org markup may not start or end with whitespace
     const markdown = "a ``x` `` b\n"

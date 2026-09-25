@@ -6,6 +6,7 @@ import { EXIT, visit } from "unist-util-visit"
 import {
   isInline,
   orgParser,
+  positionParser,
   renderChildren,
   tryParse,
   type Node
@@ -24,18 +25,20 @@ const bracedScriptsParser = unified()
   .use(uniorgParse, { useSubSuperscripts: "{}" })
   .freeze()
 
-// a text uniorg fails to read counts as holding none
-function countScripts(text: string, braced: boolean): number {
-  const tree = tryParse(text, braced ? bracedScriptsParser : orgParser)
-  if (!tree) {
-    return 0
-  }
+function isScript(node: Node): boolean {
+  return node.type === "subscript" || node.type === "superscript"
+}
+
+// a tree uniorg fails to read counts as holding none
+function countScripts(tree: Parent | undefined): number {
   let count = 0
-  visit(tree, node => {
-    if (node.type === "subscript" || node.type === "superscript") {
-      count++
-    }
-  })
+  if (tree) {
+    visit(tree, (node: Node) => {
+      if (isScript(node)) {
+        count++
+      }
+    })
+  }
   return count
 }
 
@@ -52,6 +55,38 @@ function renderedContent(node: Node | Parent): string | undefined {
   return renderChildren(node.children).join("")
 }
 
+// a script org reads without `^:{}` only (uniorg's
+// matchSubstringRegex without the braced form, loosened): a `_` or `^`
+// after a non-blank, then `(`, `*`, or a word ending in a letter or
+// digit. Text without one reads the same either way and skips the parses
+const BARE_SCRIPT_RE = /\S[_^](?:[(*]|[+-]?[\p{L}\p{N}.,\\]*[\p{L}\p{N}])/u
+
+// whether `tree` (of `content`) holds a script not in the braced form.
+// uniorg tries the braced form first, so without one both parsers read
+// the same, and the braced parse can be skipped
+function holdsBareScript(tree: Parent, content: string): boolean {
+  let found = false
+  visit(tree, (node: Node) => {
+    const offset = node.position?.start.offset
+    found =
+      isScript(node) && offset !== undefined && content[offset + 1] !== "{"
+    return found ? EXIT : undefined
+  })
+  return found
+}
+
+function readsBareScriptsIn(content: string): boolean {
+  if (!BARE_SCRIPT_RE.test(content)) {
+    return false
+  }
+  const tree = tryParse(content, positionParser)
+  return (
+    tree !== undefined &&
+    holdsBareScript(tree, content) &&
+    countScripts(tree) > countScripts(tryParse(content, bracedScriptsParser))
+  )
+}
+
 // whether org reads a script in the text that `^:{}` would keep text.
 // Checked per block as rendered, not per text node: the char before a
 // `_` or `^` may belong to a neighbor (a marker, a link's `]`, an
@@ -60,10 +95,7 @@ function readsBareScripts(tree: Parent): boolean {
   let found = false
   visit(tree, (node: Node | Parent) => {
     const content = renderedContent(node)
-    found =
-      content !== undefined &&
-      /[_^]/.test(content) &&
-      countScripts(content, false) > countScripts(content, true)
+    found = content !== undefined && readsBareScriptsIn(content)
     return found ? EXIT : undefined
   })
   return found
