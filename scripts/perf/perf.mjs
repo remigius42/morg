@@ -27,7 +27,11 @@ import remarkParse from "remark-parse"
 import { unified } from "unified"
 import uniorgParse from "uniorg-parse"
 import { checkPerf } from "./gate.mjs"
-import { syntheticMarkdown, syntheticOrg } from "./synthetic.mjs"
+import {
+  syntheticMarkdown,
+  syntheticOrg,
+  syntheticScriptlessMarkdown
+} from "./synthetic.mjs"
 
 const ROOT = resolve(import.meta.dirname, "../..")
 const TIMINGS = join(import.meta.dirname, "timings.json")
@@ -35,6 +39,7 @@ const RUNS = 9
 
 const markdown = syntheticMarkdown()
 const org = syntheticOrg()
+const scriptless = syntheticScriptlessMarkdown()
 
 // counts uniorg parses, whoever's unified processor runs them
 let uniorgParses = 0
@@ -83,6 +88,9 @@ async function measure(dist) {
   const conversions = {
     "md-org": () => morg.convertMarkdownToOrg(markdown),
     "md-org obsidian": () => morg.convertMarkdownToOrg(markdown, obsidian),
+    "md-org scriptless": () => morg.convertMarkdownToOrg(scriptless),
+    "md-org scriptless obsidian": () =>
+      morg.convertMarkdownToOrg(scriptless, obsidian),
     "org-md": () => morg.convertOrgToMarkdown(org),
     "org-md obsidian": () => morg.convertOrgToMarkdown(org, obsidian)
   }

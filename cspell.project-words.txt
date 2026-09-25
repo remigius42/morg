@@ -41,6 +41,7 @@ pico
 picocss
 remappable
 remigius
+scriptless
 setext
 sexp
 sexps

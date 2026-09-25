@@ -2,11 +2,19 @@
   "tags": {
     "v0.3.0": {
       "md-org": {
-        "normalizedTime": 0.38,
+        "normalizedTime": 0.37,
         "uniorgParses": 0
       },
       "md-org obsidian": {
-        "normalizedTime": 0.39,
+        "normalizedTime": 0.42,
+        "uniorgParses": 0
+      },
+      "md-org scriptless": {
+        "normalizedTime": 0.33,
+        "uniorgParses": 0
+      },
+      "md-org scriptless obsidian": {
+        "normalizedTime": 0.37,
         "uniorgParses": 0
       },
       "org-md": {
@@ -14,49 +22,65 @@
         "uniorgParses": 1
       },
       "org-md obsidian": {
-        "normalizedTime": 0.9,
+        "normalizedTime": 0.87,
         "uniorgParses": 1
       }
     },
     "v0.4.0": {
       "md-org": {
-        "normalizedTime": 0.38,
+        "normalizedTime": 0.41,
         "uniorgParses": 0
       },
       "md-org obsidian": {
-        "normalizedTime": 0.42,
+        "normalizedTime": 0.39,
+        "uniorgParses": 0
+      },
+      "md-org scriptless": {
+        "normalizedTime": 0.33,
+        "uniorgParses": 0
+      },
+      "md-org scriptless obsidian": {
+        "normalizedTime": 0.36,
         "uniorgParses": 0
       },
       "org-md": {
-        "normalizedTime": 0.87,
+        "normalizedTime": 0.94,
         "uniorgParses": 1
       },
       "org-md obsidian": {
-        "normalizedTime": 0.91,
+        "normalizedTime": 0.89,
         "uniorgParses": 1
       }
     },
     "v0.5.0": {
       "md-org": {
-        "normalizedTime": 0.39,
+        "normalizedTime": 0.38,
         "uniorgParses": 0
       },
       "md-org obsidian": {
-        "normalizedTime": 0.41,
+        "normalizedTime": 0.38,
+        "uniorgParses": 0
+      },
+      "md-org scriptless": {
+        "normalizedTime": 0.35,
+        "uniorgParses": 0
+      },
+      "md-org scriptless obsidian": {
+        "normalizedTime": 0.35,
         "uniorgParses": 0
       },
       "org-md": {
-        "normalizedTime": 0.91,
+        "normalizedTime": 0.93,
         "uniorgParses": 1
       },
       "org-md obsidian": {
-        "normalizedTime": 0.9,
+        "normalizedTime": 0.85,
         "uniorgParses": 1
       }
     }
   },
   "head": {
-    "reason": "escape passes check how org reads the output; org→md guards `_.` lines and drops the escapes",
+    "reason": "escape passes check how org reads the output; org\u2192md guards `_.` lines and drops the escapes",
     "md-org": {
       "normalizedTime": 0.75,
       "uniorgParses": 68
@@ -65,12 +89,20 @@
       "normalizedTime": 0.77,
       "uniorgParses": 68
     },
+    "md-org scriptless": {
+      "normalizedTime": 1.6,
+      "uniorgParses": 449
+    },
+    "md-org scriptless obsidian": {
+      "normalizedTime": 1.65,
+      "uniorgParses": 449
+    },
     "org-md": {
       "normalizedTime": 0.98,
       "uniorgParses": 1
     },
     "org-md obsidian": {
-      "normalizedTime": 1.0,
+      "normalizedTime": 1,
       "uniorgParses": 1
     }
   }

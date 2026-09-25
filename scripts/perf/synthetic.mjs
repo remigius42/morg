@@ -13,6 +13,7 @@ const WORDS = (
 // again (a test pins the documents' hash to catch it)
 const MARKDOWN_SEED = 1
 const ORG_SEED = 2
+const SCRIPTLESS_SEED = 3
 // large enough to average out per-block costs, small enough for CI
 const SIZE_KIB = 32
 
@@ -27,13 +28,19 @@ function random(seed) {
   }
 }
 
-function generator(seed) {
+// `scriptless`: md text whose every `_` and `^` org reads the same with
+// and without `^:{}` (in link paths, code, braced scripts), the worst
+// case for the check whether md text needs it
+function generator(seed, scriptless = false) {
   const next = random(seed)
   const int = n => Math.floor(next() * n)
   const pick = items => items[int(items.length)]
   const word = () => pick(WORDS)
   const words = n => Array.from({ length: n }, word).join(" ")
-  return { int, pick, word, words }
+  const subscript = () =>
+    scriptless ? `${word()}_{${word()}}` : `${word()}_${word()}`
+  const superscript = () => (scriptless ? `x^{${int(9)}}` : `x^${int(9)}`)
+  return { int, pick, word, words, subscript, superscript, scriptless }
 }
 
 // a sentence with inline constructs, in md or org syntax
@@ -47,10 +54,18 @@ function sentence(g, md, footnote) {
         () => `[${g.word()}](https://example.com/${g.word()})`,
         () => `[${g.word()}](${g.word()}.md#${g.word()})`,
         () => `[[${g.word()}|${g.word()}]]`,
-        () => `${g.word()}_${g.word()}`,
-        () => `x^${g.int(9)}`,
+        g.subscript,
+        g.superscript,
         () => `/${g.word()}/${g.word()}/`,
-        () => `[^${footnote()}]`
+        () => `[^${footnote()}]`,
+        ...(g.scriptless
+          ? [
+              () =>
+                `[${g.word()}](https://example.com/${g.word()}_${g.word()})`,
+              () => `[[${g.word()}_${g.word()}^${g.word()}]]`,
+              () => `\`${g.word()}^${g.word()}\``
+            ]
+          : [])
       ]
     : [
         () => `*${g.words(2)}*`,
@@ -114,7 +129,7 @@ function mdBlock(g, footnote) {
         `| ${g.word()} | ${g.word()} |`,
         "| --- | --- |",
         `| ${g.word()} \\| ${g.word()} | **${g.word()}** |`,
-        `| \`${g.word()}\` | ${g.word()}_${g.word()} |`
+        `| \`${g.word()}\` | ${g.subscript()} |`
       ].join("\n")
     case 5:
       return `> ${sentence(g, true, footnote)}\n> ${g.words(4)}`
@@ -169,8 +184,9 @@ function orgBlock(g, footnote) {
   }
 }
 
-function document(kib, md) {
-  const g = generator(md ? MARKDOWN_SEED : ORG_SEED)
+function document(kib, md, scriptless = false) {
+  const seed = scriptless ? SCRIPTLESS_SEED : md ? MARKDOWN_SEED : ORG_SEED
+  const g = generator(seed, scriptless)
   let footnotes = 0
   const footnote = () => {
     footnotes++
@@ -196,6 +212,16 @@ function document(kib, md) {
  */
 export function syntheticMarkdown(kib = SIZE_KIB) {
   return document(kib, true)
+}
+
+/**
+ * A synthetic Markdown document of about `kib` KiB with `_` and `^` in
+ * links, code and braced scripts, but none org reads as a bare script.
+ * @param {number} [kib] The size in KiB, the gate's by default.
+ * @returns {string} The document.
+ */
+export function syntheticScriptlessMarkdown(kib = SIZE_KIB) {
+  return document(kib, true, true)
 }
 
 /**
