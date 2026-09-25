@@ -61,6 +61,8 @@
     "lint:fix": "npm run lint:fix:prettier && npm run lint:fix:eslint",
     "lint:fix:prettier": "prettier --write '**/*'",
     "lint:fix:eslint": "eslint --fix '**/*.{ts,mts,js}'",
+    "perf": "npm run build && node scripts/perf/perf.mjs",
+    "perf:record": "node scripts/perf/perf.mjs --record",
     "test:unit": "vitest",
     "test:unit:ci": "vitest run --reporter default --coverage",
     "test:coverage": "vitest run --coverage",

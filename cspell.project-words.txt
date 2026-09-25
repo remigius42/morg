@@ -64,3 +64,4 @@ wasi
 WCAG
 wikilink
 wikilinks
+worktrees

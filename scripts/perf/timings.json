@@ -1,0 +1,58 @@
+{
+  "tags": {
+    "v0.3.0": {
+      "md-org": {
+        "normalizedTime": 0.38,
+        "uniorgParses": 0
+      },
+      "md-org obsidian": {
+        "normalizedTime": 0.39,
+        "uniorgParses": 0
+      },
+      "org-md": {
+        "normalizedTime": 0.86,
+        "uniorgParses": 1
+      },
+      "org-md obsidian": {
+        "normalizedTime": 0.9,
+        "uniorgParses": 1
+      }
+    },
+    "v0.4.0": {
+      "md-org": {
+        "normalizedTime": 0.38,
+        "uniorgParses": 0
+      },
+      "md-org obsidian": {
+        "normalizedTime": 0.42,
+        "uniorgParses": 0
+      },
+      "org-md": {
+        "normalizedTime": 0.87,
+        "uniorgParses": 1
+      },
+      "org-md obsidian": {
+        "normalizedTime": 0.91,
+        "uniorgParses": 1
+      }
+    },
+    "v0.5.0": {
+      "md-org": {
+        "normalizedTime": 0.39,
+        "uniorgParses": 0
+      },
+      "md-org obsidian": {
+        "normalizedTime": 0.41,
+        "uniorgParses": 0
+      },
+      "org-md": {
+        "normalizedTime": 0.91,
+        "uniorgParses": 1
+      },
+      "org-md obsidian": {
+        "normalizedTime": 0.9,
+        "uniorgParses": 1
+      }
+    }
+  }
+}
