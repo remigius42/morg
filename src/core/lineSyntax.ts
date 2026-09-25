@@ -108,7 +108,7 @@ function lineStarts(children: Node[], afterBullet: boolean): LineStart[] {
 // `applies` skips the rendering where there is nothing to rewrite
 function rewriteLines(
   tree: Parent,
-  rewrite: (starts: LineStart[]) => void,
+  rewrite: (starts: LineStart[], afterBullet: boolean) => void,
   applies: (children: Node[]) => boolean = () => true
 ): void {
   visit(tree, (node: Node | Parent, index, parent: Parent | undefined) => {
@@ -122,7 +122,7 @@ function rewriteLines(
           parent?.type === "footnote-definition"))
     const children = (node as Parent).children as Node[]
     if (applies(children)) {
-      rewrite(lineStarts(children, afterBullet))
+      rewrite(lineStarts(children, afterBullet), afterBullet)
     }
   })
 }
@@ -133,7 +133,11 @@ function rewriteLines(
  * space, or it would turn into a list item, headline, comment or table.
  */
 export function escapeLineSyntax(tree: Parent): void {
-  rewriteLines(tree, starts => {
+  rewriteLines(tree, (starts, afterBullet) => {
+    // passthrough is a paragraph of its own
+    if (!afterBullet && isPassthrough(starts)) {
+      return
+    }
     // back to front, so earlier offsets and indices stay valid
     for (const { segment, offset, line } of starts.reverse()) {
       if (readsAsLineSyntax(line)) {
@@ -141,6 +145,34 @@ export function escapeLineSyntax(tree: Parent): void {
       }
     }
   })
+}
+
+// org→md writes these org elements as md paragraphs of their org text,
+// to be read back as such (verbatim passthrough, see mappings.md)
+const PASSTHROUGH_TYPES = new Set([
+  "fixed-width",
+  "drawer",
+  "clock",
+  "diary-sexp",
+  "keyword",
+  "babel-call",
+  "special-block",
+  "center-block",
+  "verse-block",
+  "comment-block",
+  "export-block"
+])
+
+// whether org reads the lines, all of them starting a line, as just
+// one passthrough element
+function isPassthrough(starts: LineStart[]): boolean {
+  const [first] = starts
+  if (!first || !MAY_BE_LINE_SYNTAX_RE.test(first.line)) {
+    return false
+  }
+  const lines = starts.map(({ line }) => line)
+  const [only, ...rest] = tryParse(`${lines.join("\n")}\n`)?.children ?? []
+  return !rest.length && PASSTHROUGH_TYPES.has(only?.type ?? "")
 }
 
 function escapeLineStart(

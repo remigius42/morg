@@ -51,7 +51,9 @@ gets a leading zero-width space too, or it would turn into a list
 item, headline, comment or table; org → md drops it. So does a line
 starting `_.` or `_)`: org reads it as text, but uniorg takes it for a
 bullet and fails to parse the document (or drops the line), so org →
-md guards such lines the same way before parsing.
+md guards such lines the same way before parsing. A paragraph org
+reads as just one passthrough element (below) is org text, and stays
+unescaped.
 
 A literal `[fn:` in md text (`\[fn:1]`) would be a footnote reference
 in org; md → org puts a zero-width space after its `[`, org → md drops
