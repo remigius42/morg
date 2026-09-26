@@ -19,8 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-Found by round-tripping a real Obsidian vault, where each of these
-silently changed text.
+Mostly found by round-tripping a real Obsidian vault, the rest by code
+review and fuzzing; each of these silently changed text.
 
 - Markup touching a word character (`` `x`s ``, `foo**bar**baz`) no
   longer comes back with literal markers. Org only reads markup next to
@@ -37,7 +37,9 @@ silently changed text.
   which org reads as a heading search rather than a file, so Emacs
   would not open them and the `obsidian` preset turned them into
   wikilinks. A path holding a literal `%5B`, `%5D` or `::` keeps it
-  instead of pointing at another file.
+  instead of pointing at another file, and an org `file:` path holding
+  `#` or `%` (`[[file:C# notes.md]]`) comes back pointing at that file,
+  not at `C`.
 - A heading inside a list item keeps its text as a line of the item
   and reports via `onWarning`, instead of silently coming back as
   literal `\*\* …`: org has no headline inside a list.
@@ -81,8 +83,8 @@ silently changed text.
 - An escaped `\|` in a Markdown table cell becomes org's `\vert{}`
   entity instead of splitting the cell, and comes back as `\|`.
 - Bare underscores and carets (`my_notes_2021.md`, `x^y`, also right
-  after markup or a link: `**a**_b`) are no longer read as org
-  sub/superscripts. md → org adds `^:{}` to `#+OPTIONS:` when the text
+  after markup or a link: `**a**_b`, or in an `obsidian` wikilink alias:
+  `[[a_b.md|a_b]]`) are no longer read as org sub/superscripts. md → org adds `^:{}` to `#+OPTIONS:` when the text
   needs it; org → md honors it in a top-level `#+OPTIONS:` and consumes
   it where the text needs it, so an author's own `options: ^:{}` stays.
 - Inline code spanning three or more lines converts to org; its line
