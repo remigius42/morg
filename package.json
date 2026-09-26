@@ -46,6 +46,7 @@
     "prepare": "husky",
     "prepack": "npm run build",
     "version": "node scripts/release-changelog.mjs && git add CHANGELOG.md",
+    "postversion": "printf '\\nNext:\\n  git push origin v%s\\n  wait for the Release run to pass\\n  git push\\n' \"$npm_package_version\"",
     "build": "tsc -p tsconfig.build.json",
     "build:web": "vite build web",
     "dev:web": "vite web",

@@ -113,13 +113,16 @@ for what you submit.
 Releases are cut from `main` by pushing a tag; the
 [release workflow](.github/workflows/release.yml) does the rest.
 
-1. `npm version x.y.z`
-2. `git push origin vx.y.z`, then `git push`
+1. `npm version x.y.z`, which ends by printing the next two steps
+2. `git push origin vx.y.z`
+3. once the Release run has passed, `git push`
 
 The tag goes first: pushing `main` deploys the Web UI, which is stamped
 with `git describe --tags`, and pushed together (`--follow-tags`) the
 deploy can start before the tag exists, so the site names the previous
-version.
+version. Waiting for the Release run keeps the site from naming a
+version that is not on npm yet, and leaves a failed release to be
+rolled back before `main` has moved.
 
 `npm version` bumps `package.json` and the lockfile, and its `version`
 lifecycle script runs `scripts/release-changelog.mjs` in between the
