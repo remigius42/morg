@@ -138,6 +138,7 @@ tree, so commit or stash first.
 
 The workflow re-runs lint, the unit tests and the build (a tag push does
 not trigger CI), publishes to npm with a provenance attestation, and
-opens the GitHub Release. Publishing needs the `NPM_TOKEN` repository
-secret, a granular automation token with publish rights on
-`@remigius42/morg`.
+opens the GitHub Release. Publishing needs no token: npm trusts this
+repository's `release.yml` as a publisher of `@remigius42/morg`
+(trusted publishing, set up in the package's settings on the registry),
+so renaming the workflow file breaks it until the setting follows.

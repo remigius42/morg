@@ -9,7 +9,8 @@ jobs:
     permissions:
       # creating the GitHub Release
       contents: write
-      # minting the provenance attestation `publishConfig.provenance` asks for
+      # the OIDC token npm trusted publishing authenticates with, which also
+      # mints the provenance attestation `publishConfig.provenance` asks for
       id-token: write
     steps:
       - uses: actions/checkout@v7
@@ -17,8 +18,6 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: "npm"
-          # writes the .npmrc that makes `npm publish` read NODE_AUTH_TOKEN
-          registry-url: "https://registry.npmjs.org"
       - name: Install NPM packages
         run: npm ci
       # a tag that disagrees with package.json would publish a version nobody
@@ -69,9 +68,9 @@ jobs:
       # publish first: a failed publish then leaves no orphaned GitHub Release
       # behind, whereas the reverse order would advertise a package that is not
       # on the registry
+      # no token: npm exchanges the workflow's OIDC token, trusted for
+      # this repository and workflow file on the registry, for the publish
       - name: Publish to npm
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npm publish
       - name: Create GitHub Release
         env:
