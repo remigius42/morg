@@ -26,7 +26,7 @@ import { pathToFileURL } from "node:url"
 import remarkParse from "remark-parse"
 import { unified } from "unified"
 import uniorgParse from "uniorg-parse"
-import { checkPerf } from "./gate.mjs"
+import { checkPerf, perfFormula, perfTable } from "./gate.mjs"
 import {
   syntheticMarkdown,
   syntheticOrg,
@@ -154,8 +154,10 @@ function record(tags) {
 
 function gate() {
   const measured = measureInChild(join(ROOT, "dist"))
-  console.table(measured)
-  const failures = checkPerf(measured, readTimings())
+  const timings = readTimings()
+  console.log(perfFormula(timings))
+  console.table(perfTable(measured, timings))
+  const failures = checkPerf(measured, timings)
   for (const failure of failures) {
     console.error(`perf: ${failure}`)
   }
