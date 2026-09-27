@@ -87,7 +87,7 @@ function transformUniorgList(ctx: TransformContext, node: List): MdastList[] {
     return {
       type: "list",
       ordered,
-      start: ordered ? parseInt(firstBullet, 10) || 1 : null,
+      start: ordered ? parseInt(firstBullet, 10) : null,
       spread: false,
       children: run.map(item => transformUniorgListItem(ctx, item))
     }

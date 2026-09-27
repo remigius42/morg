@@ -182,6 +182,11 @@ describe("lists", () => {
     expect(mdRoundTrip(once)).toBe(once)
     expect(convertMarkdownToOrg(input)).toBe("1. one\n2. two\n3. three\n")
   })
+
+  it("ordered list starting at zero keeps its start", () => {
+    const markdown = "0. zero\n1. one\n"
+    expect(mdRoundTrip(markdown)).toBe(markdown)
+  })
 })
 
 describe("braced scripts", () => {
