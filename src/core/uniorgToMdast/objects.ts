@@ -17,6 +17,13 @@ export function transformUniorgObjects(
   children: ObjectType[] | undefined
 ): PhrasingContent[] {
   return (children || [])
+    .map((child, index) =>
+      // uniorg keeps the continuation line's indentation after a line
+      // break; md would render it as leading whitespace
+      child.type === "text" && children?.[index - 1]?.type === "line-break"
+        ? { ...child, value: child.value.replace(/^[ \t]+/, "") }
+        : child
+    )
     .flatMap(child => transformUniorgObjectToMdastPhrasingContent(ctx, child))
     .filter(Boolean) as PhrasingContent[]
 }

@@ -187,6 +187,11 @@ describe("lists", () => {
     const markdown = "0. zero\n1. one\n"
     expect(mdRoundTrip(markdown)).toBe(markdown)
   })
+
+  it("hard break in a list item adds no leading whitespace", () => {
+    const markdown = "- a\n  - b\\\n    c\n"
+    expect(mdRoundTrip(markdown)).toBe(markdown)
+  })
 })
 
 describe("braced scripts", () => {
