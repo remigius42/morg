@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- An ordered list starting at `0.` keeps its start through org → md
+  instead of being renumbered from `1.`.
+- A hard line break inside a list item no longer comes back from org
+  with the next line's indentation as literal leading whitespace
+  (`&#x20;`).
+
 ## [0.6.0] - 2026-09-26
 
 ### Changed
