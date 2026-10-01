@@ -2,11 +2,12 @@
 
 ## Status
 
-Accepted (2026-09-10)
+Accepted (2026-09-10). Frontmatter superseded by ADR 0005 (2026-10-01):
+it travels as a marked comment block, not as keywords or properties.
 
 ## Context
 
-`md → org` must preserve Markdown constructs org cannot express natively (raw HTML, frontmatter, image title attributes, heading level under `nestUnderHeadings`, …) so the round trip can restore them. Storing them as org properties raises two questions: how to name the properties without colliding with user-authored ones, and how to encode non-scalar values given org property values are single-line.
+`md → org` must preserve Markdown constructs org cannot express natively (raw HTML, frontmatter (see ADR 0005), image title attributes, heading level under `nestUnderHeadings`, …) so the round trip can restore them. Storing them as org properties raises two questions: how to name the properties without colliding with user-authored ones, and how to encode non-scalar values given org property values are single-line.
 
 ## Decision
 
