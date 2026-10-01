@@ -8,10 +8,10 @@ Accepted (2026-09-19)
 
 ADR 0001 rules out byte-losslessness, in part because the formats
 disagree on syntax _choices_: Markdown spells a bullet `-`, `*` or `+`
-and emphasis `_` or `*`, Org spells each one way, and the return trip
-has to pick. Convergence makes that a one-time reformat rather than an
-open-ended loss, but the reformat still lands on every non-canonical
-file.
+and emphasis `_` or `*`, Org spells emphasis one way and bullets three
+ways, none of them tied to Markdown's, and the return trip has to pick.
+Convergence makes that a one-time reformat rather than an open-ended
+loss, but the reformat still lands on every non-canonical file.
 
 Nothing forces it to. Org can carry the source's own choices, and
 `MarkdownStyleOptions` already exists to replay them; it is just wired
@@ -26,7 +26,7 @@ and who pays for it.
    consumed rather than turned into frontmatter; explicit
    `markdownStyle` options still win over it.
 2. **Document-level scope only**: `bullet`, `emphasis`, `strong`,
-   `fence`, `rule`, `ruleRepetition`, exactly the knobs
+   `fence`, `rule`, `ruleRepetition`, the per-document marker knobs
    `remark-stringify` takes. Per-node style (mixed bullets across
    sibling lists, reference vs. inline links, setext for some headings)
    is _not_ recorded; see Consequences.
