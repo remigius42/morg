@@ -1,6 +1,7 @@
 import * as fs from "node:fs"
 import * as path from "node:path"
 import { describe, it, expect } from "vitest"
+import { parse as parseYaml } from "yaml"
 import { convertMarkdownToOrg } from "../src/markdownToOrg.js"
 import { convertOrgToMarkdown } from "../src/orgToMarkdown.js"
 
@@ -43,6 +44,340 @@ describe("round-trip identity on canonical form", () => {
   it("canonical org is a round-trip identity", () => {
     const input = fs.readFileSync(path.join(FIXTURES_DIR, "simple.org"), "utf8")
     expect(orgRoundTrip(input)).toBe(input)
+  })
+})
+
+describe("frontmatter (ADR 0005)", () => {
+  const fixture = (name: string): string =>
+    fs.readFileSync(path.join(FIXTURES_DIR, name), "utf8")
+
+  for (const name of ["frontmatter.md", "frontmatter-structured.md"]) {
+    it(`${name} keeps its frontmatter verbatim through org`, () => {
+      const input = fixture(name)
+      expect(mdRoundTrip(input)).toBe(input)
+    })
+  }
+
+  it("native org keywords come back as keywords", () => {
+    const input = fixture("keywords.org")
+    const markdown = convertOrgToMarkdown(input)
+    expect(markdown).toContain("  - STARTUP: overview\n")
+    expect(convertMarkdownToOrg(markdown)).toBe(input.replace("\n\n*", "\n*"))
+  })
+
+  it("every keyword and property key uniorg reads comes back", () => {
+    for (const org of [
+      ":PROPERTIES:\n:ID: 1\n:header-args:python: :session *py*\n:END:\n#+TITLE: t\nbody\n",
+      "#+TITLE: t\n#+FOO[BAR: x\n#+A[B]C: y\n#+END_DATE: z\nbody\n"
+    ]) {
+      expect(orgRoundTrip(org)).toBe(org)
+    }
+  })
+
+  it("keywords come back next to one whose key ends in a colon", () => {
+    // uniorg reads `#+foo:: bar` as the key FOO:, the value bar
+    expect(orgRoundTrip("#+title: X\n#+foo:: bar\n\ntext\n")).toBe(
+      "#+TITLE: X\n#+FOO:: bar\ntext\n"
+    )
+  })
+
+  it("an affiliated key ending in a colon stays a document keyword", () => {
+    // org reads `#+NAME:: x` as NAME, which would attach to the table
+    for (const key of ["NAME:", "RESULTS:"]) {
+      const markdown = `---\nmorg_keywords:\n  - "${key}": x\n---\n\n| a |\n| - |\n`
+      expect(mdRoundTrip(markdown)).toBe(markdown)
+    }
+  })
+
+  it("keywords on the block come back apart from it", () => {
+    // nothing reads keywords on a comment block
+    const org =
+      "#+TITLE: t\n#+NAME: n\n#+CAPTION[s]: c\n#+begin_comment morg_frontmatter\na: 1\n#+end_comment\nBody.\n"
+    const warnings: string[] = []
+    convertOrgToMarkdown(org, { onWarning: m => warnings.push(m) })
+    expect(warnings).toContain(
+      "keywords on the frontmatter block come back apart from it"
+    )
+    expect(orgRoundTrip(org)).toBe(
+      "#+TITLE: t\n#+NAME: n\n\n#+CAPTION[S]: c\n\n#+begin_comment morg_frontmatter\na: 1\n#+end_comment\nBody.\n"
+    )
+    const once = orgRoundTrip(org)
+    expect(orgRoundTrip(once)).toBe(once)
+  })
+
+  it("only CAPTION and RESULTS keep a short value on the block", () => {
+    // org reads no other keyword as dual, alias RESULT included: no
+    // block, order kept
+    for (const key of ["FOO", "RESULT"]) {
+      expect(orgRoundTrip(`#+${key}[X]: y\n#+title: T\n\ntext\n`)).toBe(
+        `#+${key}[X]: y\n#+TITLE: T\ntext\n`
+      )
+    }
+  })
+
+  it("a property named END stays in the frontmatter", () => {
+    // `:END:` would close the drawer early
+    const markdown =
+      "---\nmorg_properties:\n  - END:\n  - ID: abc\n---\n\nbody\n"
+    expect(mdRoundTrip(markdown)).toBe(markdown)
+  })
+
+  it("morg's entries stay in the frontmatter if one cannot restore", () => {
+    for (const yaml of [
+      'morg_properties:\n  - ID: abc\nmorg_keywords:\n  - TITLE: T\n  - "bad key": x',
+      'morg_properties:\n  - "bad key": abc\nmorg_keywords:\n  - TITLE: T'
+    ]) {
+      const markdown = `---\n${yaml}\n---\n\ntext\n`
+      expect(mdRoundTrip(markdown)).toBe(markdown)
+    }
+  })
+
+  it("a -*- comment below the block converges", () => {
+    // it leads the Markdown body, so becomes the mode line (warned)
+    const once = orgRoundTrip(
+      "#+begin_comment morg_frontmatter\na: 1\n#+end_comment\n# -*- mode: org -*-\n#+TITLE: t\n"
+    )
+    expect(orgRoundTrip(once)).toBe(once)
+  })
+
+  it("a -*- comment below a Markdown definition stays inert", () => {
+    // Emacs reads file variables only from the first line
+    const markdown =
+      "---\na: 1\n---\n\n[ref]: https://x\n\n<!-- -*- eval: (foo) -*- -->\n"
+    expect(convertMarkdownToOrg(markdown).startsWith("# -*-")).toBe(false)
+  })
+
+  it("an Emacs mode line below the keywords stays inert", () => {
+    // Emacs reads file variables only from the first line
+    const org = "#+TITLE: t\n# -*- mode: org; eval: (foo) -*-\nbody\n"
+    expect(orgRoundTrip(org)).toBe(org)
+  })
+
+  it("keywords below a comment stay below it", () => {
+    for (const org of [
+      "# hello\n#+TITLE: x\nBody\n",
+      "# -*- mode: org -*-\n# hello\n#+TITLE: x\nBody\n"
+    ]) {
+      expect(orgRoundTrip(org)).toBe(org)
+    }
+  })
+
+  it("a keyword above a leading keyword survives", () => {
+    // uniorg attaches #+NAME: to the keyword below it
+    const org = "#+NAME: n\n#+TITLE: y\n\nBody\n"
+    expect(orgRoundTrip(org)).toBe("#+NAME: n\n\n#+TITLE: y\nBody\n")
+    // once only, below a comment too, where it stays a line
+    for (const input of [org, "# hello\n#+CAPTION[s]: c\n#+TITLE: t\n"]) {
+      const once = orgRoundTrip(input)
+      expect(orgRoundTrip(once)).toBe(once)
+    }
+  })
+
+  it("keywords on a block whose YAML takes none converge", () => {
+    for (const org of [
+      "#+NAME: n\n#+begin_comment morg_frontmatter\n- a\n#+end_comment\nbody\n"
+    ]) {
+      const once = orgRoundTrip(org)
+      expect(orgRoundTrip(once)).toBe(once)
+    }
+  })
+
+  it("keywords and the block together survive both ways", () => {
+    const org =
+      "#+STARTUP: overview\n#+begin_comment morg_frontmatter\ntitle: x\n#+end_comment\nBody.\n"
+    expect(orgRoundTrip(org)).toBe(org)
+    const markdown = convertOrgToMarkdown(org)
+    expect(mdRoundTrip(markdown)).toBe(markdown)
+  })
+
+  it("a 0.6.0 file keeps its keywords as org-native keywords", () => {
+    const input = fixture("legacy-keywords.org")
+    expect(convertOrgToMarkdown(input)).toBe(
+      '---\nmorg_keywords:\n  - TITLE: A Note\n  - AUTHOR: Someone\n  - TAGS: one\n  - TAGS: two\n  - DRAFT: "true"\n  - META: \'{"a":1}\'\n  - DESC: \'"line1\\nline2\\n"\'\n---\n\n# Heading\n\nBody text.\n'
+    )
+    expect(orgRoundTrip(input)).toBe(input)
+  })
+
+  it("an empty or non-mapping frontmatter survives", () => {
+    for (const input of [
+      "---\n---\n\nBody.\n",
+      "---\n- a\n- b\n---\n\nBody.\n"
+    ]) {
+      expect(mdRoundTrip(input)).toBe(input)
+    }
+  })
+
+  it("a recorded style leads the block and is consumed before it", () => {
+    const input = "---\ntitle: x\n---\n\n* a\n* b\n"
+    const org = convertMarkdownToOrg(input, { recordStyle: true })
+    expect(org).toMatch(/^#\+MORG_MARKDOWN_STYLE: .*\n#\+begin_comment/)
+    expect(convertOrgToMarkdown(org)).toBe(input)
+  })
+
+  it("a leading keyword org would attach to the next element stays apart", () => {
+    // #+CAPTION, #+NAME (and #+SOURCE, an alias) directly above an
+    // element are its affiliated keywords; a blank line keeps them not
+    for (const org of [
+      "#+CAPTION: x\n\nPara\n",
+      "#+SOURCE: x\n\n#+begin_comment morg_frontmatter\ntitle: x\n#+end_comment\nPara\n"
+    ]) {
+      expect(orgRoundTrip(org)).toBe(org)
+    }
+  })
+
+  it("frontmatter whose entries cannot be cut out stays whole", () => {
+    // a flow mapping has no line per entry; an alias needs its anchor
+    for (const input of [
+      "---\n{morg_keywords: [{TITLE: x}], a: 1}\n---\n\nBody.\n",
+      "---\nmorg_keywords:\n  - TITLE: &t x\nother: *t\n---\n\nBody.\n"
+    ]) {
+      expect(mdRoundTrip(input)).toBe(input)
+    }
+  })
+
+  it("keywords next to an empty block join the frontmatter cleanly", () => {
+    const org =
+      "#+TITLE: t\n#+begin_comment morg_frontmatter\n#+end_comment\nBody.\n"
+    expect(convertOrgToMarkdown(org)).toBe(
+      "---\nmorg_keywords:\n  - TITLE: t\n---\n\nBody.\n"
+    )
+  })
+
+  it("keywords stay keyword lines when the block's yaml cannot take them", () => {
+    for (const yaml of [
+      "- a\n- b",
+      "{a: 1}",
+      "a: 1\n...",
+      "morg_keywords: not a list",
+      "  a: 1\n  b: 2"
+    ]) {
+      const org = `#+TITLE: t\n#+begin_comment morg_frontmatter\n${yaml}\n#+end_comment\nBody.\n`
+      const warnings: string[] = []
+      const markdown = convertOrgToMarkdown(org, {
+        onWarning: message => warnings.push(message)
+      })
+
+      expect(markdown).toContain(`---\n${yaml}\n---\n`)
+      expect(convertMarkdownToOrg(markdown)).toContain("#+TITLE: t\n")
+      expect(warnings).toHaveLength(1)
+      expect(orgRoundTrip(orgRoundTrip(org))).toBe(orgRoundTrip(org))
+    }
+  })
+
+  it("an org-roam file keeps its file-level property drawer", () => {
+    // org reads the drawer as the file's only when it leads the file
+    const org =
+      ':PROPERTIES:\n:ID: abc-123\n:ROAM_ALIASES: "A b"\n:END:\n#+TITLE: x\nBody.\n'
+    const markdown = convertOrgToMarkdown(org)
+
+    expect(markdown).toBe(
+      "---\nmorg_properties:\n  - ID: abc-123\n  - ROAM_ALIASES: '\"A b\"'\nmorg_keywords:\n  - TITLE: x\n---\n\nBody.\n"
+    )
+    expect(convertMarkdownToOrg(markdown)).toBe(org)
+    // keywords other passes put in front stay below it
+    const styled = convertMarkdownToOrg(
+      markdown.replace("Body.", "* a_b\n* c"),
+      { recordStyle: true }
+    )
+    expect(styled).toMatch(/^:PROPERTIES:\n:ID: abc-123\n/)
+    expect(styled).toContain("#+MORG_MARKDOWN_STYLE:")
+    expect(styled).toContain("#+OPTIONS: ^:{}")
+  })
+
+  it("an Emacs mode line stays on the first line", () => {
+    const org =
+      "# -*- mode: org; coding: utf-8 -*-\n:PROPERTIES:\n:ID: abc\n:END:\n#+TITLE: x\n#+begin_comment morg_frontmatter\na: 1\n#+end_comment\nBody.\n"
+    const markdown = convertOrgToMarkdown(org)
+
+    expect(markdown).toBe(
+      "---\na: 1\nmorg_properties:\n  - ID: abc\nmorg_keywords:\n  - TITLE: x\n---\n\n<!-- -*- mode: org; coding: utf-8 -*- -->\n\nBody.\n"
+    )
+    expect(convertMarkdownToOrg(markdown)).toBe(org)
+    // only as the first thing below the frontmatter
+    expect(convertMarkdownToOrg("Intro.\n\n<!-- -*- x -*- -->\n")).toBe(
+      "Intro.\n\n# -*- x -*-\n"
+    )
+  })
+
+  it("long keyword and property values survive", () => {
+    const long = Array.from({ length: 30 }, (_, i) => `word${i}`).join(" ")
+    const org = `:PROPERTIES:\n:ROAM_REFS: ${long}\n:END:\n#+TITLE: ${long}\nBody.\n`
+    expect(orgRoundTrip(org)).toBe(org)
+  })
+
+  it("keywords join a frontmatter that is only comments", () => {
+    const org =
+      "#+TITLE: t\n#+begin_comment morg_frontmatter\n# just a note\n#+end_comment\nBody.\n"
+    expect(convertOrgToMarkdown(org)).toBe(
+      "---\n# just a note\nmorg_keywords:\n  - TITLE: t\n---\n\nBody.\n"
+    )
+    expect(orgRoundTrip(org)).toBe(org)
+  })
+
+  it("any keyword name org reads survives, leading or mid-file", () => {
+    for (const org of [
+      "#+TITLE: x\n#+_DRAFT: y\n#+1ST: z\nBody.\n",
+      "* H\n#+FOO:BAR: x\n"
+    ]) {
+      expect(orgRoundTrip(org)).toBe(org)
+    }
+  })
+
+  it("cutting entries keeps a keep-chomped scalar's trailing lines", () => {
+    const markdown =
+      "---\na: |+\n  text\n\nmorg_keywords:\n  - TITLE: x\n---\n\nBody.\n"
+    const org = convertMarkdownToOrg(markdown)
+    expect(org).toContain("a: |+\n  text\n\n\n#+end_comment")
+    const back = convertOrgToMarkdown(org)
+    expect(mdRoundTrip(back)).toBe(back)
+    const yaml = /^---\n([\s\S]*?)\n---/.exec(back)?.[1]
+    expect(parseYaml(yaml ?? "")).toEqual({
+      a: "text\n\n",
+      morg_keywords: [{ TITLE: "x" }]
+    })
+  })
+
+  it("an empty keyword or property comes back without quotes", () => {
+    const markdown =
+      "---\nmorg_properties:\n  - ID:\nmorg_keywords:\n  - TITLE:\n---\n\nBody.\n"
+    expect(mdRoundTrip(markdown)).toBe(markdown)
+  })
+
+  it("a cut above a keep-chomped scalar keeps its trailing lines", () => {
+    const markdown =
+      "---\nmorg_keywords:\n  - TITLE: x\na: |+\n  text\n\n---\n\nBody.\n"
+    const org = convertMarkdownToOrg(markdown)
+    expect(org).toContain("a: |+\n  text\n\n#+end_comment")
+  })
+
+  it("a block that is not morg's stays a comment block", () => {
+    const org = "#+begin_comment\ntitle: x\n#+end_comment\nBody.\n"
+    expect(convertOrgToMarkdown(org)).not.toContain("---")
+  })
+})
+
+describe("headline properties", () => {
+  it("an empty property keeps its drawer", () => {
+    const org =
+      "* Meeting\n:PROPERTIES:\n:room:\n:custom_id: mtg\n:END:\nNotes.\n"
+    expect(orgRoundTrip(org)).toBe(org)
+    expect(convertOrgToMarkdown(org)).toContain("\nroom::\n")
+  })
+})
+
+describe("affiliated keywords", () => {
+  it("stay on their element in CRLF Markdown", () => {
+    expect(
+      convertMarkdownToOrg("#+NAME: n\r\n#+CAPTION: c\r\n| a |\r\n| - |\r\n")
+    ).toBe("#+NAME: n\n#+CAPTION: c\n| a |\n|-|\n")
+  })
+
+  it("keep links and markup in a caption on the frontmatter block", () => {
+    const org =
+      "#+CAPTION: see [[https://x.org][the *site*]] now\n#+begin_comment morg_frontmatter\n#+end_comment\nBody.\n"
+    expect(convertOrgToMarkdown(org)).toContain(
+      "CAPTION: see [[https://x.org][the *site*]] now\n"
+    )
   })
 })
 
@@ -205,7 +540,7 @@ describe("braced scripts", () => {
   it("^:nil keeps underscores and carets text, and stays", () => {
     const org = "#+OPTIONS: ^:nil\na_b and x^{2}\n"
     expect(convertOrgToMarkdown(org)).toBe(
-      "---\noptions: ^:nil\n---\n\na\\_b and x^{2}\n"
+      "---\nmorg_keywords:\n  - OPTIONS: ^:nil\n---\n\na\\_b and x^{2}\n"
     )
     expect(orgRoundTrip(org)).toBe(org)
   })

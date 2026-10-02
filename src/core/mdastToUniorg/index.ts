@@ -14,7 +14,15 @@ import type {
 } from "uniorg"
 import { warn, type TransformContext } from "./context.js"
 import {
-  frontmatterToKeywords,
+  fitsKeywordLine,
+  fitsPropertyLine,
+  markModeLine,
+  renderFileHeader,
+  takeMorgEntry,
+  takesMorgEntries,
+  type FrontmatterNode
+} from "../frontmatterBlock.js"
+import {
   keywordOnlyLines,
   transformMdastCode,
   transformMdastHeading,
@@ -38,6 +46,20 @@ export function transformMdastToUniorgAst(
   mdast: MdastRoot,
   options: MdastToUniorgOptions = {}
 ): OrgData {
+  const orgAst = transformMdastToUniorgDraft(mdast, options)
+  renderFileHeader(orgAst)
+  return orgAst
+}
+
+/**
+ * md→org pipeline: like `transformMdastToUniorgAst`, but the frontmatter
+ * stays a `morg-frontmatter` node a preset can still take entries out
+ * of; `renderFileHeader` turns it into the block.
+ */
+export function transformMdastToUniorgDraft(
+  mdast: MdastRoot,
+  options: MdastToUniorgOptions = {}
+): OrgData {
   const ctx: TransformContext = { options, definitions: new Map() }
   visit(mdast, "definition", (definition: Definition) => {
     ctx.definitions.set(definition.identifier, {
@@ -45,14 +67,20 @@ export function transformMdastToUniorgAst(
       ...(definition.title != null && { title: definition.title })
     })
   })
+  const firstBody = mdast.children.find(child => child.type !== "yaml")
   const children: (GreaterElementType | ElementType)[] = mdast.children
-    .flatMap(child =>
-      // frontmatter maps to org keywords, a native construct (one mdast
-      // node fans out to one keyword per entry)
-      child.type === "yaml"
-        ? frontmatterToKeywords(child.value)
-        : [transformMdastNodeToUniorgNode(ctx, child)]
-    )
+    .flatMap(child => {
+      // frontmatter is passive data, org keywords can act; it travels
+      // inert in a marked comment block (ADR 0005)
+      if (child.type === "yaml") {
+        return transformFrontmatter(child.value)
+      }
+      const node = transformMdastNodeToUniorgNode(ctx, child)
+      if (child === firstBody) {
+        markModeLine(node)
+      }
+      return [node]
+    })
     .filter(Boolean) as (GreaterElementType | ElementType)[]
 
   const orgAst: OrgData = {
@@ -146,4 +174,61 @@ function quotedHeadingAsText(
   }
   warn(ctx, "heading inside a blockquote became text")
   return { type: "paragraph", children: node.children }
+}
+
+// morg's own entries, both or neither: one left in the YAML would keep
+// the other from joining it again on the way back
+function takeMorgEntries(yaml: string): {
+  keywords: [string, string][]
+  properties: [string, string][]
+  yaml: string
+} {
+  // most frontmatter holds neither: no need to parse it
+  if (!yaml.includes("morg_")) {
+    return { keywords: [], properties: [], yaml }
+  }
+  const taken = takeMorgEntry(yaml, "morg_keywords", fitsKeywordLine)
+  const rest = takeMorgEntry(taken.yaml, "morg_properties", fitsPropertyLine)
+  return takesMorgEntries(rest.yaml)
+    ? { keywords: taken.keywords, properties: rest.keywords, yaml: rest.yaml }
+    : { keywords: [], properties: [], yaml }
+}
+
+function keywordNodes(keywords: [string, string][]): ElementType[] {
+  return keywords.map(
+    ([key, value]) =>
+      ({
+        type: "keyword",
+        affiliated: {},
+        key,
+        value
+      }) as unknown as ElementType
+  )
+}
+
+// org's own keywords go back to keywords; the rest of the frontmatter
+// stays inert data in the block
+function transformFrontmatter(value: string): ElementType[] {
+  // in the org file's line endings, which are LF
+  const lf = value.replaceAll("\r\n", "\n")
+  const { keywords, properties, yaml } = takeMorgEntries(lf)
+  const drawer = properties.length
+    ? [
+        {
+          type: "property-drawer",
+          children: properties.map(([key, propertyValue]) => ({
+            type: "node-property",
+            key,
+            value: propertyValue
+          }))
+        } as unknown as ElementType
+      ]
+    : []
+  const nodes = keywordNodes(keywords)
+  // an empty frontmatter stays a block
+  if (yaml || !(keywords.length || properties.length)) {
+    const node: FrontmatterNode = { type: "morg-frontmatter", yaml }
+    nodes.push(node as unknown as ElementType)
+  }
+  return [...drawer, ...nodes]
 }

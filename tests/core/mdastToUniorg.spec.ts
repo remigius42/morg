@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest"
 import { transformMdastToUniorgAst } from "../../src/core/mdastToUniorg/index.js"
 import type { Root as MdastRoot } from "mdast"
+import { unified } from "unified"
+import { uniorgStringify } from "uniorg-stringify"
 
 describe("transformMdastToUniorgAst", () => {
   it("should convert a simple heading and paragraph", () => {
@@ -264,5 +266,46 @@ describe("transformMdastToUniorgAst", () => {
         }
       ]
     })
+  })
+
+  it("should return the frontmatter as uniorg that stringifies to the block", () => {
+    const mdast: MdastRoot = {
+      type: "root",
+      children: [
+        { type: "yaml", value: "title: x" },
+        { type: "paragraph", children: [{ type: "text", value: "Body." }] }
+      ]
+    }
+
+    const org = unified()
+      .use(uniorgStringify)
+      .stringify(transformMdastToUniorgAst(mdast))
+
+    expect(org).toBe(
+      "#+begin_comment morg_frontmatter\ntitle: x\n#+end_comment\nBody.\n"
+    )
+  })
+
+  it("should render the file header as the md → org pipeline does", () => {
+    const mdast: MdastRoot = {
+      type: "root",
+      children: [
+        {
+          type: "yaml",
+          value:
+            "a: 1\nmorg_keywords:\n  - NAME: x\nmorg_properties:\n  - ID: abc"
+        },
+        { type: "paragraph", children: [{ type: "text", value: "Body." }] }
+      ]
+    }
+
+    const org = unified()
+      .use(uniorgStringify)
+      .stringify(transformMdastToUniorgAst(mdast))
+
+    // #+NAME: directly above the block would be its affiliated keyword
+    expect(org).toBe(
+      ":PROPERTIES:\n:ID: abc\n:END:\n#+NAME: x\n\n#+begin_comment morg_frontmatter\na: 1\n#+end_comment\nBody.\n"
+    )
   })
 })

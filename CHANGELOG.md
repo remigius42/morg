@@ -9,8 +9,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Breaking output change.** YAML frontmatter no longer becomes org
+  keywords (`tags: [a]` → `#+TAGS: a`); it travels verbatim in a
+  marked comment block, `#+begin_comment morg_frontmatter`, inert in
+  Emacs and in export. Upper-cased keys used to collide with keywords
+  that act: `#+TAGS` declares the tag vocabulary, `#+TODO` redefines
+  the TODO keywords, `#+INCLUDE` pulls a file into exports (ADR 0005).
+  `transformMdastToUniorgAst` returns the block as a raw text node
+  instead of keyword nodes, which `transformUniorgAstToMdast` reads
+  back; a uniorg tree parsed from org text cannot carry the block's
+  marker (uniorg drops it), so pass that text as its `org` option, or
+  convert files with `convertOrgToMarkdown`.
+- **Breaking output change.** An org file's leading keywords
+  (`#+TITLE`, `#+STARTUP`, …) no longer become plain frontmatter keys;
+  they travel as a `morg_keywords` frontmatter entry and come back as
+  keywords, so `#+STARTUP` keeps its effect. An entry a keyword line
+  cannot hold (a line break in the value, a key org does not read as a
+  keyword name) stays in the frontmatter block instead.
+- Migration: files written by 0.6.0 and earlier carry their frontmatter
+  as keywords and now read as org-native keywords (`morg_keywords`).
+  That converges, but Markdown tools no longer see `title`. Re-convert
+  them from the Markdown source, or move the keywords into a
+  `morg_frontmatter` block by hand.
+
 ### Fixed
 
+- An Emacs mode line (`# -*- mode: org -*-`) stays on the first line
+  through Markdown, where Emacs reads it, instead of landing below the
+  frontmatter.
+- A file-level property drawer (org-roam's `:ID:`) no longer turns into
+  `ID:: abc` text in Markdown and stays text on the way back, which
+  broke org-roam links. It travels as a `morg_properties` frontmatter
+  entry and comes back as the drawer leading the file.
+- A leading `#+CAPTION:`, `#+NAME:` or other keyword org attaches to
+  the element below it (`#+SOURCE:` is an alias of `#+NAME:`) no longer
+  comes back from Markdown attached to the next paragraph or keyword;
+  md → org keeps it apart with a blank line.
 - An ordered list starting at `0.` keeps its start through org → md
   instead of being renumbered from `1.`.
 - A hard line break inside a list item no longer comes back from org

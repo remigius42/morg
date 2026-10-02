@@ -58,13 +58,18 @@ hold in bytes but break in substance.
    unparsed.
    `#+MORG_MARKDOWN_STYLE:` (ADR 0004) is consumed before and is not
    part of it.
+   A file-level property drawer (org-roam's `:ID:`) travels the same
+   way, as `morg_properties`, and comes back as the drawer leading the
+   file, where org reads it as the file's.
 4. **Presets may map page properties natively** (ADR 0002 §4). The
    Logseq preset does: Logseq reads leading `#+key: value` lines of an
    org page, and a leading `key:: value` block of a Markdown page, as
    page properties. It maps the two onto each other, and flat
    frontmatter entries to keywords too (a sequence as `a, b`, as
-   Logseq writes it); only what a keyword line cannot hold stays in the
-   block.
+   Logseq writes it); what a keyword line cannot hold stays in the
+   block, and so do keys that act in Emacs or in export (`todo`,
+   `include`, `setupfile`, `call`, …), since frontmatter is passive
+   data. `tags` maps: in Logseq it tags the page.
 
 ## Consequences
 

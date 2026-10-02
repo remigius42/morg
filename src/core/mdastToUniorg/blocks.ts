@@ -5,42 +5,8 @@ import type {
 } from "mdast"
 import type { ElementType } from "uniorg"
 import { toString } from "orgast-util-to-string"
-import { parse as parseYaml } from "yaml"
 import { mdismEnabled, type TransformContext } from "./context.js"
 import { transformPhrasingChildren } from "./phrasing.js"
-
-// a keyword is a single line, so anything that is not a single-line
-// scalar is JSON-encoded and restored by JSON.parse on the way back
-function keywordValue(value: unknown): string {
-  if (value !== null && typeof value === "object") {
-    return JSON.stringify(value)
-  }
-  const text = String(value)
-  return text.includes("\n") ? JSON.stringify(text) : text
-}
-
-// frontmatter entries become #+KEY: value keywords; scalar values as-is,
-// structured values JSON-encoded on a single line (see ADR 0002)
-export function frontmatterToKeywords(yamlValue: string): ElementType[] {
-  const data: unknown = parseYaml(yamlValue)
-  if (!data || typeof data !== "object" || Array.isArray(data)) {
-    return []
-  }
-  return Object.entries(data).flatMap(([key, value]) => {
-    // a sequence becomes repeated keywords -- org's own way of carrying
-    // several values for one key, and what they read back as
-    const values = Array.isArray(value) && value.length ? value : [value]
-    return values.map(
-      item =>
-        ({
-          type: "keyword",
-          affiliated: {},
-          key: key.toUpperCase(),
-          value: keywordValue(item)
-        }) as unknown as ElementType
-    )
-  })
-}
 
 export function transformMdastTable(
   ctx: TransformContext,
@@ -246,7 +212,7 @@ export function keywordOnlyLines(node: {
   const lines = node.children
     .map(child => (child as { value: string }).value)
     .join("")
-    .split("\n")
+    .split(/\r?\n/)
   return lines.length && lines.every(line => KEYWORD_LINE_RE.test(line))
     ? lines
     : null

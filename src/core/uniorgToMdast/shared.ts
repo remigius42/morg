@@ -11,6 +11,18 @@ export interface UniorgToMdastOptions {
   taskCheckboxes?: boolean
   orgismKeys?: Record<string, string>
   onWarning?: (message: string) => void
+  // YAML text of the marked frontmatter block (ADR 0005), taken out of
+  // the document before the transform
+  frontmatter?: string
+  // properties of the file-level drawer, taken out likewise
+  fileProperties?: [string, string][]
+  // whether the block's YAML can take morg's entries, if already known
+  takesMorgEntries?: boolean
+  // whether the file starts with an Emacs mode line, taken likewise
+  startsWithModeLine?: boolean
+  // the org text a tree was parsed from: uniorg drops the marker of the
+  // frontmatter block, which the transform then finds by its begin line
+  org?: string
 }
 
 // per-run state threaded through the recursive transform helpers;

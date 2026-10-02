@@ -1,6 +1,10 @@
 import { describe, it, expect } from "vitest"
 import { transformUniorgAstToMdast } from "../../src/core/uniorgToMdast/index.js"
 import type { OrgData } from "uniorg"
+import type { Root as MdastRoot } from "mdast"
+import { transformMdastToUniorgAst } from "../../src/core/mdastToUniorg/index.js"
+import { unified } from "unified"
+import uniorgParse from "uniorg-parse"
 
 describe("transformUniorgAstToMdast", () => {
   it("should transform an empty uniorg AST to an empty mdast", () => {
@@ -139,5 +143,61 @@ describe("transformUniorgAstToMdast", () => {
     const second = transformUniorgAstToMdast(buildAst())
 
     expect(second).toEqual(first)
+  })
+
+  it("should carry the frontmatter through both exported transforms", () => {
+    const mdast: MdastRoot = {
+      type: "root",
+      children: [
+        {
+          type: "yaml",
+          value:
+            "title: x # kept\n* star\nmorg_properties:\n  - ID: abc\nmorg_keywords:\n  - STARTUP: overview"
+        },
+        { type: "paragraph", children: [{ type: "text", value: "Body." }] }
+      ]
+    }
+    const uniorgAst = transformMdastToUniorgAst(mdast)
+    const before = JSON.stringify(uniorgAst)
+
+    const back = transformUniorgAstToMdast(uniorgAst)
+
+    expect(back.children[0]).toEqual({
+      type: "yaml",
+      value:
+        "title: x # kept\n* star\nmorg_properties:\n  - ID: abc\nmorg_keywords:\n  - STARTUP: overview"
+    })
+    expect(back.children).toHaveLength(2)
+    // the caller's tree stays as it was
+    expect(JSON.stringify(uniorgAst)).toBe(before)
+  })
+
+  it("should read the frontmatter block of a tree parsed from org text", () => {
+    // uniorg drops the block's marker; the text it was parsed from has it
+    const org =
+      "#+title: T\n#+begin_comment morg_frontmatter\na: 1\n#+end_comment\nBody.\n"
+    const uniorgAst = unified().use(uniorgParse).parse(org)
+    const before = JSON.stringify(uniorgAst)
+
+    const back = transformUniorgAstToMdast(uniorgAst, { org })
+
+    expect(back.children[0]).toEqual({
+      type: "yaml",
+      value: "a: 1\nmorg_keywords:\n  - TITLE: T"
+    })
+    expect(back.children).toHaveLength(2)
+    expect(JSON.stringify(uniorgAst)).toBe(before)
+  })
+
+  it("should read keywords kept apart from the block back", () => {
+    const yaml = "a: 1\nmorg_keywords:\n  - NAME: x\n  - TITLE: t"
+    const back = transformUniorgAstToMdast(
+      transformMdastToUniorgAst({
+        type: "root",
+        children: [{ type: "yaml", value: yaml }]
+      })
+    )
+
+    expect(back.children).toEqual([{ type: "yaml", value: yaml }])
   })
 })

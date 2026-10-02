@@ -115,8 +115,9 @@
         byte-for-byte stable in both directions. Markdown-only constructs
         survive the trip through Org as <code>morg_</code> properties; Org-only
         constructs travel through Markdown as
-        <code>key:: value</code> conventions. Dialect presets for Logseq and
-        Obsidian are built in.
+        <code>key:: value</code> conventions. Frontmatter travels inert in a
+        marked Org comment block, not as Org keywords, which can act in Emacs.
+        Dialect presets for Logseq and Obsidian are built in.
       </p>
       <p>
         <a href="./convert.html" class="button-3d"

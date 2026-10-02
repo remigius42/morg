@@ -25,6 +25,13 @@ is not recorded, because there is no honest single answer. It does not
 weaken Convergence; it widens the set of inputs for which the Round
 Trip is already an identity (ADR 0004).
 
+## Frontmatter Block
+
+The org comment block, `#+begin_comment morg_frontmatter`, that carries
+a Markdown file's YAML frontmatter verbatim and inert through org. Its
+counterpart: `morg_keywords`, the frontmatter entry that carries an org
+file's leading keywords through Markdown (ADR 0005).
+
 ## Md-ism
 
 A Markdown construct with no native Org equivalent. Preserved during `md → org` as org properties so the Round Trip can restore it.

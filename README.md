@@ -37,6 +37,12 @@ guarantee is to be **semantically faithful and convergent** instead
   org properties; `org → md` serializes Org-only constructs ("org-isms") as
   `key:: value` conventions ([ADR
   0002](docs/adr/0002-mdism-property-namespace.md)).
+- Frontmatter travels verbatim and inert in a
+  `#+begin_comment morg_frontmatter` block, not as org keywords, which
+  can act in Emacs; an org file's own leading keywords travel as a
+  `morg_keywords` frontmatter entry and come back as keywords, a
+  file-level drawer (org-roam's `:ID:`) as `morg_properties` ([ADR
+  0005](docs/adr/0005-frontmatter-as-a-marked-comment-block.md)).
 - The few constructs that cannot be carried are documented in the
   [mapping reference](docs/mappings.md) and reported as warnings.
 

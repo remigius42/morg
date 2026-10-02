@@ -235,7 +235,7 @@ function transformPropertyDrawer(
   }
   const isms = (node.children || [])
     .filter(child => child.type === "node-property")
-    .map(property => `${property.key}:: ${property.value}`)
+    .map(({ key, value }) => (value ? `${key}:: ${value}` : `${key}::`))
   return isms.length ? keyValueParagraph(isms) : null
 }
 

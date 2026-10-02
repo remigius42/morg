@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest"
 import { convertMarkdownToOrg } from "../src/markdownToOrg.js"
+import { convertOrgToMarkdown } from "../src/orgToMarkdown.js"
 import { logseq } from "../src/presets/logseq.js"
 
 describe("convertMarkdownToOrg", () => {
@@ -327,6 +328,14 @@ This is a paragraph.
     )
   })
 
+  it("should restore an empty key:: value as an empty property", () => {
+    const markdown = "# Meeting\n\nroom::\ncustom_id:: mtg\n\nNotes.\n"
+
+    expect(convertMarkdownToOrg(markdown)).toBe(
+      "* Meeting\n:PROPERTIES:\n:room:\n:custom_id: mtg\n:END:\nNotes.\n"
+    )
+  })
+
   it("should convert html comments to org comments", () => {
     const markdown = "<!-- a note -->\n\n<!--\nfirst\nsecond\n-->\n\nText.\n"
 
@@ -441,34 +450,106 @@ This is a paragraph.
     expect(convertMarkdownToOrg(markdown)).toBe("line one\\\\\nline two\n")
   })
 
-  it("should convert frontmatter to org keywords", () => {
+  it("should write frontmatter verbatim into a marked comment block", () => {
     const markdown = "---\ntitle: My Note\nauthor: Rem\n---\n\nBody.\n"
 
     expect(convertMarkdownToOrg(markdown)).toBe(
-      "#+TITLE: My Note\n#+AUTHOR: Rem\nBody.\n"
+      "#+begin_comment morg_frontmatter\ntitle: My Note\nauthor: Rem\n#+end_comment\nBody.\n"
     )
   })
 
-  it("should json-encode structured frontmatter values", () => {
-    const markdown = "---\nmeta:\n  a: 1\n---\n\nBody.\n"
-
-    expect(convertMarkdownToOrg(markdown)).toBe('#+META: {"a":1}\nBody.\n')
-  })
-
-  it("should expand a frontmatter sequence into repeated keywords", () => {
-    // org's own way of carrying several values for one key
-    const markdown = "---\ntags:\n  - a\n  - b\n---\n\nBody.\n"
-
-    expect(convertMarkdownToOrg(markdown)).toBe("#+TAGS: a\n#+TAGS: b\nBody.\n")
-  })
-
-  it("should json-encode multi-line frontmatter values", () => {
-    // a raw newline would end the keyword and push the rest into the body
-    const markdown = "---\ndesc: |\n  line1\n  line2\n---\n\nBody.\n"
+  it("should comma-escape frontmatter lines org would read as structure", () => {
+    // Org's own block escaping: a headline or keyword line, or one that
+    // is already escaped, gets one more comma
+    const markdown =
+      "---\n#+not a keyword\ndesc: |\n  * star\n  #+end_comment\n  ,* comma\n---\n\nBody.\n"
 
     expect(convertMarkdownToOrg(markdown)).toBe(
-      '#+DESC: "line1\\nline2\\n"\nBody.\n'
+      "#+begin_comment morg_frontmatter\n,#+not a keyword\ndesc: |\n  ,* star\n  ,#+end_comment\n  ,,* comma\n#+end_comment\nBody.\n"
     )
+  })
+
+  it("should restore morg_keywords as keywords ahead of the block", () => {
+    const markdown =
+      '---\ntitle: x # kept\nmorg_keywords:\n  - STARTUP: overview\n  - AUTHOR: a\n  - AUTHOR: b\n  - FILETAGS: ":one:two:"\nafter: 1\n---\n\nBody.\n'
+
+    expect(convertMarkdownToOrg(markdown)).toBe(
+      "#+STARTUP: overview\n#+AUTHOR: a\n#+AUTHOR: b\n#+FILETAGS: :one:two:\n#+begin_comment morg_frontmatter\ntitle: x # kept\nafter: 1\n#+end_comment\nBody.\n"
+    )
+  })
+
+  it("should keep the comments of a restored entry in its place", () => {
+    const markdown =
+      '---\na: 1\nmorg_keywords: # restored by morg\n  # first\n  - TITLE: "t #1" # c2\nb: 2\n---\n\nBody.\n'
+
+    expect(convertMarkdownToOrg(markdown)).toBe(
+      "#+TITLE: t #1\n#+begin_comment morg_frontmatter\na: 1\n# restored by morg\n# first\n# c2\nb: 2\n#+end_comment\nBody.\n"
+    )
+    expect(
+      convertMarkdownToOrg("---\na: 1\nmorg_keywords: # c\n  - TITLE: t\n---\n")
+    ).toBe(
+      "#+TITLE: t\n#+begin_comment morg_frontmatter\na: 1\n# c\n#+end_comment\n"
+    )
+  })
+
+  it("should write CRLF frontmatter with the file's line endings", () => {
+    expect(
+      convertMarkdownToOrg(
+        "---\r\na: 1\r\nmorg_keywords:\r\n  - TITLE: t\r\nb: 2\r\n---\r\n\r\nx\r\n"
+      )
+    ).toBe(
+      "#+TITLE: t\n#+begin_comment morg_frontmatter\na: 1\nb: 2\n#+end_comment\nx\n"
+    )
+  })
+
+  it("should restore morg_keywords values as written, not as parsed", () => {
+    const markdown =
+      "---\nmorg_keywords:\n  - VERSION: 1.10\n  - ZIP: 01234\n  - HEX: 0x1F\n  - EMPTY:\n  - QUOTED: 'a: b'\n---\n\nBody.\n"
+
+    expect(convertMarkdownToOrg(markdown)).toBe(
+      "#+VERSION: 1.10\n#+ZIP: 01234\n#+HEX: 0x1F\n#+EMPTY:\n#+QUOTED: a: b\nBody.\n"
+    )
+  })
+
+  it("should leave morg_keywords in the block when a keyword line cannot hold it", () => {
+    // a line break would end the keyword and inject org structure; a
+    // key org does not read as a keyword name would not come back
+    for (const entry of [
+      '- TITLE: "x\\n* injected\\n#+INCLUDE: ~/.ssh/id_rsa"',
+      '- TITLE: "x\\ry"',
+      "- TITLE: |\n      l1\n      l2",
+      "- TI TLE: x",
+      "- begin_src: x",
+      "- '': x"
+    ]) {
+      const markdown = `---\nmorg_keywords:\n  ${entry}\n---\n\nBody.\n`
+      const org = convertMarkdownToOrg(markdown)
+
+      expect(org).toMatch(/^#\+begin_comment morg_frontmatter\nmorg_keywords:/)
+      expect(convertOrgToMarkdown(org)).toBe(markdown)
+    }
+  })
+
+  it("should restore morg_properties as the leading file-level drawer", () => {
+    expect(
+      convertMarkdownToOrg(
+        "---\nmorg_keywords:\n  - TITLE: x\nmorg_properties:\n  - ID: abc\n---\n\nBody.\n"
+      )
+    ).toBe(":PROPERTIES:\n:ID: abc\n:END:\n#+TITLE: x\nBody.\n")
+    // a key with a space or a value with a line break would not come back
+    for (const entry of ['- "A B": x', '- ID: "a\\nb"']) {
+      const markdown = `---\nmorg_properties:\n  ${entry}\n---\n\nBody.\n`
+      expect(convertMarkdownToOrg(markdown)).toMatch(
+        /^#\+begin_comment morg_frontmatter\nmorg_properties:/
+      )
+    }
+  })
+
+  it("should write no block when morg_keywords is all there is", () => {
+    const markdown =
+      "---\nmorg_keywords:\n  - STARTUP: overview\n---\n\nBody.\n"
+
+    expect(convertMarkdownToOrg(markdown)).toBe("#+STARTUP: overview\nBody.\n")
   })
 
   it("should emit plain org links when the text equals the url", () => {

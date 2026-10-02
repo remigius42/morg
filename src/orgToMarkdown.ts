@@ -5,6 +5,7 @@ import remarkFrontmatter from "remark-frontmatter"
 import remarkMath from "remark-math"
 import { transformUniorgAstToMdast } from "./core/uniorgToMdast/index.js"
 import { takeRecordedStyle } from "./core/markdownStyle.js"
+import { takeFileHeader } from "./core/frontmatterBlock.js"
 import { unescapeOrgMarkup } from "./core/markupBoundary.js"
 import { unescapeLineSyntax } from "./core/lineSyntax.js"
 import { unescapeFootnoteReferences } from "./core/footnoteReferences.js"
@@ -42,12 +43,16 @@ export function convertOrgToMarkdown(
   // Phase 1: Parse Org-mode to uniorg-ast
   // md text has no scripts, so ^:{} is implied there and consumed here
   // (see markdownToOrg); uniorg misreads `_.` lines (see underscoreBullets)
-  let uniorgAst = parseOrg(guardUnderscoreBullets(org))
+  const guarded = guardUnderscoreBullets(org)
+  let uniorgAst = parseOrg(guarded)
   dropUnderscoreBulletGuards(uniorgAst)
 
   // Phase 1b: a recorded style is morg's own (ADR 0004), so consume it so
   // it does not travel on as frontmatter; explicit options still win
   const recordedStyle = takeRecordedStyle(uniorgAst)
+  // frontmatter travels in a block marked as morg's (ADR 0005)
+  // and so does a file-level drawer (org-roam's :ID:)
+  const fileHeader = takeFileHeader(uniorgAst, guarded, options.onWarning)
 
   // Phase 1c: markdown needs no zero-width space escapes (inverse of md→org)
   unescapeOrgMarkup(uniorgAst)
@@ -71,7 +76,8 @@ export function convertOrgToMarkdown(
     ...(options.orgismKeys !== undefined && {
       orgismKeys: options.orgismKeys
     }),
-    ...(options.onWarning !== undefined && { onWarning: options.onWarning })
+    ...(options.onWarning !== undefined && { onWarning: options.onWarning }),
+    ...fileHeader
   })
 
   // Phase 4: Render mdast to Markdown string

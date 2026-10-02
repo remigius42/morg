@@ -14,14 +14,16 @@ import type {
   Text,
   Timestamp
 } from "uniorg"
-import { transformMdastToUniorgAst } from "./core/mdastToUniorg/index.js"
+import { transformMdastToUniorgDraft } from "./core/mdastToUniorg/index.js"
 import { detectMarkdownStyle, STYLE_KEYWORD } from "./core/markdownStyle.js"
 import { escapeOrgMarkup } from "./core/markupBoundary.js"
+import { renderFileHeader } from "./core/frontmatterBlock.js"
 import { escapeLineSyntax } from "./core/lineSyntax.js"
 import { escapeFootnoteReferences } from "./core/footnoteReferences.js"
 import { escapeTablePipes } from "./core/tablePipes.js"
 import { requireBracedScripts } from "./core/bracedScripts.js"
 import type { MarkdownStyleOptions, MarkdownToOrgOptions } from "./options.js"
+import { keyValueEntries } from "./core/keyValueLines.js"
 
 /**
  * Converts a Markdown string to an Org-mode string.
@@ -42,7 +44,7 @@ export function convertMarkdownToOrg(
     .parse(markdown)
 
   // Phase 2: Generic mdast to uniorg-ast transformation
-  let uniorgAst = transformMdastToUniorgAst(mdast, {
+  let uniorgAst = transformMdastToUniorgDraft(mdast, {
     ...(options.preserveMdisms !== undefined && {
       preserveMdisms: options.preserveMdisms
     }),
@@ -97,6 +99,11 @@ export function convertMarkdownToOrg(
   // org parses too, and after the escapes, next to which org reads them
   requireBracedScripts(uniorgAst)
 
+  // Phase 3d: the file's header (ADR 0005): mode line and file-level
+  // drawer first, keywords apart from what follows, the frontmatter as
+  // a marked comment block; raw text, past every pass that rewrites text
+  renderFileHeader(uniorgAst)
+
   // Phase 4: Render uniorg-ast to Org-mode string
   const processor = unified().use(uniorgStringify)
   const orgContent = processor.stringify(uniorgAst)
@@ -104,7 +111,7 @@ export function convertMarkdownToOrg(
   return orgContent
 }
 
-// leads the document so it survives the frontmatter keywords following it
+// leads the document, ahead of restored keywords and the frontmatter block
 function recordStyleKeyword(
   uniorgAst: OrgData,
   style: MarkdownStyleOptions
@@ -119,8 +126,6 @@ function recordStyleKeyword(
   } as OrgData["children"][number])
 }
 
-const KEY_VALUE_LINE_RE = /^([\w-]+):: (.*)$/
-
 function parseKeyValueParagraph(
   node:
     { type?: string; children?: { type: string; value?: string }[] } | undefined
@@ -131,19 +136,7 @@ function parseKeyValueParagraph(
   if (!node.children.every(child => child.type === "text")) {
     return null
   }
-  const lines = node.children
-    .map(child => child.value ?? "")
-    .join("")
-    .split("\n")
-  const entries: [string, string][] = []
-  for (const line of lines) {
-    const match = KEY_VALUE_LINE_RE.exec(line)
-    if (!match) {
-      return null
-    }
-    entries.push([match[1] as string, match[2] as string])
-  }
-  return entries
+  return keyValueEntries(node.children.map(child => child.value ?? "").join(""))
 }
 
 function makeTimestamp(rawValue: string): Timestamp {

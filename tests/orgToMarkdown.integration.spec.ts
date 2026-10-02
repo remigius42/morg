@@ -48,7 +48,7 @@ describe("convertOrgToMarkdown", () => {
     const org = "#+OPTIONS: toc:nil ^:{}\nsee a_b and H_{2}O\n"
 
     expect(convertOrgToMarkdown(org)).toBe(
-      "---\noptions: toc:nil\n---\n\nsee a\\_b and H\\_{2}O\n"
+      "---\nmorg_keywords:\n  - OPTIONS: toc:nil\n---\n\nsee a\\_b and H\\_{2}O\n"
     )
   })
 
@@ -295,19 +295,122 @@ describe("convertOrgToMarkdown", () => {
     )
   })
 
-  it("should convert leading org keywords to frontmatter", () => {
-    const org = '#+TITLE: My Note\n#+AUTHOR: Rem\n#+TAGS: ["a","b"]\nBody.\n'
+  it("should restore frontmatter verbatim from the marked comment block", () => {
+    const org =
+      "#+begin_comment morg_frontmatter\ntitle: My Note # a comment\ntags: [a, b]\n#+end_comment\nBody.\n"
 
     expect(convertOrgToMarkdown(org)).toBe(
-      "---\ntitle: My Note\nauthor: Rem\ntags:\n  - a\n  - b\n---\n\nBody.\n"
+      "---\ntitle: My Note # a comment\ntags: [a, b]\n---\n\nBody.\n"
     )
   })
 
-  it("should collect repeated keywords into a yaml sequence", () => {
-    const org = "#+AUTHOR: a\n#+AUTHOR: b\n\nBody.\n"
+  it("should find the frontmatter block anywhere before the first headline", () => {
+    // an Emacs mode line or an org-roam drawer may lead the file; an
+    // unmarked comment block above stays the user's; stars without a
+    // space after them are no headline, nor is a star line in a block
+    for (const lead of [
+      "# -*- mode: org -*-\n",
+      ":PROPERTIES:\n:ID: abc\n:END:\n",
+      "#+begin_comment\nmine\n#+end_comment\n",
+      "#+begin_comment\nmine\n#+end_comment\n*\n",
+      "#+begin_comment\n* x\n#+end_comment\n"
+    ]) {
+      const org = `${lead}#+begin_comment morg_frontmatter\na: 1\n#+end_comment\n* H\n#+begin_comment morg_frontmatter\nb: 2\n#+end_comment\n`
+
+      expect(convertOrgToMarkdown(org)).toMatch(/^---\na: 1\n/)
+      expect(convertOrgToMarkdown(org)).toContain("b: 2")
+    }
+  })
+
+  it("should keep keywords org attached to the frontmatter block", () => {
+    const org =
+      "#+TITLE: t\n#+NAME: n\n#+begin_comment morg_frontmatter\na: 1\n#+end_comment\nBody.\n"
 
     expect(convertOrgToMarkdown(org)).toBe(
-      "---\nauthor:\n  - a\n  - b\n---\n\nBody.\n"
+      "---\na: 1\nmorg_keywords:\n  - TITLE: t\n  - NAME: n\n---\n\nBody.\n"
+    )
+  })
+
+  it("should warn when the frontmatter holds a line that ends md frontmatter", () => {
+    const warnings: string[] = []
+    convertOrgToMarkdown(
+      "#+begin_comment morg_frontmatter\na: 1\n---\nb: 2\n#+end_comment\nBody.\n",
+      { onWarning: message => warnings.push(message) }
+    )
+
+    expect(warnings).toEqual([
+      "frontmatter holds a --- line, which ends it early in Markdown"
+    ])
+  })
+
+  it("should warn about a second frontmatter block, which stays a comment", () => {
+    const warnings: string[] = []
+    const markdown = convertOrgToMarkdown(
+      "#+begin_comment morg_frontmatter\na: 1\n#+end_comment\n#+begin_comment morg_frontmatter\nb: 2\n#+end_comment\nBody.\n",
+      { onWarning: message => warnings.push(message) }
+    )
+
+    expect(markdown).toMatch(/^---\na: 1\n---\n/)
+    expect(warnings).toEqual([
+      "second frontmatter block stays a comment block, without its marker"
+    ])
+  })
+
+  it("should warn when a mode line below the header would lead the file", () => {
+    const warnings: string[] = []
+    const onWarning = (message: string): void => {
+      warnings.push(message)
+    }
+    convertOrgToMarkdown("#+TITLE: t\n# -*- eval: (foo) -*-\nBody.\n", {
+      onWarning
+    })
+    convertOrgToMarkdown(
+      "#+begin_comment morg_frontmatter\na: 1\n#+end_comment\n# -*- eval: (foo) -*-\nBody.\n",
+      { onWarning }
+    )
+    convertOrgToMarkdown("# -*- mode: org -*-\n#+TITLE: t\nBody.\n", {
+      onWarning
+    })
+    // uniorg drops the blank line
+    convertOrgToMarkdown("\n# -*- eval: (foo) -*-\nBody.\n", { onWarning })
+
+    expect(warnings).toEqual([
+      "leading keywords stay lines: a -*- comment below them is no mode line",
+      "a -*- comment below the first line becomes the mode line in org",
+      "a -*- comment below the first line becomes the mode line in org"
+    ])
+  })
+
+  it("should warn when the frontmatter cannot take the drawer or keywords", () => {
+    const warnings: string[] = []
+    convertOrgToMarkdown(
+      ":PROPERTIES:\n:ID: 1\n:END:\n#+begin_comment morg_frontmatter\n- a\n#+end_comment\n#+TITLE: t\nBody.\n",
+      { onWarning: message => warnings.push(message) }
+    )
+
+    expect(warnings).toEqual([
+      "file-level drawer stays text: the frontmatter cannot take it",
+      "leading keywords stay lines: the frontmatter cannot take them"
+    ])
+  })
+
+  it("should carry leading org keywords as morg_keywords", () => {
+    // org-native keywords act in Emacs; they travel in order, repeats
+    // included, and come back as keywords (ADR 0005)
+    const org =
+      "#+TITLE: My Note\n#+STARTUP: overview\n#+AUTHOR: a\n#+AUTHOR: b\n#+FILETAGS: :one:two:\nBody.\n"
+
+    expect(convertOrgToMarkdown(org)).toBe(
+      '---\nmorg_keywords:\n  - TITLE: My Note\n  - STARTUP: overview\n  - AUTHOR: a\n  - AUTHOR: b\n  - FILETAGS: ":one:two:"\n---\n\nBody.\n'
+    )
+  })
+
+  it("should append morg_keywords to the frontmatter block's yaml", () => {
+    const org =
+      "#+STARTUP: overview\n#+begin_comment morg_frontmatter\ntitle: x\n#+end_comment\nBody.\n"
+
+    expect(convertOrgToMarkdown(org)).toBe(
+      "---\ntitle: x\nmorg_keywords:\n  - STARTUP: overview\n---\n\nBody.\n"
     )
   })
 
