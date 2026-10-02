@@ -12,6 +12,7 @@ import {
   type FrontmatterNode
 } from "../core/frontmatterBlock.js"
 import { keyValueEntries } from "../core/keyValueLines.js"
+import { tryParse } from "../core/render.js"
 import type { Root as MdastRoot } from "mdast"
 import type { Preset } from "./types.js"
 import { markdownOutlineToOrg, orgOutlineToMarkdown } from "./logseqOutline.js"
@@ -34,13 +35,19 @@ export function logseq(): Preset {
       return extractInlineSpecifics(uniorgAst)
     }
   }
+  const bareUrls = new Map<string, number>()
   const block: Preset = {
     name: "logseq",
+    applyToMdast: mdast => countBareUrls(mdast, bareUrls),
     applyToUniorg: uniorgAst => {
       rewriteLabeledPageRefs(uniorgAst)
+      restoreBareUrls(uniorgAst, bareUrls)
       return uniorgAst
     },
-    extractFromUniorg: extractInlineSpecifics
+    extractFromUniorg: uniorgAst => {
+      bareUrlsToText(uniorgAst)
+      return extractInlineSpecifics(uniorgAst)
+    }
   }
   return {
     ...page,
@@ -49,6 +56,75 @@ export function logseq(): Preset {
     convertMarkdown: (markdown, convert) =>
       markdownOutlineToOrg(markdown, convert, { page, block })
   }
+}
+
+// Logseq md writes a url bare, as org writes a plain link; the core
+// carries a md link as a [[url]] bracket link, so md→org counts the
+// links that were bare in the source and turns as many back to plain
+function countBareUrls(mdast: MdastRoot, counts: Map<string, number>): void {
+  counts.clear()
+  visit(mdast, "link", node => {
+    const start = node.position?.start.offset
+    const end = node.position?.end.offset
+    if (
+      start !== undefined &&
+      end !== undefined &&
+      end - start === node.url.length &&
+      readsAsPlainLink(node.url)
+    ) {
+      counts.set(node.url, (counts.get(node.url) ?? 0) + 1)
+    }
+  })
+}
+
+// whether org reads `url` on its own as just that plain link; it ends
+// one early at a `(` (`…/Bandwidth_(signal)`), which a bracket link keeps
+function readsAsPlainLink(url: string): boolean {
+  if (!/^https?:\/\//.test(url)) {
+    return false
+  }
+  const [paragraph] = tryParse(`${url}\n`)?.children ?? []
+  const [link] = (paragraph as Parent | undefined)?.children ?? []
+  return (
+    (link as Partial<Link> | undefined)?.format === "plain" &&
+    (link as Link).rawLink === url
+  )
+}
+
+function restoreBareUrls(
+  uniorgAst: OrgData,
+  counts: Map<string, number>
+): void {
+  visit(uniorgAst as Parent, "link", (node: Link) => {
+    const count = counts.get(node.rawLink) ?? 0
+    if (node.format === "bracket" && !node.children.length && count) {
+      node.format = "plain"
+      counts.set(node.rawLink, count - 1)
+    }
+  })
+}
+
+// org→md: a plain http(s) link stays a bare url, unescaped
+function bareUrlsToText(uniorgAst: OrgData): void {
+  visit(
+    uniorgAst as Parent,
+    "link",
+    (node: Link, index: number | undefined, parent: Parent | undefined) => {
+      if (
+        node.format !== "plain" ||
+        !/^https?$/.test(node.linkType) ||
+        !parent ||
+        index === undefined
+      ) {
+        return undefined
+      }
+      parent.children[index] = {
+        type: "verbatim-inline",
+        value: node.rawLink
+      } as unknown as Parent["children"][number]
+      return undefined
+    }
+  )
 }
 
 // the page name of a [[page]] link destination, or null. The core

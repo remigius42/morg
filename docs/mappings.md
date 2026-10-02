@@ -371,7 +371,8 @@ state log lines, bulleted `- State …` in org and `* State …` in Markdown
 as Logseq writes them; an empty drawer is
 dropped. A heading outside the bullets is a top-level block (Logseq
 writes a page's first block so if it is a heading); other content
-before the first bullet is page content. Task markers and `[#A]`
+before the first bullet is page content. A plain `https://…` link ↔ a
+bare url (a bracketed `[[url]]` ↔ `<url>`). Task markers and `[#A]`
 priorities stay text; page references `[[page]]` and labeled forms
 `[label]([[page]])` ↔ org fuzzy links `[[page][label]]`; block refs
 `[label](((uuid)))` ↔ `[[((uuid))][label]]`; `^^highlight^^` markup

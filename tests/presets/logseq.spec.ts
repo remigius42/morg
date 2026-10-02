@@ -85,6 +85,24 @@ describe("logseq outline", () => {
     )
   })
 
+  it("keeps a bare url bare and a bracketed one bracketed", () => {
+    both(
+      "* see https://x.ch/a_b and [[https://y.ch]]\n",
+      "- see https://x.ch/a_b and <https://y.ch>\n"
+    )
+  })
+
+  it("keeps a bare url org would cut short in brackets", () => {
+    const markdown = "- https://x.ch/Band_(signal_processing)\n"
+
+    expect(toOrg(markdown)).toBe(
+      "* [[https://x.ch/Band_(signal_processing)]]\n"
+    )
+    expect(toMarkdown(toOrg(markdown))).toBe(
+      "- <https://x.ch/Band_(signal_processing)>\n"
+    )
+  })
+
   it("maps page references to wikilinks and labeled forms", () => {
     both(
       "* See [[my page name]] and [[other page][a label]]\n* [[((60ab-uuid))][a block ref]]\n",

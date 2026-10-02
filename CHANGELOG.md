@@ -35,6 +35,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Logseq preset: a repeated task's `:LOGBOOK:` state lines take the
   bullet Logseq writes in each format, `- State …` in org and
   `* State …` in Markdown.
+- Logseq preset: an org plain link (`https://…`) stays a bare url in
+  Markdown, as Logseq writes it, and comes back plain instead of as
+  `[[https://…]]`.
 
 ## [0.7.0] - 2026-10-02
 
