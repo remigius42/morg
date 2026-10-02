@@ -198,19 +198,20 @@ preset })`: `preserveOrgisms` default `true`; `useHtml` (default
   `- [x]`); headings become list items and do not restore on the
   return trip; anything with priority, tags or content keeps its
   heading and reports via `onWarning`
-- `logseq({ nestUnderHeadings })`: default `true`; content following a
-  heading nests as child blocks of that heading: paragraphs become child
-  headlines one level deeper (in Logseq org every outline block is a
-  headline), other constructs stay in the preceding block's body. The
-  reverse direction restores headings from `:heading:` properties and
-  turns plain block headlines back into paragraphs. Hiccup blocks
-  (`[:div …]`) pass through as plain text and are emitted unescaped in
-  Markdown. Page properties map both directions: a first block of
+- `logseq()`: a page is Logseq's outline of blocks, converted block by
+  block: a headline (stars, a space, the block's content, an empty
+  block as the bare stars) ↔ a `-` bullet indented one tab per level,
+  its lines below the first two spaces further in. A block's content
+  is one fragment, so a code block or table that starts on the
+  headline line converts as a whole. `:heading: N` ↔ `- ## …`, a
+  block's property drawer ↔ `key:: value` lines; planning lines and
+  other drawers (`:LOGBOOK:`) stay as written. A heading outside the
+  bullets is a top-level block, as Logseq writes a page's first one.
+  Page properties map both directions: a first block of
   `key:: value` lines and flat frontmatter entries ↔ leading
   `#+key: value` lines, which Logseq reads as page properties;
   frontmatter keys that act in Emacs (`todo`, `include`, …) stay inert.
-  Logseq's own syntax maps both directions: `TODO`/`DONE`
-  text markers and `[#A]` priorities ↔ org keywords/priorities, page
+  Task markers and `[#A]` priorities stay text, page
   references `[[page]]` and labeled forms `[label]([[page]])` ↔ org
   fuzzy links `[[page][label]]`, block refs `[label](((uuid)))` ↔
   `[[((uuid))][label]]`, and `^^highlight^^` markup survives verbatim

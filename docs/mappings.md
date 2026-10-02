@@ -358,13 +358,21 @@ keys, and export metadata such as `title` or `author`, do map. `tags`
 does map, being Logseq's page tags. A `key::`
 block maps whole, since that is how an org page's own `#+startup:`
 travels through Markdown (ADR 0005): its acting keys act in the org
-page, `include:: x` as `#+include: x`. `:heading:` property drawers; outline nesting (paragraphs ↔
-child block headlines, whose lines below the first get the line-start
-escape and come back as a paragraph of their own); `TODO`/`DONE` text markers and `[#A]`
-priorities ↔ org keywords/priorities; page references `[[page]]` and
-labeled forms `[label]([[page]])` ↔ org fuzzy links `[[page][label]]`;
-block refs `[label](((uuid)))` ↔ `[[((uuid))][label]]`; `^^highlight^^`
-markup and hiccup (`[:div …]`) survive verbatim, emitted unescaped in
+page, `include:: x` as `#+include: x`. Outline: a page converts block
+by block, each block's content one fragment (Logseq parses it as one):
+a headline of stars, a space and the content (an empty block as the
+bare stars) ↔ a `-` bullet indented one tab per level, continuation
+lines two spaces inside it; a code block or table that starts on the
+headline line converts as a whole. `:heading: N` ↔ `- ## …`; a block's
+property drawer ↔ `key:: value` lines where it was; planning lines and
+other drawers (`:LOGBOOK:`) stay as written; an empty drawer is
+dropped. A heading outside the bullets is a top-level block (Logseq
+writes a page's first block so if it is a heading); other content
+before the first bullet is page content. Task markers and `[#A]`
+priorities stay text; page references `[[page]]` and labeled forms
+`[label]([[page]])` ↔ org fuzzy links `[[page][label]]`; block refs
+`[label](((uuid)))` ↔ `[[((uuid))][label]]`; `^^highlight^^` markup
+and hiccup (`[:div …]`) survive verbatim, emitted unescaped in
 Markdown.
 
 `obsidian`: wikilinks `[[Page]]` / `[[Page|alias]]` ↔ org fuzzy links,

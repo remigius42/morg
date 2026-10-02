@@ -100,4 +100,4 @@ the root. `tests/web/` mirrors this.
 
 ## Preset
 
-A named bundle of dialect-specific transforms applied on top of the dialect-agnostic core (e.g. `logseq`). The core pipelines never contain dialect knowledge. Options that only have observable effect in a dialect (e.g. `nestUnderHeadings` for outline nesting) are scoped to their Preset, not the core.
+A named bundle of dialect-specific transforms applied on top of the dialect-agnostic core (e.g. `logseq`). The core pipelines never contain dialect knowledge. Options that only have observable effect in a dialect are scoped to their Preset, not the core. A Preset may also take a whole conversion over (Logseq: a page is an outline of blocks, each converted as a fragment by the core).

@@ -16,6 +16,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   a whole conversion over, for a dialect whose documents are an outline
   of fragments; `convert` runs the core on one fragment.
 
+### Changed
+
+- **Breaking.** Logseq preset: a page converts as Logseq's outline of
+  blocks. Org headlines ↔ `-` bullets indented one tab per level, an
+  empty block (bare stars) ↔ `-`, `:heading: N` ↔ `- ## …`, a block's
+  property drawer ↔ `key:: value` lines; a block's content converts as
+  one fragment, so a code block or table that starts on the headline
+  line stays whole. Blocks used to become paragraphs below the nearest
+  heading, which flattened every level below it. `logseq()` takes no
+  options anymore (`nestUnderHeadings` is gone).
+
 ## [0.7.0] - 2026-10-02
 
 ### Added

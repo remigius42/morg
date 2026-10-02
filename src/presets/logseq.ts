@@ -1,13 +1,4 @@
-import type {
-  OrgData,
-  Headline,
-  Keyword,
-  Paragraph,
-  PropertyDrawer,
-  NodeProperty,
-  Text,
-  Link
-} from "uniorg"
+import type { OrgData, Keyword, Paragraph, Text, Link } from "uniorg"
 import type { Parent } from "unist"
 import { visit } from "unist-util-visit"
 import { toString } from "orgast-util-to-string"
@@ -23,57 +14,41 @@ import {
 import { keyValueEntries } from "../core/keyValueLines.js"
 import type { Root as MdastRoot } from "mdast"
 import type { Preset } from "./types.js"
-
-export interface LogseqPresetOptions {
-  /**
-   * Content following a heading becomes children of that heading's block
-   * in Logseq's outline: paragraphs turn into child block headlines one
-   * level deeper; other constructs stay in the preceding block's body.
-   * Default: `true`.
-   */
-  nestUnderHeadings?: boolean
-}
+import { markdownOutlineToOrg, orgOutlineToMarkdown } from "./logseqOutline.js"
 
 /**
- * Logseq dialect preset: `heading::` properties and outline nesting.
+ * Logseq dialect preset: the outline of blocks, page properties, page
+ * and block references, highlights and hiccup.
  */
-export function logseq(options: LogseqPresetOptions = {}): Preset {
-  const nestUnderHeadings = options.nestUnderHeadings ?? true
-  return {
+export function logseq(): Preset {
+  const page: Preset = {
     name: "logseq",
     applyToMdast: keepPagePropertySource,
-    applyToUniorg: uniorgAst =>
-      applyLogseqSpecificsToUniorgAst(uniorgAst, nestUnderHeadings),
-    extractFromUniorg: extractLogseqSpecificsFromUniorgAst
+    applyToUniorg: uniorgAst => {
+      rewriteLabeledPageRefs(uniorgAst)
+      takePageProperties(uniorgAst)
+      return uniorgAst
+    },
+    extractFromUniorg: uniorgAst => {
+      pageProperties(uniorgAst)
+      return extractInlineSpecifics(uniorgAst)
+    }
   }
-}
-
-function headingProperty(level: number): NodeProperty {
-  return { type: "node-property", key: "heading", value: String(level) }
-}
-
-function headingDrawer(level: number): PropertyDrawer {
+  const block: Preset = {
+    name: "logseq",
+    applyToUniorg: uniorgAst => {
+      rewriteLabeledPageRefs(uniorgAst)
+      return uniorgAst
+    },
+    extractFromUniorg: extractInlineSpecifics
+  }
   return {
-    type: "property-drawer",
-    children: [headingProperty(level)],
-    contentsBegin: 0,
-    contentsEnd: 0
+    ...page,
+    convertOrg: (org, convert) =>
+      orgOutlineToMarkdown(org, convert, { page, block }),
+    convertMarkdown: (markdown, convert) =>
+      markdownOutlineToOrg(markdown, convert, { page, block })
   }
-}
-
-// org fixes the order below a headline: the planning line first, then a
-// single property drawer. :heading: therefore has to let the planning
-// line pass and join an existing drawer rather than displace either.
-// Returns whether the property has been placed on `node`.
-function placeHeadingProperty(node: { type: string }, level: number): boolean {
-  if (node.type === "planning") {
-    return false
-  }
-  if (node.type !== "property-drawer") {
-    return false
-  }
-  ;(node as unknown as PropertyDrawer).children.unshift(headingProperty(level))
-  return true
 }
 
 // the page name of a [[page]] link destination, or null. The core
@@ -104,87 +79,6 @@ function rewriteLabeledPageRefs(uniorgAst: OrgData): void {
     node.rawLink = page
     node.path = page
   })
-}
-
-function toBlockHeadline(node: Paragraph, level: number): { type: string } {
-  const blockHeadline: Partial<Headline> = {
-    type: "headline",
-    level,
-    todoKeyword: null,
-    priority: null,
-    commented: false,
-    rawValue: "",
-    tags: [],
-    children: node.children
-  }
-  takeTaskMarker(blockHeadline as Headline)
-  return blockHeadline as { type: string }
-}
-
-/**
- * Applies Logseq-specific conventions to a uniorg AST: every heading gets
- * a `:heading:` property drawer, and with `nestUnderHeadings` following
- * paragraphs become child block headlines (in Logseq's org format every
- * outline block is a headline).
- * @param uniorgAst The uniorg AST to transform.
- * @param nestUnderHeadings Nest content as child blocks. Default: `true`.
- * @returns The Logseq-flavored uniorg AST.
- */
-export function applyLogseqSpecificsToUniorgAst(
-  uniorgAst: OrgData,
-  nestUnderHeadings = true
-): OrgData {
-  rewriteLabeledPageRefs(uniorgAst)
-  takePageProperties(uniorgAst)
-  const children = uniorgAst.children as unknown as { type: string }[]
-  const result: { type: string }[] = []
-  let currentLevel = 0
-  // level of a headline whose :heading: property still needs a home
-  let pending: number | null = null
-  const separate = (): void => {
-    if (!nestUnderHeadings) {
-      result.push({ type: "text", value: "\n" } as Text)
-    }
-  }
-  // no drawer took the property: give it one of its own
-  const settle = (): void => {
-    if (pending === null) {
-      return
-    }
-    result.push(headingDrawer(pending))
-    pending = null
-    separate()
-  }
-  for (const node of children) {
-    if (node.type === "headline") {
-      settle()
-      const headline = node as unknown as Headline
-      currentLevel = headline.level
-      takeTaskMarker(headline)
-      result.push(node)
-      pending = headline.level
-      continue
-    }
-    if (pending !== null) {
-      if (placeHeadingProperty(node, pending)) {
-        pending = null
-        result.push(node)
-        separate()
-        continue
-      }
-      if (node.type !== "planning") {
-        settle()
-      }
-    }
-    result.push(
-      nestUnderHeadings && node.type === "paragraph"
-        ? toBlockHeadline(node as unknown as Paragraph, currentLevel + 1)
-        : node
-    )
-  }
-  settle()
-  uniorgAst.children = result as unknown as OrgData["children"]
-  return uniorgAst
 }
 
 // Logseq reads a page's first block of `key:: value` lines (md) and its
@@ -354,40 +248,40 @@ function pageProperties(uniorgAst: OrgData): void {
   )
 }
 
-// Logseq md keeps TODO/DONE as leading text markers and priorities as
-// [#A] text; in org they are the headline's TODO keyword and priority
-// (other Logseq markers like DOING are not org keywords and simply
-// stay in the title text)
-function takeTaskMarker(headline: Headline): void {
-  const first = headline.children[0]
-  if (first?.type !== "text") {
-    return
-  }
-  const marker = /^(TODO|DONE) (?:\[#([A-Z])\] )?/.exec(first.value)
-  if (!marker) {
-    return
-  }
-  headline.todoKeyword = marker[1] as string
-  if (marker[2]) {
-    headline.priority = marker[2]
-  }
-  first.value = first.value.slice((marker[0] ?? "").length)
-}
-
-/**
- * Extracts Logseq-specific conventions from a uniorg AST: headlines with
- * a `:heading:` property become plain headings of that level, headlines
- * without one are outline blocks and become paragraphs.
- * @param uniorgAst The Logseq-flavored uniorg AST to transform.
- * @returns The generic uniorg AST.
- */
-function extractLogseqSpecificsFromUniorgAst(uniorgAst: OrgData): OrgData {
-  pageProperties(uniorgAst)
-  extractInParent(uniorgAst)
+function extractInlineSpecifics(uniorgAst: OrgData): OrgData {
+  keepPriorities(uniorgAst)
   repairHighlights(uniorgAst)
   fuzzyLinksToPageRefs(uniorgAst)
   markHiccupParagraphs(uniorgAst)
   return uniorgAst
+}
+
+// a task's priority ([#A]) is Logseq md text; verbatim-inline keeps
+// its brackets unescaped
+function keepPriorities(uniorgAst: OrgData): void {
+  visit(
+    uniorgAst as Parent,
+    "text",
+    (node: Text, index: number | undefined, parent: Parent | undefined) => {
+      const parts = node.value.split(/(\[#[A-Z]\])/)
+      if (parts.length === 1 || !parent || index === undefined) {
+        return undefined
+      }
+      const nodes = parts
+        .filter(Boolean)
+        .map(value =>
+          /^\[#[A-Z]\]$/.test(value)
+            ? { type: "verbatim-inline", value }
+            : { type: "text", value }
+        )
+      parent.children.splice(
+        index,
+        1,
+        ...(nodes as unknown as Parent["children"])
+      )
+      return index + nodes.length
+    }
+  )
 }
 
 // Logseq highlight markup (^^words^^) re-parses as a caret plus a
@@ -461,72 +355,4 @@ function markHiccupParagraphs(uniorgAst: OrgData): void {
       ] as unknown as Paragraph["children"]
     }
   })
-}
-
-function extractInParent(parent: Parent): void {
-  const children = parent.children as unknown as { type: string }[]
-  for (let i = 0; i < children.length; i++) {
-    const node = children[i]
-    if (!node) {
-      continue
-    }
-    if (node.type === "section") {
-      extractInParent(node as unknown as Parent)
-      continue
-    }
-    if (node.type !== "headline") {
-      continue
-    }
-    const headline = node as unknown as Headline
-    if (headline.todoKeyword) {
-      // back to Logseq md's text conventions (TODO [#A] Ship it);
-      // verbatim-inline keeps the [#A] brackets unescaped
-      const priority = headline.priority ? `[#${headline.priority}] ` : ""
-      headline.children.unshift({
-        type: "verbatim-inline",
-        value: `${headline.todoKeyword} ${priority}`
-      } as unknown as Headline["children"][number])
-      headline.todoKeyword = null
-      headline.priority = null
-    }
-    // a planning line sits between the headline and its drawer
-    const drawerIndex = children[i + 1]?.type === "planning" ? i + 2 : i + 1
-    const heading = takeHeadingProperty(children, drawerIndex)
-    if (heading !== null) {
-      headline.level = heading
-    } else {
-      // a block headline (no :heading:) is outline structure only; its
-      // title is the block's content
-      children[i] = {
-        type: "paragraph",
-        children: headline.children,
-        contentsBegin: 0,
-        contentsEnd: 0
-      } as unknown as Paragraph
-    }
-  }
-}
-
-// removes the heading property from a drawer at `index` (and the drawer
-// itself if that empties it); returns the heading level or null
-function takeHeadingProperty(
-  children: { type: string }[],
-  index: number
-): number | null {
-  const drawer = children[index]
-  if (drawer?.type !== "property-drawer") {
-    return null
-  }
-  const properties = (drawer as unknown as PropertyDrawer).children
-  const heading = properties.find(property => property.key === "heading")
-  if (!heading) {
-    return null
-  }
-  const remaining = properties.filter(property => property !== heading)
-  if (remaining.length) {
-    ;(drawer as unknown as PropertyDrawer).children = remaining
-  } else {
-    children.splice(index, 1)
-  }
-  return parseInt(heading.value, 10) || null
 }
