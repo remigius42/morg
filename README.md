@@ -17,8 +17,8 @@ Bidirectional **Markdown ↔ Org-mode** converter, built on the
 
 morg treats Org as a canonical plain-text format and Markdown (Obsidian,
 generic) as the interop surface. Dialect conventions, such as
-[Logseq](https://docs.logseq.com/)'s `heading::` properties and outline
-nesting, are supported via presets.
+[Logseq](https://docs.logseq.com/)'s outline of blocks and page
+properties, are supported via presets.
 
 ## Round-trip convergence
 
