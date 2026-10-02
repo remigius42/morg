@@ -29,6 +29,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A block or drawer kept as org text in Markdown (special, verse,
+  center blocks, `:LOGBOOK:`, …) no longer falls apart on the way back
+  when its lines read as Markdown syntax: a blank line followed by an
+  indented line became a code block, a `#` line a heading, a `-` line a
+  list, and
+  the round trip did not converge.
 - Logseq preset: a block whose content starts with its properties
   (`** :PROPERTIES:`, as Logseq writes a query block) keeps them as its
   `key::` lines instead of growing an `:END:` line per round trip.

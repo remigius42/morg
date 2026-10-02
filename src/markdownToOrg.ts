@@ -23,6 +23,7 @@ import { escapeFootnoteReferences } from "./core/footnoteReferences.js"
 import { escapeBackslashCommands } from "./core/backslashCommands.js"
 import { escapeTablePipes } from "./core/tablePipes.js"
 import { requireBracedScripts } from "./core/bracedScripts.js"
+import { keepPassthroughSource } from "./core/passthroughSource.js"
 import type { Root } from "mdast"
 import type { MarkdownStyleOptions, MarkdownToOrgOptions } from "./options.js"
 import type { Preset } from "./presets/types.js"
@@ -132,6 +133,7 @@ function parseMarkdown(markdown: string, preset?: Preset): Root {
     .use(remarkFrontmatter)
     .use(remarkMath)
     .parse(markdown)
+  keepPassthroughSource(mdast, markdown)
   preset?.applyToMdast?.(mdast, markdown)
   return mdast
 }

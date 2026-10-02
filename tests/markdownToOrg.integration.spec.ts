@@ -599,6 +599,21 @@ This is a paragraph.
   })
 })
 
+describe("verbatim passthrough", () => {
+  it("should keep an org block whose lines read as md syntax whole", () => {
+    // a blank line and an indented one would be md code, `# ` a heading
+    const org = "#+begin_verse\n  a\n\n      b\n# c\n- d\n#+end_verse\n"
+
+    expect(convertMarkdownToOrg(convertOrgToMarkdown(org))).toBe(org)
+  })
+
+  it("should keep a drawer with a blank line and an indented line", () => {
+    const org = ":LOGBOOK:\nx\n\n    y\n:END:\n"
+
+    expect(convertMarkdownToOrg(convertOrgToMarkdown(org))).toBe(org)
+  })
+})
+
 describe("recordStyle", () => {
   it("should record the source bullet marker as a MORG_MARKDOWN_STYLE keyword", () => {
     const orgOutput = convertMarkdownToOrg("* item\n* other\n", {
