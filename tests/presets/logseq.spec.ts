@@ -116,6 +116,10 @@ describe("logseq outline", () => {
     )
   })
 
+  it("keeps a bare email address text", () => {
+    both("* mail a.b@c.ch\n", "- mail a.b@c.ch\n")
+  })
+
   it("keeps a url in a macro bare", () => {
     both(
       "* {{video https://youtube.com/watch?v=abc}}\n",

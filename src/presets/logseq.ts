@@ -38,7 +38,10 @@ export function logseq(): Preset {
   const bareUrls = new Map<string, number>()
   const block: Preset = {
     name: "logseq",
-    applyToMdast: mdast => countBareUrls(mdast, bareUrls),
+    applyToMdast: mdast => {
+      countBareUrls(mdast, bareUrls)
+      emailLinksToText(mdast)
+    },
     applyToUniorg: uniorgAst => {
       rewriteLabeledPageRefs(uniorgAst)
       restoreBareUrls(uniorgAst, bareUrls)
@@ -126,6 +129,29 @@ function restoreBareUrls(
 }
 
 // org→md: a plain http(s) link stays a bare url, unescaped
+// an email address is text in Logseq org and written bare in Logseq md,
+// where GFM links it: md→org takes such a link back to its text, and
+// org→md keeps the address unescaped (keepVerbatimText)
+const EMAIL_RE = /[\w.+-]+@[\w-]+(?:\.[\w-]+)+/
+
+function emailLinksToText(mdast: MdastRoot): void {
+  visit(mdast, "link", (node, index, parent) => {
+    const start = node.position?.start.offset
+    const end = node.position?.end.offset
+    const text = node.url.replace(/^mailto:/, "")
+    if (
+      node.url.startsWith("mailto:") &&
+      start !== undefined &&
+      end !== undefined &&
+      end - start === text.length &&
+      parent &&
+      index !== undefined
+    ) {
+      parent.children[index] = { type: "text", value: text }
+    }
+  })
+}
+
 function bareUrlsToText(uniorgAst: OrgData): void {
   visit(
     uniorgAst as Parent,
@@ -346,31 +372,33 @@ function pageProperties(uniorgAst: OrgData): void {
 }
 
 function extractInlineSpecifics(uniorgAst: OrgData): OrgData {
-  keepPriorities(uniorgAst)
+  keepVerbatimText(uniorgAst)
   repairHighlights(uniorgAst)
   fuzzyLinksToPageRefs(uniorgAst)
   markHiccupParagraphs(uniorgAst)
   return uniorgAst
 }
 
-// a task's priority ([#A]) is Logseq md text; verbatim-inline keeps
-// its brackets unescaped
-function keepPriorities(uniorgAst: OrgData): void {
+// text Logseq md writes as it is, which remark would escape: a task's
+// priority ([#A]) and an email address; verbatim-inline keeps it
+const VERBATIM_TEXT_RE = new RegExp(`(\\[#[A-Z]\\]|${EMAIL_RE.source})`)
+
+function keepVerbatimText(uniorgAst: OrgData): void {
   visit(
     uniorgAst as Parent,
     "text",
     (node: Text, index: number | undefined, parent: Parent | undefined) => {
-      const parts = node.value.split(/(\[#[A-Z]\])/)
+      const parts = node.value.split(VERBATIM_TEXT_RE)
       if (parts.length === 1 || !parent || index === undefined) {
         return undefined
       }
+      // split's captures sit at the odd indices
       const nodes = parts
-        .filter(Boolean)
-        .map(value =>
-          /^\[#[A-Z]\]$/.test(value)
-            ? { type: "verbatim-inline", value }
-            : { type: "text", value }
-        )
+        .map((value, i) => ({
+          type: i % 2 ? "verbatim-inline" : "text",
+          value
+        }))
+        .filter(part => part.value)
       parent.children.splice(
         index,
         1,
