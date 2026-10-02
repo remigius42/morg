@@ -51,6 +51,17 @@ describe("logseq outline", () => {
     both("* snake_case 2^10\n", "- snake\\_case 2^10\n")
   })
 
+  it("converts the markup in a quote block of a Markdown block", () => {
+    const org = toOrg(
+      "- #+BEGIN_QUOTE\n  some **bold** and [l](https://y.ch)\n  #+END_QUOTE\n"
+    )
+
+    expect(org).toBe(
+      "* #+BEGIN_QUOTE\nsome *bold* and [[https://y.ch][l]]\n#+END_QUOTE\n"
+    )
+    expect(toMarkdown(org)).toBe("- > some **bold** and [l](https://y.ch)\n")
+  })
+
   it("maps block properties to key:: lines", () => {
     both(
       "* a\n:PROPERTIES:\n:collapsed: true\n:logseq.order-list-type: number\n:END:\n",
