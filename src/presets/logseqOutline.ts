@@ -13,11 +13,19 @@ const PLANNING_RE = /^(?:SCHEDULED|DEADLINE): /
 const DRAWER_START_RE = /^:[\w-]+:$/
 const ORG_PROPERTY_RE = /^:([^\s:]+):(?: (.*))?$/
 const MD_PROPERTY_RE = /^([\w.-]+)::(?: (.*))?$/
+// a repeated task's log line, which Logseq bullets per format
+const STATE_LINE_RE = /^[-*] (?=State ")/
 const MD_HEADING_RE = /^(#{1,6})(?: (.*))?$/
 const FENCE_RE = /^\s*(?:```|~~~)/
 // md→org adds it for the text's bare `_` and `^`, which a block's
 // content holds as Logseq writes it
 const BRACED_SCRIPTS_LINE = "#+OPTIONS: ^:{}"
+
+function logbook(lines: string[], bullet: string): string[] {
+  return lines[0] === ":LOGBOOK:"
+    ? lines.map(line => line.replace(STATE_LINE_RE, `${bullet} `))
+    : lines
+}
 
 interface Block {
   level: number
@@ -134,7 +142,7 @@ function orgBlockToMarkdown(
   let heading = ""
   const metaLines = meta.flatMap(lines => {
     if (lines[0] !== ":PROPERTIES:") {
-      return lines
+      return logbook(lines, "*")
     }
     return lines.slice(1, -1).flatMap(line => {
       const [, key = "", value = ""] = ORG_PROPERTY_RE.exec(line) ?? []
@@ -213,7 +221,7 @@ function orgMetaLines(meta: string[][], heading: number): string[] {
   for (const group of meta) {
     const property = MD_PROPERTY_RE.exec(group[0] ?? "")
     if (!property) {
-      lines.push(...group)
+      lines.push(...logbook(group, "-"))
       continue
     }
     if (!lines.includes(null)) {

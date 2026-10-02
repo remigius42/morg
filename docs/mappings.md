@@ -366,7 +366,9 @@ lines two spaces inside it; a code block or table that starts on the
 headline line converts as a whole. `:heading: N` ↔ `- ## …`; a block's
 property drawer ↔ `key:: value` lines where it was (on the headline
 line if the content starts with it, as Logseq writes a query block); planning lines and
-other drawers (`:LOGBOOK:`) stay as written; an empty drawer is
+other drawers (`:LOGBOOK:`) stay as written, but for a repeated task's
+state log lines, bulleted `- State …` in org and `* State …` in Markdown
+as Logseq writes them; an empty drawer is
 dropped. A heading outside the bullets is a top-level block (Logseq
 writes a page's first block so if it is a heading); other content
 before the first bullet is page content. Task markers and `[#A]`

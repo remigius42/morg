@@ -32,6 +32,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Logseq preset: a block whose content starts with its properties
   (`** :PROPERTIES:`, as Logseq writes a query block) keeps them as its
   `key::` lines instead of growing an `:END:` line per round trip.
+- Logseq preset: a repeated task's `:LOGBOOK:` state lines take the
+  bullet Logseq writes in each format, `- State …` in org and
+  `* State …` in Markdown.
 
 ## [0.7.0] - 2026-10-02
 

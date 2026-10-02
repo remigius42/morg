@@ -59,6 +59,13 @@ describe("logseq outline", () => {
     )
   })
 
+  it("bullets a repeated task's state log as Logseq does per format", () => {
+    both(
+      '* DONE a\n:LOGBOOK:\n- State "DONE" from "TODO" [2026-01-01 Thu 10:00]\n:END:\n',
+      '- DONE a\n  :LOGBOOK:\n  * State "DONE" from "TODO" [2026-01-01 Thu 10:00]\n  :END:\n'
+    )
+  })
+
   it("keeps task markers and priorities as text", () => {
     both(
       "* TODO [#A] urgent\n** DONE done\n",
