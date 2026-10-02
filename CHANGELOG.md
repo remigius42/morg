@@ -56,6 +56,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `[[https://…]]`.
 - Logseq preset: an email address stays text, written bare in
   Markdown as Logseq does, instead of coming back as a `mailto:` link.
+- Logseq preset: a block that starts with a tag (`#meeting`) keeps it
+  a tag in Markdown; it was written `\#meeting`, which Logseq reads as
+  plain text.
 - Logseq preset: an org block written in a Markdown block
   (`#+BEGIN_SRC`…`#+END_SRC`, which Logseq reads there too) goes to org
   instead of as escaped text that changed on every round trip; the

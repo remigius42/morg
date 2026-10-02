@@ -134,6 +134,13 @@ describe("logseq outline", () => {
     )
   })
 
+  it("keeps a tag that starts a block a tag", () => {
+    both(
+      "* #meeting notes\n* #[[two words]] and C# stay\n",
+      "- #meeting notes\n- #[[two words]] and C# stay\n"
+    )
+  })
+
   it("keeps a bare email address text", () => {
     both("* mail a.b@c.ch\n", "- mail a.b@c.ch\n")
   })

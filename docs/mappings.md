@@ -378,7 +378,8 @@ before the first bullet is page content. An org block in a Markdown block
 (`#+BEGIN_SRC`…`#+END_SRC`, which Logseq reads there too) goes to org as
 written, as org→md writes them, except that a quote block's Markdown
 content converts (Logseq's `<quote` command writes one). A plain `https://…` link ↔ a
-bare url (a bracketed `[[url]]` ↔ `<url>`). An email address stays text, written bare. Task markers and `[#A]`
+bare url (a bracketed `[[url]]` ↔ `<url>`). An email address stays text, written bare. A `#tag` at the start of a line
+stays unescaped (mldoc reads `\#` as plain text, not a tag). Task markers and `[#A]`
 priorities stay text; page references `[[page]]` and labeled forms
 `[label]([[page]])` ↔ org fuzzy links `[[page][label]]`; block refs
 `[label](((uuid)))` ↔ `[[((uuid))][label]]`; `^^highlight^^` markup

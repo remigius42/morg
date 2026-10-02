@@ -380,8 +380,12 @@ function extractInlineSpecifics(uniorgAst: OrgData): OrgData {
 }
 
 // text Logseq md writes as it is, which remark would escape: a task's
-// priority ([#A]) and an email address; verbatim-inline keeps it
-const VERBATIM_TEXT_RE = new RegExp(`(\\[#[A-Z]\\]|${EMAIL_RE.source})`)
+// priority ([#A]), an email address, and a tag's # (`#tag` starting a
+// line, which mldoc reads as escaped plain text once written `\#`);
+// verbatim-inline keeps it
+const VERBATIM_TEXT_RE = new RegExp(
+  `(\\[#[A-Z]\\]|${EMAIL_RE.source}|(?<!\\S)#(?=[^\\s#]|$))`
+)
 
 function keepVerbatimText(uniorgAst: OrgData): void {
   visit(
