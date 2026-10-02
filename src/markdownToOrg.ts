@@ -22,7 +22,9 @@ import { escapeLineSyntax } from "./core/lineSyntax.js"
 import { escapeFootnoteReferences } from "./core/footnoteReferences.js"
 import { escapeTablePipes } from "./core/tablePipes.js"
 import { requireBracedScripts } from "./core/bracedScripts.js"
+import type { Root } from "mdast"
 import type { MarkdownStyleOptions, MarkdownToOrgOptions } from "./options.js"
+import type { Preset } from "./presets/types.js"
 import { keyValueEntries } from "./core/keyValueLines.js"
 
 /**
@@ -36,12 +38,7 @@ export function convertMarkdownToOrg(
   options: MarkdownToOrgOptions = {}
 ): string {
   // Phase 1: Parse Markdown to mdast
-  const mdast = unified()
-    .use(remarkParse)
-    .use(remarkGfm)
-    .use(remarkFrontmatter)
-    .use(remarkMath)
-    .parse(markdown)
+  const mdast = parseMarkdown(markdown, options.preset)
 
   // Phase 2: Generic mdast to uniorg-ast transformation
   let uniorgAst = transformMdastToUniorgDraft(mdast, {
@@ -109,6 +106,19 @@ export function convertMarkdownToOrg(
   const orgContent = processor.stringify(uniorgAst)
 
   return orgContent
+}
+
+// a preset's dialect conventions that need the Markdown source apply
+// to the parse, before the generic transform
+function parseMarkdown(markdown: string, preset?: Preset): Root {
+  const mdast = unified()
+    .use(remarkParse)
+    .use(remarkGfm)
+    .use(remarkFrontmatter)
+    .use(remarkMath)
+    .parse(markdown)
+  preset?.applyToMdast?.(mdast, markdown)
+  return mdast
 }
 
 // leads the document, ahead of restored keywords and the frontmatter block

@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Logseq preset: page properties map both ways. A page's first block of
+  `key:: value` lines and flat frontmatter entries become the leading
+  `#+key: value` lines Logseq reads as page properties of an org page,
+  and come back as a `key::` block, values as written. Frontmatter keys
+  that act in Emacs (`todo`, `include`, `setupfile`, …) stay inert in
+  the frontmatter block. The block used
+  to become an invalid headline (`* title:: …`).
+- `Preset.applyToMdast(mdast, markdown)`, an optional hook that runs
+  before the generic md → org transform, with the Markdown source at
+  hand.
+
 ### Changed
 
 - **Breaking output change.** YAML frontmatter no longer becomes org

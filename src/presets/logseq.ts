@@ -1,6 +1,7 @@
 import type {
   OrgData,
   Headline,
+  Keyword,
   Paragraph,
   PropertyDrawer,
   NodeProperty,
@@ -10,6 +11,17 @@ import type {
 import type { Parent } from "unist"
 import { visit } from "unist-util-visit"
 import { toString } from "orgast-util-to-string"
+import { isScalar, isSeq, type Scalar } from "yaml"
+import {
+  fitsKeywordLine,
+  isFrontmatterNode,
+  isModeLine,
+  isModeLineComment,
+  takeFrontmatterEntries,
+  type FrontmatterNode
+} from "../core/frontmatterBlock.js"
+import { keyValueEntries } from "../core/keyValueLines.js"
+import type { Root as MdastRoot } from "mdast"
 import type { Preset } from "./types.js"
 
 export interface LogseqPresetOptions {
@@ -29,6 +41,7 @@ export function logseq(options: LogseqPresetOptions = {}): Preset {
   const nestUnderHeadings = options.nestUnderHeadings ?? true
   return {
     name: "logseq",
+    applyToMdast: keepPagePropertySource,
     applyToUniorg: uniorgAst =>
       applyLogseqSpecificsToUniorgAst(uniorgAst, nestUnderHeadings),
     extractFromUniorg: extractLogseqSpecificsFromUniorgAst
@@ -122,6 +135,7 @@ export function applyLogseqSpecificsToUniorgAst(
   nestUnderHeadings = true
 ): OrgData {
   rewriteLabeledPageRefs(uniorgAst)
+  takePageProperties(uniorgAst)
   const children = uniorgAst.children as unknown as { type: string }[]
   const result: { type: string }[] = []
   let currentLevel = 0
@@ -173,6 +187,173 @@ export function applyLogseqSpecificsToUniorgAst(
   return uniorgAst
 }
 
+// Logseq reads a page's first block of `key:: value` lines (md) and its
+// leading `#+key: value` lines (org) as page properties (ADR 0005)
+function pagePropertyEntries(text: string): [string, string][] | null {
+  const entries = keyValueEntries(text)
+  // a key org reads as no keyword name (begin_src) would not come back
+  return entries?.every(entry => fitsKeywordLine(...entry)) ? entries : null
+}
+
+// md→org: the page property block's values are Logseq's, not Markdown;
+// its source text replaces the parse, so urls and markup stay verbatim
+function keepPagePropertySource(mdast: MdastRoot, markdown: string): void {
+  // below the frontmatter and an Emacs mode line
+  const node = mdast.children.find(
+    child =>
+      child.type !== "yaml" &&
+      !(
+        child.type === "html" &&
+        child.value.startsWith("<!--") &&
+        isModeLine(child.value)
+      )
+  )
+  const start = node?.position?.start.offset
+  const end = node?.position?.end.offset
+  if (node?.type !== "paragraph" || start === undefined || end === undefined) {
+    return
+  }
+  const source = markdown.slice(start, end)
+  if (pagePropertyEntries(source)) {
+    node.children = [{ type: "text", value: source }]
+  }
+}
+
+function takePageProperties(uniorgAst: OrgData): void {
+  const children = uniorgAst.children as unknown as { type: string }[]
+  const keywords = takeFrontmatterKeywords(children)
+  // below the keywords, the file-level drawer and a mode line
+  const index = children.findIndex(
+    node =>
+      !["keyword", "property-drawer"].includes(node.type) &&
+      !isModeLineComment(node) &&
+      !isFrontmatterNode(node)
+  )
+  const lines = pagePropertyLines(children[index])
+  if (lines) {
+    children.splice(index, 1)
+    keywords.push(...lines)
+  }
+  // ahead of the block, so all of them lead the page
+  const at = children.findIndex(node => node.type !== "keyword")
+  children.splice(
+    at === -1 ? children.length : at,
+    0,
+    ...keywords.map(([key, value]) => ({ type: "keyword", key, value }))
+  )
+}
+
+function takeFrontmatterKeywords(
+  children: { type: string }[]
+): [string, string][] {
+  const frontmatter = children.find(isFrontmatterNode)
+  if (!frontmatter) {
+    return []
+  }
+  const keywords = takeFlatEntries(frontmatter)
+  // an emptied block goes
+  if (!frontmatter.yaml && keywords.length) {
+    children.splice(children.indexOf(frontmatter), 1)
+  }
+  return keywords
+}
+
+function pagePropertyLines(
+  node: { type: string } | undefined
+): [string, string][] | null {
+  // plain text only: markup in a key means the source was no key:: line
+  const children = (node as Partial<Paragraph> | undefined)?.children
+  if (
+    node?.type !== "paragraph" ||
+    !children?.every(child => child.type === "text")
+  ) {
+    return null
+  }
+  return pagePropertyEntries(toString(node))
+}
+
+// keywords that act in Emacs or in export (TODO states, startup and
+// export options, file inclusion, babel calls, a dynamic block's begin
+// and end lines, citations, a table of
+// contents, index entries, raw export lines and exporter options, of
+// org's own exporters, org-info.js and KOMA letter class files among
+// them, and of ox-hugo and org-re-reveal): as frontmatter they were
+// passive data, so they stay in the block. A denylist: other
+// third-party exporters' keys pass. Export metadata (`title`, `author`)
+// passes too, and `tags`, Logseq's page tags property
+const ACTING_KEYWORD_RE =
+  /^(?:(?:SEQ_|TYP_)?TODO|STARTUP|OPTIONS|INCLUDE|SETUPFILE|BIND|MACRO|CALL|PROPERTY|LINK|CONSTANTS|PRIORITIES|BIBLIOGRAPHY|CITE_EXPORT|PRINT_BIBLIOGRAPHY|ARCHIVE|CATEGORY|COLUMNS|FILETAGS|EXCLUDE_TAGS|SELECT_TAGS|BEGIN|END|TOC|(?:C|F|K|P|T|V)?INDEX|INFOJS_OPT|LCO|EXPORT_\w+|(?:HTML|LATEX|BEAMER|ODT|TEXINFO|MAN|ASCII|MD|MARKDOWN|ICALENDAR|HUGO|REVEAL)(?:_\w+)?)$/i
+
+// flat frontmatter entries are page properties too, a sequence written
+// as Logseq writes it (`a, b`); what a keyword line cannot hold stays
+function takeFlatEntries(frontmatter: FrontmatterNode): [string, string][] {
+  const { keywords, yaml } = takeFrontmatterEntries(
+    frontmatter.yaml,
+    (key, value, text) => {
+      const flat = flatValue(value, text)
+      // a key that comes back as a key:: line as written: uniorg
+      // upper-cases it, Logseq reads it lower-cased
+      return flat !== null &&
+        /^[a-z0-9_-]+$/.test(text(key)) &&
+        fitsKeywordLine(text(key), flat) &&
+        !ACTING_KEYWORD_RE.test(text(key))
+        ? [[text(key), flat]]
+        : null
+    }
+  )
+  frontmatter.yaml = yaml
+  return keywords
+}
+
+function flatValue(
+  value: unknown,
+  text: (scalar: Scalar) => string
+): string | null {
+  const single = (item: unknown): string | null =>
+    isScalar(item) && item.value !== null ? text(item) : null
+  if (!isSeq(value)) {
+    return single(value)
+  }
+  const items = value.items.map(single)
+  return items.length &&
+    items.every(item => item !== null && !item.includes(","))
+    ? items.join(", ")
+    : null
+}
+
+// the reverse: leading keywords become the first block, verbatim, keys
+// lower-cased (uniorg upper-cases them, Logseq reads only lower case)
+function pageProperties(uniorgAst: OrgData): void {
+  const children = uniorgAst.children
+  // below a mode line, as on the way in
+  const first = children.findIndex(node => !isModeLineComment(node))
+  let count = 0
+  while (first !== -1 && children[first + count]?.type === "keyword") {
+    count++
+  }
+  const leading = children.slice(first, first + count) as Keyword[]
+  // a key no `key::` line holds (`CAPTION[short]`) stays a keyword
+  const properties = leading.filter(keyword => /^[\w-]+$/.test(keyword.key))
+  if (!properties.length) {
+    return
+  }
+  const lines = properties.map(
+    keyword =>
+      `${keyword.key.toLowerCase()}::${keyword.value ? ` ${keyword.value}` : ""}`
+  )
+  children.splice(
+    first,
+    count,
+    ...leading.filter(keyword => !properties.includes(keyword)),
+    {
+      type: "paragraph",
+      children: [{ type: "verbatim-inline", value: lines.join("\n") }],
+      contentsBegin: 0,
+      contentsEnd: 0
+    } as unknown as Paragraph
+  )
+}
+
 // Logseq md keeps TODO/DONE as leading text markers and priorities as
 // [#A] text; in org they are the headline's TODO keyword and priority
 // (other Logseq markers like DOING are not org keywords and simply
@@ -201,6 +382,7 @@ function takeTaskMarker(headline: Headline): void {
  * @returns The generic uniorg AST.
  */
 function extractLogseqSpecificsFromUniorgAst(uniorgAst: OrgData): OrgData {
+  pageProperties(uniorgAst)
   extractInParent(uniorgAst)
   repairHighlights(uniorgAst)
   fuzzyLinksToPageRefs(uniorgAst)

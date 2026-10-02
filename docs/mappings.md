@@ -324,7 +324,33 @@ style where there is one; notable normalizations beyond formatting:
 
 ## Presets
 
-`logseq`: `:heading:` property drawers; outline nesting (paragraphs ↔
+`logseq`: page properties: a page's first block of `key:: value`
+lines (plain text, an empty `key::` included, keys org reads as
+keyword names; below a file-level drawer or a mode line too; a keyword
+no `key::` line can hold, such as `#+CAPTION[short]:`, travels as
+`morg_keywords` instead) ↔ leading `#+key: value` lines, values verbatim (frontmatter
+values as written, `01234` stays `01234`), keys
+lower-cased on the way to Markdown (Logseq reads only lower case). Flat
+frontmatter entries whose keys are lower case, digits, `_` and `-`
+become such keywords too (others would not come back as written), a
+sequence written as
+Logseq writes it (`tags: [a, b]` → `#+tags: a, b`), so YAML comes back
+as a `key::` block after one round trip; what a keyword line cannot
+hold (nested maps, line breaks, an item with a comma, a key that is no
+keyword name) stays in the frontmatter block, and flow-style or aliased
+frontmatter stays there whole. So do keys that act in Emacs or in
+export (`todo`, `startup`, `options`, `include`, `setupfile`, `call`,
+`begin` and `end`, which open and close a dynamic block,
+`bibliography`, `cite_export`, `toc`, `index`, raw export lines such
+as `html`, `latex` and `markdown`, `html_*`, `infojs_opt`, `lco` and
+the other options of org's own exporters, of ox-hugo and of
+org-re-reveal): as frontmatter they were
+passive data. The list is a denylist: other third-party exporters'
+keys, and export metadata such as `title` or `author`, do map. `tags`
+does map, being Logseq's page tags. A `key::`
+block maps whole, since that is how an org page's own `#+startup:`
+travels through Markdown (ADR 0005): its acting keys act in the org
+page, `include:: x` as `#+include: x`. `:heading:` property drawers; outline nesting (paragraphs ↔
 child block headlines, whose lines below the first get the line-start
 escape and come back as a paragraph of their own); `TODO`/`DONE` text markers and `[#A]`
 priorities ↔ org keywords/priorities; page references `[[page]]` and

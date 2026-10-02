@@ -26,7 +26,9 @@ export interface FrontmatterNode {
   yaml: string
 }
 
-function isFrontmatterNode(node: { type: string }): node is FrontmatterNode {
+export function isFrontmatterNode(node: {
+  type: string
+}): node is FrontmatterNode {
   return node.type === "morg-frontmatter"
 }
 
@@ -102,7 +104,7 @@ function frontmatterBlock(yaml: string): string {
  * @param take Keywords for an entry, or null to leave it in place.
  * @returns The keywords in order, and the remaining YAML text.
  */
-function takeFrontmatterEntries(
+export function takeFrontmatterEntries(
   yaml: string,
   take: (
     key: Scalar,
@@ -451,7 +453,7 @@ function takeFileDrawer(uniorgAst: OrgData): [string, string][] | undefined {
 // Emacs reads file variables from a `-*- … -*-` comment on the first line
 const MODE_LINE_RE = /^[^\n]*-\*-.*-\*-/
 
-function isModeLine(comment: string): boolean {
+export function isModeLine(comment: string): boolean {
   return MODE_LINE_RE.test(comment)
 }
 

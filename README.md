@@ -41,7 +41,8 @@ guarantee is to be **semantically faithful and convergent** instead
   `#+begin_comment morg_frontmatter` block, not as org keywords, which
   can act in Emacs; an org file's own leading keywords travel as a
   `morg_keywords` frontmatter entry and come back as keywords, a
-  file-level drawer (org-roam's `:ID:`) as `morg_properties` ([ADR
+  file-level drawer (org-roam's `:ID:`) as `morg_properties`. The
+  Logseq preset instead maps page properties natively ([ADR
   0005](docs/adr/0005-frontmatter-as-a-marked-comment-block.md)).
 - The few constructs that cannot be carried are documented in the
   [mapping reference](docs/mappings.md) and reported as warnings.
@@ -204,7 +205,11 @@ preset })`: `preserveOrgisms` default `true`; `useHtml` (default
   reverse direction restores headings from `:heading:` properties and
   turns plain block headlines back into paragraphs. Hiccup blocks
   (`[:div …]`) pass through as plain text and are emitted unescaped in
-  Markdown. Logseq's own syntax maps both directions: `TODO`/`DONE`
+  Markdown. Page properties map both directions: a first block of
+  `key:: value` lines and flat frontmatter entries ↔ leading
+  `#+key: value` lines, which Logseq reads as page properties;
+  frontmatter keys that act in Emacs (`todo`, `include`, …) stay inert.
+  Logseq's own syntax maps both directions: `TODO`/`DONE`
   text markers and `[#A]` priorities ↔ org keywords/priorities, page
   references `[[page]]` and labeled forms `[label]([[page]])` ↔ org
   fuzzy links `[[page][label]]`, block refs `[label](((uuid)))` ↔
