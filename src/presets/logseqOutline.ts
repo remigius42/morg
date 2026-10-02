@@ -80,6 +80,44 @@ function takeMeta(lines: string[], isMeta: (line: string) => boolean) {
   return { meta, body: lines.slice(i) }
 }
 
+// the line that ends the org block `line` opens, as Logseq reads one
+// in Markdown too (`#+BEGIN_QUERY`, `#+BEGIN_SRC`)
+function orgBlockEnd(lines: string[], start: number): number {
+  const name = /^#\+begin_(\S+)/i.exec(lines[start] ?? "")?.[1]?.toLowerCase()
+  return name
+    ? lines.findIndex(
+        (line, i) => i > start && line.trim().toLowerCase() === `#+end_${name}`
+      )
+    : -1
+}
+
+// md→org: a block's org blocks stay as written, the text around them
+// converts
+function convertMarkdownContent(
+  lines: string[],
+  convert: FragmentConverter,
+  preset: Preset
+): string[] {
+  const result: string[] = []
+  let text: string[] = []
+  let fenced = false
+  for (let i = 0; i < lines.length; i++) {
+    fenced = FENCE_RE.test(lines[i] ?? "") ? !fenced : fenced
+    const end = fenced ? -1 : orgBlockEnd(lines, i)
+    if (end === -1) {
+      text.push(lines[i] ?? "")
+      continue
+    }
+    result.push(
+      ...convertContent(text, convert, preset),
+      ...lines.slice(i, end + 1)
+    )
+    text = []
+    i = end
+  }
+  return [...result, ...convertContent(text, convert, preset)]
+}
+
 function convertContent(
   lines: string[],
   convert: FragmentConverter,
@@ -272,7 +310,7 @@ function mdBlockToOrg(
   const { meta, body } = takeMeta(metaFirst ? lines : lines.slice(1), line =>
     MD_PROPERTY_RE.test(line)
   )
-  const content = convertContent(
+  const content = convertMarkdownContent(
     metaFirst ? body : [titleLine, ...body],
     convert,
     preset

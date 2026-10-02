@@ -38,6 +38,15 @@ describe("logseq outline", () => {
     )
   })
 
+  it("reads an org block in a Markdown block as org", () => {
+    expect(toOrg("- #+BEGIN_SRC\n  read_flash x_y\n  #+END_SRC\n")).toBe(
+      "* #+BEGIN_SRC\nread_flash x_y\n#+END_SRC\n"
+    )
+    expect(toOrg("- a\n  ```\n  #+BEGIN_X\n  #+END_X\n  ```\n")).toBe(
+      "* a\n\n#+begin_example\n#+BEGIN_X\n#+END_X\n#+end_example\n"
+    )
+  })
+
   it("maps block properties to key:: lines", () => {
     both(
       "* a\n:PROPERTIES:\n:collapsed: true\n:logseq.order-list-type: number\n:END:\n",

@@ -48,6 +48,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Logseq preset: an org plain link (`https://…`) stays a bare url in
   Markdown, as Logseq writes it, and comes back plain instead of as
   `[[https://…]]`.
+- Logseq preset: an org block written in a Markdown block
+  (`#+BEGIN_SRC`…`#+END_SRC`, which Logseq reads there too) goes to org
+  as written instead of as escaped text that changed on every round
+  trip.
 
 ## [0.7.0] - 2026-10-02
 
