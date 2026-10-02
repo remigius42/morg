@@ -41,8 +41,13 @@ export function convertMarkdownToOrg(
 ): string {
   const convertMarkdown = options.preset?.convertMarkdown
   return convertMarkdown
-    ? convertMarkdown(markdown, (fragment, preset) =>
-        convertMarkdownToOrg(fragment, { ...options, preset })
+    ? // a fragment's style is the preset's, not one to record
+      convertMarkdown(markdown, (fragment, preset) =>
+        convertMarkdownToOrg(fragment, {
+          ...options,
+          preset,
+          recordStyle: false
+        })
       )
     : convertMarkdownDocument(markdown, options)
 }

@@ -679,4 +679,16 @@ describe("convertMarkdownToOrg with a converting preset", () => {
 
     expect(convertMarkdownToOrg("**a**|*b*", { preset })).toBe("*a*\n|/b/\n")
   })
+
+  it("should record no style for a fragment", () => {
+    const preset = {
+      name: "whole",
+      convertMarkdown: (text: string, convert: (fragment: string) => string) =>
+        convert(text)
+    }
+
+    expect(convertMarkdownToOrg("_a_\n", { preset, recordStyle: true })).toBe(
+      "/a/\n"
+    )
+  })
 })

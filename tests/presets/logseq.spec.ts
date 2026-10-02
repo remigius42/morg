@@ -122,6 +122,15 @@ describe("logseq outline", () => {
     )
   })
 
+  it("records no markdown style in a block", () => {
+    expect(
+      convertMarkdownToOrg("- some *it* text\n", {
+        preset: logseq(),
+        recordStyle: true
+      })
+    ).toBe("* some /it/ text\n")
+  })
+
   it("maps page references to wikilinks and labeled forms", () => {
     both(
       "* See [[my page name]] and [[other page][a label]]\n* [[((60ab-uuid))][a block ref]]\n",

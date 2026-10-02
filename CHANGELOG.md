@@ -14,7 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Preset.convertOrg(org, convert)` and
   `Preset.convertMarkdown(markdown, convert)`, optional hooks that take
   a whole conversion over, for a dialect whose documents are an outline
-  of fragments; `convert` runs the core on one fragment.
+  of fragments; `convert` runs the core on one fragment (recording no
+  Markdown style: a fragment's style is the preset's).
 - The Web UI demo also shows a quote, a nested ordered list and a src
   block switch.
 - The Web UI offers a Logseq demo page, in Logseq org or Logseq
