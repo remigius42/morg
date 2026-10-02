@@ -42,6 +42,18 @@ export function convertOrgToMarkdown(
   org: string,
   options: OrgToMarkdownOptions = {}
 ): string {
+  const convertOrg = options.preset?.convertOrg
+  return convertOrg
+    ? convertOrg(org, (fragment, preset) =>
+        convertOrgToMarkdown(fragment, { ...options, preset })
+      )
+    : convertOrgDocument(org, options)
+}
+
+function convertOrgDocument(
+  org: string,
+  options: OrgToMarkdownOptions
+): string {
   // Phase 1: Parse Org-mode to uniorg-ast
   // md text has no scripts, so ^:{} is implied there and consumed here
   // (see markdownToOrg); uniorg misreads `_.` lines (see underscoreBullets)

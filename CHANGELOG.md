@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `Preset.convertOrg(org, convert)` and
+  `Preset.convertMarkdown(markdown, convert)`, optional hooks that take
+  a whole conversion over, for a dialect whose documents are an outline
+  of fragments; `convert` runs the core on one fragment.
+
 ## [0.7.0] - 2026-10-02
 
 ### Added

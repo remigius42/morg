@@ -38,6 +38,18 @@ export function convertMarkdownToOrg(
   markdown: string,
   options: MarkdownToOrgOptions = {}
 ): string {
+  const convertMarkdown = options.preset?.convertMarkdown
+  return convertMarkdown
+    ? convertMarkdown(markdown, (fragment, preset) =>
+        convertMarkdownToOrg(fragment, { ...options, preset })
+      )
+    : convertMarkdownDocument(markdown, options)
+}
+
+function convertMarkdownDocument(
+  markdown: string,
+  options: MarkdownToOrgOptions
+): string {
   // Phase 1: Parse Markdown to mdast
   const mdast = parseMarkdown(markdown, options.preset)
 

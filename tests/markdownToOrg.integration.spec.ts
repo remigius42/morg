@@ -696,3 +696,18 @@ describe("recordStyle", () => {
     ])
   })
 })
+
+describe("convertMarkdownToOrg with a converting preset", () => {
+  it("should let a preset convert fragment by fragment", () => {
+    const preset = {
+      name: "parts",
+      convertMarkdown: (text: string, convert: (fragment: string) => string) =>
+        text
+          .split("|")
+          .map(part => convert(part))
+          .join("|")
+    }
+
+    expect(convertMarkdownToOrg("**a**|*b*", { preset })).toBe("*a*\n|/b/\n")
+  })
+})

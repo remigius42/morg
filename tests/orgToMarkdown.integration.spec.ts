@@ -572,3 +572,18 @@ describe("convertOrgToMarkdown", () => {
     )
   })
 })
+
+describe("convertOrgToMarkdown with a converting preset", () => {
+  it("should let a preset convert fragment by fragment", () => {
+    const preset = {
+      name: "parts",
+      convertOrg: (text: string, convert: (fragment: string) => string) =>
+        text
+          .split("|")
+          .map(part => convert(part))
+          .join("|")
+    }
+
+    expect(convertOrgToMarkdown("*a*|/b/", { preset })).toBe("**a**\n|*b*\n")
+  })
+})
