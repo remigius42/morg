@@ -1,24 +1,35 @@
 import type { Root, RootContent } from "mdast"
-import { PASSTHROUGH_TYPES } from "./lineSyntax.js"
-import { tryParse } from "./render.js"
+import { readsAsPassthrough } from "./lineSyntax.js"
 
-// the first line of an org element spanning lines that org→md writes as
-// its org text (verbatim passthrough, see mappings.md)
+// the first line of an org block or drawer
 const BLOCK_START_RE = /^#\+begin_(\S+)/i
 const DRAWER_START_RE = /^:[\w-]+:$/
 
-// the pattern of the line that ends the element `line` starts, if any
-function endPattern(line: string): RegExp | null {
-  const block = BLOCK_START_RE.exec(line)?.[1]
-  if (block) {
-    return new RegExp(`^#\\+end_${block.replace(/\W/g, "\\$&")}\\s*$`, "i")
-  }
-  return DRAWER_START_RE.test(line) ? /^:end:\s*$/i : null
+/** Whether a line opens an org block (`#+begin_name`). */
+export function isOrgBlockStart(line: string): boolean {
+  return BLOCK_START_RE.test(line)
 }
 
-function isPassthrough(source: string): boolean {
-  const [element, ...more] = tryParse(`${source}\n`)?.children ?? []
-  return !more.length && PASSTHROUGH_TYPES.has(element?.type ?? "")
+/** Whether a line opens an org drawer (`:NAME:`). */
+export function isDrawerStart(line: string): boolean {
+  return DRAWER_START_RE.test(line)
+}
+
+/**
+ * The line that ends the org block or drawer a line opens.
+ * @param lines The lines.
+ * @param start The index of the opening line.
+ * @returns The index of the `#+end_name` or `:END:` line, or -1.
+ */
+export function orgElementEnd(lines: string[], start: number): number {
+  const line = lines[start] ?? ""
+  const block = BLOCK_START_RE.exec(line)?.[1]
+  const end = block
+    ? new RegExp(`^#\\+end_${block.replace(/\W/g, "\\$&")}\\s*$`, "i")
+    : DRAWER_START_RE.test(line)
+      ? /^:end:\s*$/i
+      : null
+  return end ? lines.findIndex((other, i) => i > start && end.test(other)) : -1
 }
 
 // the source offset where the passthrough element starting at a node
@@ -29,16 +40,17 @@ function passthroughEnd(node: RootContent, markdown: string): number {
     return -1
   }
   const lineEnd = markdown.indexOf("\n", start.offset)
-  const end = endPattern(
-    markdown.slice(start.offset, lineEnd === -1 ? undefined : lineEnd)
+  const first = markdown.slice(
+    start.offset,
+    lineEnd === -1 ? undefined : lineEnd
   )
-  if (!end) {
+  if (!isOrgBlockStart(first) && !isDrawerStart(first)) {
     return -1
   }
   const lines = markdown.slice(start.offset).split("\n")
-  const last = lines.findIndex((line, i) => i > 0 && end.test(line))
+  const last = orgElementEnd(lines, 0)
   const source = lines.slice(0, last + 1).join("\n")
-  return last !== -1 && isPassthrough(source)
+  return last !== -1 && readsAsPassthrough(source)
     ? start.offset + source.length
     : -1
 }

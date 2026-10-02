@@ -183,7 +183,7 @@ export function escapeLineSyntax(tree: Parent): void {
 
 // org→md writes these org elements as md paragraphs of their org text,
 // to be read back as such (verbatim passthrough, see mappings.md)
-export const PASSTHROUGH_TYPES = new Set([
+const PASSTHROUGH_TYPES = new Set([
   "fixed-width",
   "drawer",
   "clock",
@@ -204,8 +204,17 @@ function isPassthrough(starts: LineStart[]): boolean {
   if (!first || !MAY_BE_LINE_SYNTAX_RE.test(first.line)) {
     return false
   }
-  const lines = starts.map(({ line }) => line)
-  const [only, ...rest] = tryParse(`${lines.join("\n")}\n`)?.children ?? []
+  return readsAsPassthrough(starts.map(({ line }) => line).join("\n"))
+}
+
+/**
+ * Whether org reads a text as just one passthrough element.
+ * @param text The org text.
+ * @returns Whether it is one block, drawer, keyword … org→md writes as
+ * its org text.
+ */
+export function readsAsPassthrough(text: string): boolean {
+  const [only, ...rest] = tryParse(`${text}\n`)?.children ?? []
   return !rest.length && PASSTHROUGH_TYPES.has(only?.type ?? "")
 }
 

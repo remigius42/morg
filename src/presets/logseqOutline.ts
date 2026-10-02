@@ -1,4 +1,9 @@
 import { consumesBracedScripts } from "../core/bracedScripts.js"
+import {
+  isDrawerStart,
+  isOrgBlockStart,
+  orgElementEnd
+} from "../core/passthroughSource.js"
 import type { FragmentConverter, Preset } from "./types.js"
 
 // Logseq stores a page as an outline of blocks, each block a content
@@ -11,7 +16,6 @@ import type { FragmentConverter, Preset } from "./types.js"
 const ORG_BLOCK_RE = /^(\*+)(?: (.*))?$/
 const MD_BLOCK_RE = /^(\t*)-(?: (.*))?$/
 const PLANNING_RE = /^(?:SCHEDULED|DEADLINE): /
-const DRAWER_START_RE = /^:[\w-]+:$/
 const ORG_PROPERTY_RE = /^:([^\s:]+):(?: (.*))?$/
 const MD_PROPERTY_RE = /^([\w.-]+)::(?: (.*))?$/
 // a repeated task's log line, which Logseq bullets per format
@@ -64,8 +68,8 @@ function takeMeta(lines: string[], isMeta: (line: string) => boolean) {
   let i = 0
   while (i < lines.length) {
     const line = lines[i] ?? ""
-    if (DRAWER_START_RE.test(line)) {
-      const end = lines.indexOf(":END:", i)
+    if (isDrawerStart(line)) {
+      const end = orgElementEnd(lines, i)
       if (end === -1) {
         break
       }
@@ -79,17 +83,6 @@ function takeMeta(lines: string[], isMeta: (line: string) => boolean) {
     }
   }
   return { meta, body: lines.slice(i) }
-}
-
-// the line that ends the org block `line` opens, as Logseq reads one
-// in Markdown too (`#+BEGIN_QUERY`, `#+BEGIN_SRC`)
-function orgBlockEnd(lines: string[], start: number): number {
-  const name = /^#\+begin_(\S+)/i.exec(lines[start] ?? "")?.[1]?.toLowerCase()
-  return name
-    ? lines.findIndex(
-        (line, i) => i > start && line.trim().toLowerCase() === `#+end_${name}`
-      )
-    : -1
 }
 
 // org blocks whose content is literal text, not markup
@@ -119,7 +112,8 @@ function convertMarkdownContent(
   let fenced = false
   for (let i = 0; i < lines.length; i++) {
     fenced = FENCE_RE.test(lines[i] ?? "") ? !fenced : fenced
-    const end = fenced ? -1 : orgBlockEnd(lines, i)
+    const end =
+      fenced || !isOrgBlockStart(lines[i] ?? "") ? -1 : orgElementEnd(lines, i)
     if (end === -1) {
       text.push(lines[i] ?? "")
       continue
@@ -198,7 +192,7 @@ function orgBlockToMarkdown(
   const [first = "", ...rest] = block.lines
   // content that starts with the block's properties puts their drawer
   // on the headline line; its heading level is then a property too
-  const metaFirst = DRAWER_START_RE.test(first)
+  const metaFirst = isDrawerStart(first)
   const { meta, body } = takeMeta(metaFirst ? block.lines : rest, () => false)
   let heading = ""
   const metaLines = meta.flatMap(lines => {
