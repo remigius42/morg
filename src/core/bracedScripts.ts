@@ -181,7 +181,10 @@ function takeBracedScripts(uniorgAst: OrgData): void {
  * @returns Whether the setting is taken as the one md→org adds.
  */
 export function consumesBracedScripts(org: string): boolean {
-  return readsBareScripts(bracedScriptsParser.parse(org))
+  // text without a bare script candidate skips the parse
+  return (
+    BARE_SCRIPT_RE.test(org) && readsBareScripts(bracedScriptsParser.parse(org))
+  )
 }
 
 /**
