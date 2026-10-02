@@ -221,6 +221,12 @@ describe("logseq page properties", () => {
     expect(toOrg(toMd(org))).toBe(org)
   })
 
+  it("reads a frontmatter's list items as frontmatter, not blocks", () => {
+    expect(toOrg("---\ntitle: x\ntags:\n- a\n- b\n---\n\n- block\n")).toBe(
+      "#+title: x\n#+tags: a, b\n\n* block\n"
+    )
+  })
+
   it("yaml frontmatter converges to a key:: block, the rest stays yaml", () => {
     const markdown =
       "---\ntitle: My Page\ntags: [a, b]\nauthor:\n  name: X\n---\n\n- first block\n"

@@ -240,9 +240,15 @@ export function markdownOutlineToOrg(
   convert: FragmentConverter,
   presets: Presets
 ): string {
+  const lines = markdown.replace(/\r?\n$/, "").split(/\r?\n/)
+  // a leading frontmatter is page content, its `- ` lines yaml items
+  const frontmatter = lines.slice(
+    0,
+    lines[0] === "---" ? lines.indexOf("---", 1) + 1 : 0
+  )
   let fenced = false
   const { page, blocks } = splitBlocks(
-    markdown.replace(/\r?\n$/, "").split(/\r?\n/),
+    lines.slice(frontmatter.length),
     line => {
       const match = MD_BLOCK_RE.exec(line)
       // a bullet starts a block, which may open a fence of its own
@@ -255,6 +261,7 @@ export function markdownOutlineToOrg(
       return !fenced && MD_HEADING_RE.test(line) ? [1, line] : null
     }
   )
+  page.unshift(...frontmatter)
   return [
     ...convertPage(page, convert, presets.page),
     ...blocks.map(block => mdBlockToOrg(block, convert, presets.block))
