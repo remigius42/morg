@@ -210,6 +210,13 @@ describe("embed page", () => {
     expect(element<HTMLTextAreaElement>("input").value).toBe(LOGSEQ_MD_DEMO)
   })
 
+  it("swaps the untouched demo for a preset the config sets", () => {
+    const config = element<HTMLTextAreaElement>("config")
+    config.value = 'preset = "logseq"'
+    config.dispatchEvent(new Event("input", { bubbles: true }))
+    expect(element<HTMLTextAreaElement>("input").value).toBe(LOGSEQ_ORG_DEMO)
+  })
+
   it("keeps an edited input when the preset changes", () => {
     const input = element<HTMLTextAreaElement>("input")
     input.value = "* mine\n"

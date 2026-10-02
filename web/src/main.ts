@@ -23,6 +23,23 @@ import {
   type TextFile
 } from "./ui/files.js"
 
+// an untouched demo follows the direction's input format and the
+// preset's dialect, however the preset was set
+function swapDemo(controls: Controls): void {
+  if (isDemo(controls.input.value)) {
+    controls.input.value = demoFor(
+      controls.direction.value as Direction,
+      controls.preset.value
+    )
+  }
+}
+
+// a config may set the preset
+function applyConfig(controls: Controls): void {
+  reflectConfig(controls)
+  swapDemo(controls)
+}
+
 function persist(controls: Controls): void {
   writeState({
     direction: controls.direction.value,
@@ -88,7 +105,7 @@ async function openFiles(
     // config is read rather than converted
     controls.config.value = await config.text()
     showConfig(controls)
-    reflectConfig(controls)
+    applyConfig(controls)
   }
   if (doc) {
     notices.push(...(await openDocument(controls, doc)))
@@ -185,24 +202,19 @@ function wireListeners(controls: Controls): void {
     // The mark and the form reflection stay immediate: they describe the
     // config text itself, so lagging them behind the typing looks broken
     showConfig(controls, false)
-    reflectConfig(controls)
+    applyConfig(controls)
     persist(controls)
     convertSoon()
   })
   wireConfigSnippets(element("configSnippet"), controls, () => {
+    swapDemo(controls)
     persist(controls)
     startConvert(controls)
   })
-  // an untouched demo follows the direction's input format and the
-  // preset's dialect; registered ahead of the listeners that convert
-  const swapDemo = (): void => {
-    if (isDemo(input.value)) {
-      input.value = demoFor(direction.value as Direction, controls.preset.value)
-    }
-  }
-  controls.preset.addEventListener("change", swapDemo)
+  // registered ahead of the listeners that convert
+  controls.preset.addEventListener("change", () => swapDemo(controls))
   direction.addEventListener("change", () => {
-    swapDemo()
+    swapDemo(controls)
     // the opened name described a document this direction no longer
     // reads; kept, it would name the output after the wrong format,
     // and where the output format matches, after the source file itself
