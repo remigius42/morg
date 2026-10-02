@@ -16,12 +16,20 @@ SCHEDULED: <2026-09-11 Fri>
 
 Some *bold*, /italic/ and ~code~ text[fn:1].
 
+#+begin_quote
+Quotes stay quotes.
+#+end_quote
+
+- Lists nest
+  1. ordered
+  2. too
+
 | Format   | Extension |
 |----------+-----------|
 | Org      | .org      |
 | Markdown | .md       |
 
-#+begin_src js
+#+begin_src js -n
 console.log("fenced code survives")
 #+end_src
 
@@ -42,12 +50,18 @@ scheduled:: <2026-09-11 Fri>
 
 Some **bold**, *italic* and \`code\` text[^1].
 
+> Quotes stay quotes.
+
+- Lists nest
+  1. ordered
+  2. too
+
 | Format   | Extension |
 | -------- | --------- |
 | Org      | .org      |
 | Markdown | .md       |
 
-\`\`\`js
+\`\`\`js -n
 console.log("fenced code survives")
 \`\`\`
 

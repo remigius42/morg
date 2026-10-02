@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `Preset.convertMarkdown(markdown, convert)`, optional hooks that take
   a whole conversion over, for a dialect whose documents are an outline
   of fragments; `convert` runs the core on one fragment.
+- The Web UI demo also shows a quote, a nested ordered list and a src
+  block switch.
 
 ### Changed
 
