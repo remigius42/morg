@@ -216,7 +216,7 @@ function commentLines(
 
 // a keyword name as uniorg reads it in `#+NAME: value`: no whitespace
 // outside a dual keyword's brackets (`#+FOO:: bar` as the key `FOO:`)
-const KEYWORD_NAME = String.raw`(?:\[[^\]\r\n]*\]|\S)+`
+export const KEYWORD_NAME = String.raw`(?:\[[^\]\r\n]*\]|\S)+`
 
 // what a `#+KEY: value` line can hold, read back as the same key: not a
 // block's begin line, and no line break, which would end it and inject

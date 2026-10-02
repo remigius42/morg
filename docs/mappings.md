@@ -104,7 +104,8 @@ blocks and `@@backend:…@@` snippets. Statistics cookies (`[1/2]`) and
 
 Affiliated keywords (`#+CAPTION:`, `#+NAME:`, `#+ATTR_*`) travel as
 verbatim lines directly above their element and re-attach natively on
-the return trip, except on org tables, which discard them at parse
+the return trip, a dual value included (`#+CAPTION[short]: long`,
+`#+RESULTS[hash]: …`), except on org tables, which discard them at parse
 time (upstream [uniorg#151](https://github.com/rasendubi/uniorg/issues/151)).
 
 Org comments (`# …`) map to HTML comments (`<!-- … -->`) and back.

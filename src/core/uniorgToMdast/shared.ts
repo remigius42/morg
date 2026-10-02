@@ -1,6 +1,6 @@
 import type { PhrasingContent, RootContent } from "mdast"
-import type { ObjectType, OrgData } from "uniorg"
-import { toString as orgastToString } from "orgast-util-to-string"
+import type { AffiliatedKeywords, OrgData } from "uniorg"
+import { affiliatedEntries } from "../affiliated.js"
 import { unified } from "unified"
 import { uniorgStringify } from "uniorg-stringify"
 import { toggleEnabled, type Toggle } from "../../options.js"
@@ -81,15 +81,8 @@ export function trimTrailingNewline(value: string): string {
 // affiliated keywords (#+CAPTION:, #+NAME:, #+ATTR_*) precede their
 // element as verbatim lines so the return trip re-attaches them natively
 export function affiliatedLines(node: unknown): string[] {
-  const affiliated = (node as { affiliated?: Record<string, unknown> })
-    .affiliated
-  return Object.entries(affiliated ?? {}).flatMap(([key, value]) => {
-    const entries = Array.isArray(value) ? value : [value]
-    return entries.map(entry => {
-      const text = Array.isArray(entry)
-        ? entry.map(child => orgastToString(child as ObjectType)).join("")
-        : String(entry)
-      return `#+${key}: ${text}`
-    })
-  })
+  const affiliated = (node as { affiliated?: AffiliatedKeywords }).affiliated
+  return affiliatedEntries(affiliated).map(
+    ([key, value]) => `#+${key}: ${value}`
+  )
 }

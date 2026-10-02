@@ -49,6 +49,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A dual affiliated keyword keeps its second value through Markdown:
+  `#+CAPTION[short]: long` used to come back as a plain `#+CAPTION:`
+  with the short caption glued onto the long one, and
+  `#+RESULTS[hash]: …` as two separate lines.
 - An Emacs mode line (`# -*- mode: org -*-`) stays on the first line
   through Markdown, where Emacs reads it, instead of landing below the
   frontmatter.

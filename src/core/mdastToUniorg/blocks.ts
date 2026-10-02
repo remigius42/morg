@@ -7,6 +7,7 @@ import type { ElementType } from "uniorg"
 import { toString } from "orgast-util-to-string"
 import { mdismEnabled, type TransformContext } from "./context.js"
 import { transformPhrasingChildren } from "./phrasing.js"
+import { KEYWORD_NAME } from "../frontmatterBlock.js"
 
 export function transformMdastTable(
   ctx: TransformContext,
@@ -201,7 +202,7 @@ export function transformMdastHeading(
   }
 }
 
-const KEYWORD_LINE_RE = /^#\+\S+: /
+const KEYWORD_LINE_RE = new RegExp(String.raw`^#\+${KEYWORD_NAME}: `)
 
 export function keywordOnlyLines(node: {
   children: PhrasingContent[]

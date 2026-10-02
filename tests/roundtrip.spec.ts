@@ -175,7 +175,8 @@ describe("frontmatter (ADR 0005)", () => {
 
   it("keywords on a block whose YAML takes none converge", () => {
     for (const org of [
-      "#+NAME: n\n#+begin_comment morg_frontmatter\n- a\n#+end_comment\nbody\n"
+      "#+NAME: n\n#+begin_comment morg_frontmatter\n- a\n#+end_comment\nbody\n",
+      "#+TITLE: t\n#+CAPTION[s]: c\n#+begin_comment morg_frontmatter\n- a\n#+end_comment\nbody\n"
     ]) {
       const once = orgRoundTrip(org)
       expect(orgRoundTrip(once)).toBe(once)
@@ -366,6 +367,13 @@ describe("headline properties", () => {
 })
 
 describe("affiliated keywords", () => {
+  it("keep a dual value on a body element", () => {
+    const org =
+      "#+CAPTION[Short One]: Long\n#+begin_src js\nx\n#+end_src\n#+RESULTS[abc123]: r\n#+begin_example\ny\n#+end_example\n"
+    expect(convertOrgToMarkdown(org)).toContain("#+CAPTION[Short One]: Long\n")
+    expect(orgRoundTrip(org)).toBe(org)
+  })
+
   it("stay on their element in CRLF Markdown", () => {
     expect(
       convertMarkdownToOrg("#+NAME: n\r\n#+CAPTION: c\r\n| a |\r\n| - |\r\n")
