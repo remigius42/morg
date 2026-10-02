@@ -151,8 +151,11 @@ export function transformMdastCode(
       value: `${node.value}\n`
     } as unknown as ElementType
   }
+  // the fence's meta is the block's switches and header arguments,
+  // which uniorg-stringify writes after the language
+  const language = [node.lang, node.meta].filter(Boolean).join(" ")
   return (node.lang
-    ? { type: "src-block", language: node.lang, value: node.value }
+    ? { type: "src-block", language, value: node.value }
     : {
         type: "example-block",
         value: node.value

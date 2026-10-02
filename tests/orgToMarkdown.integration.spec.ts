@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest"
 import { convertOrgToMarkdown } from "../src/orgToMarkdown.js"
+import { convertMarkdownToOrg } from "../src/markdownToOrg.js"
 
 describe("convertOrgToMarkdown", () => {
   it("should convert inline markup and links", () => {
@@ -570,6 +571,16 @@ describe("convertOrgToMarkdown", () => {
     expect(markdown).toBe(
       "- some **bold** item\n- a [link](https://example.com) item\n"
     )
+  })
+})
+
+describe("source block header", () => {
+  it("should carry switches and header arguments as the fence's meta", () => {
+    const org = "#+begin_src python -n :results output\nprint(1)\n#+end_src\n"
+    const markdown = "```python -n :results output\nprint(1)\n```\n"
+
+    expect(convertOrgToMarkdown(org)).toBe(markdown)
+    expect(convertMarkdownToOrg(markdown)).toBe(org)
   })
 })
 

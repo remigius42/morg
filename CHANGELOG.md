@@ -29,6 +29,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A src block's switches and header arguments
+  (`#+begin_src python -n :results output`) travel as the Markdown
+  fence's meta (` ```python -n :results output `) instead of being
+  dropped both ways.
 - A block or drawer kept as org text in Markdown (special, verse,
   center blocks, `:LOGBOOK:`, …) no longer falls apart on the way back
   when its lines read as Markdown syntax: a blank line followed by an

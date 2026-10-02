@@ -9,7 +9,8 @@ normalizations to expect. Terms are defined in
 
 Both directions: headings, paragraphs, bold/italic/strikethrough,
 links, lists (nested, ordered, mixed), code (inline, fenced/src and
-example blocks), blockquotes/quote blocks, and horizontal rules
+example blocks; a src block's switches and header arguments ↔ the
+fence's meta after the language), blockquotes/quote blocks, and horizontal rules
 (md `---` ↔ org `-----`). Hard line breaks map md `\` (or two trailing
 spaces) ↔ org `\\`. Markdown is parsed and serialized with GFM
 enabled.

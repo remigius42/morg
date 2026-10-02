@@ -330,9 +330,17 @@ function transformQuoteBlock(
 function transformSrcBlock(
   node: Extract<ElementType, { type: "src-block" }>
 ): RootContent {
+  // switches and header arguments (`-n :results output`) are the
+  // fence's meta, after the language
+  const { switches, parameters } = node as {
+    switches?: string | null
+    parameters?: string | null
+  }
+  const meta = [switches, parameters].filter(Boolean).join(" ")
   return {
     type: "code",
     lang: node.language || null,
+    meta: node.language && meta ? meta : null,
     value: trimTrailingNewline(node.value)
   }
 }
