@@ -22,14 +22,37 @@ export function isDrawerStart(line: string): boolean {
  * @returns The index of the `#+end_name` or `:END:` line, or -1.
  */
 export function orgElementEnd(lines: string[], start: number): number {
-  const line = lines[start] ?? ""
-  const block = BLOCK_START_RE.exec(line)?.[1]
-  const end = block
-    ? new RegExp(`^#\\+end_${block.replace(/\W/g, "\\$&")}\\s*$`, "i")
-    : DRAWER_START_RE.test(line)
-      ? /^:end:\s*$/i
-      : null
+  const end = endPattern(lines[start] ?? "")
   return end ? lines.findIndex((other, i) => i > start && end.test(other)) : -1
+}
+
+// the pattern of the line that ends the block or drawer `line` opens
+function endPattern(line: string): RegExp | null {
+  const block = BLOCK_START_RE.exec(line)?.[1]
+  if (block) {
+    return new RegExp(`^#\\+end_${block.replace(/\W/g, "\\$&")}\\s*$`, "i")
+  }
+  return DRAWER_START_RE.test(line) ? /^:end:\s*$/i : null
+}
+
+// the text from `offset` through the line that ends the block or
+// drawer opening there, read line by line rather than splitting the
+// rest of the document (a page may hold thousands of drawers)
+function elementSource(markdown: string, offset: number): string | null {
+  const lineEnd = (from: number): number => {
+    const index = markdown.indexOf("\n", from)
+    return index === -1 ? markdown.length : index
+  }
+  let end = lineEnd(offset)
+  const pattern = endPattern(markdown.slice(offset, end))
+  while (pattern && end < markdown.length) {
+    const next = lineEnd(end + 1)
+    if (pattern.test(markdown.slice(end + 1, next))) {
+      return markdown.slice(offset, next)
+    }
+    end = next
+  }
+  return null
 }
 
 // the source offset where the passthrough element starting at a node
@@ -39,18 +62,8 @@ function passthroughEnd(node: RootContent, markdown: string): number {
   if (start?.column !== 1 || start.offset === undefined) {
     return -1
   }
-  const lineEnd = markdown.indexOf("\n", start.offset)
-  const first = markdown.slice(
-    start.offset,
-    lineEnd === -1 ? undefined : lineEnd
-  )
-  if (!isOrgBlockStart(first) && !isDrawerStart(first)) {
-    return -1
-  }
-  const lines = markdown.slice(start.offset).split("\n")
-  const last = orgElementEnd(lines, 0)
-  const source = lines.slice(0, last + 1).join("\n")
-  return last !== -1 && readsAsPassthrough(source)
+  const source = elementSource(markdown, start.offset)
+  return source !== null && readsAsPassthrough(source)
     ? start.offset + source.length
     : -1
 }
