@@ -376,8 +376,8 @@ dropped. A heading outside the bullets is a top-level block (Logseq
 writes a page's first block so if it is a heading); other content
 before the first bullet is page content. An org block in a Markdown block
 (`#+BEGIN_SRC`…`#+END_SRC`, which Logseq reads there too) goes to org as
-written, except that the Markdown markup in a block other than a src,
-example, export, comment or query block converts. A plain `https://…` link ↔ a
+written, as org→md writes them, except that a quote block's Markdown
+content converts (Logseq's `<quote` command writes one). A plain `https://…` link ↔ a
 bare url (a bracketed `[[url]]` ↔ `<url>`). An email address stays text, written bare. Task markers and `[#A]`
 priorities stay text; page references `[[page]]` and labeled forms
 `[label]([[page]])` ↔ org fuzzy links `[[page][label]]`; block refs

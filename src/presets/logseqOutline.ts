@@ -85,23 +85,24 @@ function takeMeta(lines: string[], isMeta: (line: string) => boolean) {
   return { meta, body: lines.slice(i) }
 }
 
-// org blocks whose content is literal text, not markup
-const LITERAL_BLOCK_RE = /^#\+begin_(?:src|example|export|comment|query)\b/i
+// the one org block whose content Logseq md writes as Markdown markup
+// (its <quote command), and org→md writes as a md quote
+const QUOTE_BLOCK_RE = /^#\+begin_quote\b/i
 
 function convertOrgBlock(
   block: string[],
   convert: FragmentConverter,
   preset: Preset
 ): string[] {
-  if (LITERAL_BLOCK_RE.test(block[0] ?? "")) {
+  if (!QUOTE_BLOCK_RE.test(block[0] ?? "")) {
     return block
   }
   const content = convertContent(block.slice(1, -1), convert, preset)
   return [block[0] ?? "", ...content, block.at(-1) ?? ""]
 }
 
-// md→org: a block's org blocks keep their lines, and a literal one its
-// content too; the rest converts, as Logseq reads markup in a quote
+// md→org: a block's org blocks stay as written, as org→md writes them,
+// but for a quote's content; the text around them converts
 function convertMarkdownContent(
   lines: string[],
   convert: FragmentConverter,

@@ -69,6 +69,17 @@ describe("logseq outline", () => {
     )
   })
 
+  it("keeps a md block's other org blocks as written, in both directions", () => {
+    const markdown = "- #+BEGIN_TIP\n  *emphasis* and **strong**\n  #+END_TIP\n"
+    const org = toOrg(markdown)
+
+    expect(org).toBe("* #+BEGIN_TIP\n*emphasis* and **strong**\n#+END_TIP\n")
+    // org's own case for the begin and end lines, the content as it is
+    const once = toOrg(toMarkdown(org))
+    expect(once).toBe("* #+begin_TIP\n*emphasis* and **strong**\n#+end_TIP\n")
+    expect(toOrg(toMarkdown(once))).toBe(once)
+  })
+
   it("maps block properties to key:: lines", () => {
     both(
       "* a\n:PROPERTIES:\n:collapsed: true\n:logseq.order-list-type: number\n:END:\n",

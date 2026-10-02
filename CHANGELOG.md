@@ -59,7 +59,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Logseq preset: an org block written in a Markdown block
   (`#+BEGIN_SRC`…`#+END_SRC`, which Logseq reads there too) goes to org
   instead of as escaped text that changed on every round trip; the
-  Markdown markup in a quote or other non-literal block converts.
+  Markdown content of a quote block converts.
 
 ## [0.7.0] - 2026-10-02
 
