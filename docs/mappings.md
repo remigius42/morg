@@ -60,7 +60,10 @@ unescaped.
 
 A literal `[fn:` in md text (`\[fn:1]`) would be a footnote reference
 in org; md → org puts a zero-width space after its `[`, org → md drops
-it.
+it. Likewise a literal backslash before a letter, `(` or `[` in md text
+(a path like `C:\Users`, `\n`, `\alpha`), which org would read as a
+LaTeX fragment or an entity, gets a zero-width space after the
+backslash, except in a passthrough paragraph's org text.
 
 Markdown text has no sub/superscripts, but org reads a bare `a_b` or
 `x^y` as one. md → org therefore adds `^:{}` to `#+OPTIONS:` (org's

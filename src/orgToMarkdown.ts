@@ -9,6 +9,7 @@ import { takeFileHeader } from "./core/frontmatterBlock.js"
 import { unescapeOrgMarkup } from "./core/markupBoundary.js"
 import { unescapeLineSyntax } from "./core/lineSyntax.js"
 import { unescapeFootnoteReferences } from "./core/footnoteReferences.js"
+import { unescapeBackslashCommands } from "./core/backslashCommands.js"
 import { parseOrg } from "./core/bracedScripts.js"
 import {
   dropUnderscoreBulletGuards,
@@ -58,6 +59,7 @@ export function convertOrgToMarkdown(
   unescapeOrgMarkup(uniorgAst)
   unescapeLineSyntax(uniorgAst)
   unescapeFootnoteReferences(uniorgAst)
+  unescapeBackslashCommands(uniorgAst)
 
   // Phase 2: Extract dialect preset conventions, if any
   if (options.preset?.extractFromUniorg) {

@@ -20,6 +20,7 @@ import { escapeOrgMarkup } from "./core/markupBoundary.js"
 import { renderFileHeader } from "./core/frontmatterBlock.js"
 import { escapeLineSyntax } from "./core/lineSyntax.js"
 import { escapeFootnoteReferences } from "./core/footnoteReferences.js"
+import { escapeBackslashCommands } from "./core/backslashCommands.js"
 import { escapeTablePipes } from "./core/tablePipes.js"
 import { requireBracedScripts } from "./core/bracedScripts.js"
 import type { Root } from "mdast"
@@ -84,7 +85,9 @@ export function convertMarkdownToOrg(
   // Phase 3b: literal footnote references, paragraph lines org would
   // read as line syntax, literal markers org would read as markup, and
   // markup touching a word character, need a zero-width space escape;
-  // a pipe in a table cell an entity
+  // a pipe in a table cell an entity; a literal backslash before a
+  // letter first, the entity being none
+  escapeBackslashCommands(uniorgAst)
   escapeTablePipes(uniorgAst)
   escapeFootnoteReferences(uniorgAst)
   escapeLineSyntax(uniorgAst)

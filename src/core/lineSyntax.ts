@@ -209,6 +209,28 @@ function isPassthrough(starts: LineStart[]): boolean {
   return !rest.length && PASSTHROUGH_TYPES.has(only?.type ?? "")
 }
 
+/**
+ * md→org: whether a node is a paragraph org→md wrote as the org text of
+ * one passthrough element, which goes back as it is.
+ * @param node The node.
+ * @param index Its index in its parent.
+ * @param parent Its parent.
+ */
+export function isPassthroughParagraph(
+  node: Node | Parent,
+  index: number,
+  parent: Parent | undefined
+): boolean {
+  if (node.type !== "paragraph") {
+    return false
+  }
+  const context = contextOf(node, index, parent)
+  const children = (node as Parent).children as Node[]
+  return (
+    !context.afterBullet && isPassthrough(lineStarts(children, context).starts)
+  )
+}
+
 // line syntax spanning lines (`#+begin_src`…`#+end_src`, a drawer) or
 // depending on context (planning below a headline) shows only in the
 // whole content as org reads it; each round escapes the first line of

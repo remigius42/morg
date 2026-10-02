@@ -650,9 +650,11 @@ describe("org line syntax in paragraph text", () => {
     expect(once).toBe("\\#+begin\\_src\nx\n\\#+end\\_src\n")
     expect(mdRoundTrip(once)).toBe(once)
     const math = "\\begin{equation}\nx\n\\end{equation}\n"
+    // the backslash escape leaves no LaTeX environment to escape
     expect(convertMarkdownToOrg(math)).toBe(
-      "\u200B\\begin{equation}\nx\n\\end{equation}\n"
+      "\\\u200Bbegin{equation}\nx\n\\\u200Bend{equation}\n"
     )
+    expect(mdRoundTrip(math)).toBe(math)
   })
 
   it("stays text where it depends on the headline above", () => {
@@ -707,6 +709,23 @@ describe("literal footnote references", () => {
       "a\n[\u200Bfn:1] b, [\u200Bfn::c] d\n"
     )
     expect(mdRoundTrip(markdown)).toBe(markdown)
+  })
+})
+
+describe("a literal backslash before a letter", () => {
+  it("stays text through a round trip", () => {
+    // org reads `\Users` as a LaTeX fragment, `\alpha` as an entity
+    const markdown =
+      "Path C:\\Users\\me, \\alpha, \\n and \\foo{x}\n\n| a        |\n| -------- |\n| C:\\Users |\n"
+    expect(convertMarkdownToOrg(markdown)).toContain(
+      "Path C:\\\u200BUsers\\\u200Bme, \\\u200Balpha, \\\u200Bn and \\\u200Bfoo{x}\n"
+    )
+    expect(mdRoundTrip(markdown)).toBe(markdown)
+  })
+
+  it("stays an entity or LaTeX fragment written in org", () => {
+    const org = "\\alpha and \\foo{x}\n"
+    expect(convertOrgToMarkdown(org)).toBe("α and $\\foo{x}$\n")
   })
 })
 

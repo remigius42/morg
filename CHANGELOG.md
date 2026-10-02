@@ -64,6 +64,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the element below it (`#+SOURCE:` is an alias of `#+NAME:`) no longer
   comes back from Markdown attached to the next paragraph or keyword;
   md → org keeps it apart with a blank line.
+- A literal backslash before a letter in Markdown text no longer turns
+  into LaTeX or a symbol through org: a path like `C:\Users\me` used to
+  come back as `C:$\Users$$\me$`, `\alpha` as `α`.
 - An ordered list starting at `0.` keeps its start through org → md
   instead of being renumbered from `1.`.
 - A hard line break inside a list item no longer comes back from org
