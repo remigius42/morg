@@ -27,6 +27,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   heading, which flattened every level below it. `logseq()` takes no
   options anymore (`nestUnderHeadings` is gone).
 
+### Fixed
+
+- Logseq preset: a block whose content starts with its properties
+  (`** :PROPERTIES:`, as Logseq writes a query block) keeps them as its
+  `key::` lines instead of growing an `:END:` line per round trip.
+
 ## [0.7.0] - 2026-10-02
 
 ### Added

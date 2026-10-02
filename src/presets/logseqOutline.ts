@@ -127,7 +127,10 @@ function orgBlockToMarkdown(
   preset: Preset
 ): string {
   const [first = "", ...rest] = block.lines
-  const { meta, body } = takeMeta(rest, () => false)
+  // content that starts with the block's properties puts their drawer
+  // on the headline line; its heading level is then a property too
+  const metaFirst = DRAWER_START_RE.test(first)
+  const { meta, body } = takeMeta(metaFirst ? block.lines : rest, () => false)
   let heading = ""
   const metaLines = meta.flatMap(lines => {
     if (lines[0] !== ":PROPERTIES:") {
@@ -135,23 +138,24 @@ function orgBlockToMarkdown(
     }
     return lines.slice(1, -1).flatMap(line => {
       const [, key = "", value = ""] = ORG_PROPERTY_RE.exec(line) ?? []
-      if (key === "heading" && /^[1-6]$/.test(value)) {
+      if (!metaFirst && key === "heading" && /^[1-6]$/.test(value)) {
         heading = "#".repeat(Number(value))
         return []
       }
       return [`${key}::${value ? ` ${value}` : ""}`]
     })
   })
-  const [title = "", ...more] = convertContent(
-    [first, ...body],
+  const content = convertContent(
+    metaFirst ? body : [first, ...body],
     convert,
     preset
   )
+  const [title = "", ...more] = arrange(metaFirst, metaLines, content)
   const head = [heading, title].filter(Boolean).join(" ")
   const indent = "\t".repeat(block.level - 1)
   return [
     `${indent}-${head ? ` ${head}` : ""}`,
-    ...[...metaLines, ...more].map(line => `${indent}  ${line}`)
+    ...more.map(line => `${indent}  ${line}`)
   ].join("\n")
 }
 
@@ -228,25 +232,50 @@ function orgMetaLines(meta: string[][], heading: number): string[] {
   return lines.flatMap(line => (line === null ? drawer : [line]))
 }
 
+// a block's content's first line, its meta lines, then the rest of the
+// content; content that starts with the meta lines keeps them first
+function arrange(
+  metaFirst: boolean,
+  meta: string[],
+  content: string[]
+): string[] {
+  return metaFirst
+    ? [...meta, ...content]
+    : [content[0] ?? "", ...meta, ...content.slice(1)]
+}
+
+// `## title`: the heading level and the title
+function mdHeading(line: string): [number, string] {
+  const match = MD_HEADING_RE.exec(line)
+  return match ? [match[1]?.length ?? 0, match[2] ?? ""] : [0, line]
+}
+
 function mdBlockToOrg(
   block: Block,
   convert: FragmentConverter,
   preset: Preset
 ): string {
   const [first = "", ...rest] = block.lines
-  const heading = MD_HEADING_RE.exec(first)
-  const { meta, body } = takeMeta(
-    rest.map(line => dedent(line, block.level)),
-    line => MD_PROPERTY_RE.test(line)
+  const lines = [first, ...rest.map(line => dedent(line, block.level))]
+  // content that starts with properties: their drawer opens on the
+  // headline line
+  const metaFirst = MD_PROPERTY_RE.test(first)
+  const [heading, titleLine] = metaFirst ? [0, ""] : mdHeading(first)
+  const { meta, body } = takeMeta(metaFirst ? lines : lines.slice(1), line =>
+    MD_PROPERTY_RE.test(line)
   )
-  const [title = "", ...more] = convertContent(
-    [heading ? (heading[2] ?? "") : first, ...body],
+  const content = convertContent(
+    metaFirst ? body : [titleLine, ...body],
     convert,
     preset
   ).filter(line => line !== BRACED_SCRIPTS_LINE)
+  const [title = "", ...more] = arrange(
+    metaFirst,
+    orgMetaLines(meta, heading),
+    content
+  )
   return [
     `${"*".repeat(block.level)}${title ? ` ${title}` : ""}`,
-    ...orgMetaLines(meta, heading?.[1]?.length ?? 0),
     ...more
   ].join("\n")
 }

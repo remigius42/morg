@@ -45,6 +45,13 @@ describe("logseq outline", () => {
     )
   })
 
+  it("keeps properties that start a block's content on its first line", () => {
+    both(
+      "* q\n** :PROPERTIES:\n:query-table: false\n:END:\ntext\n",
+      "- q\n\t- query-table:: false\n\t  text\n"
+    )
+  })
+
   it("keeps planning lines and drawers where they are", () => {
     both(
       "* TODO a\nSCHEDULED: <2026-01-01 Thu>\n:PROPERTIES:\n:heading: 2\n:id: x\n:END:\n:LOGBOOK:\nCLOCK: [2026-01-01 Thu 10:00]--[2026-01-01 Thu 11:00] =>  01:00\n:END:\n",

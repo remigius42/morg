@@ -364,7 +364,8 @@ a headline of stars, a space and the content (an empty block as the
 bare stars) ↔ a `-` bullet indented one tab per level, continuation
 lines two spaces inside it; a code block or table that starts on the
 headline line converts as a whole. `:heading: N` ↔ `- ## …`; a block's
-property drawer ↔ `key:: value` lines where it was; planning lines and
+property drawer ↔ `key:: value` lines where it was (on the headline
+line if the content starts with it, as Logseq writes a query block); planning lines and
 other drawers (`:LOGBOOK:`) stay as written; an empty drawer is
 dropped. A heading outside the bullets is a top-level block (Logseq
 writes a page's first block so if it is a heading); other content
