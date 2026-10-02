@@ -229,10 +229,9 @@ export function markdownOutlineToOrg(
   const { page, blocks } = splitBlocks(
     markdown.replace(/\r?\n$/, "").split(/\r?\n/),
     line => {
-      if (FENCE_RE.test(line)) {
-        fenced = !fenced
-      }
       const match = MD_BLOCK_RE.exec(line)
+      // a bullet starts a block, which may open a fence of its own
+      fenced = (match ? false : fenced) !== FENCE_RE.test(match?.[2] ?? line)
       if (match) {
         return [(match[1]?.length ?? 0) + 1, match[2] ?? ""]
       }

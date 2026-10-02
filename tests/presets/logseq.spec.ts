@@ -116,6 +116,12 @@ describe("logseq outline", () => {
     )
   })
 
+  it("ends a fence a bullet line opened", () => {
+    expect(toOrg("- ```sh\n  echo\n  ```\n## B\n\t- y\n")).toBe(
+      "* #+begin_src sh\necho\n#+end_src\n* B\n:PROPERTIES:\n:heading: 2\n:END:\n** y\n"
+    )
+  })
+
   it("maps page references to wikilinks and labeled forms", () => {
     both(
       "* See [[my page name]] and [[other page][a label]]\n* [[((60ab-uuid))][a block ref]]\n",
