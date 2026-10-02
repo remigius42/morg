@@ -13,7 +13,7 @@ import {
 } from "../core/frontmatterBlock.js"
 import { keyValueEntries } from "../core/keyValueLines.js"
 import { tryParse } from "../core/render.js"
-import type { Root as MdastRoot } from "mdast"
+import type { Link as MdastLink, Root as MdastRoot } from "mdast"
 import type { Preset } from "./types.js"
 import { markdownOutlineToOrg, orgOutlineToMarkdown } from "./logseqOutline.js"
 
@@ -60,35 +60,56 @@ export function logseq(): Preset {
 
 // Logseq md writes a url bare, as org writes a plain link; the core
 // carries a md link as a [[url]] bracket link, so md→org counts the
-// links that were bare in the source and turns as many back to plain
+// links that were bare in the source and turns as many back to plain.
+// Where org's plain link ends short of md's autolink on trailing
+// punctuation (a macro's `}}`), that tail splits off as text
 function countBareUrls(mdast: MdastRoot, counts: Map<string, number>): void {
   counts.clear()
-  visit(mdast, "link", node => {
-    const start = node.position?.start.offset
-    const end = node.position?.end.offset
-    if (
-      start !== undefined &&
-      end !== undefined &&
-      end - start === node.url.length &&
-      readsAsPlainLink(node.url)
-    ) {
-      counts.set(node.url, (counts.get(node.url) ?? 0) + 1)
+  visit(mdast, "link", (node, index, parent) => {
+    const url = bareUrl(node)
+    if (url === null) {
+      return undefined
     }
+    counts.set(url, (counts.get(url) ?? 0) + 1)
+    const tail = node.url.slice(url.length)
+    if (tail && parent && index !== undefined) {
+      node.url = url
+      node.children = [{ type: "text", value: url }]
+      parent.children.splice(index + 1, 0, { type: "text", value: tail })
+    }
+    return undefined
   })
 }
 
-// whether org reads `url` on its own as just that plain link; it ends
-// one early at a `(` (`…/Bandwidth_(signal)`), which a bracket link keeps
-function readsAsPlainLink(url: string): boolean {
+// the plain link org reads for a link written bare, if the rest is
+// trailing punctuation
+function bareUrl(node: MdastLink): string | null {
+  const start = node.position?.start.offset
+  const end = node.position?.end.offset
+  if (
+    start === undefined ||
+    end === undefined ||
+    end - start !== node.url.length
+  ) {
+    return null
+  }
+  const url = orgPlainLink(node.url)
+  return url !== null && /^[^\w(]*$/.test(node.url.slice(url.length))
+    ? url
+    : null
+}
+
+// the url of the plain link org reads at the start of `url`, if any;
+// it ends early at a `(` (`…/Bandwidth_(signal)`) or a macro's `}}`
+function orgPlainLink(url: string): string | null {
   if (!/^https?:\/\//.test(url)) {
-    return false
+    return null
   }
   const [paragraph] = tryParse(`${url}\n`)?.children ?? []
   const [link] = (paragraph as Parent | undefined)?.children ?? []
-  return (
-    (link as Partial<Link> | undefined)?.format === "plain" &&
-    (link as Link).rawLink === url
-  )
+  return (link as Partial<Link> | undefined)?.format === "plain"
+    ? (link as Link).rawLink
+    : null
 }
 
 function restoreBareUrls(

@@ -105,6 +105,13 @@ describe("logseq outline", () => {
     )
   })
 
+  it("keeps a url in a macro bare", () => {
+    both(
+      "* {{video https://youtube.com/watch?v=abc}}\n",
+      "- {{video https://youtube.com/watch?v=abc}}\n"
+    )
+  })
+
   it("keeps a bare url org would cut short in brackets", () => {
     const markdown = "- https://x.ch/Band_(signal_processing)\n"
 
