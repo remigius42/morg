@@ -45,12 +45,6 @@ export interface Controls {
   notices: string[]
   /** Name the download follows; undefined until a file has been opened. */
   openedFileName?: string
-  /**
-   * Direction the input was written for. The demo swap compares against
-   * it, and opening a file sets the direction outside the change listener,
-   * so the baseline cannot live in that closure.
-   */
-  previousDirection: Direction
   /** Says a conversion is running; built here, not in the markup. */
   converting: HTMLParagraphElement
   /** Says the clipboard refused, and what to do instead. */
@@ -112,8 +106,6 @@ export function findControls(runner: ConversionRunner): Controls {
       "copyError",
       "Could not copy. Select the output and press Ctrl+C."
     ),
-    previousDirection: element<HTMLSelectElement>("direction")
-      .value as Direction,
     runner,
     latestRun: 0
   }

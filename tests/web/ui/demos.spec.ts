@@ -1,7 +1,15 @@
 import { describe, expect, it } from "vitest"
 import { convertMarkdownToOrg } from "../../../src/markdownToOrg.js"
 import { convertOrgToMarkdown } from "../../../src/orgToMarkdown.js"
-import { demoFor, MD_DEMO, ORG_DEMO } from "../../../web/src/ui/demos.js"
+import {
+  demoFor,
+  isDemo,
+  LOGSEQ_MD_DEMO,
+  LOGSEQ_ORG_DEMO,
+  MD_DEMO,
+  ORG_DEMO
+} from "../../../web/src/ui/demos.js"
+import { logseq } from "../../../src/presets/logseq.js"
 
 // the demos are the first thing every visitor converts, so pin that they
 // round-trip convergently and warning-free under default options
@@ -27,6 +35,31 @@ describe("demo documents", () => {
     const onWarning = (message: string) => warnings.push(message)
     const org = convertMarkdownToOrg(MD_DEMO, { onWarning })
     expect(convertOrgToMarkdown(org, { onWarning })).toBe(MD_DEMO)
+    expect(warnings).toEqual([])
+  })
+
+  it("offers the logseq demos with the logseq preset", () => {
+    expect(demoFor("md-to-org", "logseq")).toBe(LOGSEQ_MD_DEMO)
+    expect(demoFor("org-to-md", "logseq")).toBe(LOGSEQ_ORG_DEMO)
+    expect(demoFor("org-to-md", "obsidian")).toBe(ORG_DEMO)
+    expect(isDemo(LOGSEQ_MD_DEMO)).toBe(true)
+    expect(isDemo(`${ORG_DEMO} `)).toBe(false)
+  })
+
+  it("logseq demos convert into each other without warnings", () => {
+    const warnings: string[] = []
+    const options = {
+      preset: logseq(),
+      onWarning: (message: string) => warnings.push(message)
+    }
+    // the same page; only the leading comment names its own format
+    const header = (text: string) => text.replace(/^.*\n/, "")
+    expect(header(convertOrgToMarkdown(LOGSEQ_ORG_DEMO, options))).toBe(
+      header(LOGSEQ_MD_DEMO)
+    )
+    expect(header(convertMarkdownToOrg(LOGSEQ_MD_DEMO, options))).toBe(
+      header(LOGSEQ_ORG_DEMO)
+    )
     expect(warnings).toEqual([])
   })
 })

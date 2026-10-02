@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   of fragments; `convert` runs the core on one fragment.
 - The Web UI demo also shows a quote, a nested ordered list and a src
   block switch.
+- The Web UI offers a Logseq demo page, in Logseq org or Logseq
+  Markdown, while the Logseq preset is selected; an untouched demo
+  follows the preset as it follows the direction.
 
 ### Changed
 

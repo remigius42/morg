@@ -5,6 +5,7 @@ import { CONVERTING_AFTER_MS, DEBOUNCE_MS } from "../../web/src/ui/runLoop.js"
 import { runConversion } from "../../web/src/pipeline/convert.js"
 import { readState, writeState } from "../../web/src/ui/persistence.js"
 import type { ConversionRunner } from "../../web/src/pipeline/runner.js"
+import { LOGSEQ_MD_DEMO, LOGSEQ_ORG_DEMO } from "../../web/src/ui/demos.js"
 
 // Smoke check: the Embed Page markup wired by main.ts converts on input.
 function loadEmbedPageBody(): string {
@@ -195,6 +196,27 @@ describe("embed page", () => {
     expect(element<HTMLTextAreaElement>("input").value).toContain(
       "Paste your Markdown here"
     )
+  })
+
+  it("swaps the untouched demo to a preset's own dialect", () => {
+    const preset = element<HTMLSelectElement>("preset")
+    preset.value = "logseq"
+    preset.dispatchEvent(new Event("change", { bubbles: true }))
+    expect(element<HTMLTextAreaElement>("input").value).toBe(LOGSEQ_ORG_DEMO)
+
+    const direction = element<HTMLSelectElement>("direction")
+    direction.value = "md-to-org"
+    direction.dispatchEvent(new Event("change", { bubbles: true }))
+    expect(element<HTMLTextAreaElement>("input").value).toBe(LOGSEQ_MD_DEMO)
+  })
+
+  it("keeps an edited input when the preset changes", () => {
+    const input = element<HTMLTextAreaElement>("input")
+    input.value = "* mine\n"
+    const preset = element<HTMLSelectElement>("preset")
+    preset.value = "logseq"
+    preset.dispatchEvent(new Event("change", { bubbles: true }))
+    expect(input.value).toBe("* mine\n")
   })
 
   it("swaps the demo a restored direction loaded", async () => {

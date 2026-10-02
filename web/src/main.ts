@@ -7,7 +7,7 @@ import {
   wireConfigSnippets
 } from "./ui/configPanel.js"
 import { element, findControls, type Controls } from "./ui/controls.js"
-import { demoFor } from "./ui/demos.js"
+import { demoFor, isDemo } from "./ui/demos.js"
 import { convert, debounce, DEBOUNCE_MS, startConvert } from "./ui/runLoop.js"
 import { wireDropZone } from "./ui/dropZone.js"
 import type { Direction } from "./direction.js"
@@ -122,7 +122,6 @@ async function openDocument(
     controls.direction.value as Direction
   )
   controls.direction.value = direction
-  controls.previousDirection = direction
   return [sizeWarning(doc)].filter(notice => notice !== undefined)
 }
 
@@ -194,18 +193,22 @@ function wireListeners(controls: Controls): void {
     persist(controls)
     startConvert(controls)
   })
-  direction.addEventListener("change", () => {
-    // an untouched demo follows the direction's input format
-    if (input.value === demoFor(controls.previousDirection)) {
-      input.value = demoFor(direction.value as Direction)
+  // an untouched demo follows the direction's input format and the
+  // preset's dialect; registered ahead of the listeners that convert
+  const swapDemo = (): void => {
+    if (isDemo(input.value)) {
+      input.value = demoFor(direction.value as Direction, controls.preset.value)
     }
-    controls.previousDirection = direction.value as Direction
+  }
+  controls.preset.addEventListener("change", swapDemo)
+  direction.addEventListener("change", () => {
+    swapDemo()
     // the opened name described a document this direction no longer
     // reads; kept, it would name the output after the wrong format,
     // and where the output format matches, after the source file itself
     if (
       controls.openedFileName &&
-      !directionSuitsFile(controls.openedFileName, controls.previousDirection)
+      !directionSuitsFile(controls.openedFileName, direction.value as Direction)
     ) {
       controls.openedFileName = undefined
     }
@@ -256,10 +259,6 @@ export function init(runner?: ConversionRunner): void {
   watchThemeChanges()
 
   restore(controls)
-  // findControls read the baseline off the markup's default; the restore
-  // may have just moved the select somewhere else, and the demo swap
-  // compares the input against whichever direction it was written for
-  controls.previousDirection = controls.direction.value as Direction
   wireListeners(controls)
   wireFileControls(controls)
 
@@ -270,7 +269,10 @@ export function init(runner?: ConversionRunner): void {
     reflectConfig(controls)
   }
   if (!controls.input.value) {
-    controls.input.value = demoFor(controls.direction.value as Direction)
+    controls.input.value = demoFor(
+      controls.direction.value as Direction,
+      controls.preset.value
+    )
   }
   startConvert(controls)
 
