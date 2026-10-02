@@ -1,3 +1,4 @@
+import { consumesBracedScripts } from "../core/bracedScripts.js"
 import type { FragmentConverter, Preset } from "./types.js"
 
 // Logseq stores a page as an outline of blocks, each block a content
@@ -167,6 +168,13 @@ export function orgOutlineToMarkdown(
     .concat("\n")
 }
 
+// org→md reads a block's bare `_` and `^` as text, as md→org writes
+// them without the setting that would say so
+function withBracedScripts(lines: string[]): string[] {
+  const braced = [BRACED_SCRIPTS_LINE, ...lines]
+  return consumesBracedScripts(braced.join("\n")) ? braced : lines
+}
+
 function orgBlockToMarkdown(
   block: Block,
   convert: FragmentConverter,
@@ -192,7 +200,7 @@ function orgBlockToMarkdown(
     })
   })
   const content = convertContent(
-    metaFirst ? body : [first, ...body],
+    withBracedScripts(metaFirst ? body : [first, ...body]),
     convert,
     preset
   )

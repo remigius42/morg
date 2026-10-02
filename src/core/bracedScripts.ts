@@ -175,6 +175,16 @@ function takeBracedScripts(uniorgAst: OrgData): void {
 }
 
 /**
+ * Whether org→md would consume a `^:{}` setting at the head of `org`:
+ * its text reads a script org would otherwise take for one.
+ * @param org The org text, the setting included.
+ * @returns Whether the setting is taken as the one md→org adds.
+ */
+export function consumesBracedScripts(org: string): boolean {
+  return readsBareScripts(bracedScriptsParser.parse(org))
+}
+
+/**
  * org→md: parses org, honoring its `^:` setting, and consuming `^:{}`
  * where the text needs it: md→org adds it only then, so anywhere else
  * it is the author's own setting.

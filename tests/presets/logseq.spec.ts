@@ -47,6 +47,10 @@ describe("logseq outline", () => {
     )
   })
 
+  it("keeps a bare underscore and caret text, as md does", () => {
+    both("* snake_case 2^10\n", "- snake\\_case 2^10\n")
+  })
+
   it("maps block properties to key:: lines", () => {
     both(
       "* a\n:PROPERTIES:\n:collapsed: true\n:logseq.order-list-type: number\n:END:\n",
