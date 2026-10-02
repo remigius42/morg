@@ -79,7 +79,11 @@ Tables: GFM ↔ org, including column alignment via org `<l>/<r>/<c>`
 cookie rows. `table.el` tables travel as `table.el`-tagged fenced
 blocks and are restored verbatim. An escaped `\|` in a cell becomes
 org's `\vert{}` entity (org has no escaped `|`), which comes back as
-`\|`.
+`\|`. In inline code, where the entity would be literal, it becomes the
+lookalike `∣` (U+2223) instead and reports via `onWarning`: the org
+file then holds a different character (a command copied from it, an
+export). org → md turns `∣` in code in a table cell back into `\|`, an
+author's own included.
 
 ## Org-isms (org → md)
 

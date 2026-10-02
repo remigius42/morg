@@ -88,7 +88,7 @@ export function convertMarkdownToOrg(
   // a pipe in a table cell an entity; a literal backslash before a
   // letter first, the entity being none
   escapeBackslashCommands(uniorgAst)
-  escapeTablePipes(uniorgAst)
+  escapeTablePipes(uniorgAst, options.onWarning)
   escapeFootnoteReferences(uniorgAst)
   escapeLineSyntax(uniorgAst)
   escapeOrgMarkup(uniorgAst)

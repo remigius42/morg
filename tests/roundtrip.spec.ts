@@ -592,6 +592,22 @@ describe("a pipe in a table cell", () => {
   })
 })
 
+describe("a pipe in code in a table cell", () => {
+  it("stays in its cell as a lookalike, with a warning", () => {
+    // org has no escape inside ~code~: U+2223 stands in for the pipe
+    const markdown =
+      "| cmd            |\n| -------------- |\n| `ls \\| grep x` |\n"
+    const warnings: string[] = []
+    expect(
+      convertMarkdownToOrg(markdown, { onWarning: m => warnings.push(m) })
+    ).toBe("| cmd |\n|-|\n| ~ls \u2223 grep x~ |\n")
+    expect(warnings).toEqual([
+      "a | in code in a table cell becomes ∣ (U+2223) in org"
+    ])
+    expect(mdRoundTrip(markdown)).toBe(markdown)
+  })
+})
+
 describe("literal org markers", () => {
   it("stay literal next to markup", () => {
     // the zero-width space separating the markup is a valid boundary
