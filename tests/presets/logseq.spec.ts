@@ -62,6 +62,13 @@ describe("logseq outline", () => {
     expect(toMarkdown(org)).toBe("- > some **bold** and [l](https://y.ch)\n")
   })
 
+  it("keeps the text of a block org writes as its org text", () => {
+    both(
+      "* #+begin_tip\nsee https://x.ch, a@b.ch and [#A]\n#+end_tip\n",
+      "- #+begin_tip\n  see https://x.ch, a@b.ch and [#A]\n  #+end_tip\n"
+    )
+  })
+
   it("maps block properties to key:: lines", () => {
     both(
       "* a\n:PROPERTIES:\n:collapsed: true\n:logseq.order-list-type: number\n:END:\n",

@@ -62,7 +62,12 @@ export function keyValueParagraph(lines: string[]): RootContent {
 // trailing newline), for verbatim passthrough of org-only constructs
 export function orgNodeToText(node: unknown): string {
   const orgText = unified()
-    .use(uniorgStringify)
+    // a preset's verbatim-inline text is org text already
+    .use(uniorgStringify, {
+      handlers: {
+        "verbatim-inline": (inline: { value: string }) => inline.value
+      }
+    } as Parameters<typeof uniorgStringify>[0])
     .stringify({
       type: "org-data",
       children: [node],
