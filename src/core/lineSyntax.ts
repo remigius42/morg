@@ -21,8 +21,12 @@ import {
 const MAY_BE_LINE_SYNTAX_RE =
   /^(?:[-+]|\*+)(?:\s|$)|^(?:-{5}|\+-|#(?:\s|$|\+)|[|:]|\[fn:|\\begin\{|%%\()|^[\p{L}\p{N}_]+[.):]/u
 
-// whether org reads `line` as anything but a plain paragraph
-function readsAsLineSyntax(line: string): boolean {
+/**
+ * Whether org reads a line as anything but a plain paragraph.
+ * @param line The line, without its line break.
+ * @returns Whether it reads as org line syntax.
+ */
+export function readsAsLineSyntax(line: string): boolean {
   if (!MAY_BE_LINE_SYNTAX_RE.test(line)) {
     return false
   }

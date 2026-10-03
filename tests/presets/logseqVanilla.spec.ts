@@ -79,6 +79,19 @@ describe("Logseq org → Vanilla md", () => {
     ).toBe("1. a\n   1. x\n2. b\n- c\n")
   })
 
+  it("keeps a block's title inline, as Logseq reads it", () => {
+    for (const [org, markdown] of <[string, string][]>[
+      ["* : a ~b~\n", "- : a `b`\n"],
+      ["* ** a\n", "- \\*\\* a\n"],
+      ["* - a\n", "- \\- a\n"]
+    ]) {
+      expect(toMarkdown(org)).toBe(markdown)
+      expect(convertMarkdownToOrg(markdown, { outputPreset: logseq() })).toBe(
+        org
+      )
+    }
+  })
+
   it("ends a page with or without blocks in one line break", () => {
     expect(toMarkdown("just text\n")).toBe("just text\n")
     expect(toMarkdown("just text\n\n* a\n")).toBe("just text\n\n- a\n")
@@ -185,9 +198,6 @@ describe("Vanilla md → Logseq org", () => {
     // children besides: `y` belongs to the inner list
     expect(toOrg("- - x\n  - y\n")).toBe("* - x\n- y\n")
     expect(toOrg("- - x\n")).toBe("* - x\n")
-    expect(
-      convertOrgToMarkdown("* - x\n** y\n", { inputPreset: logseq() })
-    ).toBe("- - x\n  - y\n")
   })
 
   it("recognizes Logseq's carried syntax as Logseq's again", () => {

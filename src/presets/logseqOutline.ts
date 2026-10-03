@@ -1,4 +1,6 @@
 import { consumesBracedScripts } from "../core/bracedScripts.js"
+import { readsAsLineSyntax } from "../core/lineSyntax.js"
+import { ZERO_WIDTH_SPACE } from "../core/markupBoundary.js"
 import {
   isDrawerStart,
   isOrgBlockStart,
@@ -366,6 +368,26 @@ function writeOutline(
   return [...page, ...blocks.map(writeBlock)].join("\n").concat("\n")
 }
 
+// a block's title is a headline's, which Logseq reads as inline text
+// only; converted with the lines below it, it must not read as a list,
+// a headline or a fixed-width line, so an escape the core drops keeps
+// it text (ADR 0006)
+function inlineTitle(block: Block): string[] {
+  const [title = "", ...rest] = block.content
+  return !block.metaFirst && readsAsLineSyntax(title)
+    ? [`${ZERO_WIDTH_SPACE}${title}`, ...rest]
+    : block.content
+}
+
+// a title written from Markdown text keeps it text with an escape that
+// a headline needs none of
+function dropTitleEscape(block: Block): Block {
+  const [title = "", ...rest] = block.content
+  return block.metaFirst || !title.startsWith(ZERO_WIDTH_SPACE)
+    ? block
+    : { ...block, content: [title.slice(ZERO_WIDTH_SPACE.length), ...rest] }
+}
+
 // a task marker Logseq shows as a checkbox (0.10, block-checkbox), and
 // the text after it; TODO and DONE are the checkbox's own
 const CHECKBOX_MARKER_RE =
@@ -515,18 +537,19 @@ export function orgOutlineToMarkdown(
   context: ConversionContext
 ): string {
   const { page, blocks } = readOrgOutline(org)
+  const vanilla = context.side === "input"
   const outline = {
     page: convertPage(page, convert, presets.page),
     blocks: blocks.map(block => ({
       ...block,
       content: convertContent(
-        withBracedScripts(block.content),
+        withBracedScripts(vanilla ? inlineTitle(block) : block.content),
         convert,
         presets.block
       )
     }))
   }
-  return context.side === "input"
+  return vanilla
     ? writeVanillaMarkdownOutline(outline, context)
     : writeOutline(outline, writeMarkdownBlock)
 }
@@ -561,14 +584,17 @@ export function markdownOutlineToOrg(
   return writeOutline(
     {
       page: convertPage(page, convertCarried, presets.page),
-      blocks: blocks.map(block => ({
-        ...block,
-        content: convertMarkdownContent(
-          block.content,
-          convertCarried,
-          presets.block
-        ).filter(line => line !== BRACED_SCRIPTS_LINE)
-      }))
+      blocks: blocks.map(block => {
+        const converted = {
+          ...block,
+          content: convertMarkdownContent(
+            block.content,
+            convertCarried,
+            presets.block
+          ).filter(line => line !== BRACED_SCRIPTS_LINE)
+        }
+        return vanilla ? dropTitleEscape(converted) : converted
+      })
     },
     writeOrgBlock
   )
