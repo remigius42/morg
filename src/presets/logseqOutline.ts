@@ -70,6 +70,8 @@ interface Presets {
   vanillaPage?: (lines: string[]) => string[]
   // a preset made to read Vanilla Markdown as carrying its syntax
   vanillaReader?: (preset: Preset) => Preset
+  // what writes Logseq's links and hiccup into Vanilla Markdown
+  vanillaInline?: Preset
 }
 
 function splitBlocks(
@@ -541,13 +543,15 @@ export function orgOutlineToMarkdown(
   const { page, blocks } = readOrgOutline(org)
   const vanilla = context.side === "input"
   const pageLines = vanilla ? (presets.vanillaPage?.(page) ?? page) : page
+  const convertCarried: FragmentConverter = (fragment, preset) =>
+    convert(fragment, preset, vanilla ? presets.vanillaInline : undefined)
   const outline = {
-    page: convertPage(pageLines, convert, presets.page),
+    page: convertPage(pageLines, convertCarried, presets.page),
     blocks: blocks.map(block => ({
       ...block,
       content: convertContent(
         withBracedScripts(vanilla ? inlineTitle(block) : block.content),
-        convert,
+        convertCarried,
         presets.block
       )
     }))

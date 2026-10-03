@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest"
 import { logseq } from "../../src/presets/logseq.js"
+import { obsidian } from "../../src/presets/obsidian.js"
 import { convertOrgToMarkdown } from "../../src/orgToMarkdown.js"
 import { convertMarkdownToOrg } from "../../src/markdownToOrg.js"
 
@@ -154,6 +155,15 @@ describe("Logseq org → Vanilla md", () => {
       })
     ).toBe("#+title: P\n#+tags: a, b\n\n* x\n")
   })
+
+  it("keeps the page refs in a hiccup paragraph", () => {
+    expect(toMarkdown("* [:div [[Page]] text]\n")).toBe(
+      "- [:div [[Page]] text]\n"
+    )
+    expect(
+      convertOrgToMarkdown("* [:div [[Page]] text]\n", { preset: logseq() })
+    ).toBe("- [:div [[Page]] text]\n")
+  })
 })
 
 describe("Vanilla md → Logseq org", () => {
@@ -221,13 +231,6 @@ describe("Vanilla md → Logseq org", () => {
     expect(toOrg("- a\nlazy\n")).toBe("* a\nlazy\n")
   })
 
-  it("reads a list on an item's first line as its content", () => {
-    // Markdown has no item whose content opens with a list and that has
-    // children besides: `y` belongs to the inner list
-    expect(toOrg("- - x\n  - y\n")).toBe("* - x\n- y\n")
-    expect(toOrg("- - x\n")).toBe("* - x\n")
-  })
-
   it("recognizes Logseq's carried syntax as Logseq's again", () => {
     expect(
       toOrg(
@@ -243,17 +246,12 @@ describe("Vanilla md → Logseq org", () => {
       '* tasks\n\n#+begin_QUERY\n{:title "x"}\n#+end_QUERY\n'
     )
   })
-  it("stays a code block between Logseq's formats", () => {
-    expect(
-      convertMarkdownToOrg("- a\n  ```query\n  x\n  ```\n", {
-        preset: logseq()
-      })
-    ).toBe("* a\n\n#+begin_src query\nx\n#+end_src\n")
-    expect(
-      convertOrgToMarkdown("* a\n#+begin_src query\nx\n#+end_src\n", {
-        preset: logseq()
-      })
-    ).toBe("- a\n  \n  ```query\n  x\n  ```\n")
+
+  it("reads a list on an item's first line as its content", () => {
+    // Markdown has no item whose content opens with a list and that has
+    // children besides: `y` belongs to the inner list
+    expect(toOrg("- - x\n  - y\n")).toBe("* - x\n- y\n")
+    expect(toOrg("- - x\n")).toBe("* - x\n")
   })
 
   it("resolves reference links before the page splits into blocks", () => {
@@ -289,6 +287,21 @@ describe("Vanilla md → Logseq org", () => {
   })
 })
 
+describe("a code block in the query language", () => {
+  it("stays a code block between Logseq's formats", () => {
+    expect(
+      convertMarkdownToOrg("- a\n  ```query\n  x\n  ```\n", {
+        preset: logseq()
+      })
+    ).toBe("* a\n\n#+begin_src query\nx\n#+end_src\n")
+    expect(
+      convertOrgToMarkdown("* a\n#+begin_src query\nx\n#+end_src\n", {
+        preset: logseq()
+      })
+    ).toBe("- a\n  \n  ```query\n  x\n  ```\n")
+  })
+})
+
 describe("Logseq md ↔ Vanilla org", () => {
   it("writes Logseq md blocks as headlines", () => {
     expect(
@@ -321,5 +334,25 @@ describe("Logseq md ↔ Vanilla org", () => {
         }
       )
     ).toBe("#+title: P\n#+file: [a_b.pdf](../assets/a_b.pdf)\n\n* a\n")
+  })
+})
+
+describe("Obsidian ↔ Logseq", () => {
+  it("writes Logseq org page refs as Obsidian wikilinks", () => {
+    expect(
+      convertOrgToMarkdown("* see [[Page]] and [[Other][a label]] #tag\n", {
+        inputPreset: logseq(),
+        outputPreset: obsidian()
+      })
+    ).toBe("- see [[Page]] and [[Other|a label]] #tag\n")
+  })
+
+  it("reads Obsidian wikilinks as Logseq org page refs", () => {
+    expect(
+      convertMarkdownToOrg("- see [[Page]] and [[Other|a label]]\n", {
+        inputPreset: obsidian(),
+        outputPreset: logseq()
+      })
+    ).toBe("* see [[Page]] and [[Other][a label]]\n")
   })
 })

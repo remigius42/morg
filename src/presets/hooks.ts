@@ -70,7 +70,7 @@ export function takeOver(
  * @param sides The conversion's preset per side.
  * @param side The taking-over preset's side.
  * @param preset The fragment's preset.
- * @param carried The preset for the other side, if it carries syntax.
+ * @param carried The preset for the other side where it is Vanilla.
  * @returns The fragment's preset per side.
  */
 export function fragmentSides(
@@ -79,9 +79,10 @@ export function fragmentSides(
   preset: Preset | undefined,
   carried?: Preset
 ): Sides {
+  // only a Vanilla side carries another preset's syntax
   return {
-    input: side === "output" ? (carried ?? sides.input) : preset,
-    output: side === "input" ? (carried ?? sides.output) : preset
+    input: side === "output" ? (sides.input ?? carried) : preset,
+    output: side === "input" ? (sides.output ?? carried) : preset
   }
 }
 

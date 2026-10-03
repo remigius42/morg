@@ -39,7 +39,8 @@ export function logseq(): Preset {
     page,
     block,
     vanillaReader,
-    vanillaPage: pagePropertiesToFrontmatter
+    vanillaPage: pagePropertiesToFrontmatter,
+    vanillaInline
   }
   return {
     ...page,
@@ -460,15 +461,12 @@ function pageProperties(uniorgAst: OrgData): void {
 }
 
 // Logseq org's own inline syntax, carried in its Markdown form, which
-// Vanilla Markdown keeps as text (ADR 0006); writing Logseq Markdown
-// does the same for a Vanilla org link
+// Vanilla Markdown keeps as text (ADR 0006)
 function readOrgInline(uniorgAst: OrgData): OrgData {
   // first: a query's body is Logseq's query language, not org text
   queryBlocksToCode(uniorgAst)
   keepVerbatimText(uniorgAst)
   repairHighlights(uniorgAst)
-  fuzzyLinksToPageRefs(uniorgAst)
-  markHiccupParagraphs(uniorgAst)
   return uniorgAst
 }
 
@@ -489,6 +487,21 @@ function vanillaReader(preset: Preset): Preset {
           return tree
         }
       }
+    }
+  }
+}
+
+// a page ref stays a link for the output's Markdown dialect to write
+// (Obsidian's wikilink); Vanilla Markdown carries Logseq's syntax. A
+// hiccup paragraph is taken whole after its links are written, or a
+// page ref in it would be lost
+const vanillaInline: Preset = {
+  name: "logseq",
+  markdown: {
+    write: uniorgAst => {
+      fuzzyLinksToPageRefs(uniorgAst)
+      markHiccupParagraphs(uniorgAst)
+      return uniorgAst
     }
   }
 }
