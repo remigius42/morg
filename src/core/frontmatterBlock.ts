@@ -17,7 +17,7 @@ import {
 // frontmatter travels verbatim in a comment block marked as morg's
 // (ADR 0005); uniorg keeps neither the block's parameter nor its
 // unescaped value, so the block is rendered as raw text
-const FRONTMATTER_BLOCK_BEGIN = "#+begin_comment morg_frontmatter"
+export const FRONTMATTER_BLOCK_BEGIN = "#+begin_comment morg_frontmatter"
 
 // md→org carries the frontmatter as this node until just before
 // the org text is written, so a preset can still take entries out
@@ -92,7 +92,12 @@ function detachLeadingKeywords(uniorgAst: OrgData): void {
   }
 }
 
-function frontmatterBlock(yaml: string): string {
+/**
+ * The Frontmatter Block carrying YAML through org (ADR 0005).
+ * @param yaml The YAML source, without its `---` fences.
+ * @returns The block's org text.
+ */
+export function frontmatterBlock(yaml: string): string {
   const body = yaml ? `${escapeBlockLines(yaml)}\n` : ""
   return `${FRONTMATTER_BLOCK_BEGIN}\n${body}#+end_comment\n`
 }

@@ -42,6 +42,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   code block) is Logseq's again.
 - Logseq Markdown ↔ Vanilla org: Vanilla org is read and written as
   Logseq org, which it is, page properties as leading keywords.
+- Logseq page properties ↔ plain Vanilla Markdown frontmatter
+  (`title: P`), as Markdown tools read metadata; a keyword that acts in
+  Emacs stays in `morg_keywords`.
 
 ### Changed
 

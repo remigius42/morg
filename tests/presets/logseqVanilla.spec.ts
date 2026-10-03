@@ -126,6 +126,34 @@ describe("Logseq org → Vanilla md", () => {
       '- tasks\n\n  ```query\n  {:title "x" :query (and [[Page]] (task TODO))}\n  ```\n'
     )
   })
+
+  it("writes page properties into a frontmatter block, unfolded", () => {
+    const long = `https://example.com/${"x".repeat(80)}`
+    expect(
+      toMarkdown(
+        `#+title: P\n#+url: ${long}\n#+begin_comment morg_frontmatter\nnested:\n  a: 1\n#+end_comment\n\n* x\n`
+      )
+    ).toBe(`---\ntitle: P\nurl: ${long}\nnested:\n  a: 1\n---\n\n- x\n`)
+  })
+
+  it("writes page properties as frontmatter by a closing comment block", () => {
+    expect(
+      toMarkdown("#+title: Foo\n#+begin_comment\nnote\n#+end_comment\n* x\n")
+    ).toMatch(/^---\ntitle: Foo\n---\n/)
+  })
+
+  it("writes page properties as plain frontmatter", () => {
+    expect(
+      toMarkdown("#+title: P\n#+tags: a, b\n#+STARTUP: overview\n\n* x\n")
+    ).toBe(
+      "---\ntitle: P\ntags: a, b\nmorg_keywords:\n  - STARTUP: overview\n---\n\n- x\n"
+    )
+    expect(
+      convertMarkdownToOrg("---\ntitle: P\ntags: a, b\n---\n\n- x\n", {
+        outputPreset: logseq()
+      })
+    ).toBe("#+title: P\n#+tags: a, b\n\n* x\n")
+  })
 })
 
 describe("Vanilla md → Logseq org", () => {

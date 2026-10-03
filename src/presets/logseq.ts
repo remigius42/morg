@@ -10,9 +10,11 @@ import type {
 import type { Parent } from "unist"
 import { visit } from "unist-util-visit"
 import { toString } from "orgast-util-to-string"
-import { isScalar, isSeq, type Scalar } from "yaml"
+import { isScalar, isSeq, stringify as stringifyYaml, type Scalar } from "yaml"
 import {
   fitsKeywordLine,
+  FRONTMATTER_BLOCK_BEGIN,
+  frontmatterBlock,
   isFrontmatterNode,
   isModeLine,
   isModeLineComment,
@@ -31,7 +33,26 @@ import { markdownOutlineToOrg, orgOutlineToMarkdown } from "./logseqOutline.js"
  * and block references, highlights and hiccup.
  */
 export function logseq(): Preset {
-  const page: Preset = {
+  const page = pagePreset()
+  const block = blockPreset()
+  const presets = {
+    page,
+    block,
+    vanillaReader,
+    vanillaPage: pagePropertiesToFrontmatter
+  }
+  return {
+    ...page,
+    convertOrg: (org, convert, context) =>
+      orgOutlineToMarkdown(org, convert, presets, context),
+    convertMarkdown: (markdown, convert, context) =>
+      markdownOutlineToOrg(markdown, convert, presets, context)
+  }
+}
+
+// the hooks for a page's properties
+function pagePreset(): Preset {
+  return {
     name: "logseq",
     markdown: {
       read: {
@@ -49,8 +70,12 @@ export function logseq(): Preset {
       write: takePageProperties
     }
   }
+}
+
+// the hooks for a block's content
+function blockPreset(): Preset {
   const bareUrls = new Map<string, number>()
-  const block: Preset = {
+  return {
     name: "logseq",
     markdown: {
       read: {
@@ -73,18 +98,6 @@ export function logseq(): Preset {
       },
       write: uniorgAst => restoreBareUrls(uniorgAst, bareUrls)
     }
-  }
-  return {
-    ...page,
-    convertOrg: (org, convert, context) =>
-      orgOutlineToMarkdown(org, convert, { page, block }, context),
-    convertMarkdown: (markdown, convert, context) =>
-      markdownOutlineToOrg(
-        markdown,
-        convert,
-        { page, block, vanillaReader },
-        context
-      )
   }
 }
 
@@ -366,6 +379,51 @@ function flatValue(
     items.every(item => item !== null && !item.includes(","))
     ? items.join(", ")
     : null
+}
+
+const PAGE_PROPERTY_LINE_RE = /^#\+([a-z0-9_-]+):(?: (.*))?$/
+
+// Vanilla Markdown: a page's properties, its leading lower-case keywords
+// as Logseq writes them, become plain frontmatter, as Markdown tools
+// read metadata (ADR 0006); the way back takes them as page properties
+// (takeFlatEntries). A keyword that acts in Emacs stays one
+function pagePropertiesToFrontmatter(lines: string[]): string[] {
+  const begin = lines.findIndex(line =>
+    line.startsWith(FRONTMATTER_BLOCK_BEGIN)
+  )
+  const end = begin === -1 ? -1 : lines.indexOf("#+end_comment", begin)
+  // a key the frontmatter block has already stays a keyword
+  const taken = new Set(
+    lines
+      .slice(begin + 1, begin === -1 ? 0 : end)
+      .map(line => /^([^\s:#][^:]*):/.exec(line)?.[1])
+  )
+  const properties: Record<string, string> = {}
+  const rest = lines.filter((line, i) => {
+    const [, key, value = ""] = PAGE_PROPERTY_LINE_RE.exec(line) ?? []
+    if (
+      !key ||
+      (i > begin && i < end) ||
+      ACTING_KEYWORD_RE.test(key) ||
+      taken.has(key) ||
+      key in properties
+    ) {
+      return true
+    }
+    properties[key] = value
+    return false
+  })
+  if (!Object.keys(properties).length) {
+    return lines
+  }
+  // unfolded, or a long value would come back as no flat one
+  const yaml = stringifyYaml(properties, { lineWidth: 0 }).replace(/\n$/, "")
+  const block = frontmatterBlock(yaml).replace(/\n$/, "").split("\n")
+  const at = rest.findIndex(line => line.startsWith(FRONTMATTER_BLOCK_BEGIN))
+  // ahead of what the block holds, so the page properties lead
+  return at === -1
+    ? [...block, ...rest]
+    : [...rest.slice(0, at + 1), ...block.slice(1, -1), ...rest.slice(at + 1)]
 }
 
 // the reverse: leading keywords become the first block, verbatim, keys

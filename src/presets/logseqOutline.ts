@@ -66,6 +66,8 @@ export interface Outline {
 interface Presets {
   page: Preset
   block: Preset
+  // a page's source lines made ready for Vanilla Markdown
+  vanillaPage?: (lines: string[]) => string[]
   // a preset made to read Vanilla Markdown as carrying its syntax
   vanillaReader?: (preset: Preset) => Preset
 }
@@ -538,8 +540,9 @@ export function orgOutlineToMarkdown(
 ): string {
   const { page, blocks } = readOrgOutline(org)
   const vanilla = context.side === "input"
+  const pageLines = vanilla ? (presets.vanillaPage?.(page) ?? page) : page
   const outline = {
-    page: convertPage(page, convert, presets.page),
+    page: convertPage(pageLines, convert, presets.page),
     blocks: blocks.map(block => ({
       ...block,
       content: convertContent(
