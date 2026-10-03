@@ -217,4 +217,30 @@ describe("Vanilla md → Logseq org", () => {
       })
     ).toBe("- a\n  \n  ```query\n  x\n  ```\n")
   })
+
+  it("resolves reference links before the page splits into blocks", () => {
+    expect(
+      toOrg(
+        "- see [x][ref], [y][] and [ref]\n- ![pic][img]\n\n[ref]: https://a.b\n[y]: https://c.d\n[img]: https://e.f/g.png\n"
+      )
+    ).toBe(
+      "* see [[https://a.b][x]], [[https://c.d][y]] and [[https://a.b][ref]]\n* [[https://e.f/g.png][pic]]\n"
+    )
+  })
+
+  it("resolves a reference link in a footnote it moves", () => {
+    expect(
+      toOrg(
+        "- a note[^1]\n\n[^1]: see [docs][d] here\n\n[d]: http://example.com/long/path\n"
+      )
+    ).toBe(
+      "* a note[fn:1]\n\n[fn:1] see [[http://example.com/long/path][docs]] here\n"
+    )
+  })
+
+  it("moves a footnote to the block of its first reference", () => {
+    expect(toOrg("- a\n- b[^1]\n\n[^1]: a note\n")).toBe(
+      "* a\n* b[fn:1]\n\n[fn:1] a note\n"
+    )
+  })
 })

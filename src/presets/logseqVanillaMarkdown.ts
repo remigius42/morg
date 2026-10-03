@@ -3,7 +3,18 @@ import remarkParse from "remark-parse"
 import remarkGfm from "remark-gfm"
 import remarkFrontmatter from "remark-frontmatter"
 import remarkMath from "remark-math"
-import type { Heading, List, ListItem, RootContent } from "mdast"
+import type {
+  Definition,
+  FootnoteDefinition,
+  Heading,
+  ImageReference,
+  LinkReference,
+  List,
+  ListItem,
+  RootContent
+} from "mdast"
+import type { Node } from "unist"
+import { visit } from "unist-util-visit"
 import type { Block, Meta, Outline } from "./logseqOutline.js"
 import type { ConversionContext } from "./types.js"
 
@@ -200,6 +211,97 @@ function headingBlock(
   }
 }
 
+// a link destination as Markdown writes it inline
+function destination(url: string): string {
+  return /[\s()<>]/.test(url) ? `<${url}>` : url
+}
+
+type Edit = [start: number, end: number, text: string]
+
+function offsets(node: Node): [number, number] {
+  return [node.position?.start.offset ?? 0, node.position?.end.offset ?? 0]
+}
+
+// what spans a page cannot travel in a block: a reference link becomes
+// inline, a definition goes, and so does a footnote's definition, kept
+// for the block of its first reference (ADR 0006)
+function resolveReferences(markdown: string): {
+  markdown: string
+  footnotes: Map<string, string>
+} {
+  // links first: a footnote's definition may hold one
+  const inline = inlineReferences(markdown)
+  const footnotes = new Map<string, string>()
+  const edits: Edit[] = []
+  visit(parse(inline), "footnoteDefinition", (node: FootnoteDefinition) => {
+    const [start, end] = offsets(node)
+    footnotes.set(node.label ?? "", inline.slice(start, end))
+    edits.push([start, end, ""])
+  })
+  return { markdown: applyEdits(inline, edits), footnotes }
+}
+
+function inlineReferences(markdown: string): string {
+  const tree = parse(markdown)
+  const definitions = new Map<string, Definition>()
+  visit(tree, "definition", (node: Definition) => {
+    definitions.set(node.identifier, node)
+  })
+  const edits: Edit[] = []
+  visit(tree, (node: Node) => {
+    const [start, end] = offsets(node)
+    if (node.type === "definition") {
+      edits.push([start, end, ""])
+    } else if (
+      node.type === "linkReference" ||
+      node.type === "imageReference"
+    ) {
+      const reference = node as LinkReference | ImageReference
+      const definition = definitions.get(reference.identifier)
+      if (definition) {
+        edits.push([start, end, inlineLink(reference, definition, markdown)])
+      }
+    }
+  })
+  return applyEdits(markdown, edits)
+}
+
+// edits of nodes that do not nest, last first so offsets hold
+function applyEdits(text: string, edits: Edit[]): string {
+  let result = text
+  for (const [start, end, replacement] of edits.sort((a, b) => b[0] - a[0])) {
+    result = result.slice(0, start) + replacement + result.slice(end)
+  }
+  return result
+}
+
+function inlineLink(
+  reference: LinkReference | ImageReference,
+  definition: Definition,
+  markdown: string
+): string {
+  const title = definition.title ? ` "${definition.title}"` : ""
+  const target = `(${destination(definition.url)}${title})`
+  if (reference.type === "imageReference") {
+    return `![${reference.alt ?? ""}]${target}`
+  }
+  const first = reference.children[0]
+  const last = reference.children.at(-1)
+  const text =
+    first && last ? markdown.slice(offsets(first)[0], offsets(last)[1]) : ""
+  return `[${text}]${target}`
+}
+
+// a footnote's definition, after the first block that refers to it
+function placeFootnotes(blocks: Block[], footnotes: Map<string, string>) {
+  for (const [label, definition] of footnotes) {
+    const block = blocks.find(candidate =>
+      candidate.content.some(line => line.includes(`[^${label}]`))
+    )
+    block?.content.push("", ...definition.split("\n").map(line => line.trim()))
+  }
+}
+
 /**
  * Reads a Vanilla Markdown page into Logseq's outline.
  * @param markdown The Markdown page.
@@ -210,6 +312,8 @@ export function readVanillaMarkdownOutline(
   markdown: string,
   context: ConversionContext
 ): Outline {
+  const resolved = resolveReferences(markdown)
+  markdown = resolved.markdown
   const reader: Reader = {
     lines: markdown.split(/\r?\n/),
     blocks: [],
@@ -231,6 +335,7 @@ export function readVanillaMarkdownOutline(
       readText(node, level, body, reader)
     }
   }
+  placeFootnotes(reader.blocks, resolved.footnotes)
   return { page: [], blocks: reader.blocks }
 }
 
