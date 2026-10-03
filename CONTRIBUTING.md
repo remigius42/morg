@@ -52,6 +52,16 @@ The recorded numbers hold for the generated documents only, and a test
 pins their hash: after changing the generator, record the tags again
 (`npm run perf:record v0.3.0 v0.4.0 …`) and update the hash.
 
+## Corpus checks
+
+`scripts/corpus/` checks a build against real notes on your own disk,
+which never enter the repo. `roundtrip.sh` takes each file there and
+back twice (`FORWARD` and `BACK` flags, so a pair of presets per side
+works too) and prints counts only: how many came back identical, how
+many converge (ADR 0001). `snapshot.sh` converts each file once, to
+compare two builds with `diff -rq old new | wc -l`. The diffs stay in
+the work directory, for you to read locally.
+
 ## Development process
 
 Most of this codebase is written with an AI coding agent (Claude
