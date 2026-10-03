@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed (2026-10-03)
+Accepted (2026-10-03)
 
 ## Context
 
@@ -98,6 +98,9 @@ based script) drops planning and admonitions.
 - Vanilla output may hold foreign syntax (`[[Page]]`, `((uuid))`,
   `{{video …}}`), unrendered but intact.
 - One page has two Vanilla shapes: headlines in org, a list in md.
+- After a heading Block, Vanilla md has no way back to the top level:
+  a later top-level Block reads back as the heading's child. It
+  converges after one trip but does not come back as it was.
 - Vanilla md prose outside a heading's body (after a list, before the
   first heading) becomes list items on its first trip through Logseq.
 - A user's own `Key:: value` line inside a Vanilla md list item reads

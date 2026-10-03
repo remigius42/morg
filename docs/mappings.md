@@ -386,6 +386,39 @@ priorities stay text; page references `[[page]]` and labeled forms
 and hiccup (`[:div …]`) survive verbatim, emitted unescaped in
 Markdown.
 
+`logseq` on one side only (`--input-preset` / `--output-preset`, ADR
+0006). Vanilla org is read and written as Logseq org, which it is:
+Logseq md ↔ Vanilla org converts as Logseq md ↔ Logseq org does. Vanilla
+md has a shape of its own; Logseq org ↔ Vanilla md:
+
+| Logseq org                                                   | Vanilla md                                                                                  |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
+| block, nested by level                                       | list item, nested two spaces (`1.` three) further                                           |
+| `:heading: N` block, no list above it                        | `#`×N heading; its children start a new list                                                |
+| `:heading: N` block in a list                                | `- ## …`                                                                                    |
+| `logseq.order-list-type: number`                             | ordered list (`1.`, `2.`, …)                                                                |
+| `TODO` / `DONE`                                              | `- [ ]` / `- [x]`                                                                           |
+| `NOW` `LATER` `DOING` `IN-PROGRESS` `WAIT[ING]`              | `- [ ] MARKER …` (Logseq shows them unchecked)                                              |
+| `CANCELED`                                                   | text (Logseq shows no checkbox)                                                             |
+| `SCHEDULED:` / `DEADLINE:`                                   | `scheduled::` / `deadline::` lines in the item (`orgismKeys` names), one planning line back |
+| property drawer                                              | `key:: value` lines in the item                                                             |
+| `collapsed`, drawers (`:LOGBOOK:`)                           | dropped, with a warning                                                                     |
+| `#+BEGIN_QUERY`                                              | ` ```query ` code block                                                                     |
+| page properties (lower-case `#+key:`)                        | plain frontmatter keys; acting ones stay `morg_keywords`                                    |
+| page and block refs, macros, `#tag`, `[#A]`, hiccup, `^^…^^` | as Logseq md writes them, as text                                                           |
+
+A block's title is inline only, as Logseq reads it: a title that looks
+like org line syntax (`: a`, `** a`, `- a`) stays text. Reading Vanilla
+md, as Logseq reads a file it did not write: a heading is a block,
+nesting by heading level, the text below it up to a list its content;
+other text after a list is a block of its own; a list on an item's
+first line is its content (Markdown has no item whose content opens
+with a list and that has children besides). A reference link becomes
+inline before the page splits, its definition goes, and a footnote's
+definition moves to the block of its first reference. With Obsidian on
+the other side, a page ref and a wikilink map onto each other
+(`[[Page][label]]` ↔ `[[Page|label]]`).
+
 `obsidian`: wikilinks `[[Page]]` / `[[Page|alias]]` ↔ org fuzzy links,
 emitted unescaped in Markdown, except for the alias pipe inside a
 table cell, written `\|` as Obsidian does, since a bare `|` would
