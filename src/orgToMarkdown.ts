@@ -17,7 +17,12 @@ import {
   guardUnderscoreBullets
 } from "./core/underscoreBullets.js"
 import type { OrgToMarkdownOptions } from "./options.js"
-import { readOrgWriteMarkdown } from "./presets/hooks.js"
+import {
+  conversionContext,
+  fragmentSides,
+  readOrgWriteMarkdown,
+  takeOver
+} from "./presets/hooks.js"
 import { resolveSides, type Sides } from "./presets/sides.js"
 
 // a list item's paragraph after its nested list needs a blank line, or
@@ -52,10 +57,17 @@ function convertOrgSides(
   options: OrgToMarkdownOptions,
   sides: Sides
 ): string {
-  const convertOrg = sides.input?.convertOrg
-  return convertOrg && sides.input?.name === sides.output?.name
-    ? convertOrg(org, (fragment, preset) =>
-        convertOrgSides(fragment, options, { input: preset, output: preset })
+  const over = takeOver(sides, "convertOrg")
+  return over
+    ? over.preset.convertOrg!(
+        org,
+        (fragment, preset) =>
+          convertOrgSides(
+            fragment,
+            options,
+            fragmentSides(sides, over.side, preset)
+          ),
+        conversionContext(over, options)
       )
     : convertOrgDocument(org, options, sides)
 }

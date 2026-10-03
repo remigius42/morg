@@ -4,7 +4,7 @@ import {
   isOrgBlockStart,
   orgElementEnd
 } from "../core/passthroughSource.js"
-import type { FragmentConverter, Preset } from "./types.js"
+import type { ConversionContext, FragmentConverter, Preset } from "./types.js"
 
 // Logseq stores a page as an outline of blocks, each block a content
 // string it parses on its own: org writes a block as its level's stars,
@@ -363,33 +363,169 @@ function writeOutline(
   return [...page, ...blocks.map(writeBlock)].join("\n").concat("\n")
 }
 
+// a task marker Logseq shows as a checkbox (0.10, block-checkbox), and
+// the text after it; TODO and DONE are the checkbox's own
+const CHECKBOX_MARKER_RE =
+  /^(TODO|DONE|NOW|LATER|DOING|IN-PROGRESS|WAIT|WAITING) (.*)$/
+
+// Vanilla Markdown: a task as a task item, marked as Logseq shows it,
+// so the marker comes back; CANCELED, shown without one, stays text
+function vanillaTitle(title: string): string {
+  const [, marker, text] = CHECKBOX_MARKER_RE.exec(title) ?? []
+  if (!marker) {
+    return title
+  }
+  if (marker === "DONE") {
+    return `[x] ${text}`
+  }
+  return marker === "TODO" ? `[ ] ${text}` : `[ ] ${marker} ${text}`
+}
+
+const PLANNING_ENTRY_RE = /(SCHEDULED|DEADLINE): ([<[][^>\]]*[>\]])/g
+
+// Vanilla Markdown: planning and properties as key:: lines, under the
+// org-ism names; a drawer and Logseq's view state have no form there
+function vanillaMeta(meta: Meta[], context: ConversionContext): string[] {
+  return meta.flatMap(item => {
+    if ("key" in item) {
+      if (item.key === "collapsed") {
+        context.onWarning?.("collapsed is Logseq's view state; dropped")
+        return []
+      }
+      return [propertyLine(item)]
+    }
+    const [first = ""] = item.lines
+    if (isDrawerStart(first)) {
+      context.onWarning?.(
+        `a ${first.slice(1, -1)} drawer has no Vanilla Markdown form; dropped`
+      )
+      return []
+    }
+    return [...first.matchAll(PLANNING_ENTRY_RE)].map(([, key = "", value]) => {
+      const canonical = key.toLowerCase()
+      return `${context.orgismKeys?.[canonical] ?? canonical}:: ${value}`
+    })
+  })
+}
+
+// a block Logseq shows numbered, as a run of its siblings
+function isNumbered(item: Meta): boolean {
+  return (
+    "key" in item &&
+    item.key === "logseq.order-list-type" &&
+    item.value === "number"
+  )
+}
+
+// a written block: a list item, or a heading, which stands apart
+interface Written {
+  heading: boolean
+  text: string
+}
+
+function vanillaBlock(
+  block: Block,
+  indent: string,
+  bullet: string,
+  context: ConversionContext
+): Written {
+  const [first = "", ...more] = arrange(
+    block.metaFirst,
+    vanillaMeta(
+      block.meta.filter(item => !isNumbered(item)),
+      context
+    ),
+    block.content
+  )
+  const hashes = "#".repeat(block.heading)
+  // a heading no list holds is a heading of its own
+  if (block.heading && !indent) {
+    const body = more.length ? `\n\n${more.join("\n")}` : ""
+    return { heading: true, text: `${hashes} ${first}${body}` }
+  }
+  const title = [hashes, vanillaTitle(first)].filter(Boolean).join(" ")
+  return {
+    heading: false,
+    text: [
+      `${indent}${bullet}${title ? ` ${title}` : ""}`,
+      ...more.map(line =>
+        line ? `${indent}${" ".repeat(bullet.length + 1)}${line}` : ""
+      )
+    ].join("\n")
+  }
+}
+
+// Vanilla Markdown: a block is a list item, its children nested two
+// spaces further in; under a heading block they start a new list
+// (ADR 0006)
+function writeVanillaMarkdownOutline(
+  { page, blocks }: Outline,
+  context: ConversionContext
+): string {
+  // a parent's level, its children's indent and their numbered run
+  const parents = [{ level: 0, indent: "", run: 0 }]
+  const written = blocks.map(block => {
+    while (parents.length > 1 && (parents.at(-1)?.level ?? 0) >= block.level) {
+      parents.pop()
+    }
+    const parent = parents.at(-1) ?? { level: 0, indent: "", run: 0 }
+    parent.run = block.meta.some(isNumbered) ? parent.run + 1 : 0
+    const bullet = parent.run ? `${parent.run}.` : "-"
+    const result = vanillaBlock(block, parent.indent, bullet, context)
+    parents.push({
+      level: block.level,
+      indent: result.heading
+        ? ""
+        : `${parent.indent}${" ".repeat(bullet.length + 1)}`,
+      run: 0
+    })
+    return result
+  })
+  const body = written
+    .map((block, i) =>
+      i && (block.heading || written[i - 1]?.heading)
+        ? `\n${block.text}`
+        : block.text
+    )
+    .join("\n")
+  return [
+    ...page.map(text => text.replace(/\n+$/, "")),
+    ...(body ? [body] : [])
+  ]
+    .join("\n\n")
+    .concat("\n")
+}
+
 /**
- * Converts a Logseq org page to Logseq Markdown, block by block.
+ * Converts a Logseq org page to Markdown, block by block: Logseq's,
+ * or Vanilla where the preset is on the input side only.
  * @param org The org page.
  * @param convert The core's fragment converter.
  * @param presets The presets for the page properties and for a block.
+ * @param context The side the preset is on.
  * @returns The Markdown page.
  */
 export function orgOutlineToMarkdown(
   org: string,
   convert: FragmentConverter,
-  presets: Presets
+  presets: Presets,
+  context: ConversionContext
 ): string {
   const { page, blocks } = readOrgOutline(org)
-  return writeOutline(
-    {
-      page: convertPage(page, convert, presets.page),
-      blocks: blocks.map(block => ({
-        ...block,
-        content: convertContent(
-          withBracedScripts(block.content),
-          convert,
-          presets.block
-        )
-      }))
-    },
-    writeMarkdownBlock
-  )
+  const outline = {
+    page: convertPage(page, convert, presets.page),
+    blocks: blocks.map(block => ({
+      ...block,
+      content: convertContent(
+        withBracedScripts(block.content),
+        convert,
+        presets.block
+      )
+    }))
+  }
+  return context.side === "input"
+    ? writeVanillaMarkdownOutline(outline, context)
+    : writeOutline(outline, writeMarkdownBlock)
 }
 
 /**
@@ -397,12 +533,14 @@ export function orgOutlineToMarkdown(
  * @param markdown The Markdown page.
  * @param convert The core's fragment converter.
  * @param presets The presets for the page properties and for a block.
+ * @param _context The side the preset is on.
  * @returns The org page.
  */
 export function markdownOutlineToOrg(
   markdown: string,
   convert: FragmentConverter,
-  presets: Presets
+  presets: Presets,
+  _context: ConversionContext
 ): string {
   const { page, blocks } = readMarkdownOutline(markdown)
   return writeOutline(

@@ -53,11 +53,15 @@ based script) drops planning and admonitions.
    item: as headings, thousands of Blocks would nest past `######`.
    A `heading` property makes a Block a heading on either side. This
    matches how Logseq (mldoc) reads files it did not write.
-6. **Block meta in Vanilla Markdown** rides inside the item: `TODO` /
-   `DONE` as `- [ ]` / `- [x]`, other task markers as text with a
-   warning; planning and properties as `key:: value` continuation lines
-   (the org-ism names, `orgismKeys` applies); `logseq.order-list-type`
-   as an ordered list; `collapsed` and `LOGBOOK` dropped with a warning.
+6. **Block meta in Vanilla Markdown** rides inside the item. Task
+   markers render as Logseq renders them (0.10, either format): `TODO`
+   / `DONE` as `- [ ]` / `- [x]`; `NOW`, `LATER`, `DOING`,
+   `IN-PROGRESS`, `WAIT` and `WAITING`, which Logseq shows unchecked,
+   as `- [ ]` followed by the marker; `CANCELED`, which it shows without
+   a checkbox, as text. Planning and properties become `key:: value`
+   continuation lines (the org-ism names, `orgismKeys` applies);
+   `logseq.order-list-type` an ordered list; `collapsed` and `LOGBOOK`
+   are dropped with a warning.
 7. **Convergence for an asymmetric pair holds from either start.**
    With f the Vanilla → Logseq step and g its return,
    `g(f(g(f(x)))) === g(f(x))` and `f(g(f(g(y)))) === f(g(y))`, per

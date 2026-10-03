@@ -21,9 +21,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `outputPreset` in `morg.toml`, and the preset name `vanilla`. Each
   side resolves on its own: side flag, `--preset`, side key, `preset`;
   `preset` next to a different side preset in one place is an error.
+- Logseq org → Vanilla Markdown (`--input-preset logseq`): blocks become
+  a nested list, a heading block a heading whose children start a new
+  list, numbered blocks an ordered list. Task markers render as Logseq
+  shows them (`- [ ]`, `- [x]`, `- [ ] LATER …`); planning and
+  properties become `key:: value` lines in the item, under the
+  `orgismKeys` names; `collapsed` and drawers are dropped with a
+  warning.
 
 ### Changed
 
+- **Breaking.** `Preset.convertOrg` and `Preset.convertMarkdown` get a
+  third argument, the conversion's context: the side the preset is on
+  (`both`, `input` or `output`), `onWarning` and `orgismKeys`.
 - **Breaking.** `Preset` holds one dialect per format, each read in
   one direction and written in the other (ADR 0006):
   `markdown: { read: { mdast, org }, write }` and

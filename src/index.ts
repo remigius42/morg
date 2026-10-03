@@ -9,6 +9,7 @@ export { transformUniorgAstToMdast } from "./core/uniorgToMdast/index.js"
 export { logseq } from "./presets/logseq.js"
 export { obsidian } from "./presets/obsidian.js"
 export type {
+  ConversionContext,
   FragmentConverter,
   MarkdownDialect,
   OrgDialect,

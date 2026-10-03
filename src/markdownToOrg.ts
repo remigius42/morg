@@ -27,7 +27,12 @@ import { keepPassthroughSource } from "./core/passthroughSource.js"
 import type { Root } from "mdast"
 import type { MarkdownStyleOptions, MarkdownToOrgOptions } from "./options.js"
 import type { Preset } from "./presets/types.js"
-import { readMarkdownWriteOrg } from "./presets/hooks.js"
+import {
+  conversionContext,
+  fragmentSides,
+  readMarkdownWriteOrg,
+  takeOver
+} from "./presets/hooks.js"
 import { resolveSides, type Sides } from "./presets/sides.js"
 import { keyValueEntries } from "./core/keyValueLines.js"
 
@@ -53,15 +58,18 @@ function convertMarkdownSides(
   options: MarkdownToOrgOptions,
   sides: Sides
 ): string {
-  const convertMarkdown = sides.input?.convertMarkdown
-  return convertMarkdown && sides.input?.name === sides.output?.name
+  const over = takeOver(sides, "convertMarkdown")
+  return over
     ? // a fragment's style is the preset's, not one to record
-      convertMarkdown(markdown, (fragment, preset) =>
-        convertMarkdownSides(
-          fragment,
-          { ...options, recordStyle: false },
-          { input: preset, output: preset }
-        )
+      over.preset.convertMarkdown!(
+        markdown,
+        (fragment, preset) =>
+          convertMarkdownSides(
+            fragment,
+            { ...options, recordStyle: false },
+            fragmentSides(sides, over.side, preset)
+          ),
+        conversionContext(over, options)
       )
     : convertMarkdownDocument(markdown, options, sides)
 }

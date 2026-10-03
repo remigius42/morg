@@ -14,11 +14,33 @@ export interface Preset {
   name: string
   markdown?: MarkdownDialect
   org?: OrgDialect
-  convertOrg?: (org: string, convert: FragmentConverter) => string
-  convertMarkdown?: (markdown: string, convert: FragmentConverter) => string
+  convertOrg?: (
+    org: string,
+    convert: FragmentConverter,
+    context: ConversionContext
+  ) => string
+  convertMarkdown?: (
+    markdown: string,
+    convert: FragmentConverter,
+    context: ConversionContext
+  ) => string
 }
 
-/** Converts a fragment with the core and the given preset's AST hooks. */
+/**
+ * What a preset that takes a whole conversion over learns of it: the
+ * side or sides it is on (the other one is another preset's or
+ * Vanilla), and the conversion's warning callback and org-ism key names.
+ */
+export interface ConversionContext {
+  side: "both" | "input" | "output"
+  onWarning?: (message: string) => void
+  orgismKeys?: Record<string, string>
+}
+
+/**
+ * Converts a fragment with the core, the given preset's AST hooks on
+ * the taking-over preset's side or sides, and the other side's preset.
+ */
 export type FragmentConverter = (fragment: string, preset?: Preset) => string
 
 /**

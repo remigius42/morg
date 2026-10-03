@@ -62,10 +62,10 @@ export function logseq(): Preset {
   }
   return {
     ...page,
-    convertOrg: (org, convert) =>
-      orgOutlineToMarkdown(org, convert, { page, block }),
-    convertMarkdown: (markdown, convert) =>
-      markdownOutlineToOrg(markdown, convert, { page, block })
+    convertOrg: (org, convert, context) =>
+      orgOutlineToMarkdown(org, convert, { page, block }, context),
+    convertMarkdown: (markdown, convert, context) =>
+      markdownOutlineToOrg(markdown, convert, { page, block }, context)
   }
 }
 
