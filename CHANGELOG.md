@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-10-03
+
 ### Added
 
 - `inputPreset` and `outputPreset` conversion options: the dialect the
@@ -27,8 +29,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   shows them (`- [ ]`, `- [x]`, `- [ ] LATER …`); planning and
   properties become `key:: value` lines in the item, under the
   `orgismKeys` names; `collapsed` and drawers are dropped with a
-  warning. Logseq's inline syntax is carried as Logseq Markdown writes
-  it, as text a return trip restores: page and block refs
+  warning. A block's title stays inline text, as Logseq reads it, even
+  where it looks like org line syntax (`: a`, `- a`). After a heading
+  block, Markdown has no way back to the top level, so a later
+  top-level block reads back as the heading's child. Logseq's inline
+  syntax is carried as Logseq Markdown writes it, as text a return trip
+  restores: page and block refs
   (`[[Page]]`, `[label]([[Page]])`), macros (`{{video …}}`), tags,
   priorities, hiccup, highlights; a query block becomes a `query` code
   block.
@@ -37,7 +43,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   list its children; a heading is a block nesting by level, the text
   below it its content; other text after a list a block of its own.
   Task items, `key:: value` lines and ordered lists come back as task
-  markers, planning, properties and numbered blocks. Logseq's syntax
+  markers, planning, properties and numbered blocks. Reference links
+  become inline before the page splits into blocks, and a footnote's
+  definition moves to the block of its first reference. Logseq's syntax
   carried in Vanilla Markdown (page and block refs, macros, a `query`
   code block) is Logseq's again.
 - Logseq Markdown ↔ Vanilla org: Vanilla org is read and written as
@@ -59,7 +67,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Breaking.** A `FragmentConverter` takes a third argument, the
   preset whose syntax a Vanilla side carries. `Preset.convertOrg` and
-  `Preset.convertMarkdown` get a third argument, the conversion's context: the side the preset is on
+  `Preset.convertMarkdown` get a third argument, the conversion's
+  context (exported as `ConversionContext`): the side the preset is on
   (`both`, `input` or `output`), `onWarning` and `orgismKeys`.
 - **Breaking.** `Preset` holds one dialect per format, each read in
   one direction and written in the other (ADR 0006):
@@ -671,7 +680,8 @@ review and fuzzing; each of these silently changed text.
   normalize modes, `morg.toml` paste and a preloaded demo, iframable
   embed page with `?theme` override, light/dark switcher
 
-[unreleased]: https://github.com/remigius42/morg/compare/v0.8.0...HEAD
+[unreleased]: https://github.com/remigius42/morg/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/remigius42/morg/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/remigius42/morg/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/remigius42/morg/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/remigius42/morg/compare/v0.5.0...v0.6.0
