@@ -15,6 +15,13 @@ This is a paragraph.
     expect(orgOutput).toBe(expectedOrgMode)
   })
 
+  it("should keep the space after an empty heading's stars", () => {
+    // Emacs reads stars without a space after them as text
+    expect(convertMarkdownToOrg("#\n\n## TODO\n")).toBe("* \n** TODO\n")
+    // last in the document too
+    expect(convertMarkdownToOrg("a\n\n#\n")).toBe("a\n\n* \n")
+  })
+
   it("should convert inline code to org verbatim markup", () => {
     const markdown = "Use `foo` here.\n"
 

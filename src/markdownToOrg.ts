@@ -145,11 +145,33 @@ function convertMarkdownDocument(
   renderFileHeader(uniorgAst)
 
   // Phase 4: Render uniorg-ast to Org-mode string
-  const processor = unified().use(uniorgStringify)
-  const orgContent = processor.stringify(uniorgAst)
+  const orgContent = String(stringifier.stringify(uniorgAst))
 
-  return orgContent
+  return orgContent.replaceAll(SPACE_KEEPER, "")
 }
+
+// uniorg-stringify trims a headline's line, and the document's end, but
+// Emacs reads stars without a space after them as text; the space ends
+// in a character no trim takes, removed after. null leaves the rest to
+// uniorg-stringify
+const SPACE_KEEPER = "\u0000"
+
+function emptyHeadline(node: Headline): string | null {
+  const empty =
+    !node.children.length &&
+    !node.todoKeyword &&
+    !node.priority &&
+    !node.commented &&
+    !node.tags.length
+  return empty ? `${"*".repeat(node.level)} ${SPACE_KEEPER}\n` : null
+}
+
+// built once: a preset converts a page block by block
+const stringifier = unified()
+  .use(uniorgStringify, {
+    handlers: { headline: emptyHeadline }
+  } as Parameters<typeof uniorgStringify>[0])
+  .freeze()
 
 // a preset's dialect conventions that need the Markdown source apply
 // to the parse, before the generic transform
