@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   whose format it has no dialect for; a side preset without one throws,
   as does `preset` together with another side preset, and `normalize*`
   with different presets per side.
+- `--input-preset` / `--output-preset` and `inputPreset` /
+  `outputPreset` in `morg.toml`, and the preset name `vanilla`. Each
+  side resolves on its own: side flag, `--preset`, side key, `preset`;
+  `preset` next to a different side preset in one place is an error.
 
 ### Changed
 

@@ -9,18 +9,21 @@ const PRESETS: Record<string, () => Preset> = {
   obsidian: () => obsidian()
 }
 
-const PRESET_NAMES = Object.keys(PRESETS)
+// the Vanilla side: no preset, but a name to set a side back to it
+const VANILLA = "vanilla"
+
+const PRESET_NAMES = [VANILLA, ...Object.keys(PRESETS)]
 
 /**
  * Instantiates a preset by name.
  * @param presetName Preset name, or `undefined` for no preset.
- * @returns The preset, or `undefined` when no name was given.
+ * @returns The preset, or `undefined` for none or `vanilla`.
  * @throws If the name is not a known preset.
  */
 export function createPreset(
   presetName: string | undefined
 ): Preset | undefined {
-  if (!presetName) {
+  if (!presetName || presetName === VANILLA) {
     return undefined
   }
   const factory = PRESETS[presetName]

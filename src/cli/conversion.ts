@@ -4,14 +4,14 @@ import { normalizeMarkdown, normalizeOrg } from "../normalize.js"
 import type { MorgConfig } from "../config.js"
 import { buildConversionOptions as layerOptions } from "../conversionOptions.js"
 import type { MarkdownStyleOptions } from "../options.js"
-import type { Preset } from "../presets/types.js"
+import type { PresetOptions } from "../presets/sides.js"
 import type { CliArgs } from "./args.js"
 import { CliError } from "./error.js"
 
 export function buildConversionOptions(
   cli: CliArgs,
   config: MorgConfig,
-  preset: Preset | undefined
+  presets: PresetOptions
 ) {
   // an explicit --silent wins over the config; dropped constructs are
   // reported on stderr unless it ends up on
@@ -36,7 +36,7 @@ export function buildConversionOptions(
     },
     config,
     {
-      preset,
+      ...presets,
       onWarning,
       ...(config.orgismKeys && { orgismKeys: config.orgismKeys })
     }
@@ -49,13 +49,13 @@ export function convert(
   normalize: boolean,
   cli: CliArgs,
   config: MorgConfig,
-  preset: Preset | undefined
+  presets: PresetOptions
 ): string {
   try {
     const { mdToOrgOptions, orgToMdOptions } = buildConversionOptions(
       cli,
       config,
-      preset
+      presets
     )
     if (normalize) {
       return fromFormat === "markdown"

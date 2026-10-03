@@ -1,24 +1,32 @@
 import { parse as parseToml } from "smol-toml"
 import type { MarkdownToOrgOptions, OrgToMarkdownOptions } from "./options.js"
 
+// presets are named at the top level, for both directions
+type PresetKey = "preset" | "inputPreset" | "outputPreset"
+
 /**
  * Shape of `morg.toml`. Sections mirror the library options objects;
- * `preset` and `silent` mirror their CLI flags; `orgismKeys` is shared
- * by both directions. Precedence: CLI > config > defaults.
+ * `preset`, `inputPreset`, `outputPreset` and `silent` mirror their CLI
+ * flags; `orgismKeys` is shared by both directions. Precedence: CLI >
+ * config > defaults, per side for the presets.
  */
 export interface MorgConfig {
   preset?: string
+  inputPreset?: string
+  outputPreset?: string
   silent?: boolean
   orgismKeys?: Record<string, string>
-  markdownToOrg?: Omit<MarkdownToOrgOptions, "preset" | "onWarning">
+  markdownToOrg?: Omit<MarkdownToOrgOptions, PresetKey | "onWarning">
   orgToMarkdown?: Omit<
     OrgToMarkdownOptions,
-    "preset" | "onWarning" | "orgismKeys"
+    PresetKey | "onWarning" | "orgismKeys"
   >
 }
 
 const KNOWN_KEYS = new Set([
   "preset",
+  "inputPreset",
+  "outputPreset",
   "silent",
   "orgismKeys",
   "markdownToOrg",

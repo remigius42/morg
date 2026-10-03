@@ -7,7 +7,7 @@ import { parseArgs } from "../src/cli/args.js"
 import { FLAGS } from "../src/cli/flags.js"
 import { HELP_TEXT } from "../src/cli/help.js"
 import { loadConfig } from "../src/cli/configFile.js"
-import { resolvePreset } from "../src/cli/presets.js"
+import { resolvePresets } from "../src/cli/presets.js"
 import { inferFormats, validateFormats } from "../src/cli/formats.js"
 import { buildConversionOptions, convert } from "../src/cli/conversion.js"
 import { CliError } from "../src/cli/error.js"
@@ -230,16 +230,20 @@ describe("validateFormats", () => {
   })
 })
 
-describe("resolvePreset", () => {
+describe("resolvePresets", () => {
+  const cli = (overrides: object) => ({ ...parseArgs([]), ...overrides })
+
   it("resolves known presets and none", () => {
-    expect(resolvePreset("logseq")).toBeDefined()
-    expect(resolvePreset(undefined)).toBeUndefined()
+    expect(
+      resolvePresets(cli({ presetName: "logseq" }), {}, "org", "markdown")
+    ).toMatchObject({ inputPreset: { name: "logseq" } })
+    expect(resolvePresets(cli({}), {}, "org", "markdown")).toEqual({})
   })
 
   it("rejects unknown presets, listing the available ones", () => {
-    expect(() => resolvePreset("roam")).toThrow(
-      /Unknown preset 'roam'.*logseq, obsidian/
-    )
+    expect(() =>
+      resolvePresets(cli({ presetName: "roam" }), {}, "org", "markdown")
+    ).toThrow(/Unknown preset 'roam'.*vanilla, logseq, obsidian/)
   })
 })
 
@@ -273,7 +277,7 @@ describe("buildConversionOptions", () => {
     const { orgToMdOptions } = buildConversionOptions(
       cli({ markdownStyle: { emphasis: "*" } }),
       { orgToMarkdown: { markdownStyle: { emphasis: "_", bullet: "+" } } },
-      undefined
+      {}
     )
     expect(orgToMdOptions.markdownStyle).toMatchObject({
       emphasis: "*",
@@ -285,11 +289,10 @@ describe("buildConversionOptions", () => {
     const config = { markdownToOrg: { recordStyle: true } }
 
     expect(
-      buildConversionOptions(cli({}), config, undefined).mdToOrgOptions
-        .recordStyle
+      buildConversionOptions(cli({}), config, {}).mdToOrgOptions.recordStyle
     ).toBe(true)
     expect(
-      buildConversionOptions(cli({ recordStyle: false }), config, undefined)
+      buildConversionOptions(cli({ recordStyle: false }), config, {})
         .mdToOrgOptions.recordStyle
     ).toBe(false)
   })
@@ -298,45 +301,42 @@ describe("buildConversionOptions", () => {
     const { orgToMdOptions } = buildConversionOptions(
       cli({ markdownStyle: { ruleRepetition: "5" } }),
       {},
-      undefined
+      {}
     )
     expect(orgToMdOptions.markdownStyle.ruleRepetition).toBe(5)
   })
 
   it("suppresses warnings when silent via flag or config", () => {
     expect(
-      buildConversionOptions(cli({ silent: true }), {}, undefined)
-        .orgToMdOptions.onWarning
+      buildConversionOptions(cli({ silent: true }), {}, {}).orgToMdOptions
+        .onWarning
     ).toBeUndefined()
     expect(
-      buildConversionOptions(cli({}), { silent: true }, undefined)
-        .orgToMdOptions.onWarning
+      buildConversionOptions(cli({}), { silent: true }, {}).orgToMdOptions
+        .onWarning
     ).toBeUndefined()
     expect(
-      buildConversionOptions(cli({}), {}, undefined).orgToMdOptions.onWarning
+      buildConversionOptions(cli({}), {}, {}).orgToMdOptions.onWarning
     ).toBeDefined()
   })
 
   it("lets an explicit CLI false override a config true", () => {
     expect(
-      buildConversionOptions(
-        cli({ silent: false }),
-        { silent: true },
-        undefined
-      ).orgToMdOptions.onWarning
+      buildConversionOptions(cli({ silent: false }), { silent: true }, {})
+        .orgToMdOptions.onWarning
     ).toBeDefined()
     expect(
       buildConversionOptions(
         cli({ taskCheckboxes: false }),
         { orgToMarkdown: { taskCheckboxes: true } },
-        undefined
+        {}
       ).orgToMdOptions.taskCheckboxes
     ).toBe(false)
     expect(
       buildConversionOptions(
         cli({ interpretHtml: false }),
         { markdownToOrg: { interpretHtml: true } },
-        undefined
+        {}
       ).mdToOrgOptions.interpretHtml
     ).toBe(false)
   })
@@ -346,12 +346,10 @@ describe("convert", () => {
   const cli = (overrides: object) => ({ ...parseArgs([]), ...overrides })
 
   it("converts in both directions", () => {
-    expect(convert("# Hello", "markdown", false, cli({}), {}, undefined)).toBe(
+    expect(convert("# Hello", "markdown", false, cli({}), {}, {})).toBe(
       "* Hello\n"
     )
-    expect(convert("* Hello", "org", false, cli({}), {}, undefined)).toBe(
-      "# Hello\n"
-    )
+    expect(convert("* Hello", "org", false, cli({}), {}, {})).toBe("# Hello\n")
   })
 
   it("records the source style when --record-style is given", () => {
@@ -361,18 +359,18 @@ describe("convert", () => {
       false,
       cli({ recordStyle: true }),
       {},
-      undefined
+      {}
     )
 
     expect(org).toContain('#+MORG_MARKDOWN_STYLE: {"bullet":"*"}')
-    expect(convert(org, "org", false, cli({}), {}, undefined)).toBe("* item\n")
+    expect(convert(org, "org", false, cli({}), {}, {})).toBe("* item\n")
   })
 
   it("normalizes both formats", () => {
-    expect(convert("#   Hello", "markdown", true, cli({}), {}, undefined)).toBe(
+    expect(convert("#   Hello", "markdown", true, cli({}), {}, {})).toBe(
       "# Hello\n"
     )
-    expect(convert("*    Hello", "org", true, cli({}), {}, undefined)).toBe(
+    expect(convert("*    Hello", "org", true, cli({}), {}, {})).toBe(
       "* Hello\n"
     )
   })
@@ -380,14 +378,7 @@ describe("convert", () => {
   it("reports dropped constructs as morg: warnings on stderr", () => {
     const spy = vi.spyOn(console, "error").mockImplementation(() => undefined)
     try {
-      convert(
-        '![alt](img.png "title")',
-        "markdown",
-        false,
-        cli({}),
-        {},
-        undefined
-      )
+      convert('![alt](img.png "title")', "markdown", false, cli({}), {}, {})
       expect(spy).toHaveBeenCalledWith(expect.stringMatching(/^morg: .*title/))
     } finally {
       spy.mockRestore()
@@ -404,10 +395,24 @@ describe("convert", () => {
       }
     }
     expect(() =>
-      convert("# x", "markdown", false, cli({}), {}, throwingPreset)
+      convert(
+        "# x",
+        "markdown",
+        false,
+        cli({}),
+        {},
+        { outputPreset: throwingPreset }
+      )
     ).toThrow(CliError)
     expect(() =>
-      convert("# x", "markdown", false, cli({}), {}, throwingPreset)
+      convert(
+        "# x",
+        "markdown",
+        false,
+        cli({}),
+        {},
+        { outputPreset: throwingPreset }
+      )
     ).toThrow("Conversion error:")
   })
 })
@@ -459,6 +464,38 @@ describe("cli process", () => {
     const result = await run(["--input", input, "--output", output])
     expect(result.code).toBe(0)
     expect(fs.readFileSync(output, "utf8")).toBe("* Hello\n")
+  })
+
+  it("reads and writes a preset per side", async () => {
+    const read = await run(
+      ["--from", "markdown", "--input-preset", "obsidian"],
+      "[[Page|alias]]\n"
+    )
+    expect(read).toMatchObject({ stdout: "[[Page][alias]]\n\n", code: 0 })
+    const write = await run(
+      ["--from", "org", "--output-preset", "obsidian"],
+      "[[Page][alias]]\n"
+    )
+    expect(write).toMatchObject({ stdout: "[[Page|alias]]\n\n", code: 0 })
+  })
+
+  it("lets a side flag override the config's preset", async () => {
+    const config = path.join(tmp, "side.toml")
+    fs.writeFileSync(config, 'preset = "obsidian"\n')
+    const result = await run(
+      ["--from", "org", "--config", config, "--output-preset", "vanilla"],
+      "[[Page][alias]]\n"
+    )
+    expect(result).toMatchObject({ stdout: "[alias](Page)\n\n", code: 0 })
+  })
+
+  it("rejects a side preset with no dialect as invalid usage", async () => {
+    const result = await run(["--from", "org", "--input-preset", "obsidian"])
+    expect(result.code).toBe(1)
+    expect(result.stderr).toContain(
+      "Error: Preset 'obsidian' has no org dialect to read the input in"
+    )
+    expect(result.stderr).toContain("Run 'morg --help' for usage.")
   })
 
   it("fails with exit code 1 and a message on invalid usage", async () => {

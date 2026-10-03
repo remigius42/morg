@@ -39,6 +39,12 @@ bullet = "*"
     })
   })
 
+  it("parses a preset per side", () => {
+    expect(
+      parseConfig('inputPreset = "logseq"\noutputPreset = "vanilla"\n')
+    ).toEqual({ inputPreset: "logseq", outputPreset: "vanilla" })
+  })
+
   it("returns an empty config for an empty file", () => {
     expect(parseConfig("")).toEqual({})
   })

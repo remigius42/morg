@@ -51,7 +51,7 @@ function onePreset(options: NormalizeOptions): NormalizeOptions {
   const output = outputPreset ?? preset
   if (input?.name !== output?.name) {
     const name = (key: string, side: Preset | undefined) =>
-      side ? `${key} '${side.name}'` : `${key} vanilla`
+      `${key} '${side?.name ?? "vanilla"}'`
     throw new Error(
       `normalize takes one preset; got ${name("inputPreset", input)} and ${name("outputPreset", output)}`
     )

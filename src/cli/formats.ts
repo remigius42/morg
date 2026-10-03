@@ -1,6 +1,7 @@
 import type { CliArgs } from "./args.js"
 import { CliError } from "./error.js"
 import { formatFromFileName, splitFileName } from "../fileNames.js"
+import type { Format } from "../presets/sides.js"
 
 export function inferFormats(
   cli: CliArgs
@@ -51,7 +52,7 @@ export function validateFormats(
   fromFormat: string | undefined,
   toFormat: string | undefined,
   normalize: boolean
-): asserts fromFormat is string {
+): [fromFormat: Format, toFormat: Format] {
   if (!fromFormat || !toFormat) {
     throw new CliError(
       "Error: Could not determine conversion formats.\n" +
@@ -81,4 +82,5 @@ export function validateFormats(
         `got '${fromFormat}' and '${toFormat}'.`
     )
   }
+  return [fromFormat as Format, toFormat as Format]
 }

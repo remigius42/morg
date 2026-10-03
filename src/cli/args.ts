@@ -10,6 +10,8 @@ export interface CliArgs {
   inputFile: string | undefined
   outputFile: string | undefined
   presetName: string | undefined
+  inputPresetName: string | undefined
+  outputPresetName: string | undefined
   // unset (undefined) so the config file can still decide -- see
   // buildConversionOptions; only an explicit flag overrides it
   silent: boolean | undefined
@@ -36,6 +38,8 @@ export function parseArgs(args: string[]): CliArgs {
     inputFile: undefined,
     outputFile: undefined,
     presetName: undefined,
+    inputPresetName: undefined,
+    outputPresetName: undefined,
     silent: undefined,
     taskCheckboxes: undefined,
     interpretHtml: undefined,

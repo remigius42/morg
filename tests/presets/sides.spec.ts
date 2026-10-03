@@ -47,7 +47,7 @@ describe("a preset per side", () => {
 
   it("should normalize in one dialect only", () => {
     const message =
-      "normalize takes one preset; got inputPreset 'logseq' and outputPreset vanilla"
+      "normalize takes one preset; got inputPreset 'logseq' and outputPreset 'vanilla'"
     expect(() => normalizeMarkdown("a\n", { inputPreset: logseq() })).toThrow(
       message
     )

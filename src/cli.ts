@@ -3,7 +3,7 @@
 import * as fs from "node:fs"
 import { parseArgs } from "./cli/args.js"
 import { loadConfig } from "./cli/configFile.js"
-import { resolvePreset } from "./cli/presets.js"
+import { resolvePresets } from "./cli/presets.js"
 import { inferFormats, validateFormats } from "./cli/formats.js"
 import { convert } from "./cli/conversion.js"
 import { CliError } from "./cli/error.js"
@@ -53,10 +53,12 @@ async function main() {
     return
   }
   const config = loadConfig(cli.configPath)
-  const preset = resolvePreset(cli.presetName ?? config.preset)
 
-  const [fromFormat, toFormat] = inferFormats(cli)
-  validateFormats(fromFormat, toFormat, cli.normalize)
+  const [fromFormat, toFormat] = validateFormats(
+    ...inferFormats(cli),
+    cli.normalize
+  )
+  const presets = resolvePresets(cli, config, fromFormat, toFormat)
 
   const inputContent = await readInput(cli.inputFile)
   const outputContent = convert(
@@ -65,7 +67,7 @@ async function main() {
     cli.normalize,
     cli,
     config,
-    preset
+    presets
   )
 
   if (cli.outputFile) {

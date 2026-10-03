@@ -16,7 +16,8 @@ export interface Sides {
   output: Preset | undefined
 }
 
-type Format = "markdown" | "org"
+/** A document format. */
+export type Format = "markdown" | "org"
 
 /**
  * Resolves the preset of each side of a conversion. A side preset must
@@ -47,18 +48,29 @@ export function resolveSides(
     }
   }
   return {
-    input: side(options.inputPreset, options.preset, from, "read the input"),
-    output: side(options.outputPreset, options.preset, to, "write the output")
+    input: resolveSide(options.inputPreset, options.preset, from, "input"),
+    output: resolveSide(options.outputPreset, options.preset, to, "output")
   }
 }
 
-function side(
+/**
+ * Resolves one side's preset: the side preset, else `preset` where it
+ * has a dialect for the side's format.
+ * @param sidePreset The side's own preset, if any.
+ * @param preset The preset for both sides, if any.
+ * @param format The side's format.
+ * @param side Which side it is.
+ * @returns The side's preset; `undefined` is Vanilla.
+ * @throws If the side preset has no dialect for the format.
+ */
+export function resolveSide(
   sidePreset: Preset | undefined,
   preset: Preset | undefined,
   format: Format,
-  purpose: string
+  side: "input" | "output"
 ): Preset | undefined {
   if (sidePreset && !sidePreset[format]) {
+    const purpose = side === "input" ? "read the input" : "write the output"
     throw new Error(
       `Preset '${sidePreset.name}' has no ${format} dialect to ${purpose} in`
     )

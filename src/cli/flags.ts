@@ -8,6 +8,8 @@ type StringOption =
   | "inputFile"
   | "outputFile"
   | "presetName"
+  | "inputPresetName"
+  | "outputPresetName"
   | "configPath"
 
 type BooleanOption =
@@ -57,9 +59,23 @@ export const FLAGS: FlagSpec[] = [
   {
     names: ["--preset"],
     arg: "<name>",
-    description: "Apply an editor preset, for example logseq",
+    description: "Read and write an editor's dialect, for example logseq",
     kind: "string",
     key: "presetName"
+  },
+  {
+    names: ["--input-preset"],
+    arg: "<name>",
+    description: "Read the input in a preset's dialect",
+    kind: "string",
+    key: "inputPresetName"
+  },
+  {
+    names: ["--output-preset"],
+    arg: "<name>",
+    description: "Write the output in a preset's dialect",
+    kind: "string",
+    key: "outputPresetName"
   },
   {
     names: ["--config"],

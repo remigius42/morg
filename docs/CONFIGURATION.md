@@ -9,13 +9,27 @@ Boolean CLI flags take an optional value: `--silent` is shorthand for
 `--silent true`, and `--silent false` turns off a config that sets it,
 which is what makes the precedence above hold in both directions.
 
+Presets resolve per side: `--input-preset`, then `--preset`, then
+`inputPreset`, then `preset`, else Vanilla (likewise for the output).
+So a config can name the vault's dialect and a flag override one side:
+with `preset = "logseq"`, `--output-preset vanilla` reads Logseq org
+and writes Vanilla Markdown. `preset` next to a different side preset
+in the same place (both flags, or both keys) is an error. `preset`
+leaves a side Vanilla whose format it has no dialect for (Obsidian
+writes no org); a side preset without one is an error. `normalize`
+takes one preset.
+
 The [Web UI](https://morg.binarypoetry.ch) accepts the same TOML in
 its Config panel.
 
 ## Full reference
 
 ```toml
-preset = "logseq"     # dialect preset: "logseq" | "obsidian"
+preset = "logseq"     # dialect preset: "vanilla" | "logseq" | "obsidian"
+# or one per side (ADR 0006): the dialect the input is read in and the
+# one the output is written in; next to preset only if they agree
+# inputPreset = "logseq"
+# outputPreset = "vanilla"
 silent = false        # suppress dropped-construct warnings (CLI -s)
 
 # custom names for org-ism key:: lines (canonical = custom);

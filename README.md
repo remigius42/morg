@@ -121,6 +121,9 @@ echo "# Hello" | morg --from markdown
 # Apply a dialect preset
 morg --input page.md --output page.org --preset logseq
 
+# Or one per side: read Logseq org, write Vanilla Markdown (ADR 0006)
+morg --input page.org --output page.md --input-preset logseq
+
 # Dropped constructs are reported on stderr; -s / --silent suppresses.
 # Boolean flags take an optional value, so --silent false overrides a
 # morg.toml that sets it
@@ -141,7 +144,7 @@ morg normalize --input notes.org --output notes.org
 
 Options can live in a `morg.toml` (auto-discovered in the working
 directory, or passed via `--config path`). Precedence: CLI flags >
-config file > defaults:
+config file > defaults, per side for the presets:
 
 ```toml
 preset = "logseq"
