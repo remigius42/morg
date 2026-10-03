@@ -246,8 +246,8 @@ Two pipelines, each with a two-phase transformation separating the
 dialect-agnostic core from dialect presets:
 
 ```text
-md → org:  remark-parse → mdast→uniorg (core) → preset transforms → uniorg-stringify
-org → md:  uniorg-parse → preset extraction → uniorg→mdast (core) → remark-stringify
+md → org:  remark-parse → mdast→uniorg (core) → read md dialect → write org dialect → uniorg-stringify
+org → md:  uniorg-parse → read org dialect → write md dialect → uniorg→mdast (core) → remark-stringify
 ```
 
 Formatting is controlled by shaping the AST (e.g. inserting newline text nodes),

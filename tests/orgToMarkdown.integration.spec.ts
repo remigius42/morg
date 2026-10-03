@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest"
 import { convertOrgToMarkdown } from "../src/orgToMarkdown.js"
 import { convertMarkdownToOrg } from "../src/markdownToOrg.js"
+import type { OrgData } from "uniorg"
+import type { Preset } from "../src/presets/types.js"
 
 describe("convertOrgToMarkdown", () => {
   it("should convert inline markup and links", () => {
@@ -581,6 +583,28 @@ describe("source block header", () => {
 
     expect(convertOrgToMarkdown(org)).toBe(markdown)
     expect(convertMarkdownToOrg(markdown)).toBe(org)
+  })
+})
+
+describe("convertOrgToMarkdown with a dialect preset", () => {
+  it("should read the org dialect, then write the md dialect", () => {
+    const calls: string[] = []
+    const step = (name: string) => (uniorg: OrgData) => {
+      calls.push(name)
+      return uniorg
+    }
+    const preset: Preset = {
+      name: "dialects",
+      markdown: {
+        read: { mdast: () => calls.push("markdown.read.mdast") },
+        write: step("markdown.write")
+      },
+      org: { read: step("org.read"), write: step("org.write") }
+    }
+
+    convertOrgToMarkdown("a\n", { preset })
+
+    expect(calls).toEqual(["org.read", "markdown.write"])
   })
 })
 

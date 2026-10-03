@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest"
 import { convertMarkdownToOrg } from "../src/markdownToOrg.js"
 import { convertOrgToMarkdown } from "../src/orgToMarkdown.js"
+import type { Preset } from "../src/presets/types.js"
 
 describe("convertMarkdownToOrg", () => {
   it("should convert a simple markdown string to a generic org-mode string", () => {
@@ -662,6 +663,48 @@ describe("recordStyle", () => {
     expect(orgOutput).not.toContain("#+MORG_MARKDOWN_STYLE:")
     expect(warnings).toEqual([
       "bullet marker is not used consistently; not recorded"
+    ])
+  })
+})
+
+describe("convertMarkdownToOrg with a dialect preset", () => {
+  it("should read the md dialect, then write the org dialect", () => {
+    const calls: string[] = []
+    const preset: Preset = {
+      name: "dialects",
+      markdown: {
+        read: {
+          mdast: () => {
+            calls.push("markdown.read.mdast")
+          },
+          org: uniorg => {
+            calls.push("markdown.read.org")
+            return uniorg
+          }
+        },
+        write: uniorg => {
+          calls.push("markdown.write")
+          return uniorg
+        }
+      },
+      org: {
+        read: uniorg => {
+          calls.push("org.read")
+          return uniorg
+        },
+        write: uniorg => {
+          calls.push("org.write")
+          return uniorg
+        }
+      }
+    }
+
+    convertMarkdownToOrg("a\n", { preset })
+
+    expect(calls).toEqual([
+      "markdown.read.mdast",
+      "markdown.read.org",
+      "org.write"
     ])
   })
 })

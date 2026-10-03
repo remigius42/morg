@@ -17,6 +17,7 @@ import {
   guardUnderscoreBullets
 } from "./core/underscoreBullets.js"
 import type { OrgToMarkdownOptions } from "./options.js"
+import { readOrgWriteMarkdown } from "./presets/hooks.js"
 
 // a list item's paragraph after its nested list needs a blank line, or
 // md reads it as a lazy continuation of the nested list's last item
@@ -75,10 +76,9 @@ function convertOrgDocument(
   unescapeBackslashCommands(uniorgAst)
   unescapeTablePipes(uniorgAst)
 
-  // Phase 2: Extract dialect preset conventions, if any
-  if (options.preset?.extractFromUniorg) {
-    uniorgAst = options.preset.extractFromUniorg(uniorgAst)
-  }
+  // Phase 2: Extract dialect preset conventions, if any: read the org
+  // dialect, then write the md dialect
+  uniorgAst = readOrgWriteMarkdown(uniorgAst, options.preset)
 
   // Phase 3: Generic uniorg-ast to mdast transformation
   const mdast = transformUniorgAstToMdast(uniorgAst, {

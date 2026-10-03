@@ -397,8 +397,10 @@ describe("convert", () => {
   it("wraps converter failures in a CliError", () => {
     const throwingPreset = {
       name: "throwing",
-      applyToUniorg: () => {
-        throw new Error("boom")
+      org: {
+        write: () => {
+          throw new Error("boom")
+        }
       }
     }
     expect(() =>

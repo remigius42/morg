@@ -11,8 +11,10 @@ import type { Preset } from "./types.js"
 export function obsidian(): Preset {
   return {
     name: "obsidian",
-    applyToUniorg: rewriteAliasedWikilinks,
-    extractFromUniorg: fuzzyLinksToWikilinks
+    markdown: {
+      read: { org: rewriteAliasedWikilinks },
+      write: fuzzyLinksToWikilinks
+    }
   }
 }
 

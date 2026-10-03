@@ -24,32 +24,40 @@ import { markdownOutlineToOrg, orgOutlineToMarkdown } from "./logseqOutline.js"
 export function logseq(): Preset {
   const page: Preset = {
     name: "logseq",
-    applyToMdast: keepPagePropertySource,
-    applyToUniorg: uniorgAst => {
-      rewriteLabeledPageRefs(uniorgAst)
-      takePageProperties(uniorgAst)
-      return uniorgAst
+    markdown: {
+      read: {
+        mdast: keepPagePropertySource,
+        org: rewriteLabeledPageRefs
+      },
+      write: uniorgAst => {
+        pageProperties(uniorgAst)
+        return extractInlineSpecifics(uniorgAst)
+      }
     },
-    extractFromUniorg: uniorgAst => {
-      pageProperties(uniorgAst)
-      return extractInlineSpecifics(uniorgAst)
+    org: {
+      read: repairHighlights,
+      write: takePageProperties
     }
   }
   const bareUrls = new Map<string, number>()
   const block: Preset = {
     name: "logseq",
-    applyToMdast: mdast => {
-      countBareUrls(mdast, bareUrls)
-      emailLinksToText(mdast)
+    markdown: {
+      read: {
+        mdast: mdast => {
+          countBareUrls(mdast, bareUrls)
+          emailLinksToText(mdast)
+        },
+        org: rewriteLabeledPageRefs
+      },
+      write: uniorgAst => {
+        bareUrlsToText(uniorgAst)
+        return extractInlineSpecifics(uniorgAst)
+      }
     },
-    applyToUniorg: uniorgAst => {
-      rewriteLabeledPageRefs(uniorgAst)
-      restoreBareUrls(uniorgAst, bareUrls)
-      return uniorgAst
-    },
-    extractFromUniorg: uniorgAst => {
-      bareUrlsToText(uniorgAst)
-      return extractInlineSpecifics(uniorgAst)
+    org: {
+      read: repairHighlights,
+      write: uniorgAst => restoreBareUrls(uniorgAst, bareUrls)
     }
   }
   return {
@@ -118,7 +126,7 @@ function orgPlainLink(url: string): string | null {
 function restoreBareUrls(
   uniorgAst: OrgData,
   counts: Map<string, number>
-): void {
+): OrgData {
   visit(uniorgAst as Parent, "link", (node: Link) => {
     const count = counts.get(node.rawLink) ?? 0
     if (node.format === "bracket" && !node.children.length && count) {
@@ -126,6 +134,7 @@ function restoreBareUrls(
       counts.set(node.rawLink, count - 1)
     }
   })
+  return uniorgAst
 }
 
 // org→md: a plain http(s) link stays a bare url, unescaped
@@ -186,7 +195,7 @@ function pageRefUrlTarget(rawLink: string): string | null {
 // [[page][label]] description syntax. A page name containing a space is
 // not a valid CommonMark destination, so the ref travels as plain text;
 // without one remark parses it as a real link instead.
-function rewriteLabeledPageRefs(uniorgAst: OrgData): void {
+function rewriteLabeledPageRefs(uniorgAst: OrgData): OrgData {
   visit(uniorgAst as Parent, "text", (node: Text) => {
     node.value = node.value.replace(
       /\[([^\]]+)\]\(\[\[([^\]]+)\]\]\)/g,
@@ -202,6 +211,7 @@ function rewriteLabeledPageRefs(uniorgAst: OrgData): void {
     node.rawLink = page
     node.path = page
   })
+  return uniorgAst
 }
 
 // Logseq reads a page's first block of `key:: value` lines (md) and its
@@ -236,7 +246,7 @@ function keepPagePropertySource(mdast: MdastRoot, markdown: string): void {
   }
 }
 
-function takePageProperties(uniorgAst: OrgData): void {
+function takePageProperties(uniorgAst: OrgData): OrgData {
   const children = uniorgAst.children as unknown as { type: string }[]
   const keywords = takeFrontmatterKeywords(children)
   // below the keywords, the file-level drawer and a mode line
@@ -258,6 +268,7 @@ function takePageProperties(uniorgAst: OrgData): void {
     0,
     ...keywords.map(([key, value]) => ({ type: "keyword", key, value }))
   )
+  return uniorgAst
 }
 
 function takeFrontmatterKeywords(
@@ -373,7 +384,6 @@ function pageProperties(uniorgAst: OrgData): void {
 
 function extractInlineSpecifics(uniorgAst: OrgData): OrgData {
   keepVerbatimText(uniorgAst)
-  repairHighlights(uniorgAst)
   fuzzyLinksToPageRefs(uniorgAst)
   markHiccupParagraphs(uniorgAst)
   return uniorgAst
@@ -415,7 +425,7 @@ function keepVerbatimText(uniorgAst: OrgData): void {
 
 // Logseq highlight markup (^^words^^) re-parses as a caret plus a
 // superscript; merge the pieces back into literal text
-function repairHighlights(uniorgAst: OrgData): void {
+function repairHighlights(uniorgAst: OrgData): OrgData {
   visit(uniorgAst as Parent, node => {
     const children = (node as Partial<Parent>).children as unknown[] | undefined
     if (!children) {
@@ -435,6 +445,7 @@ function repairHighlights(uniorgAst: OrgData): void {
       }
     }
   })
+  return uniorgAst
 }
 
 // Logseq page and block references: [[page]] stays a wikilink,

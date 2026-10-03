@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Breaking.** `Preset` holds one dialect per format, each read in
+  one direction and written in the other (ADR 0006):
+  `markdown: { read: { mdast, org }, write }` and
+  `org: { read, write }`, typed `MarkdownDialect` and `OrgDialect`.
+  `applyToMdast`, `applyToUniorg` and `extractFromUniorg` are gone. The
+  built-in presets convert as before.
+
 ## [0.8.0] - 2026-10-03
 
 ### Added

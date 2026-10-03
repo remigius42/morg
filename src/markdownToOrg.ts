@@ -27,6 +27,7 @@ import { keepPassthroughSource } from "./core/passthroughSource.js"
 import type { Root } from "mdast"
 import type { MarkdownStyleOptions, MarkdownToOrgOptions } from "./options.js"
 import type { Preset } from "./presets/types.js"
+import { readMarkdownWriteOrg } from "./presets/hooks.js"
 import { keyValueEntries } from "./core/keyValueLines.js"
 
 /**
@@ -95,10 +96,9 @@ function convertMarkdownDocument(
     )
   }
 
-  // Phase 3: Apply dialect preset, if any
-  if (options.preset?.applyToUniorg) {
-    uniorgAst = options.preset.applyToUniorg(uniorgAst)
-  }
+  // Phase 3: Apply dialect preset, if any: read the md dialect, then
+  // write the org dialect
+  uniorgAst = readMarkdownWriteOrg(uniorgAst, options.preset)
 
   // Phase 3b: literal footnote references, paragraph lines org would
   // read as line syntax, literal markers org would read as markup, and
@@ -139,7 +139,7 @@ function parseMarkdown(markdown: string, preset?: Preset): Root {
     .use(remarkMath)
     .parse(markdown)
   keepPassthroughSource(mdast, markdown)
-  preset?.applyToMdast?.(mdast, markdown)
+  preset?.markdown?.read?.mdast?.(mdast, markdown)
   return mdast
 }
 
