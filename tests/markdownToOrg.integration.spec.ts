@@ -344,6 +344,18 @@ This is a paragraph.
     )
   })
 
+  it("should keep a multi-line comment's empty first and last lines", () => {
+    const markdown = "<!--\n\nmiddle\n\n-->\n"
+
+    expect(convertMarkdownToOrg(markdown)).toBe("# \n# middle\n#\n")
+  })
+
+  it("should drop a multi-line comment's common indentation", () => {
+    const markdown = "<!--\n  a\n    b\n-->\n"
+
+    expect(convertMarkdownToOrg(markdown)).toBe("# a\n#   b\n")
+  })
+
   it("should restore an escaped comment terminator", () => {
     const markdown = "<!-- see --&gt; here -->\n"
 

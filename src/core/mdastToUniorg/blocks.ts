@@ -58,6 +58,19 @@ function transformMdastTableRow(
   }
 }
 
+// lines without the indentation all non-blank ones share
+function dedentLines(text: string): string {
+  const lines = text.split("\n")
+  const indent = Math.min(
+    ...lines
+      .filter(line => line.trim())
+      .map(line => /^[ \t]*/.exec(line)?.[0].length ?? 0)
+  )
+  return Number.isFinite(indent)
+    ? lines.map(line => line.slice(indent)).join("\n")
+    : text
+}
+
 export function transformMdastHtml(
   ctx: TransformContext,
   node: Extract<RootContent, { type: "html" }>
@@ -66,10 +79,17 @@ export function transformMdastHtml(
   // org comments (not an md-ism)
   const comment = /^<!--([\s\S]*?)-->\s*$/.exec(node.value)
   if (comment) {
+    const body = comment[1] ?? ""
+    // a multi-line comment's own line breaks frame its lines, so an
+    // empty first or last line is the comment's, not padding
+    const lines = /^[ \t]*\n([\s\S]*)\n[ \t]*$/.exec(body)
     return {
       type: "comment",
       // inverse of the escaping applied when the comment was emitted
-      value: (comment[1] ?? "").trim().replaceAll("--&gt;", "-->")
+      value: (lines ? dedentLines(lines[1] ?? "") : body.trim()).replaceAll(
+        "--&gt;",
+        "-->"
+      )
     } as unknown as ElementType
   }
   if (ctx.options.interpretHtml) {

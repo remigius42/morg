@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- A multi-line HTML comment keeps an empty first or last line as an
+  empty org comment line instead of losing it, so such a
+  comment comes back as it was.
+
 ## [0.9.0] - 2026-10-03
 
 ### Added
