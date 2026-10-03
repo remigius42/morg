@@ -52,7 +52,9 @@ based script) drops planning and admonitions.
    scheduled Block is a plain Block). In Markdown a Block is a list
    item: as headings, thousands of Blocks would nest past `######`.
    A `heading` property makes a Block a heading on either side. This
-   matches how Logseq (mldoc) reads files it did not write.
+   matches how Logseq (mldoc) reads files it did not write. So Vanilla
+   org is read and written as Logseq org, Logseq's page properties as
+   its leading keywords; only Vanilla md has a shape of its own.
 6. **Block meta in Vanilla Markdown** rides inside the item. Task
    markers render as Logseq renders them (0.10, either format): `TODO`
    / `DONE` as `- [ ]` / `- [x]`; `NOW`, `LATER`, `DOING`,

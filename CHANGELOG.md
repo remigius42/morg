@@ -40,6 +40,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   markers, planning, properties and numbered blocks. Logseq's syntax
   carried in Vanilla Markdown (page and block refs, macros, a `query`
   code block) is Logseq's again.
+- Logseq Markdown ↔ Vanilla org: Vanilla org is read and written as
+  Logseq org, which it is, page properties as leading keywords.
 
 ### Changed
 

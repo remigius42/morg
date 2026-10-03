@@ -572,14 +572,17 @@ export function markdownOutlineToOrg(
   const { page, blocks } = vanilla
     ? readVanillaMarkdownOutline(markdown, context)
     : readMarkdownOutline(markdown)
-  // Vanilla Markdown carries Logseq's syntax as Logseq Markdown writes it
+  // Vanilla Markdown carries Logseq's syntax as Logseq Markdown writes
+  // it; Vanilla org is written as Logseq org, which it is (ADR 0006)
   const convertCarried: FragmentConverter = (fragment, preset) =>
     convert(
       fragment,
       preset,
-      vanilla && preset
-        ? (presets.vanillaReader?.(preset) ?? preset)
-        : undefined
+      context.side === "both" || !preset
+        ? undefined
+        : vanilla
+          ? (presets.vanillaReader?.(preset) ?? preset)
+          : preset
     )
   return writeOutline(
     {

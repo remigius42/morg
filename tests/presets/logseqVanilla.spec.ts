@@ -260,3 +260,38 @@ describe("Vanilla md → Logseq org", () => {
     )
   })
 })
+
+describe("Logseq md ↔ Vanilla org", () => {
+  it("writes Logseq md blocks as headlines", () => {
+    expect(
+      convertMarkdownToOrg(
+        "- TODO a [[Page]]\n  SCHEDULED: <2026-10-04 Sat>\n\t- b\n\t  id:: 6512ab00\n",
+        { inputPreset: logseq() }
+      )
+    ).toBe(
+      "* TODO a [[Page]]\nSCHEDULED: <2026-10-04 Sat>\n** b\n:PROPERTIES:\n:id: 6512ab00\n:END:\n"
+    )
+  })
+
+  it("reads Vanilla org headlines as Logseq md blocks", () => {
+    expect(
+      convertOrgToMarkdown(
+        "* TODO a [[Page]]\nSCHEDULED: <2026-10-04 Sat>\n** b\n:PROPERTIES:\n:id: 6512ab00\n:END:\n",
+        { outputPreset: logseq() }
+      )
+    ).toBe(
+      "- TODO a [[Page]]\n  SCHEDULED: <2026-10-04 Sat>\n\t- b\n\t  id:: 6512ab00\n"
+    )
+  })
+
+  it("writes Logseq md page properties as Vanilla org keywords", () => {
+    expect(
+      convertMarkdownToOrg(
+        "title:: P\nfile:: [a_b.pdf](../assets/a_b.pdf)\n\n- a\n",
+        {
+          inputPreset: logseq()
+        }
+      )
+    ).toBe("#+title: P\n#+file: [a_b.pdf](../assets/a_b.pdf)\n\n* a\n")
+  })
+})
