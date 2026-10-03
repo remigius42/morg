@@ -32,9 +32,32 @@ function logbook(lines: string[], bullet: string): string[] {
     : lines
 }
 
-interface Block {
+// a block's source lines, before they are read
+interface Lines {
   level: number
   lines: string[]
+}
+
+// a block's planning line or drawer, or one of its properties
+type Meta = { lines: string[] } | { key: string; value: string }
+
+/** A block of the outline, read from either format. */
+interface Block {
+  level: number
+  // a heading's level, 0 for none
+  heading: number
+  // content that starts with the block's properties
+  metaFirst: boolean
+  // in source order
+  meta: Meta[]
+  // in the source format, its first line first
+  content: string[]
+}
+
+/** A page: its properties' source lines, then its blocks. */
+interface Outline {
+  page: string[]
+  blocks: Block[]
 }
 
 interface Presets {
@@ -45,9 +68,9 @@ interface Presets {
 function splitBlocks(
   lines: string[],
   blockLevel: (line: string) => [number, string] | null
-): { page: string[]; blocks: Block[] } {
+): { page: string[]; blocks: Lines[] } {
   const page: string[] = []
-  const blocks: Block[] = []
+  const blocks: Lines[] = []
   for (const line of lines) {
     const start = blockLevel(line)
     if (start) {
@@ -151,33 +174,6 @@ function convertPage(
     : []
 }
 
-/**
- * Converts a Logseq org page to Logseq Markdown, block by block.
- * @param org The org page.
- * @param convert The core's fragment converter.
- * @param presets The presets for the page properties and for a block.
- * @returns The Markdown page.
- */
-export function orgOutlineToMarkdown(
-  org: string,
-  convert: FragmentConverter,
-  presets: Presets
-): string {
-  const { page, blocks } = splitBlocks(
-    org.replace(/\r?\n$/, "").split(/\r?\n/),
-    line => {
-      const match = ORG_BLOCK_RE.exec(line)
-      return match ? [match[1]?.length ?? 0, match[2] ?? ""] : null
-    }
-  )
-  return [
-    ...convertPage(page, convert, presets.page),
-    ...blocks.map(block => orgBlockToMarkdown(block, convert, presets.block))
-  ]
-    .join("\n")
-    .concat("\n")
-}
-
 // org→md reads a block's bare `_` and `^` as text, as md→org writes
 // them without the setting that would say so
 function withBracedScripts(lines: string[]): string[] {
@@ -185,56 +181,87 @@ function withBracedScripts(lines: string[]): string[] {
   return consumesBracedScripts(braced.join("\n")) ? braced : lines
 }
 
-function orgBlockToMarkdown(
-  block: Block,
-  convert: FragmentConverter,
-  preset: Preset
-): string {
-  const [first = "", ...rest] = block.lines
-  // content that starts with the block's properties puts their drawer
-  // on the headline line; its heading level is then a property too
+// Logseq org: a block's properties drawer, as properties; a heading
+// level is one of them, but for content that starts with the drawer
+function readOrgBlock({ level, lines }: Lines): Block {
+  const [first = "", ...rest] = lines
   const metaFirst = isDrawerStart(first)
-  const { meta, body } = takeMeta(metaFirst ? block.lines : rest, () => false)
-  let heading = ""
-  const metaLines = meta.flatMap(lines => {
-    if (lines[0] !== ":PROPERTIES:") {
-      return logbook(lines, "*")
+  const { meta: groups, body } = takeMeta(metaFirst ? lines : rest, () => false)
+  let heading = 0
+  const meta = groups.flatMap((group): Meta[] => {
+    if (group[0] !== ":PROPERTIES:") {
+      return [{ lines: group }]
     }
-    return lines.slice(1, -1).flatMap(line => {
+    return group.slice(1, -1).flatMap(line => {
       const [, key = "", value = ""] = ORG_PROPERTY_RE.exec(line) ?? []
       if (!metaFirst && key === "heading" && /^[1-6]$/.test(value)) {
-        heading = "#".repeat(Number(value))
+        heading = Number(value)
         return []
       }
-      return [`${key}::${value ? ` ${value}` : ""}`]
+      return [{ key, value }]
     })
   })
-  const content = convertContent(
-    withBracedScripts(metaFirst ? body : [first, ...body]),
-    convert,
-    preset
-  )
-  const [title = "", ...more] = arrange(metaFirst, metaLines, content)
-  const head = [heading, title].filter(Boolean).join(" ")
-  const indent = "\t".repeat(block.level - 1)
-  return [
-    `${indent}-${head ? ` ${head}` : ""}`,
-    ...more.map(line => `${indent}  ${line}`)
-  ].join("\n")
+  return {
+    level,
+    heading,
+    metaFirst,
+    meta,
+    content: metaFirst ? body : [first, ...body]
+  }
 }
 
-/**
- * Converts a Logseq Markdown page to Logseq org, block by block.
- * @param markdown The Markdown page.
- * @param convert The core's fragment converter.
- * @param presets The presets for the page properties and for a block.
- * @returns The org page.
- */
-export function markdownOutlineToOrg(
-  markdown: string,
-  convert: FragmentConverter,
-  presets: Presets
-): string {
+function readOrgOutline(org: string): Outline {
+  const { page, blocks } = splitBlocks(
+    org.replace(/\r?\n$/, "").split(/\r?\n/),
+    line => {
+      const match = ORG_BLOCK_RE.exec(line)
+      return match ? [match[1]?.length ?? 0, match[2] ?? ""] : null
+    }
+  )
+  return { page, blocks: blocks.map(readOrgBlock) }
+}
+
+// a continuation line sits two spaces inside its bullet
+function dedent(line: string, level: number): string {
+  const indent = `${"\t".repeat(level - 1)}  `
+  return line.startsWith(indent)
+    ? line.slice(indent.length)
+    : line.trim()
+      ? line
+      : ""
+}
+
+// `## title`: the heading level and the title
+function mdHeading(line: string): [number, string] {
+  const match = MD_HEADING_RE.exec(line)
+  return match ? [match[1]?.length ?? 0, match[2] ?? ""] : [0, line]
+}
+
+function readMarkdownBlock({ level, lines: source }: Lines): Block {
+  const [first = "", ...rest] = source
+  const lines = [first, ...rest.map(line => dedent(line, level))]
+  const metaFirst = MD_PROPERTY_RE.test(first)
+  const [heading, titleLine] = metaFirst ? [0, ""] : mdHeading(first)
+  const { meta: groups, body } = takeMeta(
+    metaFirst ? lines : lines.slice(1),
+    line => MD_PROPERTY_RE.test(line)
+  )
+  const meta = groups.map((group): Meta => {
+    const property = MD_PROPERTY_RE.exec(group[0] ?? "")
+    return property
+      ? { key: property[1] ?? "", value: property[2] ?? "" }
+      : { lines: group }
+  })
+  return {
+    level,
+    heading,
+    metaFirst,
+    meta,
+    content: metaFirst ? body : [titleLine, ...body]
+  }
+}
+
+function readMarkdownOutline(markdown: string): Outline {
   const lines = markdown.replace(/\r?\n$/, "").split(/\r?\n/)
   // a leading frontmatter is page content, its `- ` lines yaml items
   const frontmatter = lines.slice(
@@ -256,50 +283,10 @@ export function markdownOutlineToOrg(
       return !fenced && MD_HEADING_RE.test(line) ? [1, line] : null
     }
   )
-  page.unshift(...frontmatter)
-  return [
-    ...convertPage(page, convert, presets.page),
-    ...blocks.map(block => mdBlockToOrg(block, convert, presets.block))
-  ]
-    .join("\n")
-    .concat("\n")
-}
-
-// a continuation line sits two spaces inside its bullet
-function dedent(line: string, level: number): string {
-  const indent = `${"\t".repeat(level - 1)}  `
-  return line.startsWith(indent)
-    ? line.slice(indent.length)
-    : line.trim()
-      ? line
-      : ""
-}
-
-// the md meta lines in org: `key::` lines become the property drawer,
-// where the first of them was, or below the planning lines
-function orgMetaLines(meta: string[][], heading: number): string[] {
-  const properties = heading ? [`:heading: ${heading}`] : []
-  const lines: (string | null)[] = []
-  for (const group of meta) {
-    const property = MD_PROPERTY_RE.exec(group[0] ?? "")
-    if (!property) {
-      lines.push(...logbook(group, "-"))
-      continue
-    }
-    if (!lines.includes(null)) {
-      lines.push(null)
-    }
-    properties.push(`:${property[1]}:${property[2] ? ` ${property[2]}` : ""}`)
+  return {
+    page: [...frontmatter, ...page],
+    blocks: blocks.map(readMarkdownBlock)
   }
-  if (properties.length && !lines.includes(null)) {
-    lines.splice(
-      lines.filter(line => PLANNING_RE.test(line ?? "")).length,
-      0,
-      null
-    )
-  }
-  const drawer = [":PROPERTIES:", ...properties, ":END:"]
-  return lines.flatMap(line => (line === null ? drawer : [line]))
 }
 
 // a block's content's first line, its meta lines, then the rest of the
@@ -314,38 +301,122 @@ function arrange(
     : [content[0] ?? "", ...meta, ...content.slice(1)]
 }
 
-// `## title`: the heading level and the title
-function mdHeading(line: string): [number, string] {
-  const match = MD_HEADING_RE.exec(line)
-  return match ? [match[1]?.length ?? 0, match[2] ?? ""] : [0, line]
+function propertyLine({ key, value }: { key: string; value: string }) {
+  return `${key}::${value ? ` ${value}` : ""}`
 }
 
-function mdBlockToOrg(
-  block: Block,
-  convert: FragmentConverter,
-  preset: Preset
-): string {
-  const [first = "", ...rest] = block.lines
-  const lines = [first, ...rest.map(line => dedent(line, block.level))]
-  // content that starts with properties: their drawer opens on the
-  // headline line
-  const metaFirst = MD_PROPERTY_RE.test(first)
-  const [heading, titleLine] = metaFirst ? [0, ""] : mdHeading(first)
-  const { meta, body } = takeMeta(metaFirst ? lines : lines.slice(1), line =>
-    MD_PROPERTY_RE.test(line)
+function writeMarkdownBlock(block: Block): string {
+  const meta = block.meta.flatMap(item =>
+    "lines" in item ? logbook(item.lines, "*") : [propertyLine(item)]
   )
-  const content = convertMarkdownContent(
-    metaFirst ? body : [titleLine, ...body],
-    convert,
-    preset
-  ).filter(line => line !== BRACED_SCRIPTS_LINE)
+  const [title = "", ...more] = arrange(block.metaFirst, meta, block.content)
+  const head = ["#".repeat(block.heading), title].filter(Boolean).join(" ")
+  const indent = "\t".repeat(block.level - 1)
+  return [
+    `${indent}-${head ? ` ${head}` : ""}`,
+    ...more.map(line => `${indent}  ${line}`)
+  ].join("\n")
+}
+
+// the meta in org: properties become the property drawer, where the
+// first of them was, or below the planning lines
+function orgMetaLines(meta: Meta[], heading: number): string[] {
+  const properties = heading ? [`:heading: ${heading}`] : []
+  const lines: (string | null)[] = []
+  for (const item of meta) {
+    if ("lines" in item) {
+      lines.push(...logbook(item.lines, "-"))
+      continue
+    }
+    if (!lines.includes(null)) {
+      lines.push(null)
+    }
+    properties.push(`:${item.key}:${item.value ? ` ${item.value}` : ""}`)
+  }
+  if (properties.length && !lines.includes(null)) {
+    lines.splice(
+      lines.filter(line => PLANNING_RE.test(line ?? "")).length,
+      0,
+      null
+    )
+  }
+  const drawer = [":PROPERTIES:", ...properties, ":END:"]
+  return lines.flatMap(line => (line === null ? drawer : [line]))
+}
+
+function writeOrgBlock(block: Block): string {
   const [title = "", ...more] = arrange(
-    metaFirst,
-    orgMetaLines(meta, heading),
-    content
+    block.metaFirst,
+    orgMetaLines(block.meta, block.heading),
+    block.content
   )
   return [
     `${"*".repeat(block.level)}${title ? ` ${title}` : ""}`,
     ...more
   ].join("\n")
+}
+
+function writeOutline(
+  { page, blocks }: Outline,
+  writeBlock: (block: Block) => string
+): string {
+  return [...page, ...blocks.map(writeBlock)].join("\n").concat("\n")
+}
+
+/**
+ * Converts a Logseq org page to Logseq Markdown, block by block.
+ * @param org The org page.
+ * @param convert The core's fragment converter.
+ * @param presets The presets for the page properties and for a block.
+ * @returns The Markdown page.
+ */
+export function orgOutlineToMarkdown(
+  org: string,
+  convert: FragmentConverter,
+  presets: Presets
+): string {
+  const { page, blocks } = readOrgOutline(org)
+  return writeOutline(
+    {
+      page: convertPage(page, convert, presets.page),
+      blocks: blocks.map(block => ({
+        ...block,
+        content: convertContent(
+          withBracedScripts(block.content),
+          convert,
+          presets.block
+        )
+      }))
+    },
+    writeMarkdownBlock
+  )
+}
+
+/**
+ * Converts a Logseq Markdown page to Logseq org, block by block.
+ * @param markdown The Markdown page.
+ * @param convert The core's fragment converter.
+ * @param presets The presets for the page properties and for a block.
+ * @returns The org page.
+ */
+export function markdownOutlineToOrg(
+  markdown: string,
+  convert: FragmentConverter,
+  presets: Presets
+): string {
+  const { page, blocks } = readMarkdownOutline(markdown)
+  return writeOutline(
+    {
+      page: convertPage(page, convert, presets.page),
+      blocks: blocks.map(block => ({
+        ...block,
+        content: convertMarkdownContent(
+          block.content,
+          convert,
+          presets.block
+        ).filter(line => line !== BRACED_SCRIPTS_LINE)
+      }))
+    },
+    writeOrgBlock
+  )
 }
