@@ -27,7 +27,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   shows them (`- [ ]`, `- [x]`, `- [ ] LATER …`); planning and
   properties become `key:: value` lines in the item, under the
   `orgismKeys` names; `collapsed` and drawers are dropped with a
-  warning.
+  warning. Logseq's inline syntax is carried as Logseq Markdown writes
+  it, as text a return trip restores: page and block refs
+  (`[[Page]]`, `[label]([[Page]])`), macros (`{{video …}}`), tags,
+  priorities, hiccup, highlights; a query block becomes a `query` code
+  block.
 
 ### Changed
 

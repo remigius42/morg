@@ -1,4 +1,12 @@
-import type { OrgData, Keyword, Paragraph, Text, Link } from "uniorg"
+import type {
+  OrgData,
+  Keyword,
+  Paragraph,
+  Text,
+  Link,
+  SpecialBlock,
+  SrcBlock
+} from "uniorg"
 import type { Parent } from "unist"
 import { visit } from "unist-util-visit"
 import { toString } from "orgast-util-to-string"
@@ -13,6 +21,7 @@ import {
 } from "../core/frontmatterBlock.js"
 import { keyValueEntries } from "../core/keyValueLines.js"
 import { tryParse } from "../core/render.js"
+import { orgNodeToText } from "../core/uniorgToMdast/shared.js"
 import type { Link as MdastLink, Root as MdastRoot } from "mdast"
 import type { Preset } from "./types.js"
 import { markdownOutlineToOrg, orgOutlineToMarkdown } from "./logseqOutline.js"
@@ -30,12 +39,13 @@ export function logseq(): Preset {
         org: rewriteLabeledPageRefs
       },
       write: uniorgAst => {
+        codeToQueryBlocks(uniorgAst)
         pageProperties(uniorgAst)
         return extractInlineSpecifics(uniorgAst)
       }
     },
     org: {
-      read: repairHighlights,
+      read: readOrgInline,
       write: takePageProperties
     }
   }
@@ -51,12 +61,16 @@ export function logseq(): Preset {
         org: rewriteLabeledPageRefs
       },
       write: uniorgAst => {
+        codeToQueryBlocks(uniorgAst)
         bareUrlsToText(uniorgAst)
         return extractInlineSpecifics(uniorgAst)
       }
     },
     org: {
-      read: repairHighlights,
+      read: uniorgAst => {
+        bareUrlsToText(uniorgAst)
+        return readOrgInline(uniorgAst)
+      },
       write: uniorgAst => restoreBareUrls(uniorgAst, bareUrls)
     }
   }
@@ -379,6 +393,76 @@ function pageProperties(uniorgAst: OrgData): void {
       contentsBegin: 0,
       contentsEnd: 0
     } as unknown as Paragraph
+  )
+}
+
+// Logseq org's own inline syntax, carried in its Markdown form, which
+// Vanilla Markdown keeps as text (ADR 0006); writing Logseq Markdown
+// does the same for a Vanilla org link
+function readOrgInline(uniorgAst: OrgData): OrgData {
+  // first: a query's body is Logseq's query language, not org text
+  queryBlocksToCode(uniorgAst)
+  keepVerbatimText(uniorgAst)
+  repairHighlights(uniorgAst)
+  fuzzyLinksToPageRefs(uniorgAst)
+  markHiccupParagraphs(uniorgAst)
+  return uniorgAst
+}
+
+// a query block: Vanilla Markdown has none, so a code block in the
+// query language carries it (ADR 0006); Logseq Markdown writes the
+// block itself, as Logseq does
+const QUERY_LANGUAGE = "query"
+
+function queryBlocksToCode(uniorgAst: OrgData): void {
+  visit(
+    uniorgAst as Parent,
+    "special-block",
+    (
+      node: SpecialBlock,
+      index: number | undefined,
+      parent: Parent | undefined
+    ) => {
+      if (
+        node.blockType.toUpperCase() !== "QUERY" ||
+        !parent ||
+        index === undefined
+      ) {
+        return undefined
+      }
+      const lines = orgNodeToText(node).split("\n")
+      parent.children[index] = {
+        type: "src-block",
+        affiliated: node.affiliated,
+        language: QUERY_LANGUAGE,
+        // the block as written, for Logseq Markdown to write it back
+        blockType: node.blockType,
+        switches: null,
+        parameters: null,
+        value: `${lines.slice(1, -1).join("\n")}\n`
+      } as unknown as Parent["children"][number]
+      return undefined
+    }
+  )
+}
+
+function codeToQueryBlocks(uniorgAst: OrgData): void {
+  visit(
+    uniorgAst as Parent,
+    "src-block",
+    (node: SrcBlock, index: number | undefined, parent: Parent | undefined) => {
+      if (node.language !== QUERY_LANGUAGE || !parent || index === undefined) {
+        return undefined
+      }
+      const type = (node as { blockType?: string }).blockType ?? "QUERY"
+      const [block] =
+        tryParse(`#+begin_${type}\n${node.value}#+end_${type}\n`)?.children ??
+        []
+      if (block) {
+        parent.children[index] = block
+      }
+      return undefined
+    }
   )
 }
 

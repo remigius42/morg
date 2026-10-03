@@ -82,4 +82,34 @@ describe("Logseq org → Vanilla md", () => {
     expect(toMarkdown("just text\n")).toBe("just text\n")
     expect(toMarkdown("just text\n\n* a\n")).toBe("just text\n\n- a\n")
   })
+
+  it("carries page and block refs in Logseq's Markdown syntax", () => {
+    expect(
+      toMarkdown(
+        "* see [[Page]], [[Other][a label]] and [[((6512ab00-0000))][a ref]]\n"
+      )
+    ).toBe(
+      "- see [[Page]], [a label]([[Other]]) and [a ref](((6512ab00-0000)))\n"
+    )
+  })
+
+  it("keeps macros, tags, priorities, addresses and hiccup as written", () => {
+    expect(
+      toMarkdown(
+        '* {{video https://x.y/z}} #tag\n* TODO [#A] mail a@b.ch\n* [:div "hi"]\n'
+      )
+    ).toBe(
+      '- {{video https://x.y/z}} #tag\n- [ ] [#A] mail a@b.ch\n- [:div "hi"]\n'
+    )
+  })
+
+  it("writes a query as a query code block", () => {
+    expect(
+      toMarkdown(
+        '* tasks\n#+BEGIN_QUERY\n{:title "x" :query (and [[Page]] (task TODO))}\n#+END_QUERY\n'
+      )
+    ).toBe(
+      '- tasks\n\n  ```query\n  {:title "x" :query (and [[Page]] (task TODO))}\n  ```\n'
+    )
+  })
 })
