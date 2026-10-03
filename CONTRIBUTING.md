@@ -36,15 +36,17 @@ covers it on every pull request.
 
 `npm run perf` builds and runs the performance gate on seeded synthetic
 documents (`scripts/perf/`): per conversion, HEAD may take at most 1.25
-times the last tag's normalized time, and no more uniorg parses. Times
+times the reference's normalized time (the `head` budget where one is
+set, else the last recorded tag), and no more uniorg parses. Times
 are divided by what plain remark and uniorg parsing of the same
 documents takes in the same run, so numbers recorded on one machine
 hold on another. CI runs the gate on every push and pull request.
 
 A change that needs more on purpose sets its numbers in the `head` entry
 of `scripts/perf/timings.json`, with a reason, so the cost shows up in
-review. After a release, record the new tag
-(`npm run perf:record vX.Y.Z`) and drop the `head` entry.
+review. Record a released tag (`npm run perf:record vX.Y.Z`) and drop
+the `head` entry only where the tag is faster: recording a slower tag
+would make its numbers the reference and loosen the gate.
 
 The recorded numbers hold for the generated documents only, and a test
 pins their hash: after changing the generator, record the tags again
