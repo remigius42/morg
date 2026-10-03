@@ -353,14 +353,16 @@ function orgMetaLines(meta: Meta[], heading: number): string[] {
   return lines.flatMap(line => (line === null ? drawer : [line]))
 }
 
-function writeOrgBlock(block: Block): string {
+// Vanilla org: Emacs reads stars without a space after them as text, so
+// an empty title keeps the space Logseq org leaves out (ADR 0006)
+function writeOrgBlock(block: Block, vanilla = false): string {
   const [title = "", ...more] = arrange(
     block.metaFirst,
     orgMetaLines(block.meta, block.heading),
     block.content
   )
   return [
-    `${"*".repeat(block.level)}${title ? ` ${title}` : ""}`,
+    `${"*".repeat(block.level)}${title || vanilla ? ` ${title}` : ""}`,
     ...more
   ].join("\n")
 }
@@ -606,6 +608,6 @@ export function markdownOutlineToOrg(
         return vanilla ? dropTitleEscape(converted) : converted
       })
     },
-    writeOrgBlock
+    block => writeOrgBlock(block, context.side === "input")
   )
 }

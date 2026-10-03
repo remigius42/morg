@@ -325,6 +325,16 @@ describe("Logseq md ↔ Vanilla org", () => {
     )
   })
 
+  it("writes an empty block as a headline Emacs reads", () => {
+    // Emacs reads stars without a space after them as text
+    expect(
+      convertMarkdownToOrg("- a\n-\n\t-\n", { inputPreset: logseq() })
+    ).toBe("* a\n* \n** \n")
+    expect(
+      convertOrgToMarkdown("* a\n* \n** \n", { outputPreset: logseq() })
+    ).toBe("- a\n-\n\t-\n")
+  })
+
   it("writes Logseq md page properties as Vanilla org keywords", () => {
     expect(
       convertMarkdownToOrg(

@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - An empty Markdown heading becomes an org headline with a space after
   its stars, as Emacs needs to read it as one; it was written as bare
   stars, which Emacs and morg read as text.
+- Logseq Markdown → Vanilla org writes an empty block as a headline
+  with a space after its stars, which Emacs reads as one, instead of
+  Logseq org's bare stars.
 - A multi-line HTML comment keeps an empty first or last line as an
   empty org comment line instead of losing it, so such a
   comment comes back as it was.
