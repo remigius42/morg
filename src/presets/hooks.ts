@@ -70,16 +70,18 @@ export function takeOver(
  * @param sides The conversion's preset per side.
  * @param side The taking-over preset's side.
  * @param preset The fragment's preset.
+ * @param carried The preset for the other side, if it carries syntax.
  * @returns The fragment's preset per side.
  */
 export function fragmentSides(
   sides: Sides,
   side: ConversionContext["side"],
-  preset: Preset | undefined
+  preset: Preset | undefined,
+  carried?: Preset
 ): Sides {
   return {
-    input: side === "output" ? sides.input : preset,
-    output: side === "input" ? sides.output : preset
+    input: side === "output" ? (carried ?? sides.input) : preset,
+    output: side === "input" ? (carried ?? sides.output) : preset
   }
 }
 

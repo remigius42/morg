@@ -189,4 +189,32 @@ describe("Vanilla md → Logseq org", () => {
       convertOrgToMarkdown("* - x\n** y\n", { inputPreset: logseq() })
     ).toBe("- - x\n  - y\n")
   })
+
+  it("recognizes Logseq's carried syntax as Logseq's again", () => {
+    expect(
+      toOrg(
+        "- see [[Page]], [a label]([[Other]]) and [a ref](((6512ab00-0000)))\n- {{video https://x.y/z}} #tag\n- [ ] [#A] mail a@b.ch\n"
+      )
+    ).toBe(
+      "* see [[Page]], [[Other][a label]] and [[((6512ab00-0000))][a ref]]\n* {{video https://x.y/z}} #tag\n* TODO [#A] mail a@b.ch\n"
+    )
+  })
+
+  it("reads a query code block as a query block", () => {
+    expect(toOrg('- tasks\n\n  ```query\n  {:title "x"}\n  ```\n')).toBe(
+      '* tasks\n\n#+begin_QUERY\n{:title "x"}\n#+end_QUERY\n'
+    )
+  })
+  it("stays a code block between Logseq's formats", () => {
+    expect(
+      convertMarkdownToOrg("- a\n  ```query\n  x\n  ```\n", {
+        preset: logseq()
+      })
+    ).toBe("* a\n\n#+begin_src query\nx\n#+end_src\n")
+    expect(
+      convertOrgToMarkdown("* a\n#+begin_src query\nx\n#+end_src\n", {
+        preset: logseq()
+      })
+    ).toBe("- a\n  \n  ```query\n  x\n  ```\n")
+  })
 })

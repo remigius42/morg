@@ -64,6 +64,8 @@ export interface Outline {
 interface Presets {
   page: Preset
   block: Preset
+  // a preset made to read Vanilla Markdown as carrying its syntax
+  vanillaReader?: (preset: Preset) => Preset
 }
 
 function splitBlocks(
@@ -543,18 +545,27 @@ export function markdownOutlineToOrg(
   presets: Presets,
   context: ConversionContext
 ): string {
-  const { page, blocks } =
-    context.side === "output"
-      ? readVanillaMarkdownOutline(markdown, context)
-      : readMarkdownOutline(markdown)
+  const vanilla = context.side === "output"
+  const { page, blocks } = vanilla
+    ? readVanillaMarkdownOutline(markdown, context)
+    : readMarkdownOutline(markdown)
+  // Vanilla Markdown carries Logseq's syntax as Logseq Markdown writes it
+  const convertCarried: FragmentConverter = (fragment, preset) =>
+    convert(
+      fragment,
+      preset,
+      vanilla && preset
+        ? (presets.vanillaReader?.(preset) ?? preset)
+        : undefined
+    )
   return writeOutline(
     {
-      page: convertPage(page, convert, presets.page),
+      page: convertPage(page, convertCarried, presets.page),
       blocks: blocks.map(block => ({
         ...block,
         content: convertMarkdownContent(
           block.content,
-          convert,
+          convertCarried,
           presets.block
         ).filter(line => line !== BRACED_SCRIPTS_LINE)
       }))

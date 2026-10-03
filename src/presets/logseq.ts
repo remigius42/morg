@@ -79,7 +79,12 @@ export function logseq(): Preset {
     convertOrg: (org, convert, context) =>
       orgOutlineToMarkdown(org, convert, { page, block }, context),
     convertMarkdown: (markdown, convert, context) =>
-      markdownOutlineToOrg(markdown, convert, { page, block }, context)
+      markdownOutlineToOrg(
+        markdown,
+        convert,
+        { page, block, vanillaReader },
+        context
+      )
   }
 }
 
@@ -409,6 +414,27 @@ function readOrgInline(uniorgAst: OrgData): OrgData {
   return uniorgAst
 }
 
+// reading Vanilla Markdown as carrying Logseq Markdown's syntax: a
+// `query` code block is a query block (ADR 0006), which Logseq Markdown
+// writes as the block itself, so its code blocks stay code
+function vanillaReader(preset: Preset): Preset {
+  const read = preset.markdown?.read
+  return {
+    ...preset,
+    markdown: {
+      ...preset.markdown,
+      read: {
+        ...read,
+        org: uniorgAst => {
+          const tree = read?.org?.(uniorgAst) ?? uniorgAst
+          codeToQueryBlocks(tree, "QUERY")
+          return tree
+        }
+      }
+    }
+  }
+}
+
 // a query block: Vanilla Markdown has none, so a code block in the
 // query language carries it (ADR 0006); Logseq Markdown writes the
 // block itself, as Logseq does
@@ -446,18 +472,27 @@ function queryBlocksToCode(uniorgAst: OrgData): void {
   )
 }
 
-function codeToQueryBlocks(uniorgAst: OrgData): void {
+// a query block read as a code block (queryBlocksToCode) goes back as
+// it was written; with a fallback type, so does any `query` code block,
+// as Vanilla Markdown carries a query block
+function codeToQueryBlocks(uniorgAst: OrgData, fallback?: string): void {
   visit(
     uniorgAst as Parent,
     "src-block",
     (node: SrcBlock, index: number | undefined, parent: Parent | undefined) => {
-      if (node.language !== QUERY_LANGUAGE || !parent || index === undefined) {
+      const type = (node as { blockType?: string }).blockType ?? fallback
+      if (
+        node.language !== QUERY_LANGUAGE ||
+        !type ||
+        !parent ||
+        index === undefined
+      ) {
         return undefined
       }
-      const type = (node as { blockType?: string }).blockType ?? "QUERY"
+      // a Markdown code block's value ends short of its last line break
+      const body = node.value.replace(/\n?$/, "\n")
       const [block] =
-        tryParse(`#+begin_${type}\n${node.value}#+end_${type}\n`)?.children ??
-        []
+        tryParse(`#+begin_${type}\n${body}#+end_${type}\n`)?.children ?? []
       if (block) {
         parent.children[index] = block
       }

@@ -61,11 +61,11 @@ function convertOrgSides(
   return over
     ? over.preset.convertOrg!(
         org,
-        (fragment, preset) =>
+        (fragment, preset, carried) =>
           convertOrgSides(
             fragment,
             options,
-            fragmentSides(sides, over.side, preset)
+            fragmentSides(sides, over.side, preset, carried)
           ),
         conversionContext(over, options)
       )

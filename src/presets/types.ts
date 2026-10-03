@@ -39,9 +39,14 @@ export interface ConversionContext {
 
 /**
  * Converts a fragment with the core, the given preset's AST hooks on
- * the taking-over preset's side or sides, and the other side's preset.
+ * the taking-over preset's side or sides, and the other side's preset,
+ * or `carried` there: the preset whose syntax a Vanilla side carries.
  */
-export type FragmentConverter = (fragment: string, preset?: Preset) => string
+export type FragmentConverter = (
+  fragment: string,
+  preset?: Preset,
+  carried?: Preset
+) => string
 
 /**
  * A preset's Markdown dialect. `read` runs in md→org: `mdast` on the

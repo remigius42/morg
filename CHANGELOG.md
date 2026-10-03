@@ -37,12 +37,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   list its children; a heading is a block nesting by level, the text
   below it its content; other text after a list a block of its own.
   Task items, `key:: value` lines and ordered lists come back as task
-  markers, planning, properties and numbered blocks.
+  markers, planning, properties and numbered blocks. Logseq's syntax
+  carried in Vanilla Markdown (page and block refs, macros, a `query`
+  code block) is Logseq's again.
 
 ### Changed
 
-- **Breaking.** `Preset.convertOrg` and `Preset.convertMarkdown` get a
-  third argument, the conversion's context: the side the preset is on
+- **Breaking.** A `FragmentConverter` takes a third argument, the
+  preset whose syntax a Vanilla side carries. `Preset.convertOrg` and
+  `Preset.convertMarkdown` get a third argument, the conversion's context: the side the preset is on
   (`both`, `input` or `output`), `onWarning` and `orgismKeys`.
 - **Breaking.** `Preset` holds one dialect per format, each read in
   one direction and written in the other (ADR 0006):

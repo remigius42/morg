@@ -63,11 +63,11 @@ function convertMarkdownSides(
     ? // a fragment's style is the preset's, not one to record
       over.preset.convertMarkdown!(
         markdown,
-        (fragment, preset) =>
+        (fragment, preset, carried) =>
           convertMarkdownSides(
             fragment,
             { ...options, recordStyle: false },
-            fragmentSides(sides, over.side, preset)
+            fragmentSides(sides, over.side, preset, carried)
           ),
         conversionContext(over, options)
       )
