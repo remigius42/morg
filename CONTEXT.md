@@ -100,4 +100,27 @@ the root. `tests/web/` mirrors this.
 
 ## Preset
 
-A named bundle of dialect-specific transforms applied on top of the dialect-agnostic core (e.g. `logseq`). The core pipelines never contain dialect knowledge. Options that only have observable effect in a dialect are scoped to their Preset, not the core. A Preset may also take a whole conversion over (Logseq: a page is an outline of blocks, each converted as a fragment by the core).
+A named bundle of dialect-specific transforms applied on top of the dialect-agnostic core (e.g. `logseq`). The core pipelines never contain dialect knowledge. Options that only have observable effect in a dialect are scoped to their Preset, not the core. A Preset may also take a whole conversion over (Logseq: a page is an outline of blocks, each converted as a fragment by the core). A Preset has a Dialect per format it knows (Logseq: md and org; Obsidian: md only).
+
+## Dialect
+
+One editor's flavour of one format (Logseq org, Logseq md, Obsidian md). A Preset supplies at most one Dialect per format; reading and writing a Dialect are separate halves.
+
+## Vanilla
+
+The Preset with no Dialect: plain Org and CommonMark/GFM as the core reads and writes them. A named value, so one side can be set back to it.
+_Avoid_: none, default, generic
+
+## Input Preset / Output Preset
+
+The Preset whose Dialect the input is read in, and the one the output is written in. They may differ (Logseq org → Vanilla md); `preset` sets both. Asking a Preset for a Dialect it lacks (Obsidian as the Input Preset of org) is an error. Never auto-detected: a page often carries no telling syntax, and a vault must convert the same way file by file.
+
+## Block
+
+One unit of a Logseq page's outline. On the Vanilla side a Block is what each format natively calls an outline unit: a headline in org (so planning still reaches the agenda), a list item in Markdown. A Block's meta (task marker, planning, properties) travels with it: in Markdown as a task checkbox and `key:: value` lines inside the item.
+_Avoid_: node, bullet
+
+## Carried Construct
+
+A Dialect construct with no Vanilla equivalent (a page or block ref, a macro, a query, a highlight). The Input Preset keeps it marked rather than interpreting it; a Dialect's writer renders it in its own syntax, a Vanilla writer as literal text, so the return trip can restore it.
+_Avoid_: passthrough, verbatim node
