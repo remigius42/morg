@@ -17,6 +17,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Logseq Markdown → Vanilla org writes an empty block as a headline
   with a space after its stars, which Emacs reads as one, instead of
   Logseq org's bare stars.
+- Logseq Markdown → Vanilla org writes a block whose first line starts
+  a src block, a table, a list or its property drawer with that line
+  below an empty headline: on the stars' line, as Logseq org writes it,
+  Emacs read it as the title and cut the element off (ADR 0006,
+  amended).
 - A multi-line HTML comment keeps an empty first or last line as an
   empty org comment line instead of losing it, so such a
   comment comes back as it was.

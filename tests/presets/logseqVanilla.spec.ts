@@ -335,6 +335,45 @@ describe("Logseq md ↔ Vanilla org", () => {
     ).toBe("- a\n-\n\t-\n")
   })
 
+  it.each([
+    ["- ```py\n  x\n  ```\n", "* \n#+begin_src py\nx\n#+end_src\n"],
+    ["- - a\n  - b\n", "* \n- a\n- b\n"],
+    ["- key:: v\n  text\n", "* \n:PROPERTIES:\n:key: v\n:END:\ntext\n"]
+  ])(
+    "writes a block's content below its headline where Emacs would read it as the title: %j",
+    (markdown, org) => {
+      // Logseq org puts the content's first line on the stars' line,
+      // where Emacs reads it as the title (ADR 0006)
+      expect(convertMarkdownToOrg(markdown, { inputPreset: logseq() })).toBe(
+        org
+      )
+      expect(convertOrgToMarkdown(org, { outputPreset: logseq() })).toBe(
+        markdown
+      )
+    }
+  )
+
+  it("keeps an empty heading block a heading", () => {
+    expect(convertMarkdownToOrg("- ##\n", { inputPreset: logseq() })).toBe(
+      "* \n:PROPERTIES:\n:heading: 2\n:END:\n"
+    )
+    expect(
+      convertOrgToMarkdown("* \n:PROPERTIES:\n:heading: 2\n:END:\n", {
+        outputPreset: logseq()
+      })
+    ).toBe("- ##\n")
+  })
+
+  it("keeps a first line that ends its element as the title", () => {
+    // Emacs reads it as text there, which loses nothing
+    expect(
+      convertMarkdownToOrg("- 1. Which\n\n  - a\n", { inputPreset: logseq() })
+    ).toBe("* 1. Which\n\n\n- a\n")
+    expect(
+      convertOrgToMarkdown("* 1. Which\n\n- a\n", { outputPreset: logseq() })
+    ).toBe("- 1. Which\n  \n  - a\n")
+  })
+
   it("writes Logseq md page properties as Vanilla org keywords", () => {
     expect(
       convertMarkdownToOrg(

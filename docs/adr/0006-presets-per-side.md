@@ -55,6 +55,16 @@ based script) drops planning and admonitions.
    matches how Logseq (mldoc) reads files it did not write. So Vanilla
    org is read and written as Logseq org, Logseq's page properties as
    its leading keywords; only Vanilla md has a shape of its own.
+   Amended (0.9.1): but for two headlines Emacs reads apart, as
+   `org-element-headline-re` needs a space after the stars. An empty
+   block keeps that space, which Logseq org leaves out, and a block
+   whose first line starts an element running on below it (a block, a
+   table, a list, its property drawer) has that line below an empty
+   headline, not on the stars' line, where Emacs would read it as the
+   title and cut the element off. Reading Vanilla org, such an empty
+   headline's next line is the block's first again. A first line that
+   ends its element (`* 1. Which`) stays the title, as Emacs files
+   write numbered titles so.
 6. **Block meta in Vanilla Markdown** rides inside the item. Task
    markers render as Logseq renders them (0.10, either format): `TODO`
    / `DONE` as `- [ ]` / `- [x]`; `NOW`, `LATER`, `DOING`,

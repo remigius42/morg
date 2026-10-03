@@ -1,5 +1,6 @@
 import { consumesBracedScripts } from "../core/bracedScripts.js"
-import { readsAsLineSyntax } from "../core/lineSyntax.js"
+import { mayBeLineSyntax, readsAsLineSyntax } from "../core/lineSyntax.js"
+import { positionParser, tryParse } from "../core/render.js"
 import { ZERO_WIDTH_SPACE } from "../core/markupBoundary.js"
 import {
   isDrawerStart,
@@ -24,6 +25,7 @@ const MD_PROPERTY_RE = /^([\w.-]+)::(?: (.*))?$/
 // a repeated task's log line, which Logseq bullets per format
 const STATE_LINE_RE = /^[-*] (?=State ")/
 const MD_HEADING_RE = /^(#{1,6})(?: (.*))?$/
+const HEADLINE_RE = /^\*+ /
 const FENCE_RE = /^\s*(?:```|~~~)/
 // md→org adds it for the text's bare `_` and `^`, which a block's
 // content holds as Logseq writes it
@@ -191,8 +193,10 @@ function withBracedScripts(lines: string[]): string[] {
 }
 
 // Logseq org: a block's properties drawer, as properties; a heading
-// level is one of them, but for content that starts with the drawer
-function readOrgBlock({ level, lines }: Lines): Block {
+// level is one of them, but for content that starts with the drawer,
+// unless written below an empty title (Vanilla org), which both look
+// alike in
+function readOrgBlock({ level, lines }: Lines, joined = false): Block {
   const [first = "", ...rest] = lines
   const metaFirst = isDrawerStart(first)
   const { meta: groups, body } = takeMeta(metaFirst ? lines : rest, () => false)
@@ -203,7 +207,11 @@ function readOrgBlock({ level, lines }: Lines): Block {
     }
     return group.slice(1, -1).flatMap(line => {
       const [, key = "", value = ""] = ORG_PROPERTY_RE.exec(line) ?? []
-      if (!metaFirst && key === "heading" && /^[1-6]$/.test(value)) {
+      if (
+        (!metaFirst || joined) &&
+        key === "heading" &&
+        /^[1-6]$/.test(value)
+      ) {
         heading = Number(value)
         return []
       }
@@ -219,7 +227,7 @@ function readOrgBlock({ level, lines }: Lines): Block {
   }
 }
 
-function readOrgOutline(org: string): Outline {
+function readOrgOutline(org: string, vanilla: boolean): Outline {
   const { page, blocks } = splitBlocks(
     org.replace(/\r?\n$/, "").split(/\r?\n/),
     line => {
@@ -227,7 +235,16 @@ function readOrgOutline(org: string): Outline {
       return match ? [match[1]?.length ?? 0, match[2] ?? ""] : null
     }
   )
-  return { page, blocks: blocks.map(readOrgBlock) }
+  return {
+    page,
+    blocks: blocks.map(({ level, lines }) => {
+      // Vanilla org: a first line written below an empty title, as it
+      // starts an element, is the block's first line again
+      const [title, ...rest] = lines
+      const joined = vanilla && title === "" && startsElement(rest)
+      return readOrgBlock({ level, lines: joined ? rest : lines }, joined)
+    })
+  }
 }
 
 // a continuation line sits two spaces inside its bullet
@@ -353,14 +370,40 @@ function orgMetaLines(meta: Meta[], heading: number): string[] {
   return lines.flatMap(line => (line === null ? drawer : [line]))
 }
 
+// Logseq org writes a block's first line on its stars' line, where
+// Emacs reads it as the title; whether the line starts an element there
+// that runs on below it (a block, a list, a table, a drawer), which the
+// title would cut off; one line of a list or a table is a fine title,
+// as is a headline's own
+function startsElement(lines: string[]): boolean {
+  const [first = ""] = lines
+  if (!mayBeLineSyntax(first) || HEADLINE_RE.test(first)) {
+    return false
+  }
+  const text = `${lines.join("\n")}\n`
+  const [element] = tryParse(text, positionParser)?.children ?? []
+  // its end takes in the blank lines after it
+  return (
+    !!element &&
+    element.type !== "paragraph" &&
+    text
+      .slice(0, element.position?.end.offset ?? 0)
+      .trimEnd()
+      .includes("\n")
+  )
+}
+
 // Vanilla org: Emacs reads stars without a space after them as text, so
-// an empty title keeps the space Logseq org leaves out (ADR 0006)
+// an empty title keeps the space Logseq org leaves out, and a first line
+// that starts an element goes below the stars (ADR 0006)
 function writeOrgBlock(block: Block, vanilla = false): string {
-  const [title = "", ...more] = arrange(
+  const lines = arrange(
     block.metaFirst,
     orgMetaLines(block.meta, block.heading),
     block.content
   )
+  const [title = "", ...more] =
+    vanilla && startsElement(lines) ? ["", ...lines] : lines
   return [
     `${"*".repeat(block.level)}${title || vanilla ? ` ${title}` : ""}`,
     ...more
@@ -542,7 +585,7 @@ export function orgOutlineToMarkdown(
   presets: Presets,
   context: ConversionContext
 ): string {
-  const { page, blocks } = readOrgOutline(org)
+  const { page, blocks } = readOrgOutline(org, context.side === "output")
   const vanilla = context.side === "input"
   const pageLines = vanilla ? (presets.vanillaPage?.(page) ?? page) : page
   const convertCarried: FragmentConverter = (fragment, preset) =>

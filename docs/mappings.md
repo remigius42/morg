@@ -387,9 +387,15 @@ and hiccup (`[:div …]`) survive verbatim, emitted unescaped in
 Markdown.
 
 `logseq` on one side only (`--input-preset` / `--output-preset`, ADR
-0006). Vanilla org is read and written as Logseq org, which it is:
-Logseq md ↔ Vanilla org converts as Logseq md ↔ Logseq org does. Vanilla
-md has a shape of its own; Logseq org ↔ Vanilla md:
+0006). Vanilla org is read and written as Logseq org, which it nearly
+is: Logseq md ↔ Vanilla org converts as Logseq md ↔ Logseq org does,
+but for two headlines Emacs reads apart. An empty block keeps a space
+after its stars (Logseq org writes bare stars, text to Emacs). A block
+whose first line starts an element that runs on below it (a src or
+other block, a table, a list, its property drawer) has that line below
+an empty headline: Logseq org puts it on the stars' line, where Emacs
+would read it as the title. Vanilla md has a shape of its own; Logseq
+org ↔ Vanilla md:
 
 | Logseq org                                                   | Vanilla md                                                                                  |
 | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
