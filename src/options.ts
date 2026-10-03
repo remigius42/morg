@@ -1,4 +1,4 @@
-import type { Preset } from "./presets/types.js"
+import type { PresetOptions } from "./presets/sides.js"
 
 /**
  * A feature toggle: `true`/`false` switches everything on/off, a record
@@ -21,7 +21,7 @@ export function toggleEnabled(
   return toggle[key] ?? defaultValue
 }
 
-export interface MarkdownToOrgOptions {
+export interface MarkdownToOrgOptions extends PresetOptions {
   /**
    * Preserve Markdown constructs without a native Org equivalent (e.g.
    * raw HTML as export blocks/snippets, see ADR 0002). Default: `true`.
@@ -53,8 +53,6 @@ export interface MarkdownToOrgOptions {
   orgismKeys?: Record<string, string>
   /** Called for each construct dropped without an equivalent. */
   onWarning?: (message: string) => void
-  /** Dialect preset applied on top of the generic conversion. */
-  preset?: Preset
 }
 
 /**
@@ -84,7 +82,7 @@ export interface MarkdownStyleOptions {
   ruleRepetition?: number
 }
 
-export interface OrgToMarkdownOptions {
+export interface OrgToMarkdownOptions extends PresetOptions {
   /**
    * Serialize Org constructs without a native Markdown equivalent as
    * `key:: value` lines and verbatim passthroughs (see ADR 0002).
@@ -114,6 +112,4 @@ export interface OrgToMarkdownOptions {
   orgismKeys?: Record<string, string>
   /** Called for each construct dropped without an equivalent. */
   onWarning?: (message: string) => void
-  /** Dialect preset extracted before the generic conversion. */
-  preset?: Preset
 }

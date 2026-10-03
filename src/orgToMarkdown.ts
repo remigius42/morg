@@ -18,6 +18,7 @@ import {
 } from "./core/underscoreBullets.js"
 import type { OrgToMarkdownOptions } from "./options.js"
 import { readOrgWriteMarkdown } from "./presets/hooks.js"
+import { resolveSides, type Sides } from "./presets/sides.js"
 
 // a list item's paragraph after its nested list needs a blank line, or
 // md reads it as a lazy continuation of the nested list's last item
@@ -43,17 +44,26 @@ export function convertOrgToMarkdown(
   org: string,
   options: OrgToMarkdownOptions = {}
 ): string {
-  const convertOrg = options.preset?.convertOrg
-  return convertOrg
+  return convertOrgSides(org, options, resolveSides(options, "org", "markdown"))
+}
+
+function convertOrgSides(
+  org: string,
+  options: OrgToMarkdownOptions,
+  sides: Sides
+): string {
+  const convertOrg = sides.input?.convertOrg
+  return convertOrg && sides.input?.name === sides.output?.name
     ? convertOrg(org, (fragment, preset) =>
-        convertOrgToMarkdown(fragment, { ...options, preset })
+        convertOrgSides(fragment, options, { input: preset, output: preset })
       )
-    : convertOrgDocument(org, options)
+    : convertOrgDocument(org, options, sides)
 }
 
 function convertOrgDocument(
   org: string,
-  options: OrgToMarkdownOptions
+  options: OrgToMarkdownOptions,
+  sides: Sides
 ): string {
   // Phase 1: Parse Org-mode to uniorg-ast
   // md text has no scripts, so ^:{} is implied there and consumed here
@@ -78,7 +88,7 @@ function convertOrgDocument(
 
   // Phase 2: Extract dialect preset conventions, if any: read the org
   // dialect, then write the md dialect
-  uniorgAst = readOrgWriteMarkdown(uniorgAst, options.preset)
+  uniorgAst = readOrgWriteMarkdown(uniorgAst, sides)
 
   // Phase 3: Generic uniorg-ast to mdast transformation
   const mdast = transformUniorgAstToMdast(uniorgAst, {

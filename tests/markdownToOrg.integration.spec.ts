@@ -713,6 +713,9 @@ describe("convertMarkdownToOrg with a converting preset", () => {
   it("should let a preset convert fragment by fragment", () => {
     const preset = {
       name: "parts",
+      // a dialect on either side, so `preset` sets both
+      markdown: {},
+      org: {},
       convertMarkdown: (text: string, convert: (fragment: string) => string) =>
         text
           .split("|")
@@ -726,6 +729,9 @@ describe("convertMarkdownToOrg with a converting preset", () => {
   it("should record no style for a fragment", () => {
     const preset = {
       name: "whole",
+      // a dialect on either side, so `preset` sets both
+      markdown: {},
+      org: {},
       convertMarkdown: (text: string, convert: (fragment: string) => string) =>
         convert(text)
     }

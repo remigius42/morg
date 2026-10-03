@@ -1,6 +1,7 @@
 import { convertMarkdownToOrg } from "./markdownToOrg.js"
 import { convertOrgToMarkdown } from "./orgToMarkdown.js"
 import type { MarkdownToOrgOptions, OrgToMarkdownOptions } from "./options.js"
+import type { Preset } from "./presets/types.js"
 
 /**
  * The full option set of both directions: normalization uses the same
@@ -23,7 +24,8 @@ export function normalizeMarkdown(
   markdown: string,
   options: NormalizeOptions = {}
 ): string {
-  return convertOrgToMarkdown(convertMarkdownToOrg(markdown, options), options)
+  const single = onePreset(options)
+  return convertOrgToMarkdown(convertMarkdownToOrg(markdown, single), single)
 }
 
 /**
@@ -37,5 +39,22 @@ export function normalizeOrg(
   org: string,
   options: NormalizeOptions = {}
 ): string {
-  return convertMarkdownToOrg(convertOrgToMarkdown(org, options), options)
+  const single = onePreset(options)
+  return convertMarkdownToOrg(convertOrgToMarkdown(org, single), single)
+}
+
+// normalizing canonicalizes within one dialect (ADR 0006), so both
+// sides name the same preset, which then sets both ways of the trip
+function onePreset(options: NormalizeOptions): NormalizeOptions {
+  const { preset, inputPreset, outputPreset, ...rest } = options
+  const input = inputPreset ?? preset
+  const output = outputPreset ?? preset
+  if (input?.name !== output?.name) {
+    const name = (key: string, side: Preset | undefined) =>
+      side ? `${key} '${side.name}'` : `${key} vanilla`
+    throw new Error(
+      `normalize takes one preset; got ${name("inputPreset", input)} and ${name("outputPreset", output)}`
+    )
+  }
+  return input ? { ...rest, preset: input } : rest
 }

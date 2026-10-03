@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `inputPreset` and `outputPreset` conversion options: the dialect the
+  input is read in and the one the output is written in, Vanilla when
+  left out (ADR 0006). `preset` still sets both, leaving a side Vanilla
+  whose format it has no dialect for; a side preset without one throws,
+  as does `preset` together with another side preset, and `normalize*`
+  with different presets per side.
+
 ### Changed
 
 - **Breaking.** `Preset` holds one dialect per format, each read in

@@ -17,7 +17,10 @@ based script) drops planning and admonitions.
 1. **Input Preset and Output Preset.** `--input-preset` and
    `--output-preset` (`inputPreset`/`outputPreset` in the config) take
    `vanilla`, `logseq` or `obsidian`; `--preset`/`preset` sets both, and
-   combined with a conflicting side preset it is an error. Each side
+   combined with a conflicting side preset it is an error. `preset`
+   leaves a side Vanilla whose format the Preset has no Dialect for
+   (`--preset obsidian` converts md → org as before), while a side
+   preset without one is an error. Each side
    resolves on its own: CLI side flag, `--preset`, config side key,
    config `preset`, `vanilla`; a conflict is an error only within one
    layer, across layers the higher one wins, so a config can set the

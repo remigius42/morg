@@ -217,10 +217,17 @@ preset })`: `preserveOrgisms` default `true`; `useHtml` (default
   `[[((uuid))][label]]`, and `^^highlight^^` markup survives verbatim
   (it would otherwise re-parse as superscripts).
 - `obsidian()`: wikilinks `[[Page]]` / `[[Page|alias]]` ↔ org fuzzy links
+- `inputPreset` / `outputPreset` (on both conversions): the dialect
+  the input is read in and the one the output is written in (ADR
+  0006); leaving one out is Vanilla. `preset` sets both, but leaves a
+  side Vanilla whose format the preset has no dialect for (Obsidian
+  writes no org); a side preset without one throws, and so does
+  `preset` naming another preset than a side preset.
 
 - `normalizeMarkdown(md, { preset })` / `normalizeOrg(org, { preset })`
   (CLI: `morg normalize`): one full round trip to morg's canonical
-  form, a fixed point. Canonicalization, not styling: org-isms and
+  form, a fixed point, within one dialect: different presets per side
+  throw. Canonicalization, not styling: org-isms and
   md-isms are rewritten exactly as a conversion would rewrite them.
   Normalize with the same preset/config you will convert with, since
   convergence is per-config (ADR 0002).

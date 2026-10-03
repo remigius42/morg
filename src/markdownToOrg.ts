@@ -28,6 +28,7 @@ import type { Root } from "mdast"
 import type { MarkdownStyleOptions, MarkdownToOrgOptions } from "./options.js"
 import type { Preset } from "./presets/types.js"
 import { readMarkdownWriteOrg } from "./presets/hooks.js"
+import { resolveSides, type Sides } from "./presets/sides.js"
 import { keyValueEntries } from "./core/keyValueLines.js"
 
 /**
@@ -40,25 +41,38 @@ export function convertMarkdownToOrg(
   markdown: string,
   options: MarkdownToOrgOptions = {}
 ): string {
-  const convertMarkdown = options.preset?.convertMarkdown
-  return convertMarkdown
+  return convertMarkdownSides(
+    markdown,
+    options,
+    resolveSides(options, "markdown", "org")
+  )
+}
+
+function convertMarkdownSides(
+  markdown: string,
+  options: MarkdownToOrgOptions,
+  sides: Sides
+): string {
+  const convertMarkdown = sides.input?.convertMarkdown
+  return convertMarkdown && sides.input?.name === sides.output?.name
     ? // a fragment's style is the preset's, not one to record
       convertMarkdown(markdown, (fragment, preset) =>
-        convertMarkdownToOrg(fragment, {
-          ...options,
-          preset,
-          recordStyle: false
-        })
+        convertMarkdownSides(
+          fragment,
+          { ...options, recordStyle: false },
+          { input: preset, output: preset }
+        )
       )
-    : convertMarkdownDocument(markdown, options)
+    : convertMarkdownDocument(markdown, options, sides)
 }
 
 function convertMarkdownDocument(
   markdown: string,
-  options: MarkdownToOrgOptions
+  options: MarkdownToOrgOptions,
+  sides: Sides
 ): string {
   // Phase 1: Parse Markdown to mdast
-  const mdast = parseMarkdown(markdown, options.preset)
+  const mdast = parseMarkdown(markdown, sides.input)
 
   // Phase 2: Generic mdast to uniorg-ast transformation
   let uniorgAst = transformMdastToUniorgDraft(mdast, {
@@ -98,7 +112,7 @@ function convertMarkdownDocument(
 
   // Phase 3: Apply dialect preset, if any: read the md dialect, then
   // write the org dialect
-  uniorgAst = readMarkdownWriteOrg(uniorgAst, options.preset)
+  uniorgAst = readMarkdownWriteOrg(uniorgAst, sides)
 
   // Phase 3b: literal footnote references, paragraph lines org would
   // read as line syntax, literal markers org would read as markup, and
