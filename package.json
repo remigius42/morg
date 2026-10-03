@@ -30,7 +30,7 @@
     }
   },
   "bin": {
-    "morg": "./dist/cli.js"
+    "morg": "dist/cli.js"
   },
   "files": [
     "dist"
