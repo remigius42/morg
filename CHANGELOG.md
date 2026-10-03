@@ -32,6 +32,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`[[Page]]`, `[label]([[Page]])`), macros (`{{video …}}`), tags,
   priorities, hiccup, highlights; a query block becomes a `query` code
   block.
+- Vanilla Markdown → Logseq org (`--output-preset logseq`), as Logseq
+  reads a file it did not write: a list item is a block, its nested
+  list its children; a heading is a block nesting by level, the text
+  below it its content; other text after a list a block of its own.
+  Task items, `key:: value` lines and ordered lists come back as task
+  markers, planning, properties and numbered blocks.
 
 ### Changed
 

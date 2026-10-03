@@ -5,6 +5,7 @@ import {
   orgElementEnd
 } from "../core/passthroughSource.js"
 import type { ConversionContext, FragmentConverter, Preset } from "./types.js"
+import { readVanillaMarkdownOutline } from "./logseqVanillaMarkdown.js"
 
 // Logseq stores a page as an outline of blocks, each block a content
 // string it parses on its own: org writes a block as its level's stars,
@@ -39,10 +40,10 @@ interface Lines {
 }
 
 // a block's planning line or drawer, or one of its properties
-type Meta = { lines: string[] } | { key: string; value: string }
+export type Meta = { lines: string[] } | { key: string; value: string }
 
 /** A block of the outline, read from either format. */
-interface Block {
+export interface Block {
   level: number
   // a heading's level, 0 for none
   heading: number
@@ -55,7 +56,7 @@ interface Block {
 }
 
 /** A page: its properties' source lines, then its blocks. */
-interface Outline {
+export interface Outline {
   page: string[]
   blocks: Block[]
 }
@@ -533,16 +534,19 @@ export function orgOutlineToMarkdown(
  * @param markdown The Markdown page.
  * @param convert The core's fragment converter.
  * @param presets The presets for the page properties and for a block.
- * @param _context The side the preset is on.
+ * @param context The side the preset is on.
  * @returns The org page.
  */
 export function markdownOutlineToOrg(
   markdown: string,
   convert: FragmentConverter,
   presets: Presets,
-  _context: ConversionContext
+  context: ConversionContext
 ): string {
-  const { page, blocks } = readMarkdownOutline(markdown)
+  const { page, blocks } =
+    context.side === "output"
+      ? readVanillaMarkdownOutline(markdown, context)
+      : readMarkdownOutline(markdown)
   return writeOutline(
     {
       page: convertPage(page, convert, presets.page),
