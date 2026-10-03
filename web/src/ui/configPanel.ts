@@ -6,16 +6,18 @@
  * three places, the panel mark, the reflection, and the snippet picker.
  *
  * Takes the controls it touches rather than the whole `Controls`, so a
- * test needs six elements instead of the converter page.
+ * test needs seven elements instead of the converter page.
  */
 import { parseConfig, type MorgConfig } from "../../../src/config.js"
 import { CONFIG_SNIPPETS } from "./snippets.js"
+import { setPreset } from "./dialects.js"
 
 /** The controls a config has anything to say about. */
 export interface ConfigControls {
   config: HTMLTextAreaElement
   configSection: HTMLDetailsElement
-  preset: HTMLSelectElement
+  inputDialect: HTMLSelectElement
+  outputDialect: HTMLSelectElement
   useHtml: HTMLInputElement
   interpretHtml: HTMLInputElement
   recordStyle: HTMLInputElement
@@ -51,7 +53,13 @@ export function reflectConfig(controls: ConfigControls): void {
   } catch {
     return // convert() reports the error
   }
-  assign(parsed.preset, value => (controls.preset.value = value))
+  // per side, as the CLI resolves it (ADR 0006)
+  assign(parsed.inputPreset ?? parsed.preset, value =>
+    setPreset(controls.inputDialect, value)
+  )
+  assign(parsed.outputPreset ?? parsed.preset, value =>
+    setPreset(controls.outputDialect, value)
+  )
   const orgToMd = parsed.orgToMarkdown
   if (typeof orgToMd?.useHtml === "boolean")
     controls.useHtml.checked = orgToMd.useHtml

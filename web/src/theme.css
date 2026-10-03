@@ -253,18 +253,24 @@ nav li:has(> .theme-switch) {
   grid-column-gap: var(--pico-grid-column-gap);
   grid-row-gap: var(--pico-grid-row-gap);
   grid-template-areas:
+    "input-dialect"
     "input-actions"
     "input"
+    "swap"
+    "output-dialect"
     "output-actions"
     "output";
 }
 
 @media (min-width: 768px) {
   .panes {
-    grid-template-columns: 1fr 1fr;
+    /* ⇄ between the two selects, in a column of its own that the
+       rows below leave empty, so the sides stay the same width */
+    grid-template-columns: 1fr auto 1fr;
     grid-template-areas:
-      "input-actions output-actions"
-      "input output";
+      "input-dialect swap output-dialect"
+      "input-actions . output-actions"
+      "input . output";
   }
 }
 
@@ -272,6 +278,40 @@ nav li:has(> .theme-switch) {
    width would otherwise push its column past the share it was given */
 .panes > * {
   min-width: 0;
+}
+
+.input-dialect {
+  grid-area: input-dialect;
+}
+
+.output-dialect {
+  grid-area: output-dialect;
+}
+
+/* level with the selects, which sit below their labels */
+#swapSides {
+  grid-area: swap;
+  align-self: start;
+  justify-self: center;
+  width: auto;
+  margin: 0;
+}
+
+@media (min-width: 768px) {
+  #swapSides {
+    margin-top: calc(1rem * var(--pico-line-height) + 0.375rem);
+  }
+}
+
+.input-dialect > select,
+.output-dialect > select {
+  margin-bottom: 0;
+}
+
+#normalizeHint {
+  display: block;
+  margin-top: calc(var(--pico-spacing) * 0.5);
+  color: var(--pico-muted-color);
 }
 
 .input-actions {

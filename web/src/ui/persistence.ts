@@ -12,7 +12,16 @@ const STORAGE_KEY = "morg-web"
  * it may have been written by an older version of the page, or by hand.
  */
 export interface PersistedState {
+  /** Each side's format and dialect, as its select's value. */
+  inputDialect?: string
+  outputDialect?: string
+  /**
+   * The sides as remembered before the selects named the dialects: a
+   * direction and a preset per side, or one for both (0.8.0).
+   */
   direction?: string
+  inputPreset?: string
+  outputPreset?: string
   preset?: string
   useHtml?: boolean
   interpretHtml?: boolean

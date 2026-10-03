@@ -76,12 +76,29 @@ describe("runConversion", () => {
     expect(result.output).toBe("- [ ] buy milk\n")
   })
 
-  it("applies a preset selected in the form", () => {
+  it("applies the presets selected per side in the form", () => {
     const result = runConversion("[[Page|alias]]", {
       direction: "md-to-org",
-      preset: "obsidian"
+      inputPreset: "obsidian",
+      outputPreset: "vanilla"
     })
     expect(result.output).toBe("[[Page][alias]]\n")
+    expect(
+      runConversion("* a\n** b\n", {
+        direction: "org-to-md",
+        inputPreset: "logseq",
+        outputPreset: "vanilla"
+      }).output
+    ).toBe("- a\n  - b\n")
+  })
+
+  it("lets the form's side override the config's preset", () => {
+    const result = runConversion(
+      "* a\n** b\n",
+      { direction: "org-to-md", outputPreset: "vanilla" },
+      'preset = "logseq"\n'
+    )
+    expect(result.output).toBe("- a\n  - b\n")
   })
 
   it("applies a preset named in the config", () => {
@@ -96,10 +113,36 @@ describe("runConversion", () => {
   it("reports an unknown preset", () => {
     const result = runConversion("# Hello", {
       direction: "md-to-org",
-      preset: "vim"
+      inputPreset: "vim"
     })
     expect(result.error).toMatch(/vim/)
     expect(result.output).toBe("")
+  })
+
+  it("reports an unknown preset in the config, though the form sets both", () => {
+    const result = runConversion(
+      "# Hello",
+      {
+        direction: "md-to-org",
+        inputPreset: "vanilla",
+        outputPreset: "vanilla"
+      },
+      'preset = "vim"\n'
+    )
+    expect(result.error).toMatch(/vim/)
+    expect(result.output).toBe("")
+  })
+
+  it("lets the form override a config naming presets the sides lack", () => {
+    const config = 'inputPreset = "obsidian"\noutputPreset = "logseq"\n'
+    for (const direction of ["org-to-md", "normalize-org"] as const) {
+      const result = runConversion(
+        "* a\n",
+        { direction, inputPreset: "vanilla", outputPreset: "vanilla" },
+        config
+      )
+      expect(result.error).toBeUndefined()
+    }
   })
 
   it("applies orgismKeys from the config", () => {

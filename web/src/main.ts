@@ -10,9 +10,16 @@ import { element, findControls, type Controls } from "./ui/controls.js"
 import { demoFor, isDemo } from "./ui/demos.js"
 import { convert, debounce, DEBOUNCE_MS, startConvert } from "./ui/runLoop.js"
 import { wireDropZone } from "./ui/dropZone.js"
-import type { Direction } from "./direction.js"
+import { DIRECTIONS } from "./direction.js"
 import { copyOutput, downloadOutput } from "./ui/outputActions.js"
-import { readState, writeState } from "./ui/persistence.js"
+import { readState, writeState, type PersistedState } from "./ui/persistence.js"
+import {
+  directionOf,
+  enforceOutput,
+  presetsOf,
+  setDirection,
+  swapSides
+} from "./ui/dialects.js"
 import { createRunner, type ConversionRunner } from "./pipeline/runner.js"
 import {
   directionForFile,
@@ -24,26 +31,27 @@ import {
 } from "./ui/files.js"
 
 // an untouched demo follows the direction's input format and the
-// preset's dialect, however the preset was set
+// input preset's dialect, however the preset was set
 function swapDemo(controls: Controls): void {
   if (isDemo(controls.input.value)) {
     controls.input.value = demoFor(
-      controls.direction.value as Direction,
-      controls.preset.value
+      directionOf(controls),
+      presetsOf(controls).inputPreset
     )
   }
 }
 
-// a config may set the preset
+// a config may set the presets
 function applyConfig(controls: Controls): void {
   reflectConfig(controls)
+  enforceOutput(controls)
   swapDemo(controls)
 }
 
 function persist(controls: Controls): void {
   writeState({
-    direction: controls.direction.value,
-    preset: controls.preset.value,
+    inputDialect: controls.inputDialect.value,
+    outputDialect: controls.outputDialect.value,
     useHtml: controls.useHtml.checked,
     interpretHtml: controls.interpretHtml.checked,
     recordStyle: controls.recordStyle.checked,
@@ -59,17 +67,48 @@ function assign<T>(value: T | undefined, apply: (value: T) => void): void {
   if (value !== undefined) apply(value)
 }
 
+// a direction the sides changed to: the untouched demo follows, and an
+// opened name no longer read in it goes, or it would name the output
+// after the wrong format, and where that matches, after the source file
+function sidesChanged(controls: Controls): void {
+  swapDemo(controls)
+  if (
+    controls.openedFileName &&
+    !directionSuitsFile(controls.openedFileName, directionOf(controls))
+  ) {
+    controls.openedFileName = undefined
+  }
+}
+
+// the sides as remembered: by dialect, or as a direction and presets,
+// as the page remembered them before the selects named the dialects
+function restoreDialects(controls: Controls, state: PersistedState): void {
+  const options = (select: HTMLSelectElement) =>
+    [...select.options].map(option => option.value)
+  if (
+    state.inputDialect &&
+    state.outputDialect &&
+    options(controls.inputDialect).includes(state.inputDialect) &&
+    options(controls.outputDialect).includes(state.outputDialect)
+  ) {
+    controls.inputDialect.value = state.inputDialect
+    controls.outputDialect.value = state.outputDialect
+    enforceOutput(controls)
+    return
+  }
+  // Org → Markdown, the first, where the page remembers none
+  const direction = DIRECTIONS.find(known => known === state.direction)
+  setDirection(controls, direction ?? "org-to-md", {
+    inputPreset: state.inputPreset ?? state.preset ?? "vanilla",
+    outputPreset: state.outputPreset ?? state.preset ?? "vanilla"
+  })
+}
+
 function restore(controls: Controls): void {
   const state = readState()
   // a stale or hand-edited value would leave the select blank, so keep
   // the default unless the option actually exists
-  if (state.direction) {
-    const options = [...controls.direction.options].map(option => option.value)
-    if (options.includes(state.direction)) {
-      controls.direction.value = state.direction
-    }
-  }
-  assign(state.preset, value => (controls.preset.value = value))
+  restoreDialects(controls, state)
   assign(state.useHtml, value => (controls.useHtml.checked = value))
   assign(state.interpretHtml, value => (controls.interpretHtml.checked = value))
   assign(state.recordStyle, value => (controls.recordStyle.checked = value))
@@ -134,11 +173,7 @@ async function openDocument(
   }
   controls.openedFileName = doc.name
   controls.input.value = text
-  const direction = directionForFile(
-    doc.name,
-    controls.direction.value as Direction
-  )
-  controls.direction.value = direction
+  setDirection(controls, directionForFile(doc.name, directionOf(controls)))
   return [sizeWarning(doc)].filter(notice => notice !== undefined)
 }
 
@@ -175,7 +210,7 @@ function wireFileControls(controls: Controls): void {
     downloadOutput(
       controls.output,
       controls.openedFileName,
-      controls.direction.value as Direction
+      directionOf(controls)
     )
   )
 
@@ -191,7 +226,7 @@ function wireFileControls(controls: Controls): void {
 }
 
 function wireListeners(controls: Controls): void {
-  const { direction, config, input } = controls
+  const { config, input } = controls
   // only the two textareas, which fire per keystroke; a select or a
   // checkbox fires once per interaction, and delaying a click reads as lag.
   // One shared timer, since typing in both boxes is still one intent to
@@ -212,22 +247,23 @@ function wireListeners(controls: Controls): void {
     startConvert(controls)
   })
   // registered ahead of the listeners that convert
-  controls.preset.addEventListener("change", () => swapDemo(controls))
-  direction.addEventListener("change", () => {
-    swapDemo(controls)
-    // the opened name described a document this direction no longer
-    // reads; kept, it would name the output after the wrong format,
-    // and where the output format matches, after the source file itself
-    if (
-      controls.openedFileName &&
-      !directionSuitsFile(controls.openedFileName, direction.value as Direction)
-    ) {
-      controls.openedFileName = undefined
-    }
+  controls.inputDialect.addEventListener("change", () => {
+    enforceOutput(controls, true)
+    sidesChanged(controls)
+  })
+  controls.outputDialect.addEventListener("change", () => {
+    enforceOutput(controls)
+    sidesChanged(controls)
+  })
+  controls.swapSides.addEventListener("click", () => {
+    swapSides(controls)
+    sidesChanged(controls)
+    persist(controls)
+    startConvert(controls)
   })
   for (const control of [
-    direction,
-    controls.preset,
+    controls.inputDialect,
+    controls.outputDialect,
     controls.useHtml,
     controls.interpretHtml,
     controls.recordStyle,
@@ -279,11 +315,12 @@ export function init(runner?: ConversionRunner): void {
   showConfig(controls, false)
   if (controls.config.value) {
     reflectConfig(controls)
+    enforceOutput(controls)
   }
   if (!controls.input.value) {
     controls.input.value = demoFor(
-      controls.direction.value as Direction,
-      controls.preset.value
+      directionOf(controls),
+      presetsOf(controls).inputPreset
     )
   }
   startConvert(controls)

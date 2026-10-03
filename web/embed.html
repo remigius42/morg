@@ -23,24 +23,46 @@
   <body>
     <main class="container-fluid">
       <form id="converter">
-        <div class="grid">
-          <select id="direction" aria-label="Conversion direction">
-            <option value="org-to-md">Org → Markdown</option>
-            <option value="md-to-org">Markdown → Org</option>
-            <option value="normalize-org">Normalize Org</option>
-            <option value="normalize-md">Normalize Markdown</option>
-          </select>
-          <select id="preset" aria-label="Dialect preset">
-            <option value="">No preset</option>
-            <option value="logseq">Logseq</option>
-            <option value="obsidian">Obsidian</option>
-          </select>
-        </div>
         <!-- one grid rather than a row of buttons above a row of boxes:
              stacked, each set of buttons has to follow the box it acts
              on, and Copy and Download two boxes above their output is
              how they end up next to the input instead -->
         <div class="panes">
+          <!-- each side names its format and dialect (ADR 0006); the
+               direction follows from the two, and the same on both sides
+               normalizes -->
+          <div class="input-dialect">
+            <label for="inputDialect">Input</label>
+            <select id="inputDialect">
+              <option value="org">Org</option>
+              <option value="org:logseq">Org (Logseq)</option>
+              <option value="markdown">Markdown</option>
+              <option value="markdown:logseq">Markdown (Logseq)</option>
+              <option value="markdown:obsidian">Markdown (Obsidian)</option>
+            </select>
+          </div>
+          <button
+            type="button"
+            id="swapSides"
+            class="outline secondary"
+            aria-label="Swap input and output"
+            title="Swap input and output"
+          >
+            ⇄
+          </button>
+          <div class="output-dialect">
+            <label for="outputDialect">Output</label>
+            <select id="outputDialect" aria-describedby="normalizeHint">
+              <option value="org">Org</option>
+              <option value="org:logseq">Org (Logseq)</option>
+              <option value="markdown" selected>Markdown</option>
+              <option value="markdown:logseq">Markdown (Logseq)</option>
+              <option value="markdown:obsidian">Markdown (Obsidian)</option>
+            </select>
+            <small id="normalizeHint" hidden>
+              Same on both sides: normalizes to morg's canonical form
+            </small>
+          </div>
           <div class="input-actions">
             <button type="button" id="openFile" class="outline">
               Open file…

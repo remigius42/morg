@@ -8,6 +8,14 @@
 export type Direction =
   "md-to-org" | "org-to-md" | "normalize-md" | "normalize-org"
 
+/** Every direction, to read a remembered one back. */
+export const DIRECTIONS: readonly Direction[] = [
+  "org-to-md",
+  "md-to-org",
+  "normalize-org",
+  "normalize-md"
+]
+
 /** Whether a direction reads Markdown (rather than Org) as its input. */
 export function readsMarkdown(direction: Direction): boolean {
   return direction === "md-to-org" || direction === "normalize-md"

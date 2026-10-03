@@ -6,7 +6,7 @@
  * file a dependency of everything it wires.
  */
 import type { ConversionForm } from "../pipeline/convert.js"
-import type { Direction } from "../direction.js"
+import { directionOf, presetsOf } from "./dialects.js"
 import type { ConversionRunner } from "../pipeline/runner.js"
 
 /** The Markdown style knobs, which are a select each, named by their id. */
@@ -22,8 +22,10 @@ export function element<T extends HTMLElement>(id: string): T {
 }
 
 export interface Controls {
-  direction: HTMLSelectElement
-  preset: HTMLSelectElement
+  inputDialect: HTMLSelectElement
+  outputDialect: HTMLSelectElement
+  swapSides: HTMLButtonElement
+  normalizeHint: HTMLElement
   useHtml: HTMLInputElement
   interpretHtml: HTMLInputElement
   recordStyle: HTMLInputElement
@@ -85,8 +87,10 @@ function notice(id: string, text: string): HTMLParagraphElement {
 
 export function findControls(runner: ConversionRunner): Controls {
   return {
-    direction: element<HTMLSelectElement>("direction"),
-    preset: element<HTMLSelectElement>("preset"),
+    inputDialect: element<HTMLSelectElement>("inputDialect"),
+    outputDialect: element<HTMLSelectElement>("outputDialect"),
+    swapSides: element<HTMLButtonElement>("swapSides"),
+    normalizeHint: element<HTMLElement>("normalizeHint"),
     useHtml: element<HTMLInputElement>("useHtml"),
     interpretHtml: element<HTMLInputElement>("interpretHtml"),
     recordStyle: element<HTMLInputElement>("recordStyle"),
@@ -114,8 +118,8 @@ export function findControls(runner: ConversionRunner): Controls {
 /** What the form currently asks of a conversion. */
 export function formState(controls: Controls): ConversionForm {
   return {
-    direction: controls.direction.value as Direction,
-    preset: controls.preset.value,
+    direction: directionOf(controls),
+    ...presetsOf(controls),
     useHtml: controls.useHtml.checked,
     interpretHtml: controls.interpretHtml.checked,
     recordStyle: controls.recordStyle.checked,

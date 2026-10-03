@@ -17,8 +17,15 @@ beforeEach(() => {
       </select>
       <textarea id="config"></textarea>
     </details>
-    <select id="preset">
-      <option value=""></option><option value="obsidian">obsidian</option>
+    <select id="inputDialect">
+      <option value="org">Org</option><option value="org:logseq">Org (Logseq)</option>
+      <option value="markdown">Markdown</option><option value="markdown:logseq">Markdown (Logseq)</option>
+      <option value="markdown:obsidian">Markdown (Obsidian)</option>
+    </select>
+    <select id="outputDialect">
+      <option value="org">Org</option><option value="org:logseq">Org (Logseq)</option>
+      <option value="markdown">Markdown</option><option value="markdown:logseq">Markdown (Logseq)</option>
+      <option value="markdown:obsidian">Markdown (Obsidian)</option>
     </select>
     <input id="useHtml" type="checkbox" />
     <input id="interpretHtml" type="checkbox" />
@@ -29,7 +36,8 @@ beforeEach(() => {
   controls = {
     config: element<HTMLTextAreaElement>("config"),
     configSection: element<HTMLDetailsElement>("configSection"),
-    preset: element<HTMLSelectElement>("preset"),
+    inputDialect: element<HTMLSelectElement>("inputDialect"),
+    outputDialect: element<HTMLSelectElement>("outputDialect"),
     useHtml: element<HTMLInputElement>("useHtml"),
     interpretHtml: element<HTMLInputElement>("interpretHtml"),
     recordStyle: element<HTMLInputElement>("recordStyle"),
@@ -90,12 +98,26 @@ describe("reflecting a config into the form", () => {
       [markdownToOrg]
       interpretHtml = true
     `
+    controls.inputDialect.value = "markdown"
+    controls.outputDialect.value = "org"
     reflectConfig(controls)
-    expect(controls.preset.value).toBe("obsidian")
+    // a preset keeps the side's format; Obsidian writes no org
+    expect(controls.inputDialect.value).toBe("markdown:obsidian")
+    expect(controls.outputDialect.value).toBe("org")
     expect(controls.useHtml.checked).toBe(true)
     expect(controls.taskCheckboxes.checked).toBe(true)
     expect(controls.interpretHtml.checked).toBe(true)
     expect(controls.styleSelects[0]?.value).toBe("*")
+  })
+
+  it("moves a side preset onto its side, over preset", () => {
+    controls.inputDialect.value = "org"
+    controls.outputDialect.value = "markdown:obsidian"
+    controls.config.value =
+      'preset = "obsidian"\ninputPreset = "logseq"\noutputPreset = "vanilla"'
+    reflectConfig(controls)
+    expect(controls.inputDialect.value).toBe("org:logseq")
+    expect(controls.outputDialect.value).toBe("markdown")
   })
 
   it("reflects a false as readily as a true", () => {
@@ -108,19 +130,19 @@ describe("reflecting a config into the form", () => {
   })
 
   it("leaves the form alone where the config says nothing", () => {
-    controls.preset.value = "obsidian"
+    controls.inputDialect.value = "markdown:obsidian"
     controls.config.value = "[orgToMarkdown]\nuseHtml = true\n"
     reflectConfig(controls)
-    expect(controls.preset.value).toBe("obsidian")
+    expect(controls.inputDialect.value).toBe("markdown:obsidian")
   })
 
   it("leaves the form alone when the config will not parse", () => {
     // convert() is what reports the error; half-applying a broken config
     // would move controls the user never asked to move
-    controls.preset.value = "obsidian"
+    controls.inputDialect.value = "markdown:obsidian"
     controls.config.value = "tyop = ["
     reflectConfig(controls)
-    expect(controls.preset.value).toBe("obsidian")
+    expect(controls.inputDialect.value).toBe("markdown:obsidian")
   })
 })
 

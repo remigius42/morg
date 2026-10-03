@@ -28,11 +28,11 @@ test.describe("converter", () => {
     await expect(page.locator("#output")).toHaveValue("# Typed headline\n")
   })
 
-  test("converts the other way once the direction changes", async ({
+  test("converts the other way once the sides are swapped", async ({
     page
   }) => {
     await page.goto("/embed.html")
-    await page.locator("#direction").selectOption("md-to-org")
+    await page.locator("#swapSides").click()
     await page.locator("#input").fill("# Typed headline\n")
 
     await expect(page.locator("#output")).toHaveValue("* Typed headline\n")
@@ -64,15 +64,14 @@ test.describe("converter", () => {
 
   test("keeps the form state across a reload", async ({ page }) => {
     await page.goto("/embed.html")
-    await page.locator("#direction").selectOption("md-to-org")
-    await page.locator("#preset").selectOption("logseq")
+    await page.locator("#inputDialect").selectOption("markdown:logseq")
     // the state is written on change; give the reload something to find
     await expect(page.locator("#output")).not.toHaveValue("")
 
     await page.reload()
 
-    await expect(page.locator("#direction")).toHaveValue("md-to-org")
-    await expect(page.locator("#preset")).toHaveValue("logseq")
+    await expect(page.locator("#inputDialect")).toHaveValue("markdown:logseq")
+    await expect(page.locator("#outputDialect")).toHaveValue("org")
   })
 
   test("runs the converter embedded in the chrome page", async ({ page }) => {

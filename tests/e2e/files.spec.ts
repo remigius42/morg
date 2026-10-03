@@ -29,7 +29,8 @@ test.describe("opening files", () => {
       buffer: Buffer.from("# Picked headline\n")
     })
 
-    await expect(page.locator("#direction")).toHaveValue("md-to-org")
+    await expect(page.locator("#inputDialect")).toHaveValue("markdown")
+    await expect(page.locator("#outputDialect")).toHaveValue("org")
     await expect(page.locator("#input")).toHaveValue("# Picked headline\n")
     await expect(page.locator("#output")).toHaveValue("* Picked headline\n")
   })

@@ -8,7 +8,8 @@ import {
 
 const REMEMBERED: PersistedState = {
   direction: "md-to-org",
-  preset: "obsidian",
+  inputPreset: "logseq",
+  outputPreset: "obsidian",
   useHtml: true,
   interpretHtml: false,
   taskCheckboxes: true,

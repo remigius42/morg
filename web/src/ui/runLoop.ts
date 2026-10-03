@@ -11,7 +11,8 @@
  * only mean passing `Controls` under another name.
  */
 import { formState, type Controls } from "./controls.js"
-import { readsMarkdown, type Direction } from "../direction.js"
+import { readsMarkdown } from "../direction.js"
+import { directionOf } from "./dialects.js"
 
 /**
  * How long typing pauses before the conversion runs. Long enough that a
@@ -27,10 +28,10 @@ export const DEBOUNCE_MS = 200
 export const CONVERTING_AFTER_MS = 150
 
 export async function convert(controls: Controls): Promise<void> {
-  const { input, output, error, warnings, direction, config } = controls
+  const { input, output, error, warnings, config } = controls
   // the placeholder describes the box, not the result, so it follows the
   // direction immediately rather than waiting for the run to come back
-  input.placeholder = readsMarkdown(direction.value as Direction)
+  input.placeholder = readsMarkdown(directionOf(controls))
     ? "Paste Markdown here…"
     : "Paste Org here…"
 

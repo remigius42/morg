@@ -60,7 +60,10 @@ color schemes.
 Try morg without installing anything at
 [morg.binarypoetry.ch](https://morg.binarypoetry.ch). All conversion
 happens in your browser, nothing is uploaded (see [ADR
-0003](docs/adr/0003-client-side-web-ui-on-github-pages.md)). The
+0003](docs/adr/0003-client-side-web-ui-on-github-pages.md)). Each side
+names its format and dialect (Input: Org (Logseq), Output: Markdown);
+the direction follows from the two, the same on both sides normalizes,
+and ⇄ swaps them. The
 chrome-less embed page (`/embed.html`, optionally with
 `?theme=dark|light`) can be iframed into other sites. It posts its
 content height to the host on every change, so the frame can follow it

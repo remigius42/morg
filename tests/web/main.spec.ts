@@ -52,6 +52,13 @@ async function settle(): Promise<void> {
   await Promise.resolve()
 }
 
+// picks a side's dialect as a visitor would
+function choose(id: string, value: string): void {
+  const select = element<HTMLSelectElement>(id)
+  select.value = value
+  select.dispatchEvent(new Event("change", { bubbles: true }))
+}
+
 function element<T extends HTMLElement>(id: string): T {
   const found = document.getElementById(id)
   if (!found) {
@@ -189,24 +196,17 @@ describe("embed page", () => {
     expect(element<HTMLTextAreaElement>("output").value).not.toBe("")
   })
 
-  it("swaps the untouched demo when the direction changes", () => {
-    const direction = element<HTMLSelectElement>("direction")
-    direction.value = "md-to-org"
-    direction.dispatchEvent(new Event("change", { bubbles: true }))
+  it("swaps the untouched demo when the input changes format", () => {
+    choose("inputDialect", "markdown")
     expect(element<HTMLTextAreaElement>("input").value).toContain(
       "Paste your Markdown here"
     )
   })
 
-  it("swaps the untouched demo to a preset's own dialect", () => {
-    const preset = element<HTMLSelectElement>("preset")
-    preset.value = "logseq"
-    preset.dispatchEvent(new Event("change", { bubbles: true }))
+  it("swaps the untouched demo to the input's own dialect", () => {
+    choose("inputDialect", "org:logseq")
     expect(element<HTMLTextAreaElement>("input").value).toBe(LOGSEQ_ORG_DEMO)
-
-    const direction = element<HTMLSelectElement>("direction")
-    direction.value = "md-to-org"
-    direction.dispatchEvent(new Event("change", { bubbles: true }))
+    choose("inputDialect", "markdown:logseq")
     expect(element<HTMLTextAreaElement>("input").value).toBe(LOGSEQ_MD_DEMO)
   })
 
@@ -217,13 +217,57 @@ describe("embed page", () => {
     expect(element<HTMLTextAreaElement>("input").value).toBe(LOGSEQ_ORG_DEMO)
   })
 
-  it("keeps an edited input when the preset changes", () => {
+  it("keeps an edited input when the input's dialect changes", () => {
     const input = element<HTMLTextAreaElement>("input")
     input.value = "* mine\n"
-    const preset = element<HTMLSelectElement>("preset")
-    preset.value = "logseq"
-    preset.dispatchEvent(new Event("change", { bubbles: true }))
+    choose("inputDialect", "org:logseq")
     expect(input.value).toBe("* mine\n")
+  })
+
+  it("converts from the input's dialect to the output's", async () => {
+    choose("inputDialect", "org:logseq")
+    const input = element<HTMLTextAreaElement>("input")
+    input.value = "* a\n** b\n"
+    input.dispatchEvent(new Event("input", { bubbles: true }))
+    await settle()
+    expect(element<HTMLTextAreaElement>("output").value).toBe("- a\n  - b\n")
+  })
+
+  it("moves the output to the other format when the input takes its own", () => {
+    choose("outputDialect", "markdown:obsidian")
+    choose("inputDialect", "markdown:logseq")
+    // Obsidian writes no org, so its side falls back to Vanilla
+    expect(element<HTMLSelectElement>("outputDialect").value).toBe("org")
+  })
+
+  it("offers no dialect change within one format", () => {
+    choose("inputDialect", "markdown:logseq")
+    const disabled = [
+      ...element<HTMLSelectElement>("outputDialect").options
+    ].flatMap(option => (option.disabled ? [option.value] : []))
+    expect(disabled).toEqual(["markdown", "markdown:obsidian"])
+  })
+
+  it("normalizes with the same on both sides, and says so", async () => {
+    const hint = element<HTMLElement>("normalizeHint")
+    expect(hint.hidden).toBe(true)
+    choose("outputDialect", "org")
+    expect(hint.hidden).toBe(false)
+    const input = element<HTMLTextAreaElement>("input")
+    input.value = "*    Hello\n"
+    input.dispatchEvent(new Event("input", { bubbles: true }))
+    await settle()
+    expect(element<HTMLTextAreaElement>("output").value).toBe("* Hello\n")
+  })
+
+  it("swaps the sides with one click", () => {
+    choose("inputDialect", "org:logseq")
+    element<HTMLButtonElement>("swapSides").click()
+    expect(element<HTMLSelectElement>("inputDialect").value).toBe("markdown")
+    expect(element<HTMLSelectElement>("outputDialect").value).toBe("org:logseq")
+    expect(element<HTMLTextAreaElement>("input").value).toContain(
+      "Paste your Markdown here"
+    )
   })
 
   it("swaps the demo a restored direction loaded", async () => {
@@ -238,9 +282,7 @@ describe("embed page", () => {
       "Paste your Markdown here"
     )
 
-    const direction = element<HTMLSelectElement>("direction")
-    direction.value = "org-to-md"
-    direction.dispatchEvent(new Event("change", { bubbles: true }))
+    element<HTMLButtonElement>("swapSides").click()
     expect(element<HTMLTextAreaElement>("input").value).toContain(
       "Paste your Org here"
     )
@@ -414,9 +456,7 @@ describe("embed page", () => {
   })
 
   it("interprets html via the interpretHtml checkbox", async () => {
-    const direction = element<HTMLSelectElement>("direction")
-    direction.value = "md-to-org"
-    direction.dispatchEvent(new Event("change", { bubbles: true }))
+    choose("inputDialect", "markdown")
     const input = element<HTMLTextAreaElement>("input")
     input.value = "Some <u>underlined</u> text.\n"
     input.dispatchEvent(new Event("input", { bubbles: true }))
@@ -430,9 +470,7 @@ describe("embed page", () => {
   })
 
   it("records the source style via the recordStyle checkbox", async () => {
-    const direction = element<HTMLSelectElement>("direction")
-    direction.value = "md-to-org"
-    direction.dispatchEvent(new Event("change", { bubbles: true }))
+    choose("inputDialect", "markdown")
     const input = element<HTMLTextAreaElement>("input")
     input.value = "* item\n"
     input.dispatchEvent(new Event("input", { bubbles: true }))
@@ -445,11 +483,11 @@ describe("embed page", () => {
     )
   })
 
-  it("ignores a persisted direction the select does not offer", async () => {
+  it("ignores a remembered direction the page does not know", async () => {
     writeState({ direction: "bogus" })
     await setUpPage()
-    const direction = element<HTMLSelectElement>("direction")
-    expect(direction.value).not.toBe("")
+    expect(element<HTMLSelectElement>("inputDialect").value).toBe("org")
+    expect(element<HTMLSelectElement>("outputDialect").value).toBe("markdown")
     expect(element<HTMLTextAreaElement>("output").value).not.toBe("")
   })
 
@@ -460,11 +498,13 @@ describe("embed page", () => {
   })
 
   it("opens a dropped document and follows its extension", async () => {
-    element<HTMLSelectElement>("direction").value = "normalize-md"
+    element<HTMLSelectElement>("inputDialect").value = "markdown"
+    element<HTMLSelectElement>("outputDialect").value = "markdown"
     await drop(textFile("notes.org", "* Dropped"))
     expect(element<HTMLTextAreaElement>("input").value).toBe("* Dropped")
     // the name carries a format, not an intent: normalize mode survives
-    expect(element<HTMLSelectElement>("direction").value).toBe("normalize-org")
+    expect(element<HTMLSelectElement>("inputDialect").value).toBe("org")
+    expect(element<HTMLSelectElement>("outputDialect").value).toBe("org")
     expect(element<HTMLTextAreaElement>("output").value).toBe("* Dropped\n")
   })
 
@@ -479,8 +519,11 @@ describe("embed page", () => {
     expect(config.value).toMatch(/obsidian/)
     expect(element<HTMLDetailsElement>("configSection").open).toBe(true)
     // the panel is collapsed by default, so a dropped config must announce
-    // itself, and it must actually take effect
-    expect(element<HTMLSelectElement>("preset").value).toBe("obsidian")
+    // itself, and it must actually take effect; Obsidian reads no org
+    expect(element<HTMLSelectElement>("inputDialect").value).toBe("org")
+    expect(element<HTMLSelectElement>("outputDialect").value).toBe(
+      "markdown:obsidian"
+    )
     expect(element<HTMLSelectElement>("emphasis").value).toBe("_")
     expect(element<HTMLTextAreaElement>("input").value).toContain(
       "Paste your Org here"
@@ -495,7 +538,9 @@ describe("embed page", () => {
       textFile("morg.toml", 'preset = "obsidian"\n')
     )
     expect(element<HTMLTextAreaElement>("input").value).toBe("* Dropped")
-    expect(element<HTMLSelectElement>("preset").value).toBe("obsidian")
+    expect(element<HTMLSelectElement>("outputDialect").value).toBe(
+      "markdown:obsidian"
+    )
   })
 
   it("reports the files a drop could not use", async () => {
@@ -572,7 +617,8 @@ describe("embed page", () => {
     picker.dispatchEvent(new Event("change", { bubbles: true }))
     await settle()
     expect(element<HTMLTextAreaElement>("input").value).toBe("# Picked")
-    expect(element<HTMLSelectElement>("direction").value).toBe("md-to-org")
+    expect(element<HTMLSelectElement>("inputDialect").value).toBe("markdown")
+    expect(element<HTMLSelectElement>("outputDialect").value).toBe("org")
   })
 
   it("keeps the form buttons from submitting the page", () => {
@@ -607,6 +653,25 @@ describe("embed page", () => {
     expect(notice.hidden).toBe(false)
   })
 
+  it("restores the sides as a page before the dialect selects left them", async () => {
+    // remembered by 0.8.0's direction and single preset select
+    writeState({ direction: "md-to-org", preset: "logseq" })
+    await setUpPage()
+    expect(element<HTMLSelectElement>("inputDialect").value).toBe(
+      "markdown:logseq"
+    )
+    expect(element<HTMLSelectElement>("outputDialect").value).toBe("org:logseq")
+  })
+
+  it("restores the sides it remembered", async () => {
+    writeState({ inputDialect: "markdown:obsidian", outputDialect: "org" })
+    await setUpPage()
+    expect(element<HTMLSelectElement>("inputDialect").value).toBe(
+      "markdown:obsidian"
+    )
+    expect(element<HTMLSelectElement>("outputDialect").value).toBe("org")
+  })
+
   it("marks an active config without reopening the panel on load", async () => {
     writeState({ config: 'preset = "obsidian"' })
     await setUpPage()
@@ -615,7 +680,9 @@ describe("embed page", () => {
     // that, but a config in force must still be visible
     expect(section.open).toBe(false)
     expect(section.querySelector("summary")?.textContent).toMatch(/active/)
-    expect(element<HTMLSelectElement>("preset").value).toBe("obsidian")
+    expect(element<HTMLSelectElement>("outputDialect").value).toBe(
+      "markdown:obsidian"
+    )
   })
 
   it("marks the config panel on every keystroke, without opening it", () => {
@@ -657,7 +724,7 @@ describe("embed page", () => {
 
   it("keeps a normalized download from overwriting its source", async () => {
     const saved = captureDownload()
-    element<HTMLSelectElement>("direction").value = "normalize-org"
+    element<HTMLSelectElement>("outputDialect").value = "org"
     await drop(textFile("notes.org", "* Saved"))
     element<HTMLButtonElement>("downloadOutput").click()
     expect(saved.name()).toBe("notes.normalized.org")
@@ -679,7 +746,7 @@ describe("embed page", () => {
     expect(saved.name()).toMatch(/^morg-output-\d{8}T\d{6}\.md$/)
   })
 
-  it("stops using the opened name once the direction no longer fits", async () => {
+  it("stops using the opened name once the input no longer reads it", async () => {
     // open notes.md and the direction follows it; switch to Org → Markdown
     // and the output is Markdown again, so the derived name is notes.md,
     // the source file, offered for overwriting. Nothing clears the name
@@ -687,24 +754,20 @@ describe("embed page", () => {
     // input event
     const saved = captureDownload()
     await drop(textFile("notes.md", "# Saved"))
-    const direction = element<HTMLSelectElement>("direction")
-    expect(direction.value).toBe("md-to-org")
+    expect(element<HTMLSelectElement>("inputDialect").value).toBe("markdown")
 
-    direction.value = "org-to-md"
-    direction.dispatchEvent(new Event("change", { bubbles: true }))
+    choose("inputDialect", "org")
     await settle()
     element<HTMLButtonElement>("downloadOutput").click()
     expect(saved.name()).toMatch(/^morg-output-\d{8}T\d{6}\.md$/)
   })
 
-  it("keeps the opened name while the direction still reads it", async () => {
+  it("keeps the opened name while the input still reads it", async () => {
     // Markdown → Org and Normalize Markdown both read the file that was
     // opened, so the name still describes what is being converted
     const saved = captureDownload()
     await drop(textFile("notes.md", "# Saved"))
-    const direction = element<HTMLSelectElement>("direction")
-    direction.value = "normalize-md"
-    direction.dispatchEvent(new Event("change", { bubbles: true }))
+    choose("outputDialect", "markdown")
     await settle()
     element<HTMLButtonElement>("downloadOutput").click()
     expect(saved.name()).toBe("notes.normalized.md")

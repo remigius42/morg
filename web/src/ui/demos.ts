@@ -121,9 +121,9 @@ const DEMOS = [ORG_DEMO, MD_DEMO, LOGSEQ_ORG_DEMO, LOGSEQ_MD_DEMO]
 
 /**
  * The demo written in the format a direction takes as its input, in the
- * dialect of a preset that has its own.
+ * dialect of an input preset that has its own.
  * @param direction The conversion direction.
- * @param preset The preset name, if any.
+ * @param preset The input preset's name, if any.
  * @returns The demo.
  */
 export function demoFor(direction: Direction, preset = ""): string {

@@ -45,6 +45,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Logseq page properties ↔ plain Vanilla Markdown frontmatter
   (`title: P`), as Markdown tools read metadata; a keyword that acts in
   Emacs stays in `morg_keywords`.
+- Web UI: an Input and an Output select, each naming a format and its
+  dialect (Org, Org (Logseq), Markdown, Markdown (Logseq), Markdown
+  (Obsidian)), above their text areas, replace the direction and preset
+  selects. The direction follows from the two; the same on both sides
+  normalizes, and says so; a dialect change within one format is not
+  offered; ⇄ swaps the sides. The demo follows the input; sides
+  remembered by 0.8.0 are restored.
 - Obsidian ↔ Logseq: an Obsidian wikilink and a Logseq page ref map
   onto each other (`[[Page|label]]` ↔ `[[Page][label]]`).
 

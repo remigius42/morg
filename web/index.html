@@ -117,10 +117,12 @@
         constructs travel through Markdown as
         <code>key:: value</code> conventions. Frontmatter travels inert in a
         marked Org comment block, not as Org keywords, which can act in Emacs.
-        Dialect presets for Logseq and Obsidian are built in; the Logseq preset
-        converts a page as Logseq's outline of blocks, a headline in Org and a
-        bullet in Markdown per block, and maps page properties to the
-        <code>#+key:</code> lines Logseq reads.
+        Dialect presets for Logseq and Obsidian are built in, one per side of a
+        conversion: Logseq Org to plain Markdown is as much a conversion as
+        Logseq Org to Logseq Markdown. The Logseq preset converts a page as
+        Logseq's outline of blocks, a headline in Org, a bullet in Logseq
+        Markdown and a list item in plain Markdown per block, and maps page
+        properties to the <code>#+key:</code> lines Logseq reads.
       </p>
       <p>
         <a href="./convert.html" class="button-3d"

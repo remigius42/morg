@@ -2,17 +2,21 @@ import { convertMarkdownToOrg } from "../../../src/markdownToOrg.js"
 import { convertOrgToMarkdown } from "../../../src/orgToMarkdown.js"
 import { normalizeMarkdown, normalizeOrg } from "../../../src/normalize.js"
 import { parseConfig, type MorgConfig } from "../../../src/config.js"
-import { buildConversionOptions } from "../../../src/conversionOptions.js"
+import {
+  buildConversionOptions,
+  resolvePresetOptions
+} from "../../../src/conversionOptions.js"
 import type { MarkdownStyleOptions, Toggle } from "../../../src/options.js"
+import type { Format, PresetOptions } from "../../../src/presets/sides.js"
 import { createPreset } from "../../../src/presets/registry.js"
-import type { Preset } from "../../../src/presets/types.js"
 import type { Direction } from "../direction.js"
 
 /** Form state of the Web UI; unset fields fall back to config, then defaults. */
 export interface ConversionForm {
   direction: Direction
-  /** Preset name; empty string means none. */
-  preset?: string
+  /** Preset names per side; unset defers to the config. */
+  inputPreset?: string
+  outputPreset?: string
   useHtml?: Toggle
   interpretHtml?: boolean
   recordStyle?: boolean
@@ -26,11 +30,34 @@ export interface ConversionResult {
   error?: string
 }
 
-function resolvePreset(
-  presetName: string | undefined
-): { preset?: Preset } | { error: string } {
+// the formats a direction reads and writes
+const FORMATS: Record<Direction, [Format, Format]> = {
+  "md-to-org": ["markdown", "org"],
+  "org-to-md": ["org", "markdown"],
+  "normalize-md": ["markdown", "markdown"],
+  "normalize-org": ["org", "org"]
+}
+
+// per side, the form over the config (ADR 0006)
+function resolvePresets(
+  form: ConversionForm,
+  config: MorgConfig
+): PresetOptions | { error: string } {
+  const formats = FORMATS[form.direction] as [Format, Format] | undefined
+  if (!formats) {
+    // convert() reports the direction
+    return {}
+  }
+  const names = {
+    ...(form.inputPreset && { inputPreset: form.inputPreset }),
+    ...(form.outputPreset && { outputPreset: form.outputPreset })
+  }
   try {
-    return { preset: createPreset(presetName) }
+    // the form names both sides, so the config's names would never be
+    // looked up; one that names no preset is a mistake all the same
+    for (const name of [config.preset, config.inputPreset, config.outputPreset])
+      createPreset(name)
+    return resolvePresetOptions([names, config], ...formats)
   } catch (error) {
     return { error: (error as Error).message }
   }
@@ -78,14 +105,14 @@ export function runConversion(
     }
   }
 
-  const resolved = resolvePreset(form.preset || config.preset)
-  if ("error" in resolved) {
-    return { output: "", warnings, error: resolved.error }
+  const presets = resolvePresets(form, config)
+  if ("error" in presets) {
+    return { output: "", warnings, error: presets.error }
   }
 
   const shared = {
     onWarning,
-    preset: resolved.preset,
+    ...presets,
     ...(config.orgismKeys && { orgismKeys: config.orgismKeys })
   }
   const { mdToOrgOptions, orgToMdOptions } = buildConversionOptions(
