@@ -243,4 +243,10 @@ describe("Vanilla md → Logseq org", () => {
       "* a\n* b[fn:1]\n\n[fn:1] a note\n"
     )
   })
+
+  it("reads the frontmatter as the page's", () => {
+    expect(toOrg("---\ntitle: P\nweird: {a: 1}\n---\n\n- a\n")).toBe(
+      "#+title: P\n#+begin_comment morg_frontmatter\nweird: {a: 1}\n#+end_comment\n\n* a\n"
+    )
+  })
 })

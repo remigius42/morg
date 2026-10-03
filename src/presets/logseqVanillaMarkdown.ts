@@ -323,9 +323,13 @@ export function readVanillaMarkdownOutline(
   // a heading whose body is still running: what follows it, up to a
   // list or the next heading, is its content
   let body: Block | undefined
+  const page: string[] = []
   for (const node of parse(markdown).children) {
     const level = (headings.at(-1)?.level ?? 0) + 1
-    if (node.type === "heading") {
+    if (node.type === "yaml") {
+      const [start, end] = span(node)
+      page.push(...reader.lines.slice(start, end + 1))
+    } else if (node.type === "heading") {
       body = headingBlock(node, headings, reader.lines)
       reader.blocks.push(body)
     } else if (node.type === "list") {
@@ -336,7 +340,7 @@ export function readVanillaMarkdownOutline(
     }
   }
   placeFootnotes(reader.blocks, resolved.footnotes)
-  return { page: [], blocks: reader.blocks }
+  return { page, blocks: reader.blocks }
 }
 
 // text below a heading is its body; after a list, a block of its own
