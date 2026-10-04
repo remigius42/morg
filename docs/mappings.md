@@ -421,7 +421,9 @@ kind: a `[[*heading]]` or `[[#custom-id]]` link (labeled or not) and
 an `[[id:…]]` link without a label are refs to pages of that name to
 Logseq, a `<<<radio>>>` target it misreads, and a `#+KEY:` line below
 the first headline (`#+NAME:`, `#+RESULTS:`) it takes for a page
-property; org blocks are skipped. Vanilla md has a shape of its own;
+property; org blocks are skipped. Converted to Logseq md, a
+`[[*heading]]` link (labeled or not) becomes a page ref, with that
+warning; the other kinds are Markdown links or text there. Vanilla md has a shape of its own;
 Logseq org ↔ Vanilla md:
 
 | Logseq org                                                   | Vanilla md                                                                                  |

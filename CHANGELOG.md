@@ -47,6 +47,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CLI: one format on both sides with two presets translates
   (`morg --input-preset logseq --input page.md --output out.md`); it
   was an error.
+- Vanilla org → Logseq Markdown warns of `[[*heading]]` links, which
+  Logseq reads as refs to pages of that name.
 
 ### Changed
 

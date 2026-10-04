@@ -622,6 +622,9 @@ export function orgOutlineToMarkdown(
 ): string {
   const { page, blocks } = readOrgOutline(org, context.side === "output")
   const vanilla = context.side === "input"
+  if (context.side === "output") {
+    warnMisread(splitOrgBlocks(org).blocks, context, MISREAD_IN_MARKDOWN)
+  }
   // read as Logseq org, a block's title is inline text (ADR 0006)
   const inline = context.side !== "output"
   const pageLines = vanilla ? (presets.vanillaPage?.(page) ?? page) : page
@@ -807,16 +810,28 @@ const MISREAD: [RegExp, (n: number) => string][] = [
       `Logseq takes ${count(n, "#+KEY: line")} below the first headline for a page property`
   ]
 ]
+// in Logseq md, where the others are Markdown links or text
+const MISREAD_IN_MARKDOWN: typeof MISREAD = [
+  [
+    /\[\[\*[^\]]*\](?:\[[^\]]*\])?\]/g,
+    n =>
+      `Logseq reads ${count(n, "[[*heading]] link")} as refs to pages of that name`
+  ]
+]
 const ORG_BLOCK_BOUNDARY_RE = /^\s*#\+(BEGIN|END)_(\S+)/i
 
 function count(n: number, noun: string): string {
   return `${n} ${noun}${n === 1 ? "" : "s"}`
 }
 
-// Logseq org from Vanilla org: what Emacs constructs Logseq misreads,
-// outside org blocks, whose content is no markup
-function warnMisread(blocks: Lines[], context: ConversionContext): void {
-  const counts = MISREAD.map(() => 0)
+// Logseq org or md from Vanilla org: what Emacs constructs Logseq
+// misreads, outside org blocks, whose content is no markup
+function warnMisread(
+  blocks: Lines[],
+  context: ConversionContext,
+  misread: typeof MISREAD
+): void {
+  const counts = misread.map(() => 0)
   let block = ""
   for (const line of blocks.flatMap(({ lines }) => lines)) {
     const [, boundary = "", name = ""] = ORG_BLOCK_BOUNDARY_RE.exec(line) ?? []
@@ -826,11 +841,11 @@ function warnMisread(blocks: Lines[], context: ConversionContext): void {
       block = end ? "" : block || name.toUpperCase()
       continue
     }
-    MISREAD.forEach(([pattern], i) => {
+    misread.forEach(([pattern], i) => {
       counts[i] = (counts[i] ?? 0) + (line.match(pattern)?.length ?? 0)
     })
   }
-  MISREAD.forEach(([, message], i) => {
+  misread.forEach(([, message], i) => {
     if (counts[i]) {
       context.onWarning?.(message(counts[i]))
     }
@@ -856,7 +871,7 @@ export function translateOrgOutline(
   const vanilla = context.side === "input"
   const { page, blocks } = splitOrgBlocks(org)
   if (!vanilla) {
-    warnMisread(blocks, context)
+    warnMisread(blocks, context, MISREAD)
   }
   return [
     ...(vanilla ? withTodoLine(page, blocks) : withoutTodoLine(page, context)),

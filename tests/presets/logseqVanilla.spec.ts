@@ -332,6 +332,24 @@ describe("Logseq md ↔ Vanilla org", () => {
     )
   })
 
+  it("warns of heading links, which Logseq reads as page refs", () => {
+    const warnings: string[] = []
+    const org =
+      "* a\n[[*H][l]] [[*H2]] [[#cid]] [[id:u]]\n#+BEGIN_SRC org\n[[*in code]]\n#+END_SRC\n"
+
+    convertOrgToMarkdown(org, {
+      outputPreset: logseq(),
+      onWarning: message => warnings.push(message)
+    })
+    convertOrgToMarkdown(org, {
+      preset: logseq(),
+      onWarning: message => warnings.push(message)
+    })
+    expect(warnings).toEqual([
+      "Logseq reads 2 [[*heading]] links as refs to pages of that name"
+    ])
+  })
+
   it("writes an empty block as a headline Emacs reads", () => {
     // Emacs reads stars without a space after them as text
     expect(
