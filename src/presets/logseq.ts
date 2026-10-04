@@ -29,6 +29,7 @@ import type { Preset } from "./types.js"
 import {
   markdownOutlineToOrg,
   orgOutlineToMarkdown,
+  translateMarkdownOutline,
   translateOrgOutline
 } from "./logseqOutline.js"
 
@@ -52,7 +53,12 @@ export function logseq(): Preset {
       orgOutlineToMarkdown(org, convert, presets, context),
     convertMarkdown: (markdown, convert, context) =>
       markdownOutlineToOrg(markdown, convert, presets, context),
-    translateOrg: translateOrgOutline
+    translateOrg: translateOrgOutline,
+    translateMarkdown: (markdown, context) =>
+      translateMarkdownOutline(markdown, context, {
+        vanilla: propertiesToFrontmatter,
+        logseq: frontmatterToProperties
+      })
   }
 }
 
@@ -430,6 +436,71 @@ function pagePropertiesToFrontmatter(lines: string[]): string[] {
   return at === -1
     ? [...block, ...rest]
     : [...rest.slice(0, at + 1), ...block.slice(1, -1), ...rest.slice(at + 1)]
+}
+
+const MD_PAGE_PROPERTY_KEY_RE = /^[\w.-]+$/
+
+// a Logseq Markdown page's lines: a frontmatter, if any, and the
+// properties below it, up to a blank line
+function splitPageLines(lines: string[]) {
+  const frontmatter = lines[0] === "---" ? lines.indexOf("---", 1) + 1 : 0
+  const blank = lines.indexOf("", frontmatter)
+  const end = blank === -1 ? lines.length : blank
+  return {
+    frontmatter: lines.slice(0, frontmatter),
+    properties: keyValueEntries(lines.slice(frontmatter, end).join("\n")),
+    rest: lines.slice(end)
+  }
+}
+
+// Logseq Markdown → Vanilla Markdown: page properties as plain
+// frontmatter, as Markdown tools read metadata (ADR 0006); no org is
+// in the way, so every key maps
+function propertiesToFrontmatter(lines: string[]): string[] {
+  const { frontmatter, properties, rest } = splitPageLines(lines)
+  if (!properties?.length) {
+    return lines
+  }
+  const yaml = stringifyYaml(Object.fromEntries(properties), {
+    lineWidth: 0
+  }).replace(/\n$/, "")
+  return [
+    "---",
+    ...frontmatter.slice(1, -1),
+    ...yaml.split("\n"),
+    "---",
+    ...rest
+  ]
+}
+
+// the reverse: flat entries are page properties, written as Logseq
+// writes them; what Logseq reads no property from stays frontmatter
+function frontmatterToProperties(lines: string[]): string[] {
+  if (lines[0] !== "---") {
+    return lines
+  }
+  const end = lines.indexOf("---", 1)
+  const { keywords, yaml } = takeFrontmatterEntries(
+    lines.slice(1, end).join("\n"),
+    (key, value, text) => {
+      const flat = flatValue(value, text)
+      return flat !== null &&
+        MD_PAGE_PROPERTY_KEY_RE.test(text(key)) &&
+        !flat.includes("\n")
+        ? [[text(key), flat]]
+        : null
+    }
+  )
+  if (!keywords.length) {
+    return lines
+  }
+  const rest = yaml.replace(/\n+$/, "")
+  return [
+    ...(rest.trim() ? ["---", rest, "---"] : []),
+    ...keywords.map(([key, value]) => `${key}::${value ? ` ${value}` : ""}`),
+    "",
+    ...lines.slice(end + 1)
+  ]
 }
 
 // the reverse: leading keywords become the first block, verbatim, keys

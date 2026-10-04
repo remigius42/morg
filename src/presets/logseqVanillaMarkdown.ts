@@ -39,7 +39,9 @@ function span(node: RootContent): [number, number] {
   ]
 }
 
-const BULLET_RE = /^\s*(?:[-*+]|\d+[.)])(?: |$)/
+// a bullet up to its content's column: one to four spaces after it, or
+// one where more start indented code
+const BULLET_RE = /^\s*(?:[-*+]|\d+[.)])(?: {1,4}(?=\S)| |$)/
 const CHECKBOX_RE = /^\[([ xX])\](?: |$)/
 // the markers Logseq shows unchecked other than TODO, which a task item
 // writes after its checkbox
@@ -351,7 +353,13 @@ function readText(
   reader: Reader
 ): void {
   const [start, end] = span(node)
-  const source = reader.lines.slice(start, end + 1)
+  // a rule's source may be bulleted (`- ---`), a list in a block
+  // read from its own column, as an item's content is
+  const column = (node.position?.start.column ?? 1) - 1
+  const source =
+    node.type === "thematicBreak"
+      ? ["---"]
+      : reader.lines.slice(start, end + 1).map(line => dedent(line, column))
   if (body) {
     // the body's paragraphs keep the blank lines between them
     body.content.push(...(body.content.length > 1 ? [""] : []), ...source)

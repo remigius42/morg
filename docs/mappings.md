@@ -452,6 +452,17 @@ definition moves to the block of its first reference. With Obsidian on
 the other side, a page ref and a wikilink map onto each other
 (`[[Page][label]]` ↔ `[[Page|label]]`).
 
+Translated within Markdown (Logseq md ↔ Vanilla md), the outline maps
+as in the table, a block's content stays as written but for its org
+blocks: a source or example block is fenced, a quote quoted, a query a
+`query` code block (and back: a `query` code block is a query block);
+others stay. Page properties are flat frontmatter keys, every key
+(no org is in the way to act on one); from Vanilla md, flat entries
+are page properties and the rest stays frontmatter. A rule after a
+Vanilla list is a block of `---`, a block's content loses the
+indentation all its lines share, and text after a list is read from
+its own column.
+
 `obsidian`: wikilinks `[[Page]]` / `[[Page|alias]]` ↔ org fuzzy links,
 emitted unescaped in Markdown, except for the alias pipe inside a
 table cell, written `\|` as Obsidian does, since a bare `|` would

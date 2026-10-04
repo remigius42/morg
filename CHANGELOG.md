@@ -22,6 +22,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`:collapsed: true` ↔ `:VISIBILITY: folded`). Emacs syntax Logseq
   misreads (`[[*heading]]` links, `<<<radio>>>` targets, keyword lines
   below the first headline, …) stays, with a warning.
+- `translateMarkdown(md, { inputPreset, outputPreset })`: Logseq
+  Markdown ↔ Vanilla Markdown within Markdown, blocks ↔ list items and
+  headings with their meta as before, page properties ↔ flat
+  frontmatter, a block's org blocks ↔ fences, quotes and `query` code
+  blocks; other content stays as written.
 
 ## [0.9.2] - 2026-10-04
 

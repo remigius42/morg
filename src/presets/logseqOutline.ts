@@ -27,6 +27,7 @@ const STATE_LINE_RE = /^[-*] (?=State ")/
 const MD_HEADING_RE = /^(#{1,6})(?: (.*))?$/
 const HEADLINE_RE = /^\*+ /
 const FENCE_RE = /^\s*(?:```|~~~)/
+const QUERY_LANGUAGE = "query"
 // md→org adds it for the text's bare `_` and `^`, which a block's
 // content holds as Logseq writes it
 const BRACED_SCRIPTS_LINE = "#+OPTIONS: ^:{}"
@@ -74,6 +75,13 @@ interface Presets {
   vanillaReader?: (preset: Preset) => Preset
   // what writes Logseq's links and hiccup into Vanilla Markdown
   vanillaInline?: Preset
+}
+
+// a Markdown page's lines (its properties, a frontmatter) written for
+// Vanilla Markdown, or for Logseq's
+interface MarkdownPages {
+  vanilla: (lines: string[]) => string[]
+  logseq: (lines: string[]) => string[]
 }
 
 function splitBlocks(
@@ -861,4 +869,133 @@ export function translateOrgOutline(
   ]
     .join("\n")
     .concat("\n")
+}
+
+const ORG_BLOCK_START_RE = /^#\+begin_(\S+)(?:\s+(.*?))?\s*$/i
+
+// a fence the lines hold no run of backticks as long as
+function fenceFor(lines: string[]): string {
+  const longest = Math.max(
+    2,
+    ...lines.flatMap(line => line.match(/`+/g) ?? []).map(run => run.length)
+  )
+  return "`".repeat(longest + 1)
+}
+
+// Vanilla Markdown: a block's org blocks as Markdown writes them, a
+// source or example block fenced, a quote quoted, a query in a `query`
+// code block (ADR 0006); others have no Markdown form and stay
+function orgBlockToMarkdown(lines: string[]): string[] {
+  const [, type = "", parameters = ""] =
+    ORG_BLOCK_START_RE.exec(lines[0] ?? "") ?? []
+  const body = lines.slice(1, -1)
+  const info = {
+    SRC: parameters,
+    EXAMPLE: "",
+    QUERY: QUERY_LANGUAGE
+  }[type.toUpperCase()]
+  if (info !== undefined) {
+    const fence = fenceFor(body)
+    return [`${fence}${info}`, ...body, fence]
+  }
+  return type.toUpperCase() === "QUOTE"
+    ? body.map(line => (line ? `> ${line}` : ">"))
+    : lines
+}
+
+function orgBlocksToMarkdown(content: string[]): string[] {
+  const result: string[] = []
+  let fenced = false
+  for (let i = 0; i < content.length; i++) {
+    const line = content[i] ?? ""
+    fenced = FENCE_RE.test(line) ? !fenced : fenced
+    const end =
+      fenced || !isOrgBlockStart(line) ? -1 : orgElementEnd(content, i)
+    if (end === -1) {
+      result.push(line)
+      continue
+    }
+    result.push(...orgBlockToMarkdown(content.slice(i, end + 1)))
+    i = end
+  }
+  return result
+}
+
+const QUERY_FENCE_RE = /^(`{3,}|~{3,})\s*query\s*$/
+
+// Logseq Markdown: a `query` code block is a query block, which Logseq
+// Markdown writes as the block itself (ADR 0006)
+function queryCodeToBlocks(content: string[]): string[] {
+  const result: string[] = []
+  let fence = ""
+  for (const line of content) {
+    const query = QUERY_FENCE_RE.exec(line)?.[1]
+    if (!fence && query) {
+      fence = query
+      result.push("#+BEGIN_QUERY")
+    } else if (fence && line.trim() === fence) {
+      fence = ""
+      result.push("#+END_QUERY")
+    } else {
+      result.push(line)
+    }
+  }
+  return result
+}
+
+// Logseq Markdown: spaces after a bullet the whole content shares, which
+// a Vanilla list item would read as its content's column
+function dedentCommon(content: string[]): string[] {
+  const indent = Math.min(
+    ...content
+      .filter(line => line.trim())
+      .map(line => /^ */.exec(line)?.[0].length ?? 0)
+  )
+  return Number.isFinite(indent) && indent
+    ? content.map(line => line.slice(Math.min(indent, line.length)))
+    : content
+}
+
+/**
+ * Translates a Markdown page between Logseq Markdown and Vanilla
+ * Markdown: blocks become list items and headings and back, their meta
+ * as Vanilla Markdown writes it (ADR 0006); a block's content is kept.
+ * @param markdown The Markdown page.
+ * @param context The side Logseq is on.
+ * @param pages What writes a page's lines in either dialect.
+ * @returns The page in the other dialect.
+ */
+export function translateMarkdownOutline(
+  markdown: string,
+  context: ConversionContext,
+  pages: MarkdownPages
+): string {
+  if (!markdown) {
+    return markdown
+  }
+  if (context.side === "input") {
+    const { page, blocks } = readMarkdownOutline(markdown)
+    const text = pages.vanilla(page).join("\n").replace(/\n+$/, "")
+    return writeVanillaMarkdownOutline(
+      {
+        page: text ? [text] : [],
+        blocks: blocks.map(block => ({
+          ...block,
+          content: orgBlocksToMarkdown(dedentCommon(block.content))
+        }))
+      },
+      context
+    )
+  }
+  const { page, blocks } = readVanillaMarkdownOutline(markdown, context)
+  return writeOutline(
+    {
+      page: pages.logseq(page),
+      blocks: blocks.map(block => ({
+        ...block,
+        content: queryCodeToBlocks(block.content)
+      }))
+    },
+    writeMarkdownBlock
+  )
 }

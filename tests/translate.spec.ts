@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { translateOrg } from "../src/translate.js"
+import { translateMarkdown, translateOrg } from "../src/translate.js"
 import { logseq } from "../src/presets/logseq.js"
 
 const TODO_LINE =
@@ -130,5 +130,115 @@ describe("translateOrg", () => {
     expect(() => translateOrg("* a\n", { preset: logseq() })).toThrow(
       "for 'logseq' on both sides, use normalizeOrg"
     )
+  })
+})
+
+describe("translateMarkdown", () => {
+  it("writes Logseq md's blocks as a Vanilla md list", () => {
+    const markdown =
+      "- TODO a\n  SCHEDULED: <2026-10-04 Sun>\n\t- ## b\n\t  text *x* [[Page]]\n- c\n  id:: 1\n"
+
+    expect(translateMarkdown(markdown, { inputPreset: logseq() })).toBe(
+      "- [ ] a\n  scheduled:: <2026-10-04 Sun>\n  - ## b\n    text *x* [[Page]]\n- c\n  id:: 1\n"
+    )
+  })
+
+  it("writes page properties as frontmatter and back", () => {
+    const logseqMarkdown = "title:: P\ntags:: a, b\nnum:: 01234\n\n- a\n"
+    const vanilla = '---\ntitle: P\ntags: a, b\nnum: "01234"\n---\n\n- a\n'
+
+    expect(translateMarkdown(logseqMarkdown, { inputPreset: logseq() })).toBe(
+      vanilla
+    )
+    expect(translateMarkdown(vanilla, { outputPreset: logseq() })).toBe(
+      logseqMarkdown
+    )
+  })
+
+  it("keeps frontmatter Logseq reads no property from", () => {
+    const vanilla = "---\ntitle: P\nnested:\n  k: v\n---\n\n- a\n"
+
+    expect(translateMarkdown(vanilla, { outputPreset: logseq() })).toBe(
+      "---\nnested:\n  k: v\n---\ntitle:: P\n\n- a\n"
+    )
+  })
+
+  it("reads a rule that a Vanilla md list ends in as a rule block", () => {
+    expect(translateMarkdown("- a\n- ---\n", { outputPreset: logseq() })).toBe(
+      "- a\n- ---\n"
+    )
+  })
+
+  it("writes Logseq md's org blocks as Markdown does", () => {
+    const markdown = [
+      "- a",
+      "  #+BEGIN_SRC sh",
+      "  echo *x*",
+      "  #+END_SRC",
+      "- #+BEGIN_QUOTE",
+      "  q **b**",
+      "  #+END_QUOTE",
+      "- #+BEGIN_QUERY",
+      "  {:q 1}",
+      "  #+END_QUERY",
+      "- #+begin_example",
+      "  ex",
+      "  #+end_example",
+      "- #+BEGIN_NOTE",
+      "  n",
+      "  #+END_NOTE",
+      ""
+    ].join("\n")
+
+    expect(translateMarkdown(markdown, { inputPreset: logseq() })).toBe(
+      [
+        "- a",
+        "  ```sh",
+        "  echo *x*",
+        "  ```",
+        "- > q **b**",
+        "- ```query",
+        "  {:q 1}",
+        "  ```",
+        "- ```",
+        "  ex",
+        "  ```",
+        "- #+BEGIN_NOTE",
+        "  n",
+        "  #+END_NOTE",
+        ""
+      ].join("\n")
+    )
+  })
+
+  it("writes a query code block as Logseq md's query block", () => {
+    const markdown =
+      "- a\n  ```query\n  {:q 1}\n  ```\n- ```sh\n  echo\n  ```\n"
+
+    expect(translateMarkdown(markdown, { outputPreset: logseq() })).toBe(
+      "- a\n  #+BEGIN_QUERY\n  {:q 1}\n  #+END_QUERY\n- ```sh\n  echo\n  ```\n"
+    )
+  })
+
+  it("reads a list item's content from its content column", () => {
+    expect(
+      translateMarkdown("1.  a\n    1.  b\n", { outputPreset: logseq() })
+    ).toBe(
+      "- a\n  logseq.order-list-type:: number\n\t- b\n\t  logseq.order-list-type:: number\n"
+    )
+  })
+
+  it("drops a block's common indentation", () => {
+    expect(
+      translateMarkdown("-  → a\n\t-  ```\n\t   x\n\t   ```\n", {
+        inputPreset: logseq()
+      })
+    ).toBe("- → a\n  - ```\n    x\n    ```\n")
+  })
+
+  it("reads text after a list from its own column", () => {
+    expect(
+      translateMarkdown("1. a\n\n  > q\n  > r\n", { outputPreset: logseq() })
+    ).toBe("- a\n  logseq.order-list-type:: number\n- > q\n  > r\n")
   })
 })

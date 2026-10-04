@@ -36,6 +36,31 @@ export function translateOrg(
     : org
 }
 
+/**
+ * Translates a Markdown string from the Input Preset's dialect into the
+ * Output Preset's, changing only what the two dialects write
+ * differently (ADR 0006): a block's content is kept as written.
+ * @param markdown The Markdown string to translate.
+ * @param options The preset of each side, which must differ.
+ * @returns The Markdown string in the output's dialect.
+ * @throws If both sides name the same preset (that is
+ * `normalizeMarkdown`).
+ */
+export function translateMarkdown(
+  markdown: string,
+  options: TranslateOptions = {}
+): string {
+  const { input, output } = twoSides(options, "markdown", "normalizeMarkdown")
+  const side = input?.translateMarkdown ? "input" : "output"
+  const translate = (side === "input" ? input : output)?.translateMarkdown
+  return translate
+    ? translate(markdown, {
+        side,
+        ...(options.onWarning && { onWarning: options.onWarning })
+      })
+    : markdown
+}
+
 // a translation is between two dialects; one on both sides normalizes
 function twoSides(
   options: PresetOptions,

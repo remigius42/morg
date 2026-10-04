@@ -8,8 +8,9 @@ import type { OrgData } from "uniorg"
  * `convertMarkdown` take a whole conversion over, for a dialect whose
  * documents are no single org or Markdown document (an outline of
  * blocks, each its own fragment); `convert` runs the core on a fragment,
- * with the given preset's hooks. `translateOrg` translates an org page
- * between the preset's org dialect and Vanilla org.
+ * with the given preset's hooks. `translateOrg` and `translateMarkdown`
+ * translate a page between the preset's dialect of the format and
+ * Vanilla.
  */
 export interface Preset {
   name: string
@@ -26,6 +27,7 @@ export interface Preset {
     context: ConversionContext
   ) => string
   translateOrg?: (org: string, context: ConversionContext) => string
+  translateMarkdown?: (markdown: string, context: ConversionContext) => string
 }
 
 /**

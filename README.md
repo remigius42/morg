@@ -242,6 +242,8 @@ preset })`: `preserveOrgisms` default `true`; `useHtml` (default
   between two org dialects (Logseq org ↔ Vanilla org), changing only
   what they write differently: a block's content stays as written.
   The same preset on both sides throws; that is `normalizeOrg`.
+  `translateMarkdown(md, { inputPreset, outputPreset })` does the same
+  within Markdown (Logseq md ↔ Vanilla md).
 
 - `markdownStyle: { bullet, emphasis, strong, fence, rule, ruleRepetition }`
   (on `convertOrgToMarkdown` and `normalizeMarkdown`; CLI `--bullet`,
