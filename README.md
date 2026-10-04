@@ -263,8 +263,9 @@ preset })`: `preserveOrgisms` default `true`; `spelling` (`"markdown"`
   within Markdown (Logseq md, Obsidian md and Vanilla md, any two);
   `orgismKeys` names the
   `key::` lines Vanilla md writes planning under, as in a conversion,
-  and `style` rewrites the markers it names, leaving the rest
-  as written.
+  `style` rewrites the markers it names, and `spelling` and
+  `interpretHtml` respell the blocks they concern (ADR 0007), leaving
+  the rest as written.
 
 - `style: { bullet, emphasis, strong, fence, rule, ruleRepetition }`
   (on `convertOrgToMarkdown`, `normalizeMarkdown` and

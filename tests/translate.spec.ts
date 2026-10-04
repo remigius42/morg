@@ -413,3 +413,46 @@ describe("translateMarkdown", () => {
     ).toBe("~~~\na\n~~~~~\n")
   })
 })
+
+describe("Markdown options in a translation (ADR 0007)", () => {
+  const fromObsidian = { inputPreset: obsidian() }
+
+  it("writes a definition list in the spelling the output names", () => {
+    expect(
+      translateMarkdown("Term\n:   def\n\nKeep  *this*\n", {
+        ...fromObsidian,
+        spelling: { definitionList: "html" }
+      })
+    ).toBe("<dl>\n<dt>Term</dt>\n<dd>def</dd>\n</dl>\n\nKeep  *this*\n")
+  })
+
+  it("keeps a nested definition list in its quote", () => {
+    expect(
+      translateMarkdown("> Term\n> :   def\n", {
+        ...fromObsidian,
+        spelling: "html"
+      })
+    ).toBe("> <dl>\n> <dt>Term</dt>\n> <dd>def</dd>\n> </dl>\n")
+  })
+
+  it("reads the HTML the input names as the construct", () => {
+    expect(
+      translateMarkdown(
+        "<dl><dt>a</dt><dd>b</dd></dl>\n\nx <u>u</u> y\n\nKeep  <u>this</u>\n",
+        { ...fromObsidian, interpretHtml: { definitionList: true } }
+      )
+    ).toBe("a\n:   b\n\nx <u>u</u> y\n\nKeep  <u>this</u>\n")
+    expect(
+      translateMarkdown("x <u>u</u>  y\n", {
+        ...fromObsidian,
+        interpretHtml: true
+      })
+    ).toBe("x \\_u\\_  y\n")
+  })
+
+  it("leaves a translation without Markdown options as written", () => {
+    const markdown = "Term\n:   def\n\n<dl><dt>a</dt><dd>b</dd></dl>\n"
+
+    expect(translateMarkdown(markdown, fromObsidian)).toBe(markdown)
+  })
+})

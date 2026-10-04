@@ -1,5 +1,6 @@
 import { restyleMarkdown } from "./core/restyle.js"
 import type { MarkdownStyleOptions } from "./options.js"
+import { respellMarkdown, type RespellOptions } from "./respell.js"
 import type { Preset } from "./presets/types.js"
 import {
   resolveSides,
@@ -12,12 +13,13 @@ import {
  * The presets of a translation, its warning callback and the org-ism
  * key names Vanilla Markdown writes planning under.
  */
-export type TranslateOptions = PresetOptions & {
-  onWarning?: (message: string) => void
-  orgismKeys?: Record<string, string>
-  /** The Markdown markers to write; others stay as written. */
-  style?: MarkdownStyleOptions
-}
+export type TranslateOptions = PresetOptions &
+  RespellOptions & {
+    onWarning?: (message: string) => void
+    orgismKeys?: Record<string, string>
+    /** The Markdown markers to write; others stay as written. */
+    style?: MarkdownStyleOptions
+  }
 
 /**
  * Translates an Org string from the Input Preset's dialect into the
@@ -69,8 +71,9 @@ export function translateMarkdown(
   const translated =
     output?.translateMarkdown?.(vanilla, { ...context, side: "output" }) ??
     vanilla
+  const respelled = respellMarkdown(translated, options)
   const style = outputStyle(options, output)
-  return style ? restyleMarkdown(translated, style) : translated
+  return style ? restyleMarkdown(respelled, style) : respelled
 }
 
 // the style to write, but for a bullet the output's outline needs

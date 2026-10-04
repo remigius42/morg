@@ -478,7 +478,12 @@ column cut stays as spaces. A
 `style` option rewrites the markers it names (bullets,
 emphasis, strong, fences, rules) and nothing else; Logseq md keeps the
 `-` its blocks need, with a warning, and a fence stays whose code
-holds a run of the new marker. Obsidian md translates as Vanilla md
+holds a run of the new marker. The Markdown options apply as in a
+conversion (ADR 0007): a definition list written in the Spelling they
+name, `<dl>`, `<u>`, `<sup>` and `<sub>` read where `interpretHtml`
+asks, each block holding one converted on its own, the rest as written;
+underline and scripts in their Markdown spelling, org text only morg
+writes, stay as written. Obsidian md translates as Vanilla md
 does, but for its links: `[[Page|label]]` (in a table
 `[[Page\|label]]`) ↔ `[label]([[Page]])` outside code (`[[Page]]` is
 both's); an embed's size (`![[image.png|300]]`) stays. Obsidian md →

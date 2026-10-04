@@ -31,6 +31,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Markdown list item holding `::` stays a list item, and a
   fixed-width line's `:` is escaped (`\: text`), as a line below text that starts with
   a colon now starts a definition.
+- Translating Markdown honours the Markdown options, as normalizing
+  does: a block holding a construct they concern is converted on its
+  own, in the Spelling they name; the rest stays as written.
 - The Web UI's options name the side they act on, and a table sets
   each construct's HTML reading and Spelling.
 
