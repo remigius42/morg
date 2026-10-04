@@ -183,6 +183,19 @@ describe("runConversion", () => {
     ).toBe("* \n")
   })
 
+  it("translates with the config's orgismKeys", () => {
+    const result = runConversion(
+      "- a\n  SCHEDULED: <2026-10-04 Sun>\n",
+      {
+        direction: "normalize-md",
+        inputPreset: "logseq",
+        outputPreset: "vanilla"
+      },
+      '[orgismKeys]\nscheduled = "due"\n'
+    )
+    expect(result.output).toBe("- a\n  due:: <2026-10-04 Sun>\n")
+  })
+
   it("applies markdown style options when normalizing", () => {
     const result = runConversion("- one", {
       direction: "normalize-md",

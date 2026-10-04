@@ -88,7 +88,8 @@ function sameFormat(
     const translate = format === "markdown" ? translateMarkdown : translateOrg
     return translate(inputContent, {
       ...presets,
-      ...(options.onWarning && { onWarning: options.onWarning })
+      ...(options.onWarning && { onWarning: options.onWarning }),
+      ...(options.orgismKeys && { orgismKeys: options.orgismKeys })
     })
   }
   return format === "markdown"

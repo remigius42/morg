@@ -373,6 +373,19 @@ describe("convert", () => {
     ).toBe("* \n")
   })
 
+  it("translates with the config's orgismKeys", () => {
+    expect(
+      convert(
+        "- a\n  SCHEDULED: <2026-10-04 Sun>\n",
+        "markdown",
+        "markdown",
+        cli({}),
+        { orgismKeys: { scheduled: "due" } },
+        { inputPreset: logseq() }
+      )
+    ).toBe("- a\n  due:: <2026-10-04 Sun>\n")
+  })
+
   it("reports dropped constructs as morg: warnings on stderr", () => {
     const spy = vi.spyOn(console, "error").mockImplementation(() => undefined)
     try {

@@ -287,4 +287,17 @@ describe("translateMarkdown", () => {
       })
     ).toBe("- a <!--c--> b[^1] [x]([[P]])\n  \n  [^1]: n\n")
   })
+
+  it("writes and reads planning under the orgismKeys names", () => {
+    const logseqMarkdown = "- a\n  SCHEDULED: <2026-10-04 Sun>\n"
+    const vanilla = "- a\n  due:: <2026-10-04 Sun>\n"
+    const orgismKeys = { scheduled: "due" }
+
+    expect(
+      translateMarkdown(logseqMarkdown, { inputPreset: logseq(), orgismKeys })
+    ).toBe(vanilla)
+    expect(
+      translateMarkdown(vanilla, { outputPreset: logseq(), orgismKeys })
+    ).toBe(logseqMarkdown)
+  })
 })

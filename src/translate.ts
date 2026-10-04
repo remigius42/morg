@@ -5,9 +5,13 @@ import {
   type Sides
 } from "./presets/sides.js"
 
-/** The presets of a translation, and its warning callback. */
+/**
+ * The presets of a translation, its warning callback and the org-ism
+ * key names Vanilla Markdown writes planning under.
+ */
 export type TranslateOptions = PresetOptions & {
   onWarning?: (message: string) => void
+  orgismKeys?: Record<string, string>
 }
 
 /**
@@ -51,11 +55,7 @@ export function translateMarkdown(
   options: TranslateOptions = {}
 ): string {
   const { input, output } = twoSides(options, "markdown", "normalizeMarkdown")
-  const relink = pageLinks({ input, output })
-  const context = {
-    ...(options.onWarning && { onWarning: options.onWarning }),
-    ...(relink && { relink })
-  }
+  const context = hookContext(options, pageLinks({ input, output }))
   // into Vanilla from the input's dialect, then from it into the
   // output's; a dialect does what its side needs
   const vanilla =
@@ -65,6 +65,18 @@ export function translateMarkdown(
     output?.translateMarkdown?.(vanilla, { ...context, side: "output" }) ??
     vanilla
   )
+}
+
+// what a dialect's translation learns of the options
+function hookContext(
+  { onWarning, orgismKeys }: TranslateOptions,
+  relink: ((text: string) => string) | undefined
+) {
+  return {
+    ...(onWarning && { onWarning }),
+    ...(orgismKeys && { orgismKeys }),
+    ...(relink && { relink })
+  }
 }
 
 // page links between two dialects; a Vanilla side carries the other's
