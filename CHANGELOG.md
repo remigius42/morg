@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- **Breaking:** the `morg normalize` subcommand. One format on both
+  sides is enough: with one preset it normalizes
+  (`morg --input notes.org --output notes.org`, or `--from org --to
+org`), with two it translates.
+
 ### Added
 
 - `translateOrg(org, { inputPreset, outputPreset })`: Logseq org ↔
@@ -32,6 +39,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   HTML comment and an inline footnote a footnote (also on the way to
   Logseq Markdown); wikilinks stay, as resolving a note's file needs
   the vault.
+- CLI: one format on both sides with two presets translates
+  (`morg --input-preset logseq --input page.md --output out.md`); it
+  was an error.
 
 ## [0.9.2] - 2026-10-04
 

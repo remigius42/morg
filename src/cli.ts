@@ -54,17 +54,14 @@ async function main() {
   }
   const config = loadConfig(cli.configPath)
 
-  const [fromFormat, toFormat] = validateFormats(
-    ...inferFormats(cli),
-    cli.normalize
-  )
+  const [fromFormat, toFormat] = validateFormats(...inferFormats(cli))
   const presets = resolvePresets(cli, config, fromFormat, toFormat)
 
   const inputContent = await readInput(cli.inputFile)
   const outputContent = convert(
     inputContent,
     fromFormat,
-    cli.normalize,
+    toFormat,
     cli,
     config,
     presets

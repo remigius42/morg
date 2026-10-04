@@ -2,7 +2,6 @@ import { CliError } from "./error.js"
 import { FLAGS_BY_NAME } from "./flags.js"
 
 export interface CliArgs {
-  normalize: boolean
   help: boolean
   version: boolean
   fromFormat: string | undefined
@@ -23,14 +22,13 @@ export interface CliArgs {
 }
 
 export function parseArgs(args: string[]): CliArgs {
-  // `morg normalize` canonicalizes in place of converting: same format
-  // in and out, one full round trip (see ADR 0001)
-  const normalize = args[0] === "normalize"
-  if (normalize) {
-    args.shift()
+  // gone in 0.10.0: one format on both sides normalizes (ADR 0006)
+  if (args[0] === "normalize") {
+    throw new CliError(
+      "'morg normalize' is gone: the same format and preset on both sides normalizes (--from org --to org)"
+    )
   }
   const parsed: CliArgs = {
-    normalize,
     help: false,
     version: false,
     fromFormat: undefined,

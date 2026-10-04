@@ -16,21 +16,15 @@ export function inferFormats(
     toFormat = formatFromFileName(cli.outputFile)
   }
 
-  return inferMissingFormat(cli.normalize, fromFormat, toFormat)
+  return inferMissingFormat(fromFormat, toFormat)
 }
 
 // Infer missing format based on the other
 function inferMissingFormat(
-  normalize: boolean,
   fromFormat: string | undefined,
   toFormat: string | undefined
 ): [fromFormat: string | undefined, toFormat: string | undefined] {
-  if (normalize) {
-    // mirror whichever side is known; a conflict between the two is left
-    // intact for validateFormats to reject rather than silently overwritten
-    fromFormat = fromFormat ?? toFormat
-    toFormat = toFormat ?? fromFormat
-  } else if (fromFormat && !toFormat) {
+  if (fromFormat && !toFormat) {
     toFormat = fromFormat === "markdown" ? "org" : "markdown"
   } else if (toFormat && !fromFormat) {
     fromFormat = toFormat === "markdown" ? "org" : "markdown"
@@ -50,8 +44,7 @@ function fileNameHint(flag: "--from" | "--to", value: string): string {
 
 export function validateFormats(
   fromFormat: string | undefined,
-  toFormat: string | undefined,
-  normalize: boolean
+  toFormat: string | undefined
 ): [fromFormat: Format, toFormat: Format] {
   if (!fromFormat || !toFormat) {
     throw new CliError(
@@ -72,15 +65,5 @@ export function validateFormats(
     }
   }
 
-  if (!normalize && fromFormat === toFormat) {
-    throw new CliError("Error: Source and target formats cannot be the same.")
-  }
-
-  if (normalize && fromFormat !== toFormat) {
-    throw new CliError(
-      "Error: normalize reads and writes the same format; " +
-        `got '${fromFormat}' and '${toFormat}'.`
-    )
-  }
   return [fromFormat as Format, toFormat as Format]
 }

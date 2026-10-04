@@ -16,8 +16,8 @@ with `preset = "logseq"`, `--output-preset vanilla` reads Logseq org
 and writes Vanilla Markdown. `preset` next to a different side preset
 in the same place (both flags, or both keys) is an error. `preset`
 leaves a side Vanilla whose format it has no dialect for (Obsidian
-writes no org); a side preset without one is an error. `normalize`
-takes one preset.
+writes no org); a side preset without one is an error. With one format
+on both sides, one preset normalizes and two translate.
 
 The [Web UI](https://morg.binarypoetry.ch) accepts the same TOML in
 its Config panel.

@@ -11,6 +11,7 @@ import { resolvePresets } from "../src/cli/presets.js"
 import { inferFormats, validateFormats } from "../src/cli/formats.js"
 import { buildConversionOptions, convert } from "../src/cli/conversion.js"
 import { CliError } from "../src/cli/error.js"
+import { logseq } from "../src/presets/logseq.js"
 
 const escapeRegExp = (value: string) =>
   value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
@@ -35,7 +36,6 @@ describe("parseArgs", () => {
       "--interpret-html"
     ])
     expect(args).toMatchObject({
-      normalize: false,
       fromFormat: "markdown",
       toFormat: "org",
       inputFile: "in.md",
@@ -64,9 +64,10 @@ describe("parseArgs", () => {
     )
   })
 
-  it("recognizes the normalize subcommand", () => {
-    expect(parseArgs(["normalize", "--from", "org"]).normalize).toBe(true)
-    expect(parseArgs(["--from", "org"]).normalize).toBe(false)
+  it("points the gone normalize subcommand to one format on both sides", () => {
+    expect(() => parseArgs(["normalize", "--from", "org"])).toThrow(
+      "'morg normalize' is gone: the same format and preset on both sides normalizes (--from org --to org)"
+    )
   })
 
   it("collects markdown style flags", () => {
@@ -168,65 +169,42 @@ describe("inferFormats", () => {
     ])
   })
 
-  it("mirrors the format for normalize", () => {
-    expect(inferFormats(cli({ normalize: true, toFormat: "org" }))).toEqual([
-      "org",
-      "org"
-    ])
-  })
-
-  it("keeps a conflicting normalize target for validation", () => {
+  it("takes one format for both sides from two file names", () => {
     expect(
-      inferFormats(
-        cli({ normalize: true, fromFormat: "markdown", toFormat: "org" })
-      )
-    ).toEqual(["markdown", "org"])
-    expect(
-      inferFormats(
-        cli({ normalize: true, inputFile: "a.md", outputFile: "b.org" })
-      )
-    ).toEqual(["markdown", "org"])
+      inferFormats(cli({ inputFile: "a.org", outputFile: "b.org" }))
+    ).toEqual(["org", "org"])
   })
 })
 
 describe("validateFormats", () => {
   it("rejects undeterminable formats", () => {
-    expect(() => validateFormats(undefined, undefined, false)).toThrow(
+    expect(() => validateFormats(undefined, undefined)).toThrow(
       /Could not determine conversion formats/
     )
   })
 
   it("rejects unsupported formats, naming the value", () => {
-    expect(() => validateFormats("markdown", "asciidoc", false)).toThrow(
+    expect(() => validateFormats("markdown", "asciidoc")).toThrow(
       /Unsupported format 'asciidoc'/
     )
-    expect(() => validateFormats("asciidoc", "org", false)).toThrow(
+    expect(() => validateFormats("asciidoc", "org")).toThrow(
       /Unsupported format 'asciidoc'/
     )
   })
 
   it("points a file name at the flag that takes one", () => {
-    expect(() => validateFormats("notes.md", "org", false)).toThrow(
+    expect(() => validateFormats("notes.md", "org")).toThrow(
       /--from takes a format name; for a file use --input notes\.md/
     )
-    expect(() => validateFormats("markdown", "out.org", false)).toThrow(
+    expect(() => validateFormats("markdown", "out.org")).toThrow(
       /--to takes a format name; for a file use --output out\.org/
     )
     // a format name that is merely wrong has no file to suggest
-    expect(() => validateFormats("html", "org", false)).not.toThrow(/--input/)
+    expect(() => validateFormats("html", "org")).not.toThrow(/--input/)
   })
 
-  it("rejects same source and target except for normalize", () => {
-    expect(() => validateFormats("org", "org", false)).toThrow(
-      /cannot be the same/
-    )
-    expect(() => validateFormats("org", "org", true)).not.toThrow()
-  })
-
-  it("rejects differing source and target for normalize", () => {
-    expect(() => validateFormats("markdown", "org", true)).toThrow(
-      /normalize.*same format/i
-    )
+  it("accepts one format on both sides", () => {
+    expect(validateFormats("org", "org")).toEqual(["org", "org"])
   })
 })
 
@@ -346,39 +324,59 @@ describe("convert", () => {
   const cli = (overrides: object) => ({ ...parseArgs([]), ...overrides })
 
   it("converts in both directions", () => {
-    expect(convert("# Hello", "markdown", false, cli({}), {}, {})).toBe(
+    expect(convert("# Hello", "markdown", "org", cli({}), {}, {})).toBe(
       "* Hello\n"
     )
-    expect(convert("* Hello", "org", false, cli({}), {}, {})).toBe("# Hello\n")
+    expect(convert("* Hello", "org", "markdown", cli({}), {}, {})).toBe(
+      "# Hello\n"
+    )
   })
 
   it("records the source style when --record-style is given", () => {
     const org = convert(
       "* item\n",
       "markdown",
-      false,
+      "org",
       cli({ recordStyle: true }),
       {},
       {}
     )
 
     expect(org).toContain('#+MORG_MARKDOWN_STYLE: {"bullet":"*"}')
-    expect(convert(org, "org", false, cli({}), {}, {})).toBe("* item\n")
+    expect(convert(org, "org", "markdown", cli({}), {}, {})).toBe("* item\n")
   })
 
-  it("normalizes both formats", () => {
-    expect(convert("#   Hello", "markdown", true, cli({}), {}, {})).toBe(
+  it("normalizes a format with one preset on both sides", () => {
+    expect(convert("#   Hello", "markdown", "markdown", cli({}), {}, {})).toBe(
       "# Hello\n"
     )
-    expect(convert("*    Hello", "org", true, cli({}), {}, {})).toBe(
+    expect(convert("*    Hello", "org", "org", cli({}), {}, {})).toBe(
       "* Hello\n"
     )
+  })
+
+  it("translates a format between two presets", () => {
+    expect(
+      convert(
+        "- TODO a\n",
+        "markdown",
+        "markdown",
+        cli({}),
+        {},
+        {
+          inputPreset: logseq()
+        }
+      )
+    ).toBe("- [ ] a\n")
+    expect(
+      convert("*\n", "org", "org", cli({}), {}, { inputPreset: logseq() })
+    ).toBe("* \n")
   })
 
   it("reports dropped constructs as morg: warnings on stderr", () => {
     const spy = vi.spyOn(console, "error").mockImplementation(() => undefined)
     try {
-      convert('![alt](img.png "title")', "markdown", false, cli({}), {}, {})
+      convert('![alt](img.png "title")', "markdown", "org", cli({}), {}, {})
       expect(spy).toHaveBeenCalledWith(expect.stringMatching(/^morg: .*title/))
     } finally {
       spy.mockRestore()
@@ -398,7 +396,7 @@ describe("convert", () => {
       convert(
         "# x",
         "markdown",
-        false,
+        "org",
         cli({}),
         {},
         { outputPreset: throwingPreset }
@@ -408,7 +406,7 @@ describe("convert", () => {
       convert(
         "# x",
         "markdown",
-        false,
+        "org",
         cli({}),
         {},
         { outputPreset: throwingPreset }
@@ -499,10 +497,19 @@ describe("cli process", () => {
   })
 
   it("fails with exit code 1 and a message on invalid usage", async () => {
-    const result = await run(["--from", "org", "--to", "org"], "* x")
+    const result = await run(["--from", "org", "--to", "asciidoc"], "* x")
     expect(result.code).toBe(1)
-    expect(result.stderr).toMatch(/cannot be the same/)
+    expect(result.stderr).toMatch(/Unsupported format 'asciidoc'/)
     expect(result.stdout).toBe("")
+  })
+
+  it("translates within a format between two presets", async () => {
+    const result = await run(
+      ["--from", "org", "--to", "org", "--input-preset", "logseq"],
+      "*\n"
+    )
+    expect(result.code).toBe(0)
+    expect(result.stdout).toBe("* \n\n")
   })
 
   it("prints usage on --help, -h and a bare invocation", async () => {

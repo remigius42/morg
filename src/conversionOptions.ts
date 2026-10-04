@@ -124,15 +124,16 @@ function sidePreset(
     : resolveSide(preset, undefined, format, side)
 }
 
-// normalizing goes there and back within one dialect (ADR 0006), so
-// both sides must name the same preset, which then sets both ways
-function normalizePresetOptions(layers: PresetNames[]): PresetOptions {
+// one preset on both sides of one format normalizes, going there and
+// back within its dialect, so it sets both ways of the trip; two
+// translate (ADR 0006)
+function normalizePresetOptions(
+  layers: PresetNames[]
+): PresetOptions | undefined {
   const input = sideName(layers, "inputPreset")?.name ?? "vanilla"
   const output = sideName(layers, "outputPreset")?.name ?? "vanilla"
   if (input !== output) {
-    throw new Error(
-      `normalize takes one preset; got inputPreset '${input}' and outputPreset '${output}'`
-    )
+    return undefined
   }
   const preset = createPreset(input)
   return preset ? { preset } : {}
@@ -143,10 +144,10 @@ function normalizePresetOptions(layers: PresetNames[]): PresetOptions {
  * per side, the first layer that sets the side or `preset` wins.
  * @param layers Preset names by layer, highest first.
  * @param from The input's format.
- * @param to The output's format; the input's for normalizing.
+ * @param to The output's format.
  * @returns The conversion's preset options.
  * @throws If a layer sets `preset` and another side preset, or a side
- * preset has no dialect for its side's format, or normalizing names two.
+ * preset has no dialect for its side's format.
  */
 export function resolvePresetOptions(
   layers: PresetNames[],
@@ -154,8 +155,9 @@ export function resolvePresetOptions(
   to: Format
 ): PresetOptions {
   layers.forEach(rejectConflict)
-  if (from === to) {
-    return normalizePresetOptions(layers)
+  const normalize = from === to ? normalizePresetOptions(layers) : undefined
+  if (normalize) {
+    return normalize
   }
   const input = sidePreset(sideName(layers, "inputPreset"), from, "input")
   const output = sidePreset(sideName(layers, "outputPreset"), to, "output")

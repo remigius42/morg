@@ -137,10 +137,14 @@ morg --input notes.md --output notes.org --silent
 # canonicalizing it; markers used inconsistently warn and are skipped
 morg --input notes.md --output notes.org --record-style
 
-# Normalize to canonical form (same format in and out); this
+# Translate between two dialects of one format, changing only what
+# they write differently (a block's content stays as written)
+morg --input-preset logseq --input page.md --output page.vanilla.md
+
+# Normalize to canonical form (same format and preset in and out); this
 # canonicalizes (the one-time reformat a first conversion would apply
 # anyway, ADR 0001); it is not a style formatter like prettier
-morg normalize --input notes.org --output notes.org
+morg --input notes.org --output notes.org
 ```
 
 ### Configuration file
@@ -231,7 +235,7 @@ preset })`: `preserveOrgisms` default `true`; `useHtml` (default
   `preset` naming another preset than a side preset.
 
 - `normalizeMarkdown(md, { preset })` / `normalizeOrg(org, { preset })`
-  (CLI: `morg normalize`): one full round trip to morg's canonical
+  (CLI: one format and preset on both sides): one full round trip to morg's canonical
   form, a fixed point, within one dialect: different presets per side
   throw. Canonicalization, not styling: org-isms and
   md-isms are rewritten exactly as a conversion would rewrite them.

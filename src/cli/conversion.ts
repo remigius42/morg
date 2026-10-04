@@ -1,10 +1,15 @@
 import { convertMarkdownToOrg } from "../markdownToOrg.js"
 import { convertOrgToMarkdown } from "../orgToMarkdown.js"
-import { normalizeMarkdown, normalizeOrg } from "../normalize.js"
+import {
+  normalizeMarkdown,
+  normalizeOrg,
+  type NormalizeOptions
+} from "../normalize.js"
+import { translateMarkdown, translateOrg } from "../translate.js"
 import type { MorgConfig } from "../config.js"
 import { buildConversionOptions as layerOptions } from "../conversionOptions.js"
 import type { MarkdownStyleOptions } from "../options.js"
-import type { PresetOptions } from "../presets/sides.js"
+import type { Format, PresetOptions } from "../presets/sides.js"
 import type { CliArgs } from "./args.js"
 import { CliError } from "./error.js"
 
@@ -45,8 +50,8 @@ export function buildConversionOptions(
 
 export function convert(
   inputContent: string,
-  fromFormat: string,
-  normalize: boolean,
+  fromFormat: Format,
+  toFormat: Format,
   cli: CliArgs,
   config: MorgConfig,
   presets: PresetOptions
@@ -57,13 +62,11 @@ export function convert(
       config,
       presets
     )
-    if (normalize) {
-      return fromFormat === "markdown"
-        ? normalizeMarkdown(inputContent, {
-            ...mdToOrgOptions,
-            ...orgToMdOptions
-          })
-        : normalizeOrg(inputContent, { ...mdToOrgOptions, ...orgToMdOptions })
+    if (fromFormat === toFormat) {
+      return sameFormat(inputContent, fromFormat, presets, {
+        ...mdToOrgOptions,
+        ...orgToMdOptions
+      })
     }
     if (fromFormat === "markdown") {
       return convertMarkdownToOrg(inputContent, mdToOrgOptions)
@@ -72,4 +75,23 @@ export function convert(
   } catch (error) {
     throw new CliError("Conversion error:", { cause: error })
   }
+}
+
+// one preset on both sides normalizes, two translate (ADR 0006)
+function sameFormat(
+  inputContent: string,
+  format: Format,
+  presets: PresetOptions,
+  options: NormalizeOptions
+): string {
+  if (presets.inputPreset || presets.outputPreset) {
+    const translate = format === "markdown" ? translateMarkdown : translateOrg
+    return translate(inputContent, {
+      ...presets,
+      ...(options.onWarning && { onWarning: options.onWarning })
+    })
+  }
+  return format === "markdown"
+    ? normalizeMarkdown(inputContent, options)
+    : normalizeOrg(inputContent, options)
 }

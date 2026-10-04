@@ -62,14 +62,21 @@ describe("resolvePresetOptions", () => {
       inputPreset: undefined,
       outputPreset: undefined
     })
-    expect(() =>
-      resolvePresetOptions(
-        [{ inputPreset: "logseq" }, { preset: "vanilla" }],
-        "markdown",
-        "markdown"
+  })
+
+  it("translates within a format between two presets", () => {
+    expect(
+      names(
+        resolvePresetOptions(
+          [{ inputPreset: "logseq" }, { preset: "vanilla" }],
+          "markdown",
+          "markdown"
+        )
       )
-    ).toThrow(
-      "normalize takes one preset; got inputPreset 'logseq' and outputPreset 'vanilla'"
-    )
+    ).toEqual({
+      preset: undefined,
+      inputPreset: "logseq",
+      outputPreset: undefined
+    })
   })
 })
