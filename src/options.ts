@@ -28,6 +28,7 @@ export function toggleEnabled(
  */
 export const HTML_CONSTRUCTS = [
   "definitionList",
+  "images",
   "underline",
   "superscript",
   "subscript"
@@ -59,7 +60,8 @@ export interface MarkdownToOrgOptions extends PresetOptions {
   preserveMdisms?: Toggle
   /**
    * Read a construct's HTML spelling (`<dl>`, `<u>`, `<sup>`, `<sub>`,
-   * bare, without attributes) as the native Org construct, per
+   * bare, without attributes; `<img>` with `src`, `alt`, `width` and
+   * `height` only) as the native Org construct, per
    * construct (ADR 0007); its Markdown spelling is always read. Any
    * other HTML still preserves per `preserveMdisms`. Default: `false`.
    */
@@ -120,7 +122,8 @@ export interface OrgToMarkdownOptions extends PresetOptions {
   /**
    * The Spelling to write each construct in (ADR 0007): `"markdown"`,
    * its own syntax, or verbatim org text where Markdown has none, or
-   * `"html"` (`<dl>`, `<u>`, `<sup>`, `<sub>`). HTML reads back as the
+   * `"html"` (`<dl>`, `<img>` for an image with a size, `<u>`, `<sup>`,
+   * `<sub>`). HTML reads back as the
    * construct where `interpretHtml` asks, else as a preserved md-ism.
    * Default: `"markdown"`.
    */

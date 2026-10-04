@@ -20,7 +20,12 @@ md images, alt text ↔ link description. Image title attributes
 (`![alt](url "title")`) are dropped by design (reported via
 `onWarning`): org links have no title slot, and an inline construct
 has no sensible `morg_` property anchor (ADR 0002 reserves properties
-for metadata-shaped md-isms).
+for metadata-shaped md-isms). An image's size, an `#+ATTR_HTML:
+:width 300` line above an image link alone in its paragraph (`:height`
+too), stays a verbatim line; spelled in HTML (`images = "html"`, ADR 0007) the two become `<img src="…" alt="…" width="300">`, read back
+where `interpretHtml` reads images. An `<img>` below text in a list
+item takes a blank line, as HTML of its kind cannot interrupt a
+paragraph.
 
 Relative links: a md url without a scheme (`notes.md#Some%20Heading`,
 `img/a.png`) is a path, but a bare org path is a fuzzy link, a

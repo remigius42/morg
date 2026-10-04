@@ -186,7 +186,11 @@ function transformUniorgListItem(
   keepLeadingColon(children[0])
   return {
     type: "listItem",
-    spread: false,
+    // an <img> line below text would be part of the paragraph
+    spread: children.some(
+      (child, i) =>
+        i > 0 && child.type === "html" && child.value.startsWith("<img")
+    ),
     checked:
       item.checkbox === "on" ? true : item.checkbox === "off" ? false : null,
     children

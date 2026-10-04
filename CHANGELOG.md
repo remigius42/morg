@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- An image's size has a Spelling, `images` (ADR 0007): `"html"`
+  writes an image link sized by `#+ATTR_HTML: :width`/`:height` as
+  `<img src alt width height>` and reads that `<img>` back; under
+  `"markdown"`, the default, the attribute line stays verbatim.
+
 ### Changed
 
 - **Breaking:** options are named by format and side (ADR 0007). The

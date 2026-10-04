@@ -557,6 +557,45 @@ describe("convertOrgToMarkdown", () => {
     )
   })
 
+  it("should spell a sized image as <img> spelled in html (ADR 0007)", () => {
+    const org =
+      '#+ATTR_HTML: :width 300 :height 50%\n[[file:a b.png][a "q" & r]]\n'
+
+    expect(convertOrgToMarkdown(org, { spelling: { images: "html" } })).toBe(
+      '<img src="a%20b.png" alt="a &quot;q&quot; &amp; r" width="300" height="50%">\n'
+    )
+  })
+
+  it("should keep an image's width line verbatim spelled in markdown", () => {
+    const org = "#+ATTR_HTML: :width 300\n[[file:img.png]]\n"
+
+    expect(convertOrgToMarkdown(org)).toBe(
+      "#+ATTR_HTML: :width 300\n\n![](img.png)\n"
+    )
+  })
+
+  it("should keep the other affiliated keywords of an image as lines", () => {
+    const org = "#+CAPTION: c\n#+ATTR_HTML: :width 300\n[[file:img.png]]\n"
+
+    expect(convertOrgToMarkdown(org, { spelling: "html" })).toBe(
+      '#+CAPTION: c\n\n<img src="img.png" alt="" width="300">\n'
+    )
+  })
+
+  it("should keep a width line <img> cannot hold verbatim", () => {
+    for (const org of [
+      "#+ATTR_HTML: :width 300 :class x\n[[file:img.png]]\n",
+      "#+ATTR_HTML: :width 300\n#+ATTR_HTML: :height 2\n[[file:img.png]]\n",
+      "#+ATTR_HTML: :width 300\n[[file:img.png]] text\n",
+      "#+ATTR_HTML: :width 300\n[[https://x.org/a]]\n",
+      "#+ATTR_ORG: :width 300\n[[file:img.png]]\n"
+    ]) {
+      expect(convertOrgToMarkdown(org, { spelling: "html" })).not.toContain(
+        "<img"
+      )
+    }
+  })
+
   it("should autolink links whose description equals the url", () => {
     const org =
       "[[https://example.com/a_b/][https://example.com/a_b/]] and [[https://example.com/plain/]]\n"

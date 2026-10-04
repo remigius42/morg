@@ -450,6 +450,15 @@ describe("Markdown options in a translation (ADR 0007)", () => {
     ).toBe("x \\_u\\_  y\n")
   })
 
+  it("writes an <img> the input reads in Markdown's spelling", () => {
+    expect(
+      translateMarkdown('<img src="img.png" alt="a" width="300">\n', {
+        ...fromObsidian,
+        interpretHtml: { images: true }
+      })
+    ).toBe("#+ATTR_HTML: :width 300\n\n![a](img.png)\n")
+  })
+
   it("leaves a translation without Markdown options as written", () => {
     const markdown = "Term\n:   def\n\n<dl><dt>a</dt><dd>b</dd></dl>\n"
 

@@ -58,11 +58,14 @@ function respelled(node: Node, options: RespellOptions): boolean {
   switch (node.type) {
     case "defList":
       return spellingOf(options.spelling, "definitionList") === "html"
-    case "html":
+    case "html": {
+      const value = (node as { value?: string }).value ?? ""
       return (
-        /^<dl[\s>]/i.test((node as { value?: string }).value ?? "") &&
-        htmlToMarkdown(options, "definitionList")
+        (/^<dl[\s>]/i.test(value) &&
+          htmlToMarkdown(options, "definitionList")) ||
+        (/^<img\s/i.test(value) && htmlToMarkdown(options, "images"))
       )
+    }
     case "paragraph":
       return holdsInlineHtml(node as Parent, options)
     default:

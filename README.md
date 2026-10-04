@@ -199,9 +199,9 @@ Options (flags accept `boolean` or a per-construct `Record<string, boolean>`):
 - `convertMarkdownToOrg(md, { preserveMdisms, interpretHtml,
 recordMarkdownStyle, preset })`:
   `preserveMdisms` default `true`; `interpretHtml` (default `false`,
-  per construct: `definitionList`, `underline`, `superscript`,
-  `subscript`) reads a construct's HTML spelling (bare `<dl>`, `<u>`,
-  `<sup>`, `<sub>`) as the native Org construct, the inverse of
+  per construct: `definitionList`, `images`, `underline`,
+  `superscript`, `subscript`) reads a construct's HTML spelling (bare
+  `<dl>`, `<u>`, `<sup>`, `<sub>`, a sized `<img>`) as the native Org construct, the inverse of
   `spelling: "html"` (ADR 0007); other HTML preserves as usual;
   `recordMarkdownStyle` (default `false`, CLI
   `--record-markdown-style`) records the document-level markdown style
@@ -211,7 +211,8 @@ recordMarkdownStyle, preset })`:
 preset })`: `preserveOrgisms` default `true`; `spelling` (`"markdown"`
   or `"html"`, for all constructs or per construct, default
   `"markdown"`) writes a construct Markdown cannot spell losslessly as
-  HTML (`<dl>`, `<u>`, `<sup>`, `<sub>`) instead of verbatim org
+  HTML (`<dl>`, `<img width>`, `<u>`, `<sup>`, `<sub>`) instead of
+  verbatim org
   (ADR 0007; CLI `--html` sets both sides); `taskCheckboxes` (default
   `false`, CLI `--task-checkboxes`) is a lossy export mode that maps
   bare `TODO`/`DONE` leaf headlines to GFM task items (`- [ ]` /

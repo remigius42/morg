@@ -16,6 +16,7 @@ import type {
   Timestamp
 } from "uniorg"
 import { transformMdastToUniorgDraft } from "./core/mdastToUniorg/index.js"
+import { BULLET_LINE_END } from "./core/mdastToUniorg/context.js"
 import { detectMarkdownStyle, STYLE_KEYWORD } from "./core/markdownStyle.js"
 import { escapeOrgMarkup } from "./core/markupBoundary.js"
 import { renderFileHeader } from "./core/frontmatterBlock.js"
@@ -150,7 +151,9 @@ function convertMarkdownDocument(
   // Phase 4: Render uniorg-ast to Org-mode string
   const orgContent = String(stringifier.stringify(uniorgAst))
 
-  return orgContent.replaceAll(SPACE_KEEPER, "")
+  return orgContent
+    .replaceAll(SPACE_KEEPER, "")
+    .replaceAll(` ${BULLET_LINE_END}`, "")
 }
 
 // uniorg-stringify trims a headline's line, and the document's end, but

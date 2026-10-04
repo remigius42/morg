@@ -17,7 +17,7 @@ import type {
   List,
   ListItem
 } from "uniorg"
-import { warn, type TransformContext } from "./context.js"
+import { BULLET_LINE_END, warn, type TransformContext } from "./context.js"
 import { transformPhrasingChildren } from "./phrasing.js"
 // circular import with index.js is fine in ESM: both sides only export
 // hoisted function declarations called after module initialization
@@ -101,6 +101,12 @@ function transformMdastListItem(
       ]
     })
     .filter(Boolean)
+  // org attaches keywords on the bullet's line to nothing: the element
+  // they belong to starts on the next
+  const first = children[0] as { affiliated?: object } | undefined
+  if (first?.affiliated && Object.keys(first.affiliated).length) {
+    children.unshift({ type: "text", value: `${BULLET_LINE_END}\n` })
+  }
   return {
     type: "list-item",
     indent,

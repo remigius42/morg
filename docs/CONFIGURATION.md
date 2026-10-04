@@ -45,6 +45,7 @@ scheduled = "when"
 # a construct's Spelling for both sides of Markdown; see "Spelling"
 [markdown]
 definitionList = "markdown"  # "markdown" | "html"
+images = "markdown"
 underline = "markdown"
 superscript = "markdown"
 subscript = "markdown"
@@ -91,18 +92,24 @@ html = false
 An org construct Markdown cannot write losslessly in its own syntax,
 but HTML can, has two spellings (ADR 0007): `"markdown"`, the
 default, writes it in Markdown's syntax, or as verbatim org text org
-re-parses where Markdown has none; `"html"` writes `<dl>`, `<u>`,
-`<sup>` or `<sub>`.
+re-parses where Markdown has none; `"html"` writes `<dl>`, `<img>`,
+`<u>`, `<sup>` or `<sub>`.
 
-| Construct        | `"markdown"`       | `"html"` |
-| ---------------- | ------------------ | -------- |
-| `definitionList` | `term` / `:   def` | `<dl>`   |
-| `underline`      | `_x_` (org text)   | `<u>`    |
-| `superscript`    | `^{x}` (org text)  | `<sup>`  |
-| `subscript`      | `_{x}` (org text)  | `<sub>`  |
+| Construct        | `"markdown"`                           | `"html"`              |
+| ---------------- | -------------------------------------- | --------------------- |
+| `definitionList` | `term` / `:   def`                     | `<dl>`                |
+| `images`         | `![alt](src)`, the `#+ATTR_HTML:` line | `<img src alt width>` |
+| `underline`      | `_x_` (org text)                       | `<u>`                 |
+| `superscript`    | `^{x}` (org text)                      | `<sup>`               |
+| `subscript`      | `_{x}` (org text)                      | `<sub>`               |
+
+`images` concerns an image link alone in its paragraph that one
+`#+ATTR_HTML:` line sizes with `:width` and `:height` and nothing else;
+another image keeps its attribute lines verbatim either way.
 
 A construct in `[markdown]` sets both sides: `"html"` reads its bare
-HTML (no attributes) back as the construct and writes it, so the round
+HTML (no attributes; an `<img>` with `src`, `alt`, `width` and `height`
+only) back as the construct and writes it, so the round
 trip converges with the HTML in Markdown and the construct in org.
 `[markdown.input.interpretHtml]` and `[markdown.output]` override one
 side each. Different sides migrate: reading HTML and writing

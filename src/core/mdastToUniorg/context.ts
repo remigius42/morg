@@ -4,6 +4,10 @@ import {
   type Toggle
 } from "../../options.js"
 
+// ends a bullet's line where uniorg-stringify would trim the line
+// break, taken out with the space before it once stringified
+export const BULLET_LINE_END = "\u0001"
+
 export interface MdastToUniorgOptions {
   preserveMdisms?: Toggle
   interpretHtml?: Toggle

@@ -3,7 +3,7 @@ import type {
   PhrasingContent,
   TableRow as MdastTableRow
 } from "mdast"
-import type { ElementType } from "uniorg"
+import type { ElementType, ObjectType } from "uniorg"
 import { toString } from "orgast-util-to-string"
 import {
   htmlInterpreted,
@@ -13,6 +13,11 @@ import {
 import { transformPhrasingChildren } from "./phrasing.js"
 import { tagSeparator } from "./lists.js"
 import { KEYWORD_NAME } from "../frontmatterBlock.js"
+import {
+  attrHtmlValue,
+  IMAGE_EXTENSION_RE,
+  parseImgTag
+} from "../sizedImages.js"
 
 export function transformMdastTable(
   ctx: TransformContext,
@@ -97,6 +102,12 @@ export function transformMdastHtml(
       )
     } as unknown as ElementType
   }
+  if (htmlInterpreted(ctx, "images")) {
+    const image = interpretImg(ctx, node.value)
+    if (image) {
+      return image
+    }
+  }
   if (htmlInterpreted(ctx, "definitionList")) {
     const descriptiveList = interpretDefinitionList(node.value)
     if (descriptiveList) {
@@ -111,6 +122,33 @@ export function transformMdastHtml(
         value: node.value
       } as unknown as ElementType)
     : null
+}
+
+// a bare <img> of an image file becomes its image link, the size an
+// #+ATTR_HTML: line above it, as org writes it
+function interpretImg(ctx: TransformContext, html: string): ElementType | null {
+  const img = parseImgTag(html)
+  if (!img) {
+    return null
+  }
+  const [link] = transformPhrasingChildren(ctx, [
+    { type: "image", url: img.src, alt: img.alt }
+  ])
+  const path = (link as { rawLink?: string } | undefined)?.rawLink?.replace(
+    /::.*$/s,
+    ""
+  )
+  if (!path || !IMAGE_EXTENSION_RE.test(path)) {
+    return null
+  }
+  const size = attrHtmlValue(img.size)
+  return {
+    type: "paragraph",
+    affiliated: size ? { ATTR_HTML: [size] } : {},
+    children: [link as ObjectType],
+    contentsBegin: 0,
+    contentsEnd: 0
+  } as unknown as ElementType
 }
 
 // a bare <dl> whose body is nothing but attribute-less <dt>/<dd> pairs

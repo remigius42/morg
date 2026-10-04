@@ -515,6 +515,39 @@ This is a paragraph.
     )
   })
 
+  it("should interpret <img> as a sized image link with interpretHtml", () => {
+    const markdown =
+      '<img src="a%20b.png" alt="a &quot;q&quot; &amp; r" width="300" height="50%">\n'
+
+    expect(
+      convertMarkdownToOrg(markdown, { interpretHtml: { images: true } })
+    ).toBe('#+ATTR_HTML: :width 300 :height 50%\n[[file:a b.png][a "q" & r]]\n')
+  })
+
+  it("should read an <img>'s attributes in any order, alt optional", () => {
+    const markdown = '<img height="20" src="img.png" />\n'
+
+    expect(convertMarkdownToOrg(markdown, { interpretHtml: true })).toBe(
+      "#+ATTR_HTML: :height 20\n[[file:img.png]]\n"
+    )
+  })
+
+  it("should preserve an <img> org cannot hold despite interpretHtml", () => {
+    for (const markdown of [
+      '<img src="img.png" width="3" class="x">\n',
+      '<img src="https://x.org/a" width="3">\n',
+      '<img src="img.png" width="3" width="4">\n',
+      'Text <img src="img.png" width="3">\n'
+    ]) {
+      expect(convertMarkdownToOrg(markdown, { interpretHtml: true })).toContain(
+        "html"
+      )
+    }
+    expect(convertMarkdownToOrg('<img src="img.png" width="3">\n')).toBe(
+      '#+begin_export html\n<img src="img.png" width="3">\n#+end_export\n'
+    )
+  })
+
   it("should drop html when preserveMdisms.html is false", () => {
     const markdown = "Press <kbd>x</kbd> now.\n\n<div>\nblock\n</div>\n"
 

@@ -432,6 +432,18 @@ describe("html spelling", () => {
     expect(mdRoundTrip(once)).toBe(once)
   })
 
+  it("reads a sized image back from its html spelling", () => {
+    const input =
+      "#+CAPTION: c\n#+ATTR_HTML: :width 300\n[[file:img.png][alt]]\n\n" +
+      "- x\n  #+ATTR_HTML: :height 2\n  [[file:b.png]]\n" +
+      "-\n  #+ATTR_HTML: :width 3\n  [[file:c.png]]\n"
+    expect(
+      convertMarkdownToOrg(convertOrgToMarkdown(input, { spelling: "html" }), {
+        interpretHtml: true
+      })
+    ).toBe(input)
+  })
+
   it("stays lossless when list terms contain html-special characters", () => {
     const input = "- a < b :: x & y\n"
     expect(

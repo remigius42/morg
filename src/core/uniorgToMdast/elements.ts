@@ -1,8 +1,20 @@
-import type { BlockContent, Heading, PhrasingContent, RootContent } from "mdast"
-import type { ElementType, GreaterElementType, Text } from "uniorg"
+import type {
+  BlockContent,
+  Heading,
+  Image,
+  PhrasingContent,
+  RootContent
+} from "mdast"
+import type {
+  AffiliatedKeywords,
+  ElementType,
+  GreaterElementType,
+  Text
+} from "uniorg"
 import { toString as orgastToString } from "orgast-util-to-string"
 import {
   affiliatedLines,
+  htmlEnabled,
   keyName,
   keyValueParagraph,
   orgismEnabled,
@@ -15,6 +27,7 @@ import { transformUniorgObjects } from "./objects.js"
 import { transformFootnoteDefinition } from "./footnotes.js"
 import { transformTable } from "./tables.js"
 import { transformPlainList } from "./lists.js"
+import { attrHtmlSize, imgTag } from "../sizedImages.js"
 
 export function transformNodes(
   ctx: TransformContext,
@@ -29,6 +42,10 @@ function transformUniorgNodeToMdastNode(
   ctx: TransformContext,
   node: GreaterElementType | ElementType | Text
 ): RootContent | RootContent[] | null {
+  const image = sizedImage(ctx, node)
+  if (image) {
+    return image
+  }
   const result = transformUniorgElement(ctx, node)
   const lines = affiliatedLines(node)
   if (
@@ -43,6 +60,51 @@ function transformUniorgNodeToMdastNode(
   return [
     keyValueParagraph(lines),
     ...(Array.isArray(result) ? result : [result])
+  ]
+}
+
+// the size a lone #+ATTR_HTML: line gives, and the other keywords
+function imageSize(affiliated: AffiliatedKeywords = {}) {
+  const { ATTR_HTML: attrHtml, ...others } = affiliated
+  const [value, ...more] = Array.isArray(attrHtml) ? attrHtml : []
+  const size =
+    typeof value === "string" && !more.length ? attrHtmlSize(value) : undefined
+  return { size, others }
+}
+
+// the image a paragraph's lone link shows, if it is one
+function loneImage(
+  ctx: TransformContext,
+  children: Extract<ElementType, { type: "paragraph" }>["children"]
+): Image | undefined {
+  const links = children.filter(
+    child => !(child.type === "text" && child.value.trim() === "")
+  )
+  const [image] =
+    links.length === 1 && links[0]?.type === "link"
+      ? transformUniorgObjects(ctx, links)
+      : []
+  return image?.type === "image" ? image : undefined
+}
+
+// a paragraph of one image link its #+ATTR_HTML: line sizes, spelled
+// in html: the size goes into the <img>, other keywords stay lines
+function sizedImage(
+  ctx: TransformContext,
+  node: GreaterElementType | ElementType | Text
+): RootContent[] | null {
+  if (node.type !== "paragraph" || !htmlEnabled(ctx, "images")) {
+    return null
+  }
+  const { size, others } = imageSize(node.affiliated)
+  const image = size && loneImage(ctx, node.children)
+  if (!size || !image) {
+    return null
+  }
+  const lines = affiliatedLines({ affiliated: others })
+  return [
+    ...(lines.length ? [keyValueParagraph(lines)] : []),
+    { type: "html", value: imgTag(image.url, image.alt ?? "", size) }
   ]
 }
 

@@ -9,8 +9,7 @@ import {
 } from "./shared.js"
 import { transformFootnoteReference } from "./footnotes.js"
 import { unescapeOrgPath } from "../orgPath.js"
-
-const IMAGE_EXTENSION_RE = /\.(png|jpe?g|gif|svg|webp|avif|bmp|ico)$/i
+import { IMAGE_EXTENSION_RE } from "../sizedImages.js"
 
 export function transformUniorgObjects(
   ctx: TransformContext,
