@@ -16,7 +16,7 @@ export function obsidian(): Preset {
       read: { org: rewriteAliasedWikilinks },
       write: fuzzyLinksToWikilinks,
       links: {
-        read: text => text.replace(ALIASED_WIKILINK_RE, "[[$1][$2]]"),
+        read: text => text.replace(ALIASED_PAGE_LINK_RE, "[[$1][$2]]"),
         write: text => text.replace(FUZZY_LINK_RE, "[[$1|$2]]")
       }
     },
@@ -28,6 +28,9 @@ export function obsidian(): Preset {
 }
 
 const ALIASED_WIKILINK_RE = /\[\[([^\][|]+)\|([^\][]+)\]\]/g
+// in Markdown text: not an embed, whose `|300` is a size, and with a
+// table cell's escaped pipe (`[[Page\|alias]]`)
+const ALIASED_PAGE_LINK_RE = /(?<!!)\[\[([^\][|\\]+)\\?\|([^\][]+)\]\]/g
 const FUZZY_LINK_RE = /\[\[([^\][]+)\]\[([^\][]+)\]\]/g
 
 // md→org: a wikilink travels as plain text; org already reads `[[Page]]`

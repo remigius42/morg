@@ -300,4 +300,13 @@ describe("translateMarkdown", () => {
       translateMarkdown(vanilla, { outputPreset: logseq(), orgismKeys })
     ).toBe(logseqMarkdown)
   })
+
+  it("keeps Obsidian's sized embeds, and reads a table's escaped alias pipe", () => {
+    expect(
+      translateMarkdown("- see ![[img.png|300]]\n- | [[P\\|a]] |\n", {
+        inputPreset: obsidian(),
+        outputPreset: logseq()
+      })
+    ).toBe("- see ![[img.png|300]]\n- | [a]([[P]]) |\n")
+  })
 })
