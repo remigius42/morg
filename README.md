@@ -288,9 +288,10 @@ Project vocabulary lives in [CONTEXT.md](CONTEXT.md); design decisions in
 The core conversion surface is feature-complete and validated against
 real-world Logseq org vaults (edge cases found there live on as
 anonymized fixtures, e.g. `tests/fixtures/logseq-vault.org`), and
-the conversions between a Logseq dialect and Vanilla Org or Markdown
-are checked by round trips of that vault and of public Markdown and
-Org documentation from either side; the
+the conversions between a Logseq dialect and Vanilla Org or Markdown,
+and the translations between two dialects of one format, are checked
+by round trips of that vault and of public Markdown and Org
+documentation from either side; the
 client-side [Web UI](https://morg.binarypoetry.ch) is deployed from
 `main`. The npm package is `@remigius42/morg`, since the bare `morg`
 name is taken, and pushing a `v*` tag publishes it. Most of the code is

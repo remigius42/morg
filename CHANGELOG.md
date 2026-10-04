@@ -12,9 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - **Breaking:** the `morg normalize` subcommand. One format on both
-  sides is enough: with one preset it normalizes
-  (`morg --input notes.org --output notes.org`, or `--from org --to
-org`), with two it translates.
+  sides is enough: with one preset it normalizes (`--from org` and
+  `--to org`, or `--input notes.org --output notes.org`), with two it
+  translates.
 
 ### Added
 
