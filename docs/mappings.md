@@ -134,7 +134,12 @@ kramdown and Logseq read too) and back, a term's markup and its
 definition's blocks included; one with an item without a term or with
 a checkbox keeps its `- term :: definition` text. Markdown's
 definitions merge into one per term, and a term without its own (one of
-several above a definition) gets an empty one, both with a warning. A
+several above a definition) gets an empty one, both with a warning.
+Known limitation: Markdown does not read a definition list inside a
+list item (upstream, micromark-extension-definition-list), so a
+descriptive list nested in an org list item comes back as the item's
+text; it converges, but its terms are lost. In a quote or another
+definition it is read. A
 `- term :: definition` Markdown list item stays one: a zero-width space
 before the `::` keeps org from reading a tag. A fixed-width line's `:`
 is escaped (`\: text`), as a line below text that starts with a colon starts a definition.

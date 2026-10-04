@@ -634,6 +634,15 @@ describe("verbatim passthrough", () => {
     }
   })
 
+  it("loses a descriptive list nested in a list item (known limitation)", () => {
+    // micromark-extension-definition-list reads no definition list
+    // inside a list item; once it does, this keeps the nested list
+    const org = "- a\n  - b :: c\n"
+
+    expect(orgRoundTrip(org)).toBe("- a\n  b\n  \u200B:   c\n")
+    expect(orgRoundTrip(orgRoundTrip(org))).toBe(orgRoundTrip(org))
+  })
+
   it("keeps a list item's leading colon as written", () => {
     // MDN writes a definition as a nested `- : ` item; an item's first
     // line has no text above it, so no definition starts there

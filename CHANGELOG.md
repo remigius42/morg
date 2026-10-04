@@ -30,7 +30,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   org text (`- term :: definition`), and read back from them. A
   Markdown list item holding `::` stays a list item, and a
   fixed-width line's `:` is escaped (`\: text`), as a line below text that starts with
-  a colon now starts a definition.
+  a colon now starts a definition. A descriptive list nested in a list
+  item does not survive a round trip as one (a known limitation of
+  the Markdown parser): it comes back as the item's text.
 - Translating Markdown honours the Markdown options, as normalizing
   does: a block holding a construct they concern is converted on its
   own, in the Spelling they name; the rest stays as written.
