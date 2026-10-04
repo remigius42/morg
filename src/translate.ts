@@ -16,7 +16,7 @@ export type TranslateOptions = PresetOptions & {
   onWarning?: (message: string) => void
   orgismKeys?: Record<string, string>
   /** The Markdown markers to write; others stay as written. */
-  markdownStyle?: MarkdownStyleOptions
+  style?: MarkdownStyleOptions
 }
 
 /**
@@ -75,7 +75,7 @@ export function translateMarkdown(
 
 // the style to write, but for a bullet the output's outline needs
 function outputStyle(
-  { markdownStyle, onWarning }: TranslateOptions,
+  { style: markdownStyle, onWarning }: TranslateOptions,
   output: Preset | undefined
 ): MarkdownStyleOptions | undefined {
   const needed = output?.markdown?.bullet

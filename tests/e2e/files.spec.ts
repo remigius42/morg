@@ -57,7 +57,7 @@ test.describe("opening files", () => {
     await page.goto("/embed.html")
     const transfer = await dragging(page, {
       name: "morg.toml",
-      contents: '[orgToMarkdown.markdownStyle]\nbullet = "+"\n'
+      contents: '[markdown.output.style]\nbullet = "+"\n'
     })
 
     await page.dispatchEvent("body", "drop", { dataTransfer: transfer })

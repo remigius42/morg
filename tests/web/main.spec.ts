@@ -467,12 +467,12 @@ describe("embed page", () => {
     expect(element<HTMLSelectElement>("emphasis").value).toBe("_")
   })
 
-  it("interprets html via the interpretHtml checkbox", async () => {
+  it("reads a construct's html via its row's checkbox", async () => {
     choose("inputDialect", "markdown")
     const input = element<HTMLTextAreaElement>("input")
     input.value = "Some <u>underlined</u> text.\n"
     input.dispatchEvent(new Event("input", { bubbles: true }))
-    const interpretHtml = element<HTMLInputElement>("interpretHtml")
+    const interpretHtml = element<HTMLInputElement>("interpretHtml-underline")
     interpretHtml.checked = true
     interpretHtml.dispatchEvent(new Event("change", { bubbles: true }))
     await settle()
@@ -481,14 +481,23 @@ describe("embed page", () => {
     )
   })
 
-  it("records the source style via the recordStyle checkbox", async () => {
+  it("writes a construct's html via its row's select", async () => {
+    const input = element<HTMLTextAreaElement>("input")
+    input.value = "_under_\n"
+    input.dispatchEvent(new Event("input", { bubbles: true }))
+    choose("spelling-underline", "html")
+    await settle()
+    expect(element<HTMLTextAreaElement>("output").value).toBe("<u>under</u>\n")
+  })
+
+  it("records the source style via its checkbox", async () => {
     choose("inputDialect", "markdown")
     const input = element<HTMLTextAreaElement>("input")
     input.value = "* item\n"
     input.dispatchEvent(new Event("input", { bubbles: true }))
-    const recordStyle = element<HTMLInputElement>("recordStyle")
-    recordStyle.checked = true
-    recordStyle.dispatchEvent(new Event("change", { bubbles: true }))
+    const record = element<HTMLInputElement>("recordMarkdownStyle")
+    record.checked = true
+    record.dispatchEvent(new Event("change", { bubbles: true }))
     await settle()
     expect(element<HTMLTextAreaElement>("output").value).toContain(
       '#+MORG_MARKDOWN_STYLE: {"bullet":"*"}'
@@ -524,7 +533,7 @@ describe("embed page", () => {
     await drop(
       textFile(
         "morg.toml",
-        'preset = "obsidian"\n\n[orgToMarkdown.markdownStyle]\nemphasis = "_"\n'
+        'preset = "obsidian"\n\n[markdown.output.style]\nemphasis = "_"\n'
       )
     )
     const config = element<HTMLTextAreaElement>("config")

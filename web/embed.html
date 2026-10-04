@@ -100,17 +100,99 @@
         <ul id="warnings" hidden></ul>
         <details id="options">
           <summary>Options</summary>
+          <table id="htmlSpellings">
+            <caption>
+              Constructs Markdown can also write as HTML
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Construct</th>
+                <th scope="col">Read HTML (Markdown input)</th>
+                <th scope="col">Write as (Markdown output)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">Definition list</th>
+                <td>
+                  <input
+                    type="checkbox"
+                    id="interpretHtml-definitionList"
+                    aria-label="Read definition list HTML"
+                  />
+                </td>
+                <td>
+                  <select
+                    id="spelling-definitionList"
+                    aria-label="Write definition list as"
+                  >
+                    <option value="markdown">Markdown</option>
+                    <option value="html">HTML</option>
+                  </select>
+                </td>
+              </tr>
+              <tr>
+                <th scope="row">Underline</th>
+                <td>
+                  <input
+                    type="checkbox"
+                    id="interpretHtml-underline"
+                    aria-label="Read underline HTML"
+                  />
+                </td>
+                <td>
+                  <select
+                    id="spelling-underline"
+                    aria-label="Write underline as"
+                  >
+                    <option value="markdown">Markdown</option>
+                    <option value="html">HTML</option>
+                  </select>
+                </td>
+              </tr>
+              <tr>
+                <th scope="row">Superscript</th>
+                <td>
+                  <input
+                    type="checkbox"
+                    id="interpretHtml-superscript"
+                    aria-label="Read superscript HTML"
+                  />
+                </td>
+                <td>
+                  <select
+                    id="spelling-superscript"
+                    aria-label="Write superscript as"
+                  >
+                    <option value="markdown">Markdown</option>
+                    <option value="html">HTML</option>
+                  </select>
+                </td>
+              </tr>
+              <tr>
+                <th scope="row">Subscript</th>
+                <td>
+                  <input
+                    type="checkbox"
+                    id="interpretHtml-subscript"
+                    aria-label="Read subscript HTML"
+                  />
+                </td>
+                <td>
+                  <select
+                    id="spelling-subscript"
+                    aria-label="Write subscript as"
+                  >
+                    <option value="markdown">Markdown</option>
+                    <option value="html">HTML</option>
+                  </select>
+                </td>
+              </tr>
+            </tbody>
+          </table>
           <label>
-            <input type="checkbox" id="useHtml" />
-            Render org-only constructs as HTML (Org → Markdown)
-          </label>
-          <label>
-            <input type="checkbox" id="interpretHtml" />
-            Interpret morg's HTML as native Org (Markdown → Org)
-          </label>
-          <label>
-            <input type="checkbox" id="recordStyle" />
-            Record the source's Markdown style (Markdown → Org)
+            <input type="checkbox" id="recordMarkdownStyle" />
+            Record the source's Markdown style (Org output)
           </label>
           <label>
             <input type="checkbox" id="taskCheckboxes" />

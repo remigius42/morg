@@ -39,59 +39,80 @@ silent = false        # suppress dropped-construct warnings (CLI -s)
 todo = "state"
 scheduled = "when"
 
-[markdownToOrg]
-# interpret morg's own useHtml vocabulary (bare <u>, <sup>, <sub>,
-# <dl>/<dt>/<dd>) as native org constructs; see "HTML flag pairing"
-interpretHtml = false
+# Options are named by format and side (ADR 0007): an input section is
+# about reading that format, an output section about writing it
 
-# record the source's own markdown style as a #+MORG_MARKDOWN_STYLE: keyword,
-# so the return trip restores it instead of canonicalizing it; a
-# marker the document uses inconsistently is skipped and warns
-# (ADR 0004)
-recordStyle = false
+# a construct's Spelling for both sides of Markdown; see "Spelling"
+[markdown]
+definitionList = "markdown"  # "markdown" | "html"
+underline = "markdown"
+superscript = "markdown"
+subscript = "markdown"
 
-# preserve markdown-only constructs during md → org; false or a
-# per-construct table (ADR 0002)
-[markdownToOrg.preserveMdisms]
-html = false
+# reading Markdown: also read a construct's HTML spelling as the
+# construct (its own spelling is always read)
+[markdown.input.interpretHtml]
+definitionList = false
 
-[orgToMarkdown]
-useHtml = false        # render org-only markup as raw HTML
-taskCheckboxes = false # lossy: bare TODO/DONE headlines → - [ ] / - [x]
+[markdown.output]
+definitionList = "markdown"  # the Spelling to write, over [markdown]
+taskCheckboxes = false       # lossy: bare TODO/DONE headlines → - [ ] / - [x]
 
-# preserve org-only constructs during org → md; false or a
-# per-construct table
-[orgToMarkdown.preserveOrgisms]
+# preserve org-only constructs in Markdown; false or a per-construct
+# table
+[markdown.output.preserveOrgisms]
 drawers = true
 
 # Markdown output style (canonical form is per-config, ADR 0001):
 # round trips must use the same style
-[orgToMarkdown.markdownStyle]
+[markdown.output.style]
 bullet = "-"        # "-" | "*" | "+"
 emphasis = "*"      # "*" | "_"
 strong = "*"        # "*" | "_" (doubled in output)
 fence = "`"         # "`" | "~"
 rule = "-"          # "-" | "*" | "_"
 ruleRepetition = 3  # marker count for thematic breaks (min 3)
+
+[org.output]
+# record the source's own markdown style as a #+MORG_MARKDOWN_STYLE:
+# keyword, so the return trip restores it instead of canonicalizing
+# it; a marker the document uses inconsistently is skipped and warns
+# (ADR 0004)
+recordMarkdownStyle = false
+
+# preserve markdown-only constructs in org; false or a per-construct
+# table (ADR 0002)
+[org.output.preserveMdisms]
+html = false
 ```
 
-## HTML flag pairing
+## Spelling
 
-`orgToMarkdown.useHtml` and `markdownToOrg.interpretHtml` are inverses
-over the HTML vocabulary morg emits (`<u>`, `<sup>`, `<sub>`,
-`<dl>/<dt>/<dd>`, bare tags without attributes); any other HTML is
-governed by `preserveMdisms` as usual. The four combinations:
+An org construct Markdown cannot write losslessly in its own syntax,
+but HTML can, has two spellings (ADR 0007): `"markdown"`, the
+default, writes it in Markdown's syntax, or as verbatim org text org
+re-parses where Markdown has none; `"html"` writes `<dl>`, `<u>`,
+`<sup>` or `<sub>`.
 
-- **both off** (default): org-only markup stays verbatim org text in
-  Markdown; HTML passes through preserved in both directions.
-- **both on**: lossless symmetric round trip; Markdown holds rendered
-  HTML, Org holds native markup.
-- **`useHtml` only**: one-way door; org markup becomes HTML, and the
-  return trip preserves it as an export block, never restoring the
-  native construct.
-- **`interpretHtml` only**: HTML-cleanup mode; matching HTML in
-  Markdown migrates to native org constructs, and the round trip
-  converges away from HTML.
+| Construct        | `"markdown"`               | `"html"` |
+| ---------------- | -------------------------- | -------- |
+| `definitionList` | `- term :: def` (org text) | `<dl>`   |
+| `underline`      | `_x_` (org text)           | `<u>`    |
+| `superscript`    | `^{x}` (org text)          | `<sup>`  |
+| `subscript`      | `_{x}` (org text)          | `<sub>`  |
+
+A construct in `[markdown]` sets both sides: `"html"` reads its bare
+HTML (no attributes) back as the construct and writes it, so the round
+trip converges with the HTML in Markdown and the construct in org.
+`[markdown.input.interpretHtml]` and `[markdown.output]` override one
+side each. Different sides migrate: reading HTML and writing
+`"markdown"` turns a document's HTML into the construct once and for
+all; writing `"html"` without reading it is a one-way door, the HTML
+coming back as a preserved export block. HTML morg cannot read as the
+construct, attributes included, is preserved per `preserveMdisms`.
+
+`--html` sets every construct to `"html"` on both sides, and
+`--html false` to `"markdown"`, over the config.
 
 ## Formatter compatibility snippets
 
@@ -103,7 +124,7 @@ formatters so that formatting morg output produces no diff.
 ```toml
 # prettier compatibility: morg's canonical form already matches
 # prettier's defaults except the emphasis marker
-[orgToMarkdown.markdownStyle]
+[markdown.output.style]
 emphasis = "_"
 ```
 
@@ -122,7 +143,7 @@ inherent rather than style knobs:
 ```toml
 # mdformat compatibility: defaults align except thematic breaks,
 # which mdformat writes as 70 underscores
-[orgToMarkdown.markdownStyle]
+[markdown.output.style]
 rule = "_"
 ruleRepetition = 70
 ```

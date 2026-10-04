@@ -1,14 +1,21 @@
 import type { PhrasingContent } from "mdast"
 import type { ObjectType } from "uniorg"
-import { mdismEnabled, warn, type TransformContext } from "./context.js"
+import {
+  htmlInterpreted,
+  mdismEnabled,
+  warn,
+  type TransformContext
+} from "./context.js"
 import type { Parent } from "unist"
 import { visit } from "unist-util-visit"
 import { escapeOrgPath } from "../orgPath.js"
 import { orgParser, renderInline, type Node } from "../render.js"
 
-// html tags morg itself emits under useHtml; with interpretHtml a bare
-// open/close pair becomes the corresponding native org object
-const INLINE_HTML_ORG_TYPES: Record<string, ObjectType["type"]> = {
+type HtmlObjectType = "underline" | "superscript" | "subscript"
+
+// html tags morg itself writes in the html spelling; interpreted, a
+// bare open/close pair becomes the corresponding native org object
+const INLINE_HTML_ORG_TYPES: Record<string, HtmlObjectType> = {
   u: "underline",
   sup: "superscript",
   sub: "subscript"
@@ -17,16 +24,17 @@ const INLINE_HTML_ORG_TYPES: Record<string, ObjectType["type"]> = {
 // tag names are case-insensitive and may have whitespace before
 // the closing > (valid html); attributes disqualify the tag
 function matchInlineHtmlPair(
+  ctx: TransformContext,
   children: PhrasingContent[],
   i: number
-): { orgType: ObjectType["type"]; end: number } | null {
+): { orgType: HtmlObjectType; end: number } | null {
   const node = children[i] as PhrasingContent
   if (node.type !== "html") {
     return null
   }
   const tag = /^<(u|sup|sub)\s*>$/i.exec(node.value)?.[1]?.toLowerCase()
   const orgType = tag ? INLINE_HTML_ORG_TYPES[tag] : undefined
-  if (!orgType) {
+  if (!orgType || !htmlInterpreted(ctx, orgType)) {
     return null
   }
   const closeTag = new RegExp(`^</${tag}\\s*>$`, "i")
@@ -43,9 +51,7 @@ export function transformPhrasingChildren(
   const result: ObjectType[] = []
   for (let i = 0; i < children.length; i++) {
     const node = children[i] as PhrasingContent
-    const pair = ctx.options.interpretHtml
-      ? matchInlineHtmlPair(children, i)
-      : null
+    const pair = matchInlineHtmlPair(ctx, children, i)
     if (pair) {
       result.push(
         ...hoistEdgeWhitespace(
@@ -55,7 +61,7 @@ export function transformPhrasingChildren(
               ctx,
               children.slice(i + 1, pair.end)
             )
-          } as ObjectType)
+          })
         )
       )
       i = pair.end

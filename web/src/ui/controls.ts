@@ -8,6 +8,11 @@
 import type { ConversionForm } from "../pipeline/convert.js"
 import { directionOf, presetsOf } from "./dialects.js"
 import type { ConversionRunner } from "../pipeline/runner.js"
+import {
+  HTML_CONSTRUCTS,
+  type HtmlConstruct,
+  type Spelling
+} from "../../../src/options.js"
 
 /** The Markdown style knobs, which are a select each, named by their id. */
 const STYLE_KEYS = ["bullet", "emphasis", "strong", "fence", "rule"] as const
@@ -26,9 +31,11 @@ export interface Controls {
   outputDialect: HTMLSelectElement
   swapSides: HTMLButtonElement
   normalizeHint: HTMLElement
-  useHtml: HTMLInputElement
-  interpretHtml: HTMLInputElement
-  recordStyle: HTMLInputElement
+  /** Per construct, whether Markdown input reads its HTML (ADR 0007). */
+  interpretHtml: Record<HtmlConstruct, HTMLInputElement>
+  /** Per construct, the Spelling Markdown output writes it in. */
+  spelling: Record<HtmlConstruct, HTMLSelectElement>
+  recordMarkdownStyle: HTMLInputElement
   taskCheckboxes: HTMLInputElement
   config: HTMLTextAreaElement
   input: HTMLTextAreaElement
@@ -85,15 +92,28 @@ function notice(id: string, text: string): HTMLParagraphElement {
   return built
 }
 
+/** One value per construct of the HTML table. */
+export function perConstruct<T>(
+  value: (construct: HtmlConstruct) => T
+): Record<HtmlConstruct, T> {
+  return Object.fromEntries(
+    HTML_CONSTRUCTS.map(construct => [construct, value(construct)])
+  ) as Record<HtmlConstruct, T>
+}
+
 export function findControls(runner: ConversionRunner): Controls {
   return {
     inputDialect: element<HTMLSelectElement>("inputDialect"),
     outputDialect: element<HTMLSelectElement>("outputDialect"),
     swapSides: element<HTMLButtonElement>("swapSides"),
     normalizeHint: element<HTMLElement>("normalizeHint"),
-    useHtml: element<HTMLInputElement>("useHtml"),
-    interpretHtml: element<HTMLInputElement>("interpretHtml"),
-    recordStyle: element<HTMLInputElement>("recordStyle"),
+    interpretHtml: perConstruct(construct =>
+      element<HTMLInputElement>(`interpretHtml-${construct}`)
+    ),
+    spelling: perConstruct(construct =>
+      element<HTMLSelectElement>(`spelling-${construct}`)
+    ),
+    recordMarkdownStyle: element<HTMLInputElement>("recordMarkdownStyle"),
     taskCheckboxes: element<HTMLInputElement>("taskCheckboxes"),
     config: element<HTMLTextAreaElement>("config"),
     input: element<HTMLTextAreaElement>("input"),
@@ -120,11 +140,15 @@ export function formState(controls: Controls): ConversionForm {
   return {
     direction: directionOf(controls),
     ...presetsOf(controls),
-    useHtml: controls.useHtml.checked,
-    interpretHtml: controls.interpretHtml.checked,
-    recordStyle: controls.recordStyle.checked,
+    interpretHtml: perConstruct(
+      construct => controls.interpretHtml[construct].checked
+    ),
+    spelling: perConstruct(
+      construct => controls.spelling[construct].value as Spelling
+    ),
+    recordMarkdownStyle: controls.recordMarkdownStyle.checked,
     taskCheckboxes: controls.taskCheckboxes.checked,
-    markdownStyle: Object.fromEntries(
+    style: Object.fromEntries(
       controls.styleSelects.map(select => [select.id, select.value])
     )
   }

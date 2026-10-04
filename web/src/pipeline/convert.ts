@@ -6,7 +6,11 @@ import {
   buildConversionOptions,
   resolvePresetOptions
 } from "../../../src/conversionOptions.js"
-import type { MarkdownStyleOptions, Toggle } from "../../../src/options.js"
+import type {
+  HtmlConstruct,
+  MarkdownStyleOptions,
+  Spelling
+} from "../../../src/options.js"
 import type { Format, PresetOptions } from "../../../src/presets/sides.js"
 import { createPreset } from "../../../src/presets/registry.js"
 import type { Direction } from "../direction.js"
@@ -17,11 +21,11 @@ export interface ConversionForm {
   /** Preset names per side; unset defers to the config. */
   inputPreset?: string
   outputPreset?: string
-  useHtml?: Toggle
-  interpretHtml?: boolean
-  recordStyle?: boolean
+  interpretHtml?: Partial<Record<HtmlConstruct, boolean>>
+  spelling?: Partial<Record<HtmlConstruct, Spelling>>
+  recordMarkdownStyle?: boolean
   taskCheckboxes?: boolean
-  markdownStyle?: MarkdownStyleOptions
+  style?: MarkdownStyleOptions
 }
 
 export interface ConversionResult {
@@ -121,10 +125,10 @@ export function runConversion(
   const { mdToOrgOptions, orgToMdOptions } = buildConversionOptions(
     {
       interpretHtml: form.interpretHtml,
-      recordStyle: form.recordStyle,
-      useHtml: form.useHtml,
+      spelling: form.spelling,
+      recordMarkdownStyle: form.recordMarkdownStyle,
       taskCheckboxes: form.taskCheckboxes,
-      markdownStyle: form.markdownStyle
+      style: form.style
     },
     config,
     shared

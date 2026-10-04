@@ -33,7 +33,7 @@ describe("parseArgs", () => {
       "custom.toml",
       "-s",
       "--task-checkboxes",
-      "--interpret-html"
+      "--html"
     ])
     expect(args).toMatchObject({
       fromFormat: "markdown",
@@ -44,7 +44,7 @@ describe("parseArgs", () => {
       configPath: "custom.toml",
       silent: true,
       taskCheckboxes: true,
-      interpretHtml: true
+      html: true
     })
   })
 
@@ -91,7 +91,7 @@ describe("parseArgs", () => {
     expect(parseArgs(["--silent", "true"]).silent).toBe(true)
     expect(parseArgs(["--silent", "false"]).silent).toBe(false)
     expect(parseArgs(["--task-checkboxes", "false"]).taskCheckboxes).toBe(false)
-    expect(parseArgs(["--interpret-html", "false"]).interpretHtml).toBe(false)
+    expect(parseArgs(["--html", "false"]).html).toBe(false)
     // unset stays unset, so config can still decide
     expect(parseArgs([]).silent).toBeUndefined()
     // a following flag is not the value
@@ -113,10 +113,19 @@ describe("parseArgs", () => {
     expect(parseArgs(["--bullet", "-"]).markdownStyle.bullet).toBe("-")
   })
 
-  it("parses --record-style as a boolean flag", () => {
-    expect(parseArgs(["--record-style"]).recordStyle).toBe(true)
-    expect(parseArgs(["--record-style", "false"]).recordStyle).toBe(false)
-    expect(parseArgs([]).recordStyle).toBeUndefined()
+  it("parses --record-markdown-style as a boolean flag", () => {
+    expect(parseArgs(["--record-markdown-style"]).recordMarkdownStyle).toBe(
+      true
+    )
+    expect(
+      parseArgs(["--record-markdown-style", "false"]).recordMarkdownStyle
+    ).toBe(false)
+    expect(parseArgs([]).recordMarkdownStyle).toBeUndefined()
+  })
+
+  it("names the flags ADR 0007 replaced as unknown", () => {
+    expect(() => parseArgs(["--interpret-html"])).toThrow(CliError)
+    expect(() => parseArgs(["--record-style"])).toThrow(CliError)
   })
 
   it("rejects unknown arguments", () => {
@@ -254,25 +263,37 @@ describe("buildConversionOptions", () => {
   it("layers CLI flags over config values", () => {
     const { orgToMdOptions } = buildConversionOptions(
       cli({ markdownStyle: { emphasis: "*" } }),
-      { orgToMarkdown: { markdownStyle: { emphasis: "_", bullet: "+" } } },
+      { markdown: { output: { style: { emphasis: "_", bullet: "+" } } } },
       {}
     )
-    expect(orgToMdOptions.markdownStyle).toMatchObject({
+    expect(orgToMdOptions.style).toMatchObject({
       emphasis: "*",
       bullet: "+"
     })
   })
 
-  it("takes recordStyle from the config, and lets the flag override it", () => {
-    const config = { markdownToOrg: { recordStyle: true } }
+  it("takes recordMarkdownStyle from the config, and lets the flag override it", () => {
+    const config = { org: { output: { recordMarkdownStyle: true } } }
 
     expect(
-      buildConversionOptions(cli({}), config, {}).mdToOrgOptions.recordStyle
+      buildConversionOptions(cli({}), config, {}).mdToOrgOptions
+        .recordMarkdownStyle
     ).toBe(true)
     expect(
-      buildConversionOptions(cli({ recordStyle: false }), config, {})
-        .mdToOrgOptions.recordStyle
+      buildConversionOptions(cli({ recordMarkdownStyle: false }), config, {})
+        .mdToOrgOptions.recordMarkdownStyle
     ).toBe(false)
+  })
+
+  it("sets every construct on both sides with --html", () => {
+    const config = { markdown: { definitionList: "html" as const } }
+    const on = buildConversionOptions(cli({ html: true }), {}, {})
+    const off = buildConversionOptions(cli({ html: false }), config, {})
+
+    expect(on.mdToOrgOptions.interpretHtml).toBe(true)
+    expect(on.orgToMdOptions.spelling).toBe("html")
+    expect(off.mdToOrgOptions.interpretHtml).toBe(false)
+    expect(off.orgToMdOptions.spelling).toBe("markdown")
   })
 
   it("converts ruleRepetition to a number", () => {
@@ -281,7 +302,7 @@ describe("buildConversionOptions", () => {
       {},
       {}
     )
-    expect(orgToMdOptions.markdownStyle.ruleRepetition).toBe(5)
+    expect(orgToMdOptions.style.ruleRepetition).toBe(5)
   })
 
   it("suppresses warnings when silent via flag or config", () => {
@@ -306,14 +327,14 @@ describe("buildConversionOptions", () => {
     expect(
       buildConversionOptions(
         cli({ taskCheckboxes: false }),
-        { orgToMarkdown: { taskCheckboxes: true } },
+        { markdown: { output: { taskCheckboxes: true } } },
         {}
       ).orgToMdOptions.taskCheckboxes
     ).toBe(false)
     expect(
       buildConversionOptions(
-        cli({ interpretHtml: false }),
-        { markdownToOrg: { interpretHtml: true } },
+        cli({ html: false }),
+        { markdown: { input: { interpretHtml: { underline: true } } } },
         {}
       ).mdToOrgOptions.interpretHtml
     ).toBe(false)
@@ -332,12 +353,12 @@ describe("convert", () => {
     )
   })
 
-  it("records the source style when --record-style is given", () => {
+  it("records the source style when --record-markdown-style is given", () => {
     const org = convert(
       "* item\n",
       "markdown",
       "org",
-      cli({ recordStyle: true }),
+      cli({ recordMarkdownStyle: true }),
       {},
       {}
     )

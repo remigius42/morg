@@ -9,6 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Breaking:** options are named by format and side (ADR 0007). The
+  config's `[markdownToOrg]` and `[orgToMarkdown]` sections are gone,
+  with an error naming their replacements: `[markdown]`,
+  `[markdown.input]`, `[markdown.output]` and `[org.output]`.
+  `markdownStyle` is `[markdown.output.style]`, `recordStyle` is
+  `[org.output] recordMarkdownStyle` (CLI `--record-markdown-style`),
+  and the library options are renamed to match (`style`,
+  `recordMarkdownStyle`).
+- **Breaking:** `useHtml` and `interpretHtml` give way to a Spelling
+  per construct (`definitionList`, `underline`, `superscript`,
+  `subscript`): `"markdown"` or `"html"`, set for both sides in
+  `[markdown]` or per side. The library's `spelling` and per-construct
+  `interpretHtml` replace them; CLI `--html` replaces
+  `--interpret-html` and sets both sides.
+- The Web UI's options name the side they act on, and a table sets
+  each construct's HTML reading and Spelling.
+
 ## [0.10.1] - 2026-10-04
 
 ### Fixed

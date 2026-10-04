@@ -66,7 +66,7 @@ function convertMarkdownSides(
         (fragment, preset, carried) =>
           convertMarkdownSides(
             fragment,
-            { ...options, recordStyle: false },
+            { ...options, recordMarkdownStyle: false },
             fragmentSides(sides, over.side, preset, carried)
           ),
         conversionContext(over, options)
@@ -111,7 +111,7 @@ function convertMarkdownDocument(
 
   // Phase 2d: record the source's own style markers, so the return trip
   // can reproduce them instead of morg's canonical ones (ADR 0004)
-  if (options.recordStyle) {
+  if (options.recordMarkdownStyle) {
     recordStyleKeyword(
       uniorgAst,
       detectMarkdownStyle(mdast, markdown, options.onWarning)

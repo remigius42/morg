@@ -5,7 +5,11 @@ import type {
 } from "mdast"
 import type { ElementType } from "uniorg"
 import { toString } from "orgast-util-to-string"
-import { mdismEnabled, type TransformContext } from "./context.js"
+import {
+  htmlInterpreted,
+  mdismEnabled,
+  type TransformContext
+} from "./context.js"
 import { transformPhrasingChildren } from "./phrasing.js"
 import { KEYWORD_NAME } from "../frontmatterBlock.js"
 
@@ -92,7 +96,7 @@ export function transformMdastHtml(
       )
     } as unknown as ElementType
   }
-  if (ctx.options.interpretHtml) {
+  if (htmlInterpreted(ctx, "definitionList")) {
     const descriptiveList = interpretDefinitionList(node.value)
     if (descriptiveList) {
       return descriptiveList
@@ -110,10 +114,10 @@ export function transformMdastHtml(
 
 // a bare <dl> whose body is nothing but attribute-less <dt>/<dd> pairs
 // (any whitespace between tags) becomes a ` :: ` list, the same
-// markdown convention descriptive lists use without useHtml, so the
+// markdown convention descriptive lists use in their markdown spelling, so the
 // org side re-parses it as a native descriptive list; anything richer
 // stays a preserved md-ism
-// inverse of the escaping the useHtml side applies to <dt>/<dd> text
+// inverse of the escaping the html spelling applies to <dt>/<dd> text
 function unescapeHtmlText(text: string): string {
   return text
     .trim()

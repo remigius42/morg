@@ -634,10 +634,10 @@ describe("verbatim passthrough", () => {
   })
 })
 
-describe("recordStyle", () => {
+describe("recordMarkdownStyle", () => {
   it("should record the source bullet marker as a MORG_MARKDOWN_STYLE keyword", () => {
     const orgOutput = convertMarkdownToOrg("* item\n* other\n", {
-      recordStyle: true
+      recordMarkdownStyle: true
     })
 
     expect(orgOutput).toContain('#+MORG_MARKDOWN_STYLE: {"bullet":"*"}')
@@ -645,7 +645,7 @@ describe("recordStyle", () => {
 
   it("should record the source emphasis and strong markers", () => {
     const orgOutput = convertMarkdownToOrg("_soft_ and __loud__\n", {
-      recordStyle: true
+      recordMarkdownStyle: true
     })
 
     expect(orgOutput).toContain(
@@ -655,7 +655,7 @@ describe("recordStyle", () => {
 
   it("should record the source fence marker", () => {
     const orgOutput = convertMarkdownToOrg("~~~js\ncode()\n~~~\n", {
-      recordStyle: true
+      recordMarkdownStyle: true
     })
 
     expect(orgOutput).toContain('#+MORG_MARKDOWN_STYLE: {"fence":"~"}')
@@ -663,7 +663,7 @@ describe("recordStyle", () => {
 
   it("should record the thematic break marker and its repetition", () => {
     const orgOutput = convertMarkdownToOrg(`${"_".repeat(70)}\n`, {
-      recordStyle: true
+      recordMarkdownStyle: true
     })
 
     expect(orgOutput).toContain(
@@ -675,7 +675,7 @@ describe("recordStyle", () => {
     const warnings: string[] = []
 
     const orgOutput = convertMarkdownToOrg("* item\n\n\n- other\n", {
-      recordStyle: true,
+      recordMarkdownStyle: true,
       onWarning: message => warnings.push(message)
     })
 
@@ -755,8 +755,8 @@ describe("convertMarkdownToOrg with a converting preset", () => {
         convert(text)
     }
 
-    expect(convertMarkdownToOrg("_a_\n", { preset, recordStyle: true })).toBe(
-      "/a/\n"
-    )
+    expect(
+      convertMarkdownToOrg("_a_\n", { preset, recordMarkdownStyle: true })
+    ).toBe("/a/\n")
   })
 })

@@ -3,11 +3,17 @@ import type { AffiliatedKeywords, OrgData } from "uniorg"
 import { affiliatedEntries } from "../affiliated.js"
 import { unified } from "unified"
 import { uniorgStringify } from "uniorg-stringify"
-import { toggleEnabled, type Toggle } from "../../options.js"
+import {
+  spellingOf,
+  toggleEnabled,
+  type HtmlConstruct,
+  type Spellings,
+  type Toggle
+} from "../../options.js"
 
 export interface UniorgToMdastOptions {
   preserveOrgisms?: Toggle
-  useHtml?: Toggle
+  spelling?: Spellings
   taskCheckboxes?: boolean
   orgismKeys?: Record<string, string>
   onWarning?: (message: string) => void
@@ -39,8 +45,11 @@ export function orgismEnabled(ctx: TransformContext, key: string): boolean {
   return toggleEnabled(ctx.options.preserveOrgisms, key)
 }
 
-export function htmlEnabled(ctx: TransformContext, key: string): boolean {
-  return toggleEnabled(ctx.options.useHtml, key, false)
+export function htmlEnabled(
+  ctx: TransformContext,
+  construct: HtmlConstruct
+): boolean {
+  return spellingOf(ctx.options.spelling, construct) === "html"
 }
 
 export function warn(ctx: TransformContext, message: string): void {

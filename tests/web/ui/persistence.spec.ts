@@ -10,8 +10,8 @@ const REMEMBERED: PersistedState = {
   direction: "md-to-org",
   inputPreset: "logseq",
   outputPreset: "obsidian",
-  useHtml: true,
-  interpretHtml: false,
+  interpretHtml: { underline: true },
+  spelling: { definitionList: "html" },
   taskCheckboxes: true,
   style: { bullet: "*" },
   config: 'preset = "obsidian"'

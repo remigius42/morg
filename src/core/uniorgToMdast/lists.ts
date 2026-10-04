@@ -15,7 +15,7 @@ export function transformPlainList(
   ctx: TransformContext,
   node: List
 ): RootContent | RootContent[] {
-  if (node.listType === "descriptive" && htmlEnabled(ctx, "descriptiveList")) {
+  if (node.listType === "descriptive" && htmlEnabled(ctx, "definitionList")) {
     return descriptiveListToHtml(node)
   }
   return transformUniorgList(ctx, node)
@@ -37,7 +37,7 @@ function escapeHtmlText(text: string): string {
     .replaceAll(">", "&gt;")
 }
 
-// with useHtml a descriptive list renders as a <dl> block (a preserved
+// spelled in html a descriptive list renders as a <dl> block (a preserved
 // md-ism on the return trip); terms and definitions are flattened to text
 function descriptiveListToHtml(node: List): RootContent {
   const lines = ["<dl>"]

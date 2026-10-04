@@ -129,10 +129,11 @@ their raw org markup (`_text_`, `^{2}`, `_{2}`) is kept verbatim as
 escaped text and re-parsed natively on the way back (same approach as
 inline org timestamps, which survive verbatim including
 active/inactive ranges). Descriptive lists keep their
-`- term :: definition` syntax literally in Markdown list items. With
-`useHtml: true` these constructs render as raw HTML instead (`<u>`,
-`<sup>`, `<sub>`, `<dl>`); the HTML then round-trips as a preserved
-md-ism, not back to native org markup.
+`- term :: definition` syntax literally in Markdown list items. Spelled
+in HTML (`spelling: "html"`, ADR 0007) these constructs render as raw
+HTML instead (`<u>`, `<sup>`, `<sub>`, `<dl>`); the HTML round-trips
+to the native org construct where `interpretHtml` reads it, else as a
+preserved md-ism.
 
 Org entities render as their character (`\alpha` → `α`), matching
 org's own export (one-way normalization).
@@ -275,13 +276,13 @@ ones get generated numeric labels).
 
 ## Recorded style (md → org, opt-in)
 
-With `recordStyle`, the markdown style the source was written in is
+With `recordMarkdownStyle`, the markdown style the source was written in is
 detected and stored as a leading `#+MORG_MARKDOWN_STYLE:` keyword (JSON on one
 line), then restored by `org → md` instead of being canonicalized,
 which is what makes a consistently non-canonical file a round-trip
 identity rather than a one-time reformat (ADR 0004). Explicit
-`markdownStyle` options override a record; normalizing drops it,
-unless it is itself given `recordStyle`, which re-records the canonical
+`style` options override a record; normalizing drops it,
+unless it is itself given `recordMarkdownStyle`, which re-records the canonical
 form's own markers.
 
 Recorded: `bullet`, `emphasis`, `strong`, `fence`, `rule` and
@@ -465,7 +466,7 @@ list is a block of `---`, a block's content loses the indentation all
 its lines share, and text after a list is read from its own column; a
 tab indents to the next tab stop (4), and what of it lies right of the
 column cut stays as spaces. A
-`markdownStyle` option rewrites the markers it names (bullets,
+`style` option rewrites the markers it names (bullets,
 emphasis, strong, fences, rules) and nothing else; Logseq md keeps the
 `-` its blocks need, with a warning, and a fence stays whose code
 holds a run of the new marker. Obsidian md translates as Vanilla md

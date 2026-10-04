@@ -15,8 +15,8 @@ export interface CliArgs {
   // buildConversionOptions; only an explicit flag overrides it
   silent: boolean | undefined
   taskCheckboxes: boolean | undefined
-  interpretHtml: boolean | undefined
-  recordStyle: boolean | undefined
+  html: boolean | undefined
+  recordMarkdownStyle: boolean | undefined
   configPath: string | undefined
   markdownStyle: Record<string, string>
 }
@@ -40,8 +40,8 @@ export function parseArgs(args: string[]): CliArgs {
     outputPresetName: undefined,
     silent: undefined,
     taskCheckboxes: undefined,
-    interpretHtml: undefined,
-    recordStyle: undefined,
+    html: undefined,
+    recordMarkdownStyle: undefined,
     configPath: undefined,
     markdownStyle: {}
   }

@@ -6,7 +6,13 @@ import {
   showConfig,
   wireConfigSnippets
 } from "./ui/configPanel.js"
-import { element, findControls, type Controls } from "./ui/controls.js"
+import {
+  element,
+  findControls,
+  perConstruct,
+  type Controls
+} from "./ui/controls.js"
+import { HTML_CONSTRUCTS } from "../../src/options.js"
 import { demoFor, isDemo } from "./ui/demos.js"
 import { convert, debounce, DEBOUNCE_MS, startConvert } from "./ui/runLoop.js"
 import { wireDropZone } from "./ui/dropZone.js"
@@ -52,9 +58,11 @@ function persist(controls: Controls): void {
   writeState({
     inputDialect: controls.inputDialect.value,
     outputDialect: controls.outputDialect.value,
-    useHtml: controls.useHtml.checked,
-    interpretHtml: controls.interpretHtml.checked,
-    recordStyle: controls.recordStyle.checked,
+    interpretHtml: perConstruct(
+      construct => controls.interpretHtml[construct].checked
+    ),
+    spelling: perConstruct(construct => controls.spelling[construct].value),
+    recordMarkdownStyle: controls.recordMarkdownStyle.checked,
     taskCheckboxes: controls.taskCheckboxes.checked,
     style: Object.fromEntries(
       controls.styleSelects.map(select => [select.id, select.value])
@@ -104,14 +112,30 @@ function restoreDialects(controls: Controls, state: PersistedState): void {
   })
 }
 
+// per construct; a hand-edited value would leave the select blank
+function restoreHtml(controls: Controls, state: PersistedState): void {
+  for (const construct of HTML_CONSTRUCTS) {
+    const read = state.interpretHtml?.[construct]
+    if (typeof read === "boolean") {
+      controls.interpretHtml[construct].checked = read
+    }
+    const written = state.spelling?.[construct]
+    if (written === "markdown" || written === "html") {
+      controls.spelling[construct].value = written
+    }
+  }
+}
+
 function restore(controls: Controls): void {
   const state = readState()
   // a stale or hand-edited value would leave the select blank, so keep
   // the default unless the option actually exists
   restoreDialects(controls, state)
-  assign(state.useHtml, value => (controls.useHtml.checked = value))
-  assign(state.interpretHtml, value => (controls.interpretHtml.checked = value))
-  assign(state.recordStyle, value => (controls.recordStyle.checked = value))
+  restoreHtml(controls, state)
+  assign(
+    state.recordMarkdownStyle,
+    value => (controls.recordMarkdownStyle.checked = value)
+  )
   assign(
     state.taskCheckboxes,
     value => (controls.taskCheckboxes.checked = value)
@@ -265,9 +289,9 @@ function wireListeners(controls: Controls): void {
   for (const control of [
     controls.inputDialect,
     controls.outputDialect,
-    controls.useHtml,
-    controls.interpretHtml,
-    controls.recordStyle,
+    ...Object.values(controls.interpretHtml),
+    ...Object.values(controls.spelling),
+    controls.recordMarkdownStyle,
     controls.taskCheckboxes,
     ...controls.styleSelects
   ]) {

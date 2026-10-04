@@ -186,7 +186,7 @@ describe("logseq outline", () => {
     expect(
       convertMarkdownToOrg("- some *it* text\n", {
         preset: logseq(),
-        recordStyle: true
+        recordMarkdownStyle: true
       })
     ).toBe("* some /it/ text\n")
   })

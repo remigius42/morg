@@ -31,7 +31,7 @@ guarantee is to be **semantically faithful and convergent** instead
 - One round trip (`md → org → md` or `org → md → org`) may normalize formatting,
   but its output is a fixed point: converting again reproduces it byte-for-byte.
 - Input already in canonical form is a round-trip identity. Opt-in
-  `recordStyle` widens that set: a file whose bullet, emphasis, fence
+  `recordMarkdownStyle` widens that set: a file whose bullet, emphasis, fence
   and rule markers are used consistently has them recorded in the org
   file and restored on the way back, so it is left untouched
   ([ADR 0004](docs/adr/0004-record-source-markdown-style.md)).
@@ -139,7 +139,11 @@ morg --input notes.md --output notes.org --silent
 # Record the source's own markdown style (bullet, emphasis, fence,
 # rule) in the org file, so the return trip restores it instead of
 # canonicalizing it; markers used inconsistently warn and are skipped
-morg --input notes.md --output notes.org --record-style
+morg --input notes.md --output notes.org --record-markdown-style
+
+# Write and read HTML for what Markdown cannot spell in its own
+# syntax (<u>, <sup>, <sub>, <dl>); per construct in the config
+morg --input notes.org --output notes.md --html
 
 # Translate between two dialects of one format, changing only what
 # they write differently (a block's content stays as written)
@@ -160,7 +164,7 @@ config file > defaults, per side for the presets:
 ```toml
 preset = "logseq"
 
-[orgToMarkdown.markdownStyle]
+[markdown.output.style]
 emphasis = "_" # align with prettier
 ```
 
@@ -192,21 +196,23 @@ const logseqOrg = convertMarkdownToOrg(markdown, { preset: logseq() })
 
 Options (flags accept `boolean` or a per-construct `Record<string, boolean>`):
 
-- `convertMarkdownToOrg(md, { preserveMdisms, interpretHtml, recordStyle,
-preset })`:
+- `convertMarkdownToOrg(md, { preserveMdisms, interpretHtml,
+recordMarkdownStyle, preset })`:
   `preserveMdisms` default `true`; `interpretHtml` (default `false`,
-  CLI `--interpret-html`) interprets the HTML vocabulary morg itself
-  emits under `useHtml` (bare `<u>`, `<sup>`, `<sub>`, `<dl>`) as
-  native Org constructs, the inverse of `useHtml`: with both enabled
-  the round trip is lossless, with `interpretHtml` alone it converges
-  away from HTML (cleanup mode); other HTML preserves as usual;
-  `recordStyle` (default `false`, CLI `--record-style`) records the
-  document-level markdown style as a `#+MORG_MARKDOWN_STYLE:` keyword so the
-  round trip restores it (ADR 0004)
-- `convertOrgToMarkdown(org, { preserveOrgisms, useHtml, taskCheckboxes,
-preset })`: `preserveOrgisms` default `true`; `useHtml` (default
-  `false`) renders org-only markup as raw HTML (`<u>`, `<sup>`, `<sub>`,
-  `<dl>`) instead of keeping it verbatim; `taskCheckboxes` (default
+  per construct: `definitionList`, `underline`, `superscript`,
+  `subscript`) reads a construct's HTML spelling (bare `<dl>`, `<u>`,
+  `<sup>`, `<sub>`) as the native Org construct, the inverse of
+  `spelling: "html"` (ADR 0007); other HTML preserves as usual;
+  `recordMarkdownStyle` (default `false`, CLI
+  `--record-markdown-style`) records the document-level markdown style
+  as a `#+MORG_MARKDOWN_STYLE:` keyword so the round trip restores it
+  (ADR 0004)
+- `convertOrgToMarkdown(org, { preserveOrgisms, spelling, taskCheckboxes,
+preset })`: `preserveOrgisms` default `true`; `spelling` (`"markdown"`
+  or `"html"`, for all constructs or per construct, default
+  `"markdown"`) writes a construct Markdown cannot spell losslessly as
+  HTML (`<dl>`, `<u>`, `<sup>`, `<sub>`) instead of verbatim org
+  (ADR 0007; CLI `--html` sets both sides); `taskCheckboxes` (default
   `false`, CLI `--task-checkboxes`) is a lossy export mode that maps
   bare `TODO`/`DONE` leaf headlines to GFM task items (`- [ ]` /
   `- [x]`); headings become list items and do not restore on the
@@ -257,10 +263,10 @@ preset })`: `preserveOrgisms` default `true`; `useHtml` (default
   within Markdown (Logseq md, Obsidian md and Vanilla md, any two);
   `orgismKeys` names the
   `key::` lines Vanilla md writes planning under, as in a conversion,
-  and `markdownStyle` rewrites the markers it names, leaving the rest
+  and `style` rewrites the markers it names, leaving the rest
   as written.
 
-- `markdownStyle: { bullet, emphasis, strong, fence, rule, ruleRepetition }`
+- `style: { bullet, emphasis, strong, fence, rule, ruleRepetition }`
   (on `convertOrgToMarkdown`, `normalizeMarkdown` and
   `translateMarkdown`; CLI `--bullet`,
   `--emphasis`, `--strong`, `--fence`, `--rule`, `--rule-repetition`)

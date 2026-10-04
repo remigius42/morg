@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest"
-import { resolvePresetOptions } from "../src/conversionOptions.js"
+import {
+  buildConversionOptions,
+  resolvePresetOptions
+} from "../src/conversionOptions.js"
+import { parseConfig } from "../src/config.js"
 
 const names = (options: ReturnType<typeof resolvePresetOptions>) => ({
   preset: options.preset?.name,
@@ -77,6 +81,88 @@ describe("resolvePresetOptions", () => {
       preset: undefined,
       inputPreset: "logseq",
       outputPreset: undefined
+    })
+  })
+})
+
+describe("buildConversionOptions", () => {
+  const build = (toml: string, overrides = {}) =>
+    buildConversionOptions(overrides, parseConfig(toml), {})
+
+  it("sets both Markdown sides from [markdown] (ADR 0007)", () => {
+    const { mdToOrgOptions, orgToMdOptions } = build(
+      '[markdown]\ndefinitionList = "html"\nunderline = "markdown"\n'
+    )
+
+    expect(mdToOrgOptions.interpretHtml).toEqual({
+      definitionList: true,
+      underline: false
+    })
+    expect(orgToMdOptions.spelling).toEqual({
+      definitionList: "html",
+      underline: "markdown"
+    })
+  })
+
+  it("lets a side section override [markdown]", () => {
+    const { mdToOrgOptions, orgToMdOptions } = build(`
+[markdown]
+underline = "html"
+subscript = "html"
+
+[markdown.input.interpretHtml]
+underline = false
+
+[markdown.output]
+subscript = "markdown"
+`)
+
+    expect(mdToOrgOptions.interpretHtml).toEqual({
+      underline: false,
+      subscript: true
+    })
+    expect(orgToMdOptions.spelling).toEqual({
+      underline: "html",
+      subscript: "markdown"
+    })
+  })
+
+  it("lets an explicit override win over every construct", () => {
+    const { mdToOrgOptions, orgToMdOptions } = build(
+      '[markdown]\ndefinitionList = "markdown"\n',
+      { interpretHtml: true, spelling: "html" }
+    )
+
+    expect(mdToOrgOptions.interpretHtml).toBe(true)
+    expect(orgToMdOptions.spelling).toBe("html")
+  })
+
+  it("takes each side's own options from its section", () => {
+    const { mdToOrgOptions, orgToMdOptions } = build(`
+[markdown.output]
+taskCheckboxes = true
+
+[markdown.output.preserveOrgisms]
+drawers = false
+
+[markdown.output.style]
+emphasis = "_"
+
+[org.output]
+recordMarkdownStyle = true
+
+[org.output.preserveMdisms]
+html = false
+`)
+
+    expect(mdToOrgOptions).toEqual({
+      recordMarkdownStyle: true,
+      preserveMdisms: { html: false }
+    })
+    expect(orgToMdOptions).toEqual({
+      taskCheckboxes: true,
+      preserveOrgisms: { drawers: false },
+      style: { emphasis: "_" }
     })
   })
 })

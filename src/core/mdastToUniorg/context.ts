@@ -1,8 +1,12 @@
-import { toggleEnabled, type Toggle } from "../../options.js"
+import {
+  toggleEnabled,
+  type HtmlConstruct,
+  type Toggle
+} from "../../options.js"
 
 export interface MdastToUniorgOptions {
   preserveMdisms?: Toggle
-  interpretHtml?: boolean
+  interpretHtml?: Toggle
   onWarning?: (message: string) => void
 }
 
@@ -15,6 +19,14 @@ export interface TransformContext {
 
 export function mdismEnabled(ctx: TransformContext, key: string): boolean {
   return toggleEnabled(ctx.options.preserveMdisms, key)
+}
+
+// whether a construct's html spelling reads as the org construct
+export function htmlInterpreted(
+  ctx: TransformContext,
+  construct: HtmlConstruct
+): boolean {
+  return toggleEnabled(ctx.options.interpretHtml, construct, false)
 }
 
 export function warn(ctx: TransformContext, message: string): void {

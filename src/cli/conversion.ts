@@ -30,9 +30,13 @@ export function buildConversionOptions(
   return layerOptions(
     {
       taskCheckboxes: cli.taskCheckboxes,
-      interpretHtml: cli.interpretHtml,
-      recordStyle: cli.recordStyle,
-      markdownStyle
+      // --html sets every construct on both sides, as [markdown] would
+      interpretHtml: cli.html,
+      ...(cli.html !== undefined && {
+        spelling: cli.html ? "html" : "markdown"
+      }),
+      recordMarkdownStyle: cli.recordMarkdownStyle,
+      style: markdownStyle
     },
     config,
     {

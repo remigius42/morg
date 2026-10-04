@@ -107,7 +107,7 @@ function convertOrgDocument(
     ...(options.preserveOrgisms !== undefined && {
       preserveOrgisms: options.preserveOrgisms
     }),
-    ...(options.useHtml !== undefined && { useHtml: options.useHtml }),
+    ...(options.spelling !== undefined && { spelling: options.spelling }),
     ...(options.taskCheckboxes !== undefined && {
       taskCheckboxes: options.taskCheckboxes
     }),
@@ -120,14 +120,14 @@ function convertOrgDocument(
 
   // Phase 4: Render mdast to Markdown string
   // bullet and rule "-" (not remark's default "*") are morg's canonical
-  // Markdown form; markdownStyle knobs override it (canonical form is
+  // Markdown form; style knobs override it (canonical form is
   // then per-config, see ADR 0001)
   const markdownContent = unified()
     .use(remarkStringify, {
       bullet: "-",
       rule: "-",
       ...recordedStyle,
-      ...options.markdownStyle,
+      ...options.style,
       join: [separateTextAfterNestedList],
       handlers: {
         // key:: value blocks and preset inline passthroughs (e.g.

@@ -21,6 +21,36 @@ export function toggleEnabled(
   return toggle[key] ?? defaultValue
 }
 
+/**
+ * The org constructs Markdown cannot spell losslessly in its own syntax
+ * but HTML can (ADR 0007): each has a Spelling to write and an HTML
+ * spelling to read.
+ */
+export const HTML_CONSTRUCTS = [
+  "definitionList",
+  "underline",
+  "superscript",
+  "subscript"
+] as const
+
+export type HtmlConstruct = (typeof HTML_CONSTRUCTS)[number]
+
+/** How Markdown writes a construct: its own syntax, or HTML. */
+export type Spelling = "markdown" | "html"
+
+/** One Spelling for every construct, or one per construct. */
+export type Spellings = Spelling | Partial<Record<HtmlConstruct, Spelling>>
+
+export function spellingOf(
+  spellings: Spellings | undefined,
+  construct: HtmlConstruct
+): Spelling {
+  if (spellings === undefined || typeof spellings === "string") {
+    return spellings ?? "markdown"
+  }
+  return spellings[construct] ?? "markdown"
+}
+
 export interface MarkdownToOrgOptions extends PresetOptions {
   /**
    * Preserve Markdown constructs without a native Org equivalent (e.g.
@@ -28,14 +58,12 @@ export interface MarkdownToOrgOptions extends PresetOptions {
    */
   preserveMdisms?: Toggle
   /**
-   * Interpret the HTML vocabulary morg itself emits under `useHtml`
-   * (bare `<u>`, `<sup>`, `<sub>`, `<dl>/<dt>/<dd>` without attributes)
-   * as native Org constructs instead of preserving it as an md-ism.
-   * The inverse of `useHtml`; with both enabled the round trip is
-   * lossless. Any other HTML still preserves per `preserveMdisms`.
-   * Default: `false`.
+   * Read a construct's HTML spelling (`<dl>`, `<u>`, `<sup>`, `<sub>`,
+   * bare, without attributes) as the native Org construct, per
+   * construct (ADR 0007); its Markdown spelling is always read. Any
+   * other HTML still preserves per `preserveMdisms`. Default: `false`.
    */
-  interpretHtml?: boolean
+  interpretHtml?: Toggle
   /**
    * Record the Markdown style knobs detected in the source as a
    * `#+MORG_MARKDOWN_STYLE:` keyword, so the return trip restores the source's own
@@ -44,7 +72,7 @@ export interface MarkdownToOrgOptions extends PresetOptions {
    * Convergence. Knobs used inconsistently are not recorded and warn.
    * Default: `false`.
    */
-  recordStyle?: boolean
+  recordMarkdownStyle?: boolean
   /**
    * Custom names for org-ism `key::` lines, canonical → custom (e.g.
    * `{ todo: "state" }`). Must match the mapping the file was written
@@ -90,14 +118,13 @@ export interface OrgToMarkdownOptions extends PresetOptions {
    */
   preserveOrgisms?: Toggle
   /**
-   * Render Org constructs without a Markdown equivalent as raw HTML
-   * (`<u>`, `<sup>`, `<sub>`, `<dl>`) instead of keeping their org markup
-   * verbatim. HTML round-trips as a preserved md-ism (export blocks and
-   * snippets), not back to native org markup, a one-way door unless
-   * the return trip enables its inverse, `interpretHtml`.
-   * Default: `false`.
+   * The Spelling to write each construct in (ADR 0007): `"markdown"`,
+   * its own syntax, or verbatim org text where Markdown has none, or
+   * `"html"` (`<dl>`, `<u>`, `<sup>`, `<sub>`). HTML reads back as the
+   * construct where `interpretHtml` asks, else as a preserved md-ism.
+   * Default: `"markdown"`.
    */
-  useHtml?: Toggle
+  spelling?: Spellings
   /**
    * Map bare `TODO`/`DONE` leaf headlines (no priority, tags or content)
    * to GFM task items (`- [ ]` / `- [x]`). Documented lossy export mode:
@@ -107,7 +134,7 @@ export interface OrgToMarkdownOptions extends PresetOptions {
    */
   taskCheckboxes?: boolean
   /** Markdown output style; canonical form is per-config (ADR 0001). */
-  markdownStyle?: MarkdownStyleOptions
+  style?: MarkdownStyleOptions
   /** Custom names for org-ism `key::` lines, canonical → custom. */
   orgismKeys?: Record<string, string>
   /** Called for each construct dropped without an equivalent. */

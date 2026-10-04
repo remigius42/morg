@@ -23,9 +23,10 @@ export interface PersistedState {
   inputPreset?: string
   outputPreset?: string
   preset?: string
-  useHtml?: boolean
-  interpretHtml?: boolean
-  recordStyle?: boolean
+  /** Per construct (ADR 0007); the page before it kept `useHtml`. */
+  interpretHtml?: Record<string, boolean>
+  spelling?: Record<string, string>
+  recordMarkdownStyle?: boolean
   taskCheckboxes?: boolean
   style?: Record<string, string>
   config?: string

@@ -13,7 +13,7 @@ type StringOption =
   | "configPath"
 
 type BooleanOption =
-  "silent" | "taskCheckboxes" | "interpretHtml" | "recordStyle"
+  "silent" | "taskCheckboxes" | "html" | "recordMarkdownStyle"
 
 type InfoOption = "help" | "version"
 
@@ -97,16 +97,16 @@ export const FLAGS: FlagSpec[] = [
     key: "taskCheckboxes"
   },
   {
-    names: ["--interpret-html"],
-    description: "Convert inline HTML instead of passing it through",
+    names: ["--html"],
+    description: "Write and read HTML where Markdown has no syntax",
     kind: "boolean",
-    key: "interpretHtml"
+    key: "html"
   },
   {
-    names: ["--record-style"],
-    description: "Record the detected Markdown style as front matter",
+    names: ["--record-markdown-style"],
+    description: "Record the detected Markdown style in the org file",
     kind: "boolean",
-    key: "recordStyle"
+    key: "recordMarkdownStyle"
   },
   {
     names: ["-h", "--help"],

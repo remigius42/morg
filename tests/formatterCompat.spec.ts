@@ -42,7 +42,7 @@ describe("formatter compatibility snippets", () => {
   it("prettier snippet output is a prettier fixed point", async () => {
     const config = parseConfig(CONFIG_SNIPPETS.prettier.toml)
     const markdown = convertOrgToMarkdown(RICH_ORG, {
-      markdownStyle: config.orgToMarkdown?.markdownStyle
+      style: config.markdown?.output?.style
     })
     expect(await format(markdown, { parser: "markdown" })).toBe(markdown)
   })
@@ -50,7 +50,7 @@ describe("formatter compatibility snippets", () => {
   it("mdformat snippet renders 70-underscore thematic breaks", () => {
     const config = parseConfig(CONFIG_SNIPPETS.mdformat.toml)
     const markdown = convertOrgToMarkdown("-----\n", {
-      markdownStyle: config.orgToMarkdown?.markdownStyle
+      style: config.markdown?.output?.style
     })
     expect(markdown).toBe(`${"_".repeat(70)}\n`)
   })

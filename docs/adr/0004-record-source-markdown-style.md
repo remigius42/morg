@@ -36,6 +36,8 @@ and who pays for it.
 4. **Opt-in** (`recordStyle`, default `false`, `--record-style`). The
    keyword is a visible morg-specific line in the format the user keeps
    and hand-edits; that cost should be chosen, not defaulted into.
+   Amended (ADR 0007): renamed `recordMarkdownStyle`, in `[org.output]`
+   (`--record-markdown-style`), as recording writes org.
 5. **Asymmetric on purpose**: only `md → org` records. `uniorg-stringify`
    has no comparable knobs, so there is nothing to record going the
    other way. `morg normalize` drops the record, which is how a file

@@ -35,7 +35,7 @@ describe("runConversion", () => {
     const result = runConversion(
       "* Hello /world/",
       { direction: "org-to-md" },
-      '[orgToMarkdown.markdownStyle]\nemphasis = "_"\n'
+      '[markdown.output.style]\nemphasis = "_"\n'
     )
     expect(result.output).toBe("# Hello _world_\n")
   })
@@ -62,8 +62,8 @@ describe("runConversion", () => {
   it("lets form fields override the pasted config", () => {
     const result = runConversion(
       "* Hello /world/",
-      { direction: "org-to-md", markdownStyle: { emphasis: "*" } },
-      '[orgToMarkdown.markdownStyle]\nemphasis = "_"\nbullet = "*"\n'
+      { direction: "org-to-md", style: { emphasis: "*" } },
+      '[markdown.output.style]\nemphasis = "_"\nbullet = "*"\n'
     )
     expect(result.output).toBe("# Hello *world*\n")
   })
@@ -201,7 +201,7 @@ describe("runConversion", () => {
       direction: "normalize-md",
       inputPreset: "logseq",
       outputPreset: "vanilla",
-      markdownStyle: { bullet: "*" }
+      style: { bullet: "*" }
     })
     expect(result.output).toBe("* a\n")
   })
@@ -209,7 +209,7 @@ describe("runConversion", () => {
   it("applies markdown style options when normalizing", () => {
     const result = runConversion("- one", {
       direction: "normalize-md",
-      markdownStyle: { bullet: "*" }
+      style: { bullet: "*" }
     })
     expect(result.output).toBe("* one\n")
   })

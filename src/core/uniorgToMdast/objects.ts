@@ -185,7 +185,7 @@ function transformScriptMarkup(
   ctx: TransformContext,
   node: Extract<ObjectType, { type: "underline" | "superscript" | "subscript" }>
 ): PhrasingContent | PhrasingContent[] {
-  // markdown has no equivalents; with useHtml render as raw html
+  // markdown has no equivalents; spelled in html render as raw html
   // (a preserved md-ism on the return trip), otherwise keep the raw
   // org markup as text so the return trip re-parses it natively
   // (convergent, like inline timestamps)

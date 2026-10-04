@@ -7,7 +7,7 @@ export const CONFIG_SNIPPETS = {
     label: "prettier",
     toml: `# prettier compatibility: morg's canonical form already matches
 # prettier's defaults except the emphasis marker
-[orgToMarkdown.markdownStyle]
+[markdown.output.style]
 emphasis = "_"
 `
   },
@@ -15,7 +15,7 @@ emphasis = "_"
     label: "mdformat",
     toml: `# mdformat compatibility: defaults align except thematic breaks,
 # which mdformat writes as 70 underscores
-[orgToMarkdown.markdownStyle]
+[markdown.output.style]
 rule = "_"
 ruleRepetition = 70
 `

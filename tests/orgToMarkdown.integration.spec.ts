@@ -446,13 +446,13 @@ describe("convertOrgToMarkdown", () => {
     expect(convertOrgToMarkdown(org)).toBe("An α and → here.\n")
   })
 
-  it("should honor markdownStyle stringifier knobs", () => {
+  it("should honor style stringifier knobs", () => {
     const org =
       "Some /italic/ and *bold* text.\n\n- item one\n- item two\n\n-----\n\n#+begin_src js\ncode()\n#+end_src\n"
 
     expect(
       convertOrgToMarkdown(org, {
-        markdownStyle: { emphasis: "_", bullet: "*", rule: "*", fence: "~" }
+        style: { emphasis: "_", bullet: "*", rule: "*", fence: "~" }
       })
     ).toBe(
       "Some _italic_ and **bold** text.\n\n* item one\n* item two\n\n***\n\n~~~js\ncode()\n~~~\n"
@@ -466,18 +466,18 @@ describe("convertOrgToMarkdown", () => {
     expect(convertOrgToMarkdown(org)).toBe("* item one\n* item two\n")
   })
 
-  it("should let explicit markdownStyle override a recorded style", () => {
+  it("should let explicit style override a recorded style", () => {
     const org = '#+MORG_MARKDOWN_STYLE: {"bullet":"*"}\n\n- item\n'
 
-    expect(convertOrgToMarkdown(org, { markdownStyle: { bullet: "+" } })).toBe(
+    expect(convertOrgToMarkdown(org, { style: { bullet: "+" } })).toBe(
       "+ item\n"
     )
   })
 
-  it("should honor markdownStyle.ruleRepetition (mdformat style)", () => {
+  it("should honor style.ruleRepetition (mdformat style)", () => {
     expect(
       convertOrgToMarkdown("-----\n", {
-        markdownStyle: { rule: "_", ruleRepetition: 70 }
+        style: { rule: "_", ruleRepetition: 70 }
       })
     ).toBe(`${"_".repeat(70)}\n`)
   })
@@ -515,18 +515,18 @@ describe("convertOrgToMarkdown", () => {
     )
   })
 
-  it("should render sub/superscript and underline as html when useHtml", () => {
+  it("should render sub/superscript and underline as html spelled in html", () => {
     const org = "Some _underlined text_ and H_{2}O or x^{2} here.\n"
 
-    expect(convertOrgToMarkdown(org, { useHtml: true })).toBe(
+    expect(convertOrgToMarkdown(org, { spelling: "html" })).toBe(
       "Some <u>underlined text</u> and H<sub>2</sub>O or x<sup>2</sup> here.\n"
     )
   })
 
-  it("should render descriptive lists as html when useHtml", () => {
+  it("should render descriptive lists as html spelled in html", () => {
     const org = "- apple :: a fruit\n- vim :: an editor\n"
 
-    expect(convertOrgToMarkdown(org, { useHtml: true })).toBe(
+    expect(convertOrgToMarkdown(org, { spelling: "html" })).toBe(
       "<dl>\n<dt>apple</dt>\n<dd>a fruit</dd>\n<dt>vim</dt>\n<dd>an editor</dd>\n</dl>\n"
     )
   })
@@ -534,7 +534,7 @@ describe("convertOrgToMarkdown", () => {
   it("should html-escape descriptive list terms and definitions", () => {
     const org = "- a < b :: x & y\n"
 
-    expect(convertOrgToMarkdown(org, { useHtml: true })).toBe(
+    expect(convertOrgToMarkdown(org, { spelling: "html" })).toBe(
       "<dl>\n<dt>a &lt; b</dt>\n<dd>x &amp; y</dd>\n</dl>\n"
     )
   })

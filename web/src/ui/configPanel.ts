@@ -8,7 +8,12 @@
  * Takes the controls it touches rather than the whole `Controls`, so a
  * test needs seven elements instead of the converter page.
  */
-import { parseConfig, type MorgConfig } from "../../../src/config.js"
+import {
+  configuredHtml,
+  parseConfig,
+  type MorgConfig
+} from "../../../src/config.js"
+import type { HtmlConstruct } from "../../../src/options.js"
 import { CONFIG_SNIPPETS } from "./snippets.js"
 import { setPreset } from "./dialects.js"
 
@@ -18,9 +23,9 @@ export interface ConfigControls {
   configSection: HTMLDetailsElement
   inputDialect: HTMLSelectElement
   outputDialect: HTMLSelectElement
-  useHtml: HTMLInputElement
-  interpretHtml: HTMLInputElement
-  recordStyle: HTMLInputElement
+  interpretHtml: Record<HtmlConstruct, HTMLInputElement>
+  spelling: Record<HtmlConstruct, HTMLSelectElement>
+  recordMarkdownStyle: HTMLInputElement
   taskCheckboxes: HTMLInputElement
   styleSelects: HTMLSelectElement[]
 }
@@ -60,22 +65,30 @@ export function reflectConfig(controls: ConfigControls): void {
   assign(parsed.outputPreset ?? parsed.preset, value =>
     setPreset(controls.outputDialect, value)
   )
-  const orgToMd = parsed.orgToMarkdown
-  if (typeof orgToMd?.useHtml === "boolean")
-    controls.useHtml.checked = orgToMd.useHtml
+  reflectHtml(controls, parsed)
   reflectCheckboxes(controls, parsed)
+  const style = parsed.markdown?.output?.style
   for (const select of controls.styleSelects) {
-    const value =
-      orgToMd?.markdownStyle?.[select.id as keyof typeof orgToMd.markdownStyle]
+    const value = style?.[select.id as keyof typeof style]
     if (typeof value === "string") select.value = value
+  }
+}
+
+// per construct and side, as the conversion resolves it (ADR 0007)
+function reflectHtml(controls: ConfigControls, parsed: MorgConfig): void {
+  const { interpretHtml, spelling } = configuredHtml(parsed.markdown)
+  for (const [construct, read] of Object.entries(interpretHtml)) {
+    controls.interpretHtml[construct as HtmlConstruct].checked = read
+  }
+  for (const [construct, written] of Object.entries(spelling)) {
+    controls.spelling[construct as HtmlConstruct].value = written
   }
 }
 
 function reflectCheckboxes(controls: ConfigControls, parsed: MorgConfig): void {
   const checkboxes: [boolean | undefined, HTMLInputElement][] = [
-    [parsed.markdownToOrg?.interpretHtml, controls.interpretHtml],
-    [parsed.markdownToOrg?.recordStyle, controls.recordStyle],
-    [parsed.orgToMarkdown?.taskCheckboxes, controls.taskCheckboxes]
+    [parsed.org?.output?.recordMarkdownStyle, controls.recordMarkdownStyle],
+    [parsed.markdown?.output?.taskCheckboxes, controls.taskCheckboxes]
   ]
   for (const [value, control] of checkboxes) {
     assign(value, checked => (control.checked = checked))

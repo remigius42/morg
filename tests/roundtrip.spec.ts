@@ -210,7 +210,7 @@ describe("frontmatter (ADR 0005)", () => {
 
   it("a recorded style leads the block and is consumed before it", () => {
     const input = "---\ntitle: x\n---\n\n* a\n* b\n"
-    const org = convertMarkdownToOrg(input, { recordStyle: true })
+    const org = convertMarkdownToOrg(input, { recordMarkdownStyle: true })
     expect(org).toMatch(/^#\+MORG_MARKDOWN_STYLE: .*\n#\+begin_comment/)
     expect(convertOrgToMarkdown(org)).toBe(input)
   })
@@ -278,7 +278,7 @@ describe("frontmatter (ADR 0005)", () => {
     // keywords other passes put in front stay below it
     const styled = convertMarkdownToOrg(
       markdown.replace("Body.", "* a_b\n* c"),
-      { recordStyle: true }
+      { recordMarkdownStyle: true }
     )
     expect(styled).toMatch(/^:PROPERTIES:\n:ID: abc-123\n/)
     expect(styled).toContain("#+MORG_MARKDOWN_STYLE:")
@@ -389,22 +389,22 @@ describe("affiliated keywords", () => {
   })
 })
 
-describe("useHtml", () => {
+describe("html spelling", () => {
   it("html rendering of org-only markup converges", () => {
     const input =
       "Some _underlined_ H_{2}O and x^{2}.\n\n- apple :: a fruit\n- vim :: an editor\n"
     const roundTrip = (org: string): string =>
-      convertMarkdownToOrg(convertOrgToMarkdown(org, { useHtml: true }))
+      convertMarkdownToOrg(convertOrgToMarkdown(org, { spelling: "html" }))
     const once = roundTrip(input)
     expect(roundTrip(once)).toBe(once)
-    expect(convertOrgToMarkdown(input, { useHtml: true })).toContain("<sup>")
+    expect(convertOrgToMarkdown(input, { spelling: "html" })).toContain("<sup>")
   })
 
-  it("interpretHtml is the inverse of useHtml (lossless round trip)", () => {
+  it("interpretHtml is the inverse of the html spelling (lossless round trip)", () => {
     const input =
       "Some _underlined_ H_{2}O and x^{2}.\n\n- apple :: a fruit\n- vim :: an editor\n"
     expect(
-      convertMarkdownToOrg(convertOrgToMarkdown(input, { useHtml: true }), {
+      convertMarkdownToOrg(convertOrgToMarkdown(input, { spelling: "html" }), {
         interpretHtml: true
       })
     ).toBe(input)
@@ -435,20 +435,20 @@ describe("useHtml", () => {
   it("stays lossless when list terms contain html-special characters", () => {
     const input = "- a < b :: x & y\n"
     expect(
-      convertMarkdownToOrg(convertOrgToMarkdown(input, { useHtml: true }), {
+      convertMarkdownToOrg(convertOrgToMarkdown(input, { spelling: "html" }), {
         interpretHtml: true
       })
     ).toBe(input)
   })
 })
 
-describe("markdownStyle", () => {
+describe("style", () => {
   it("custom style output is a fixed point (per-config convergence)", () => {
     const markdown = "Some *italic* and **bold** text.\n\n- item\n\n---\n"
     const style = { emphasis: "_", bullet: "*" } as const
     const roundTrip = (input: string): string =>
       convertOrgToMarkdown(convertMarkdownToOrg(input), {
-        markdownStyle: style
+        style: style
       })
     const once = roundTrip(markdown)
     expect(roundTrip(once)).toBe(once)
@@ -457,13 +457,13 @@ describe("markdownStyle", () => {
   })
 })
 
-describe("recordStyle", () => {
+describe("recordMarkdownStyle", () => {
   it("leaves a non-canonical but consistent document untouched", () => {
     const markdown = "* item one\n* item two\n"
 
     expect(
       convertOrgToMarkdown(
-        convertMarkdownToOrg(markdown, { recordStyle: true })
+        convertMarkdownToOrg(markdown, { recordMarkdownStyle: true })
       )
     ).toBe(markdown)
   })
@@ -472,9 +472,13 @@ describe("recordStyle", () => {
     const markdown =
       "_italic_ and __bold__\n\n* item\n\n~~~js\ncode()\n~~~\n\n***\n"
     const mdRoundTrip = (input: string): string =>
-      convertOrgToMarkdown(convertMarkdownToOrg(input, { recordStyle: true }))
+      convertOrgToMarkdown(
+        convertMarkdownToOrg(input, { recordMarkdownStyle: true })
+      )
     const orgRoundTrip = (input: string): string =>
-      convertMarkdownToOrg(convertOrgToMarkdown(input), { recordStyle: true })
+      convertMarkdownToOrg(convertOrgToMarkdown(input), {
+        recordMarkdownStyle: true
+      })
 
     const md = mdRoundTrip(markdown)
     expect(mdRoundTrip(md)).toBe(md)

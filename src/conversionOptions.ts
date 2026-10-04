@@ -1,8 +1,11 @@
-import type { MorgConfig } from "./config.js"
+import { configuredHtml, type MorgConfig } from "./config.js"
 import type {
+  HtmlConstruct,
   MarkdownStyleOptions,
   MarkdownToOrgOptions,
   OrgToMarkdownOptions,
+  Spelling,
+  Spellings,
   Toggle
 } from "./options.js"
 import type { Preset } from "./presets/types.js"
@@ -16,10 +19,10 @@ import { createPreset } from "./presets/registry.js"
 /** Explicitly requested option values; `undefined` leaves it to config. */
 export interface ConversionOverrides {
   taskCheckboxes?: boolean
-  interpretHtml?: boolean
-  recordStyle?: boolean
-  useHtml?: Toggle
-  markdownStyle?: MarkdownStyleOptions
+  recordMarkdownStyle?: boolean
+  interpretHtml?: Toggle
+  spelling?: Spellings
+  style?: MarkdownStyleOptions
 }
 
 /** Values that apply to both directions. */
@@ -28,10 +31,37 @@ export interface SharedConversionOptions extends PresetOptions {
   orgismKeys?: Record<string, string>
 }
 
+type PerConstruct<T> = Partial<Record<HtmlConstruct, T>>
+
+// the entries that are set, so an unset one leaves a lower layer's
+function setEntries<T extends object>(
+  entries: T
+): { [K in keyof T]?: Exclude<T[K], undefined> } {
+  return Object.fromEntries(
+    Object.entries(entries).filter(([, value]) => value !== undefined)
+  ) as { [K in keyof T]?: Exclude<T[K], undefined> }
+}
+
+// one value for every construct wins outright, a table per construct
+function layer<T extends boolean | string>(
+  override: T | Record<string, T> | undefined,
+  config: PerConstruct<T>
+): T | Record<string, T> | undefined {
+  if (typeof override === "boolean" || typeof override === "string") {
+    return override
+  }
+  const merged = {
+    ...config,
+    ...override
+  } as Record<string, T>
+  return Object.keys(merged).length ? merged : undefined
+}
+
 /**
  * Layers explicit overrides over the config file, per direction. Used by
  * both adapters (CLI and Web UI) so the documented precedence (CLI or
- * form > config > defaults) means the same thing in each.
+ * form > config > defaults) means the same thing in each. A direction
+ * takes the sections of the formats it reads and writes (ADR 0007).
  * @param overrides Explicitly requested values; `undefined` defers to config.
  * @param config The parsed `morg.toml`.
  * @param shared Values that apply to both directions.
@@ -44,31 +74,37 @@ export function buildConversionOptions(
 ): {
   mdToOrgOptions: MarkdownToOrgOptions
   // always set, even when empty: config style plus the overrides
-  orgToMdOptions: OrgToMarkdownOptions & { markdownStyle: MarkdownStyleOptions }
+  orgToMdOptions: OrgToMarkdownOptions & { style: MarkdownStyleOptions }
 } {
+  const configured = configuredHtml(config.markdown)
+  const interpretHtml = layer<boolean>(
+    overrides.interpretHtml,
+    configured.interpretHtml
+  )
+  const spelling = layer<Spelling>(overrides.spelling, configured.spelling)
+  const orgOutput = config.org?.output
+  const markdownOutput = config.markdown?.output
   const mdToOrgOptions: MarkdownToOrgOptions = {
-    ...config.markdownToOrg,
-    ...shared,
-    ...(overrides.interpretHtml !== undefined && {
-      interpretHtml: overrides.interpretHtml
+    ...setEntries({
+      preserveMdisms: orgOutput?.preserveMdisms,
+      recordMarkdownStyle: orgOutput?.recordMarkdownStyle
     }),
-    ...(overrides.recordStyle !== undefined && {
-      recordStyle: overrides.recordStyle
+    ...shared,
+    ...setEntries({
+      interpretHtml,
+      recordMarkdownStyle: overrides.recordMarkdownStyle
     })
   }
   const orgToMdOptions: OrgToMarkdownOptions & {
-    markdownStyle: MarkdownStyleOptions
+    style: MarkdownStyleOptions
   } = {
-    ...config.orgToMarkdown,
-    ...shared,
-    ...(overrides.useHtml !== undefined && { useHtml: overrides.useHtml }),
-    ...(overrides.taskCheckboxes !== undefined && {
-      taskCheckboxes: overrides.taskCheckboxes
+    ...setEntries({
+      preserveOrgisms: markdownOutput?.preserveOrgisms,
+      taskCheckboxes: markdownOutput?.taskCheckboxes
     }),
-    markdownStyle: {
-      ...config.orgToMarkdown?.markdownStyle,
-      ...overrides.markdownStyle
-    }
+    ...shared,
+    ...setEntries({ spelling, taskCheckboxes: overrides.taskCheckboxes }),
+    style: { ...markdownOutput?.style, ...overrides.style }
   }
   return { mdToOrgOptions, orgToMdOptions }
 }
