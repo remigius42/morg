@@ -39,7 +39,9 @@ and who pays for it.
 5. **Asymmetric on purpose**: only `md → org` records. `uniorg-stringify`
    has no comparable knobs, so there is nothing to record going the
    other way. `morg normalize` drops the record, which is how a file
-   opts back out.
+   opts back out. Amended (0.10.0): the subcommand is gone (ADR 0006
+   §4); one format and one preset on both sides normalizes, and drops
+   the record the same way.
 
 ## Consequences
 

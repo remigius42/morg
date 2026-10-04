@@ -18,7 +18,9 @@ Bidirectional **Markdown ↔ Org-mode** converter, built on the
 morg treats Org as a canonical plain-text format and Markdown (Obsidian,
 generic) as the interop surface. Dialect conventions, such as
 [Logseq](https://docs.logseq.com/)'s outline of blocks and page
-properties, are supported via presets.
+properties, are supported via presets. Within one format, morg
+translates between two dialects (Logseq Markdown ↔ Markdown, Obsidian
+↔ Logseq), changing only what they write differently.
 
 ## Round-trip convergence
 
@@ -229,6 +231,9 @@ preset })`: `preserveOrgisms` default `true`; `useHtml` (default
   `[[((uuid))][label]]`, and `^^highlight^^` markup survives verbatim
   (it would otherwise re-parse as superscripts).
 - `obsidian()`: wikilinks `[[Page]]` / `[[Page|alias]]` ↔ org fuzzy links
+  (`[[Page\|alias]]` in a table cell). Translated to Vanilla or Logseq
+  Markdown, a `%%comment%%` becomes an HTML comment and an inline
+  footnote `^[note]` a footnote.
 - `inputPreset` / `outputPreset` (on both conversions): the dialect
   the input is read in and the one the output is written in (ADR
   0006); leaving one out is Vanilla. `preset` sets both, but leaves a
@@ -249,13 +254,15 @@ preset })`: `preserveOrgisms` default `true`; `useHtml` (default
   what they write differently: a block's content stays as written.
   The same preset on both sides throws; that is `normalizeOrg`.
   `translateMarkdown(md, { inputPreset, outputPreset })` does the same
-  within Markdown (Logseq md ↔ Vanilla md); `orgismKeys` names the
+  within Markdown (Logseq md, Obsidian md and Vanilla md, any two);
+  `orgismKeys` names the
   `key::` lines Vanilla md writes planning under, as in a conversion,
   and `markdownStyle` rewrites the markers it names, leaving the rest
   as written.
 
 - `markdownStyle: { bullet, emphasis, strong, fence, rule, ruleRepetition }`
-  (on `convertOrgToMarkdown` and `normalizeMarkdown`; CLI `--bullet`,
+  (on `convertOrgToMarkdown`, `normalizeMarkdown` and
+  `translateMarkdown`; CLI `--bullet`,
   `--emphasis`, `--strong`, `--fence`, `--rule`, `--rule-repetition`)
   are Markdown output style knobs. Defaults match prettier except
   emphasis (`*italic*`); `--emphasis _` aligns fully with prettier.
@@ -264,7 +271,7 @@ preset })`: `preserveOrgisms` default `true`; `useHtml` (default
   CommonMark/GFM prescribe no style; these defaults are morg's
   canonical choices, not a standard.
 
-Both convert functions also accept `onWarning: message => …`, called for
+The convert and translate functions also accept `onWarning: message => …`, called for
 each construct dropped without an equivalent (e.g. image titles, LaTeX
 fragments). The CLI wires this to stderr unless `-s` / `--silent` is
 given; the library is silent unless a callback is passed.
