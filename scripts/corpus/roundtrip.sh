@@ -10,12 +10,14 @@
 #     scripts/corpus/roundtrip.sh ~/notes/pages/*.org
 #
 # MORG: the CLI (default: this checkout's dist/cli.js); WORK: output
-# directory (default: /tmp/morg-corpus); EXCLUDE: a glob of files to skip.
+# directory (default: /tmp/morg-corpus); EXCLUDE: a glob of files to skip;
+# TO: the middle format, md or org (default: the other one), so a
+# same-format trip translates between the flags' dialects.
 set -euo pipefail
 
 root=$(cd "$(dirname "$0")/../.." && pwd)
 export MORG=${MORG:-$root/dist/cli.js}
-export FORWARD=${FORWARD:-} BACK=${BACK:-}
+export FORWARD=${FORWARD:-} BACK=${BACK:-} TO=${TO:-}
 export WORK=${WORK:-/tmp/morg-corpus}
 
 rm -rf "$WORK"
@@ -23,7 +25,8 @@ mkdir -p "$WORK"
 
 trip() {
   local x=$1 ext=${1##*.} other
-  [ "$ext" = org ] && other=md || other=org
+  other=$TO
+  [ -n "$other" ] || { [ "$ext" = org ] && other=md || other=org; }
   local c
   # the whole path: files in different directories may share a name
   c=$WORK/$(realpath "$x" | tr / _)

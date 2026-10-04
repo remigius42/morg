@@ -57,7 +57,8 @@ pins their hash: after changing the generator, record the tags again
 `scripts/corpus/` checks a build against real notes on your own disk,
 which never enter the repo. `roundtrip.sh` takes each file there and
 back twice (`FORWARD` and `BACK` flags, so a pair of presets per side
-works too) and prints counts only: how many came back identical, how
+works too; `TO=md` or `TO=org` keeps a trip in one format, between two
+dialects) and prints counts only: how many came back identical, how
 many converge (ADR 0001). `snapshot.sh` converts each file once, to
 compare two builds with `diff -rq old new | wc -l`. The diffs stay in
 the work directory, for you to read locally.
