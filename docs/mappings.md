@@ -412,7 +412,11 @@ gets `#+TODO: TODO NOW LATER DOING WAIT WAITING IN-PROGRESS STARTED |
 DONE CANCELED CANCELLED` after its leading keywords in Vanilla org,
 and loses that line in Logseq org. Logseq reads no such line: an own
 one stays (a page property to Logseq), with a warning naming the
-markers Logseq shows as text. Vanilla md has a shape of its own;
+markers Logseq shows as text. A block's `:collapsed: true` property
+is `:VISIBILITY: folded` in Vanilla org, which Emacs folds the
+headline by on opening the file; another `VISIBILITY` (`children`,
+`content`, `all`) stays, with a warning, as Logseq has none. Vanilla
+md has a shape of its own;
 Logseq org ↔ Vanilla md:
 
 | Logseq org                                                   | Vanilla md                                                                                  |

@@ -18,7 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   amended). Logseq's task markers (`NOW`, `DOING`, `WAITING`, …) are
   declared for Emacs in a `#+TODO:` line, dropped again on the way
   back; an own `#+TODO:` line, which Logseq ignores, warns of the
-  markers Logseq shows as text.
+  markers Logseq shows as text. A collapsed block is folded for Emacs
+  (`:collapsed: true` ↔ `:VISIBILITY: folded`).
 
 ## [0.9.2] - 2026-10-04
 

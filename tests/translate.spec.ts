@@ -65,6 +65,32 @@ describe("translateOrg", () => {
     ])
   })
 
+  it("folds a collapsed block for Emacs", () => {
+    const org = "* a\n:PROPERTIES:\n:collapsed: true\n:END:\n** b\n"
+
+    expect(translateOrg(org, { inputPreset: logseq() })).toBe(
+      "* a\n:PROPERTIES:\n:VISIBILITY: folded\n:END:\n** b\n"
+    )
+  })
+
+  it("collapses a folded block for Logseq, warning of other visibility", () => {
+    const warnings: string[] = []
+    const org =
+      "* a\n  :properties:\n  :Visibility: folded\n  :end:\n* b\n  :PROPERTIES:\n  :VISIBILITY: children\n  :END:\n"
+
+    expect(
+      translateOrg(org, {
+        outputPreset: logseq(),
+        onWarning: m => warnings.push(m)
+      })
+    ).toBe(
+      "* a\n  :properties:\n  :collapsed: true\n  :end:\n* b\n  :PROPERTIES:\n  :VISIBILITY: children\n  :END:\n"
+    )
+    expect(warnings).toEqual([
+      "Logseq has no VISIBILITY children; kept as a property"
+    ])
+  })
+
   it("keeps an empty page empty", () => {
     expect(translateOrg("", { inputPreset: logseq() })).toBe("")
   })

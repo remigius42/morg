@@ -730,6 +730,47 @@ function withoutTodoLine(page: string[], context: ConversionContext): string[] {
   return page.filter(line => line !== TODO_LINE)
 }
 
+const PROPERTY_LINE_RE = /^(\s*):([^\s:]+):(?:\s+(.*?))?\s*$/
+
+// a block Logseq shows collapsed is one Emacs shows folded, a property
+// in either's own terms
+function foldedProperties(
+  lines: string[],
+  vanilla: boolean,
+  context: ConversionContext
+): string[] {
+  let drawer = false
+  return lines.map(line => {
+    const match = PROPERTY_LINE_RE.exec(line)
+    const name = match?.[2]?.toUpperCase()
+    drawer = name === "PROPERTIES" || (drawer && name !== "END")
+    return drawer && match ? foldedProperty(match, vanilla, context) : line
+  })
+}
+
+// a drawer's property in the other dialect; Logseq has none of
+// Emacs's other visibilities
+function foldedProperty(
+  [line, indent = "", key = "", value = ""]: RegExpExecArray,
+  vanilla: boolean,
+  context: ConversionContext
+): string {
+  const name = key.toUpperCase()
+  if (vanilla) {
+    return name === "COLLAPSED" && value === "true"
+      ? `${indent}:VISIBILITY: folded`
+      : line
+  }
+  if (name !== "VISIBILITY") {
+    return line
+  }
+  if (value === "folded") {
+    return `${indent}:collapsed: true`
+  }
+  context.onWarning?.(`Logseq has no VISIBILITY ${value}; kept as a property`)
+  return line
+}
+
 /**
  * Translates an org page between Logseq org and Vanilla org, which
  * differ in their headlines only (ADR 0006): a block's lines are kept,
@@ -752,7 +793,14 @@ export function translateOrgOutline(
     ...(vanilla ? withTodoLine(page, blocks) : withoutTodoLine(page, context)),
     ...blocks.map(({ level, lines }) =>
       writeOrgLines(
-        { level, lines: vanilla ? lines : joinTitle(lines).lines },
+        {
+          level,
+          lines: foldedProperties(
+            vanilla ? lines : joinTitle(lines).lines,
+            vanilla,
+            context
+          )
+        },
         vanilla
       )
     )
