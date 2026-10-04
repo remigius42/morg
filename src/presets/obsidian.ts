@@ -30,7 +30,8 @@ export function obsidian(): Preset {
   }
 }
 
-const ALIASED_WIKILINK_RE = /\[\[([^\][|]+)\|([^\][]+)\]\]/g
+// not an embed, whose `|300` is a size
+const ALIASED_WIKILINK_RE = /(?<!!)\[\[([^\][|]+)\|([^\][]+)\]\]/g
 // in Markdown text: not an embed, whose `|300` is a size, and with a
 // table cell's escaped pipe (`[[Page\|alias]]`)
 const ALIASED_PAGE_LINK_RE = /(?<!!)\[\[([^\][|\\]+)\\?\|([^\][]+)\]\]/g

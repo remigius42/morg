@@ -481,4 +481,5 @@ md, which cannot resolve a note's name to its file without the vault.
 `obsidian`: wikilinks `[[Page]]` / `[[Page|alias]]` ↔ org fuzzy links,
 emitted unescaped in Markdown, except for the alias pipe inside a
 table cell, written `\|` as Obsidian does, since a bare `|` would
-split the cell.
+split the cell. An embed's size (`![[image.png|300]]`) is no alias:
+it stays as written in org.

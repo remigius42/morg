@@ -56,4 +56,12 @@ describe("obsidian preset", () => {
 
     expect(convertOrgToMarkdown(org, { preset: obsidian() })).toBe(markdown)
   })
+
+  it("keeps an embed's size, not reading it as an alias", () => {
+    const markdown = "An ![[image.png|300]] and [[Page|alias]].\n"
+
+    expect(convertMarkdownToOrg(markdown, { preset: obsidian() })).toBe(
+      "An ![[image.png|300]] and [[Page][alias]].\n"
+    )
+  })
 })
