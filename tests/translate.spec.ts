@@ -309,4 +309,12 @@ describe("translateMarkdown", () => {
       })
     ).toBe("- see ![[img.png|300]]\n- | [a]([[P]]) |\n")
   })
+
+  it("translates Obsidian comments and footnotes that hold code", () => {
+    expect(
+      translateMarkdown("a %% fix `foo()` later %% b^[see `x`] `%%`\n", {
+        inputPreset: obsidian()
+      })
+    ).toBe("a <!-- fix `foo()` later --> b[^1] `%%`\n\n[^1]: see `x`\n")
+  })
 })

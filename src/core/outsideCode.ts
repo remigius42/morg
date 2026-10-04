@@ -29,16 +29,13 @@ function verbatimRanges(node: Node, ranges: [number, number][]): void {
 }
 
 /**
- * Maps a Markdown string's text, each stretch between code, math,
- * frontmatter and raw HTML on its own, leaving those as written.
+ * A Markdown string with its code, math, frontmatter and raw HTML
+ * blanked out (NUL characters, one per character), so a scan for syntax
+ * finds it outside them only, at the offsets it has in the string.
  * @param markdown The Markdown string.
- * @param map What a stretch of text becomes.
- * @returns The mapped Markdown string.
+ * @returns The masked string, as long as the input.
  */
-export function mapOutsideCode(
-  markdown: string,
-  map: (text: string) => string
-): string {
+export function maskCode(markdown: string): string {
   const tree = unified()
     .use(remarkParse)
     .use(remarkGfm)
@@ -47,11 +44,11 @@ export function mapOutsideCode(
     .parse(markdown)
   const ranges: [number, number][] = []
   verbatimRanges(tree, ranges)
-  let result = ""
+  let masked = ""
   let from = 0
   for (const [start, end] of ranges) {
-    result += map(markdown.slice(from, start)) + markdown.slice(start, end)
+    masked += markdown.slice(from, start) + "\0".repeat(end - start)
     from = end
   }
-  return result + map(markdown.slice(from))
+  return masked + markdown.slice(from)
 }

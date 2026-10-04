@@ -467,7 +467,8 @@ links: `[[Page|label]]` (in a table `[[Page\|label]]`) ↔
 size (`![[image.png|300]]`) stays. Obsidian md → Vanilla md or Logseq md writes
 a `%%comment%%` as an HTML comment (`<!--comment-->`) and an inline
 footnote `^[note]` as a footnote, numbered on from the page's own, its
-definition at the end; code, math and HTML stay as written. The way
+definition at the end; their delimiters count outside code, math and
+HTML only, but what they hold may be code. The way
 back has nothing to do: Obsidian reads both. Wikilinks and embeds
 (`[[Page]]`, `![[image.png]]`) stay in Vanilla md, which cannot
 resolve a note's name to its file without the vault.

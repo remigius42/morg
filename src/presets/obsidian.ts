@@ -2,7 +2,7 @@ import type { OrgData, Link, Text } from "uniorg"
 import type { Parent } from "unist"
 import { visit } from "unist-util-visit"
 import { toString } from "orgast-util-to-string"
-import { mapOutsideCode } from "../core/outsideCode.js"
+import { maskCode } from "../core/outsideCode.js"
 import type { Preset } from "./types.js"
 
 /**
@@ -69,34 +69,44 @@ function fuzzyLinksToWikilinks(uniorgAst: OrgData): OrgData {
 const COMMENT_RE = /%%([\s\S]*?)%%/g
 const FOOTNOTE_LABEL_RE = /\[\^(\d+)\]/g
 
+type Edit = [start: number, end: number, text: string]
+
 // Obsidian Markdown → Vanilla Markdown: a comment is an HTML comment,
 // an inline footnote a footnote, numbered on from the page's own, its
-// definition at the end
+// definition at the end; their delimiters count outside code only, what
+// they hold may be code
 function toVanilla(markdown: string): string {
+  let masked = maskCode(markdown)
+  const edits: Edit[] = []
+  for (const { index, 0: comment } of masked.matchAll(COMMENT_RE)) {
+    const end = index + comment.length
+    edits.push([index, end, `<!--${markdown.slice(index + 2, end - 2)}-->`])
+    // a footnote in a comment is part of it
+    masked =
+      masked.slice(0, index) + "\0".repeat(comment.length) + masked.slice(end)
+  }
   let next =
     Math.max(
       0,
       ...[...markdown.matchAll(FOOTNOTE_LABEL_RE)].map(([, n]) => Number(n))
     ) + 1
   const definitions: string[] = []
-  const result = mapOutsideCode(markdown, text =>
-    inlineFootnotes(text.replace(COMMENT_RE, "<!--$1-->"), note => {
-      definitions.push(`[^${next}]: ${note}`)
-      return `[^${next++}]`
-    })
-  )
+  for (const [start, end] of inlineFootnotes(masked)) {
+    definitions.push(`[^${next}]: ${markdown.slice(start + 2, end)}`)
+    edits.push([start, end + 1, `[^${next++}]`])
+  }
+  let result = markdown
+  for (const [start, end, text] of edits.sort((a, b) => b[0] - a[0])) {
+    result = result.slice(0, start) + text + result.slice(end)
+  }
   return definitions.length
     ? `${result.replace(/\n*$/, "")}\n\n${definitions.join("\n")}\n`
     : result
 }
 
-// each `^[note]`, its brackets balanced, as the reference it becomes
-function inlineFootnotes(
-  text: string,
-  reference: (note: string) => string
-): string {
-  let result = ""
-  let from = 0
+// each `^[note]`, its brackets balanced: where it starts, and its `]`
+function inlineFootnotes(text: string): [number, number][] {
+  const notes: [number, number][] = []
   for (let start = text.indexOf("^["); start !== -1;) {
     let depth = 0
     let end = start + 1
@@ -109,9 +119,8 @@ function inlineFootnotes(
     if (end === text.length) {
       break
     }
-    result += text.slice(from, start) + reference(text.slice(start + 2, end))
-    from = end + 1
-    start = text.indexOf("^[", from)
+    notes.push([start, end])
+    start = text.indexOf("^[", end + 1)
   }
-  return result + text.slice(from)
+  return notes
 }
