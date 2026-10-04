@@ -771,6 +771,57 @@ function foldedProperty(
   return line
 }
 
+// what Logseq (mldoc) reads otherwise than Emacs does: a search link
+// as a page ref, a radio target as a target and text; and every
+// keyword line on the page as a page property
+const MISREAD: [RegExp, (n: number) => string][] = [
+  [
+    /\[\[[*#][^\]]*\](?:\[[^\]]*\])?\]/g,
+    n =>
+      `Logseq reads ${count(n, "[[*heading]] or [[#custom-id]] link")} as refs to pages of that name`
+  ],
+  [
+    /\[\[id:[^\]]*\]\]/g,
+    n =>
+      `Logseq reads ${count(n, "[[id:…]] link")} without a label as a ref to a page of that name`
+  ],
+  [/<<<[^<>]+>>>/g, n => `Logseq misreads ${count(n, "<<<radio>>> target")}`],
+  [
+    /^\s*#\+[^\s:]+:/g,
+    n =>
+      `Logseq takes ${count(n, "#+KEY: line")} below the first headline for a page property`
+  ]
+]
+const ORG_BLOCK_BOUNDARY_RE = /^\s*#\+(BEGIN|END)_(\S+)/i
+
+function count(n: number, noun: string): string {
+  return `${n} ${noun}${n === 1 ? "" : "s"}`
+}
+
+// Logseq org from Vanilla org: what Emacs constructs Logseq misreads,
+// outside org blocks, whose content is no markup
+function warnMisread(blocks: Lines[], context: ConversionContext): void {
+  const counts = MISREAD.map(() => 0)
+  let block = ""
+  for (const line of blocks.flatMap(({ lines }) => lines)) {
+    const [, boundary = "", name = ""] = ORG_BLOCK_BOUNDARY_RE.exec(line) ?? []
+    if (block || boundary) {
+      const end =
+        boundary.toUpperCase() === "END" && name.toUpperCase() === block
+      block = end ? "" : block || name.toUpperCase()
+      continue
+    }
+    MISREAD.forEach(([pattern], i) => {
+      counts[i] = (counts[i] ?? 0) + (line.match(pattern)?.length ?? 0)
+    })
+  }
+  MISREAD.forEach(([, message], i) => {
+    if (counts[i]) {
+      context.onWarning?.(message(counts[i]))
+    }
+  })
+}
+
 /**
  * Translates an org page between Logseq org and Vanilla org, which
  * differ in their headlines only (ADR 0006): a block's lines are kept,
@@ -789,6 +840,9 @@ export function translateOrgOutline(
   }
   const vanilla = context.side === "input"
   const { page, blocks } = splitOrgBlocks(org)
+  if (!vanilla) {
+    warnMisread(blocks, context)
+  }
   return [
     ...(vanilla ? withTodoLine(page, blocks) : withoutTodoLine(page, context)),
     ...blocks.map(({ level, lines }) =>

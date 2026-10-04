@@ -415,8 +415,13 @@ one stays (a page property to Logseq), with a warning naming the
 markers Logseq shows as text. A block's `:collapsed: true` property
 is `:VISIBILITY: folded` in Vanilla org, which Emacs folds the
 headline by on opening the file; another `VISIBILITY` (`children`,
-`content`, `all`) stays, with a warning, as Logseq has none. Vanilla
-md has a shape of its own;
+`content`, `all`) stays, with a warning, as Logseq has none. What
+Logseq reads otherwise than Emacs stays as written, with a warning per
+kind: a `[[*heading]]` or `[[#custom-id]]` link (labeled or not) and
+an `[[id:…]]` link without a label are refs to pages of that name to
+Logseq, a `<<<radio>>>` target it misreads, and a `#+KEY:` line below
+the first headline (`#+NAME:`, `#+RESULTS:`) it takes for a page
+property; org blocks are skipped. Vanilla md has a shape of its own;
 Logseq org ↔ Vanilla md:
 
 | Logseq org                                                   | Vanilla md                                                                                  |

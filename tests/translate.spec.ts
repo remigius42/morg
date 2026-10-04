@@ -91,6 +91,34 @@ describe("translateOrg", () => {
     ])
   })
 
+  it("warns of Emacs constructs Logseq misreads, once per kind", () => {
+    const warnings: string[] = []
+    const org = [
+      "#+title: T",
+      "* a",
+      "[[*H][l]] [[#cid]] [[*H2]] [[id:u]] [[id:u][block ref]] <<<r>>> <<t>>",
+      "#+NAME: tbl",
+      "| x |",
+      "#+BEGIN_SRC org",
+      "[[*in code]] <<<in code>>>",
+      "#+END_SRC",
+      ""
+    ].join("\n")
+
+    expect(
+      translateOrg(org, {
+        outputPreset: logseq(),
+        onWarning: m => warnings.push(m)
+      })
+    ).toBe(org)
+    expect(warnings).toEqual([
+      "Logseq reads 3 [[*heading]] or [[#custom-id]] links as refs to pages of that name",
+      "Logseq reads 1 [[id:…]] link without a label as a ref to a page of that name",
+      "Logseq misreads 1 <<<radio>>> target",
+      "Logseq takes 1 #+KEY: line below the first headline for a page property"
+    ])
+  })
+
   it("keeps an empty page empty", () => {
     expect(translateOrg("", { inputPreset: logseq() })).toBe("")
   })
