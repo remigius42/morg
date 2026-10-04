@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-10-04
+
 ### Fixed
 
 - An empty Markdown heading becomes an org headline with a space after
@@ -697,7 +699,8 @@ review and fuzzing; each of these silently changed text.
   normalize modes, `morg.toml` paste and a preloaded demo, iframable
   embed page with `?theme` override, light/dark switcher
 
-[unreleased]: https://github.com/remigius42/morg/compare/v0.9.0...HEAD
+[unreleased]: https://github.com/remigius42/morg/compare/v0.9.1...HEAD
+[0.9.1]: https://github.com/remigius42/morg/compare/v0.9.0...v0.9.1
 [0.9.0]: https://github.com/remigius42/morg/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/remigius42/morg/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/remigius42/morg/compare/v0.6.0...v0.7.0
