@@ -233,19 +233,31 @@ describe("embed page", () => {
     expect(element<HTMLTextAreaElement>("output").value).toBe("- a\n  - b\n")
   })
 
-  it("moves the output to the other format when the input takes its own", () => {
+  it("moves the output to the other format when the input takes its dialect", () => {
     choose("outputDialect", "markdown:obsidian")
-    choose("inputDialect", "markdown:logseq")
+    choose("inputDialect", "markdown:obsidian")
     // Obsidian writes no org, so its side falls back to Vanilla
     expect(element<HTMLSelectElement>("outputDialect").value).toBe("org")
   })
 
-  it("offers no dialect change within one format", () => {
+  it("translates between two dialects of one format", async () => {
     choose("inputDialect", "markdown:logseq")
+    choose("outputDialect", "markdown:obsidian")
+    choose("inputDialect", "markdown")
+    choose("inputDialect", "markdown:logseq")
+    expect(element<HTMLSelectElement>("outputDialect").value).toBe(
+      "markdown:obsidian"
+    )
     const disabled = [
       ...element<HTMLSelectElement>("outputDialect").options
-    ].flatMap(option => (option.disabled ? [option.value] : []))
-    expect(disabled).toEqual(["markdown", "markdown:obsidian"])
+    ].filter(option => option.disabled)
+    expect(disabled).toEqual([])
+    const input = element<HTMLTextAreaElement>("input")
+    input.value = "- TODO [a]([[P]])\n"
+    input.dispatchEvent(new Event("input", { bubbles: true }))
+    await settle()
+    expect(element<HTMLTextAreaElement>("output").value).toBe("- [ ] [[P|a]]\n")
+    expect(element<HTMLElement>("normalizeHint").hidden).toBe(true)
   })
 
   it("normalizes with the same on both sides, and says so", async () => {
@@ -771,6 +783,27 @@ describe("embed page", () => {
     await settle()
     element<HTMLButtonElement>("downloadOutput").click()
     expect(saved.name()).toBe("notes.normalized.md")
+  })
+
+  it("keeps translating when a file of the format is opened", async () => {
+    choose("inputDialect", "markdown:logseq")
+    choose("outputDialect", "markdown")
+    await drop(textFile("page.md", "- TODO a"))
+    expect(element<HTMLSelectElement>("inputDialect").value).toBe(
+      "markdown:logseq"
+    )
+    expect(element<HTMLSelectElement>("outputDialect").value).toBe("markdown")
+    expect(element<HTMLTextAreaElement>("output").value).toBe("- [ ] a\n")
+  })
+
+  it("names a translated download for its dialect", async () => {
+    const saved = captureDownload()
+    await drop(textFile("page.md", "- a"))
+    choose("inputDialect", "markdown:logseq")
+    choose("outputDialect", "markdown")
+    await settle()
+    element<HTMLButtonElement>("downloadOutput").click()
+    expect(saved.name()).toBe("page.vanilla.md")
   })
 
   it("names a paste-only download generically", () => {

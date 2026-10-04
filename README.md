@@ -63,6 +63,7 @@ happens in your browser, nothing is uploaded (see [ADR
 0003](docs/adr/0003-client-side-web-ui-on-github-pages.md)). Each side
 names its format and dialect (Input: Org (Logseq), Output: Markdown);
 the direction follows from the two, the same on both sides normalizes,
+two dialects of one format translate (Markdown (Logseq) → Markdown),
 and ⇄ swaps them. The
 chrome-less embed page (`/embed.html`, optionally with
 `?theme=dark|light`) can be iframed into other sites. It posts its
@@ -90,7 +91,8 @@ both at once and each goes where it belongs; an overlay names what is
 accepted while a drag is in flight, and anything that turns out not to
 be text is named in the warning list rather than loaded. The result can
 be copied or saved with the Copy and Download buttons; a normalized file
-is saved as `notes.normalized.org`, and switching to a direction that no
+is saved as `notes.normalized.org`, a translated one under its dialect
+(`page.vanilla.md`), and switching to a direction that no
 longer reads the opened file falls back to a generic name, so neither
 lands on top of its own source. Files are read and written by the
 browser itself; this is not an upload.

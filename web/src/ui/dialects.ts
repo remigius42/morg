@@ -1,7 +1,8 @@
 /**
  * The two dialect selects, one per side of the conversion (ADR 0006):
  * each names a format and the preset whose dialect of it is meant, and
- * the direction follows from the two; the same on both sides normalizes.
+ * the direction follows from the two; the same on both sides normalizes,
+ * two of one format translate.
  * Free of the pipeline, since the main bundle reads it on every change.
  */
 import { normalizes, readsMarkdown, type Direction } from "../direction.js"
@@ -76,11 +77,10 @@ export function presetsOf(controls: DialectControls): {
 }
 
 /**
- * Brings the output in line with the input: of the input's format it
- * allows only the input's own dialect, which normalizes, so a dialect
- * change within one format is never offered. An input that moved into
- * the output's format moves the output to the other one, keeping its
- * preset where it has a dialect there.
+ * Brings the output in line with the input: an input that moved into the
+ * output's format, or onto its dialect, moves the output to the other
+ * format, keeping its preset where it has a dialect there, as converting
+ * is the likelier intent; a dialect picked within one format translates.
  * @param controls The selects and the normalize hint.
  * @param inputMoved Whether the input was just changed.
  */
@@ -89,18 +89,17 @@ export function enforceOutput(
   inputMoved = false
 ): void {
   const input = parse(controls.inputDialect.value)
-  for (const option of controls.outputDialect.options) {
-    const dialect = parse(option.value)
-    option.disabled =
-      dialect.format === input.format && dialect.preset !== input.preset
-  }
   const output = parse(controls.outputDialect.value)
+  const formatChanged = controls.inputDialect.dataset.format !== input.format
   if (
+    inputMoved &&
     output.format === input.format &&
-    (inputMoved || output.preset !== input.preset)
+    (formatChanged ||
+      controls.inputDialect.value === controls.outputDialect.value)
   ) {
     controls.outputDialect.value = inFormat(output.preset, other(input.format))
   }
+  controls.inputDialect.dataset.format = input.format
   controls.normalizeHint.hidden =
     controls.inputDialect.value !== controls.outputDialect.value
 }
@@ -131,9 +130,11 @@ export function setDirection(
 ): void {
   const from: Format = readsMarkdown(direction) ? "markdown" : "org"
   controls.inputDialect.value = inFormat(presets.inputPreset, from)
-  controls.outputDialect.value = normalizes(direction)
-    ? controls.inputDialect.value
-    : inFormat(presets.outputPreset, other(from))
+  // one format on both sides: normalizing, or translating between two
+  controls.outputDialect.value = inFormat(
+    presets.outputPreset,
+    normalizes(direction) ? from : other(from)
+  )
   enforceOutput(controls)
 }
 

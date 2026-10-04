@@ -10,7 +10,7 @@ import { element, findControls, type Controls } from "./ui/controls.js"
 import { demoFor, isDemo } from "./ui/demos.js"
 import { convert, debounce, DEBOUNCE_MS, startConvert } from "./ui/runLoop.js"
 import { wireDropZone } from "./ui/dropZone.js"
-import { DIRECTIONS } from "./direction.js"
+import { DIRECTIONS, normalizes } from "./direction.js"
 import { copyOutput, downloadOutput } from "./ui/outputActions.js"
 import { readState, writeState, type PersistedState } from "./ui/persistence.js"
 import {
@@ -210,7 +210,8 @@ function wireFileControls(controls: Controls): void {
     downloadOutput(
       controls.output,
       controls.openedFileName,
-      directionOf(controls)
+      directionOf(controls),
+      translatedTo(controls)
     )
   )
 
@@ -332,4 +333,13 @@ export function init(runner?: ConversionRunner): void {
 
 if (document.getElementById("converter")) {
   init()
+}
+
+// the output's dialect where one format is translated between two
+function translatedTo(controls: Controls): string | undefined {
+  const { inputPreset, outputPreset } = presetsOf(controls)
+  const direction = directionOf(controls)
+  return normalizes(direction) && inputPreset !== outputPreset
+    ? outputPreset
+    : undefined
 }

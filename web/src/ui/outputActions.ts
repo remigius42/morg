@@ -59,7 +59,8 @@ function selectionCopy(output: HTMLTextAreaElement): boolean {
 export function downloadOutput(
   output: HTMLTextAreaElement,
   openedFileName: string | undefined,
-  direction: Direction
+  direction: Direction,
+  translatedTo?: string
 ): void {
   const blob = new Blob([output.value], {
     type: "text/plain;charset=utf-8"
@@ -67,7 +68,12 @@ export function downloadOutput(
   const url = URL.createObjectURL(blob)
   const link = document.createElement("a")
   link.href = url
-  link.download = outputFileName(openedFileName, direction)
+  link.download = outputFileName(
+    openedFileName,
+    direction,
+    new Date(),
+    translatedTo
+  )
   // Firefox only acts on a click if the anchor is in the document, and
   // revoking in the same task can invalidate the blob before the download
   // task has read it

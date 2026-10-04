@@ -39,6 +39,10 @@ org`), with two it translates.
   HTML comment and an inline footnote a footnote (also on the way to
   Logseq Markdown); wikilinks stay, as resolving a note's file needs
   the vault.
+- Web UI: two dialects of one format translate (Input: Markdown
+  (Logseq), Output: Markdown); a translated file is saved under its
+  dialect (`page.vanilla.md`). Changing the input's format still moves
+  the output to the other format.
 - CLI: one format on both sides with two presets translates
   (`morg --input-preset logseq --input page.md --output out.md`); it
   was an error.

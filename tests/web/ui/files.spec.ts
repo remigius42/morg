@@ -94,6 +94,16 @@ describe("outputFileName", () => {
     ).toBe("morg-output-20260914T010203.normalized.org")
   })
 
+  it("marks a translated file with the dialect it is in", () => {
+    const now = new Date()
+    expect(outputFileName("page.md", "normalize-md", now, "vanilla")).toBe(
+      "page.vanilla.md"
+    )
+    expect(outputFileName("page.org", "normalize-org", now, "logseq")).toBe(
+      "page.logseq.org"
+    )
+  })
+
   it("keeps a dotfile's name instead of stripping it", () => {
     expect(outputFileName(".hidden", "org-to-md")).toBe(".hidden.md")
     expect(outputFileName(".org", "org-to-md")).toBe(".org.md")

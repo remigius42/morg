@@ -88,16 +88,21 @@ function timestamp(now: Date): string {
  * over several snippets would otherwise name every output the same.
  * Normalizing keeps the source format, so the name would otherwise match
  * the original exactly and invite saving over it; `.normalized` keeps the
- * two apart.
+ * two apart, and a translation's dialect does (`page.vanilla.md`).
  */
 export function outputFileName(
   source: string | undefined,
   direction: Direction,
-  now = new Date()
+  now = new Date(),
+  translatedTo?: string
 ): string {
   const extension = writesMarkdown(direction) ? "md" : "org"
   const { stem } = splitFileName(source ?? `morg-output-${timestamp(now)}`)
-  const infix = normalizes(direction) ? ".normalized" : ""
+  const infix = translatedTo
+    ? `.${translatedTo}`
+    : normalizes(direction)
+      ? ".normalized"
+      : ""
   return `${stem}${infix}.${extension}`
 }
 

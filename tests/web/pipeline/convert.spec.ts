@@ -166,6 +166,23 @@ describe("runConversion", () => {
     expect(result.output).toBe("* TODO Hello\n")
   })
 
+  it("translates between two dialects of one format", () => {
+    expect(
+      runConversion("- TODO a\n", {
+        direction: "normalize-md",
+        inputPreset: "logseq",
+        outputPreset: "vanilla"
+      }).output
+    ).toBe("- [ ] a\n")
+    expect(
+      runConversion("*\n", {
+        direction: "normalize-org",
+        inputPreset: "logseq",
+        outputPreset: "vanilla"
+      }).output
+    ).toBe("* \n")
+  })
+
   it("applies markdown style options when normalizing", () => {
     const result = runConversion("- one", {
       direction: "normalize-md",
