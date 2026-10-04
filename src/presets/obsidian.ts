@@ -18,7 +18,9 @@ export function obsidian(): Preset {
       write: fuzzyLinksToWikilinks,
       links: {
         read: text => text.replace(ALIASED_PAGE_LINK_RE, "[[$1][$2]]"),
-        write: text => text.replace(FUZZY_LINK_RE, "[[$1|$2]]")
+        // a bare `|` would split a table's cell
+        write: (text, inTable) =>
+          text.replace(FUZZY_LINK_RE, inTable ? "[[$1\\|$2]]" : "[[$1|$2]]")
       }
     },
     // Vanilla Markdown reads Obsidian's own syntax but for these; the

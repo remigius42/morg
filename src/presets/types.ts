@@ -39,8 +39,11 @@ export interface ConversionContext {
   side: "both" | "input" | "output"
   onWarning?: (message: string) => void
   orgismKeys?: Record<string, string>
-  /** A translation's page links from the input's dialect into the output's. */
-  relink?: (text: string) => string
+  /**
+   * A translation's page links from the input's dialect into the
+   * output's, in a table's text or not.
+   */
+  relink?: (text: string, inTable: boolean) => string
 }
 
 /**
@@ -69,9 +72,12 @@ export interface MarkdownDialect {
   /**
    * Its page links in Markdown text to org's fuzzy link syntax
    * (`[[Page][label]]`) and back, for a translation between two
-   * dialects.
+   * dialects; `write` is told if the text is in a table.
    */
-  links?: { read: (text: string) => string; write: (text: string) => string }
+  links?: {
+    read: (text: string) => string
+    write: (text: string, inTable: boolean) => string
+  }
   /** The bullet its outline needs, which no style may change. */
   bullet?: "-" | "*" | "+"
 }

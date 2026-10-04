@@ -310,6 +310,26 @@ describe("translateMarkdown", () => {
     ).toBe("- see ![[img.png|300]]\n- | [a]([[P]]) |\n")
   })
 
+  it("escapes an alias pipe in a table cell for Obsidian", () => {
+    const logseqMarkdown =
+      "- [a]([[P]])\n  | x | y |\n  | - | - |\n  | [b]([[Q]]) | `[c]([[R]])` |\n"
+    const obsidianMarkdown =
+      "- [[P|a]]\n  | x | y |\n  | - | - |\n  | [[Q\\|b]] | `[c]([[R]])` |\n"
+
+    expect(
+      translateMarkdown(logseqMarkdown, {
+        inputPreset: logseq(),
+        outputPreset: obsidian()
+      })
+    ).toBe(obsidianMarkdown)
+    expect(
+      translateMarkdown(obsidianMarkdown, {
+        inputPreset: obsidian(),
+        outputPreset: logseq()
+      })
+    ).toBe(logseqMarkdown)
+  })
+
   it("translates Obsidian comments and footnotes that hold code", () => {
     expect(
       translateMarkdown("a %% fix `foo()` later %% b^[see `x`] `%%`\n", {

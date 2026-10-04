@@ -93,7 +93,7 @@ function outputStyle(
 // what a dialect's translation learns of the options
 function hookContext(
   { onWarning, orgismKeys }: TranslateOptions,
-  relink: ((text: string) => string) | undefined
+  relink: ((text: string, inTable: boolean) => string) | undefined
 ) {
   return {
     ...(onWarning && { onWarning }),
@@ -106,7 +106,9 @@ function hookContext(
 function pageLinks({ input, output }: Sides) {
   const read = input?.markdown?.links?.read
   const write = output?.markdown?.links?.write
-  return read && write ? (text: string): string => write(read(text)) : undefined
+  return read && write
+    ? (text: string, inTable: boolean): string => write(read(text), inTable)
+    : undefined
 }
 
 // a translation is between two dialects; one on both sides normalizes
