@@ -39,6 +39,8 @@ export interface ConversionContext {
   side: "both" | "input" | "output"
   onWarning?: (message: string) => void
   orgismKeys?: Record<string, string>
+  /** A translation's page links from the input's dialect into the output's. */
+  relink?: (text: string) => string
 }
 
 /**
@@ -64,6 +66,12 @@ export interface MarkdownDialect {
     org?: (uniorgAst: OrgData) => OrgData
   }
   write?: (uniorgAst: OrgData) => OrgData
+  /**
+   * Its page links in Markdown text to org's fuzzy link syntax
+   * (`[[Page][label]]`) and back, for a translation between two
+   * dialects.
+   */
+  links?: { read: (text: string) => string; write: (text: string) => string }
 }
 
 /**

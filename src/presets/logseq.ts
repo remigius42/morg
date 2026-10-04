@@ -49,6 +49,13 @@ export function logseq(): Preset {
   }
   return {
     ...page,
+    markdown: {
+      ...page.markdown,
+      links: {
+        read: text => text.replace(LABELED_PAGE_REF_RE, "[[$2][$1]]"),
+        write: text => text.replace(FUZZY_LINK_RE, "[$2]([[$1]])")
+      }
+    },
     convertOrg: (org, convert, context) =>
       orgOutlineToMarkdown(org, convert, presets, context),
     convertMarkdown: (markdown, convert, context) =>
@@ -83,6 +90,10 @@ function pagePreset(): Preset {
     }
   }
 }
+
+// a labeled page ref, in Logseq Markdown and in org
+const LABELED_PAGE_REF_RE = /\[([^\][]+)\]\(\[\[([^\][]+)\]\]\)/g
+const FUZZY_LINK_RE = /\[\[([^\][]+)\]\[([^\][]+)\]\]/g
 
 // the hooks for a block's content
 function blockPreset(): Preset {

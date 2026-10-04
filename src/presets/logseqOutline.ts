@@ -956,6 +956,32 @@ function dedentCommon(content: string[]): string[] {
     : content
 }
 
+const CODE_SPAN_RE = /(`+)[^`]*?\1/g
+
+// a translation's page links, but in code
+function relinkContent(
+  content: string[],
+  relink: ConversionContext["relink"]
+): string[] {
+  if (!relink) {
+    return content
+  }
+  let fenced = false
+  return content.map(line => {
+    fenced = FENCE_RE.test(line) ? !fenced : fenced
+    if (fenced || FENCE_RE.test(line)) {
+      return line
+    }
+    let result = ""
+    let from = 0
+    for (const code of line.matchAll(CODE_SPAN_RE)) {
+      result += relink(line.slice(from, code.index)) + code[0]
+      from = code.index + code[0].length
+    }
+    return result + relink(line.slice(from))
+  })
+}
+
 /**
  * Translates a Markdown page between Logseq Markdown and Vanilla
  * Markdown: blocks become list items and headings and back, their meta
@@ -981,7 +1007,10 @@ export function translateMarkdownOutline(
         page: text ? [text] : [],
         blocks: blocks.map(block => ({
           ...block,
-          content: orgBlocksToMarkdown(dedentCommon(block.content))
+          content: relinkContent(
+            orgBlocksToMarkdown(dedentCommon(block.content)),
+            context.relink
+          )
         }))
       },
       context
@@ -993,7 +1022,7 @@ export function translateMarkdownOutline(
       page: pages.logseq(page),
       blocks: blocks.map(block => ({
         ...block,
-        content: queryCodeToBlocks(block.content)
+        content: relinkContent(queryCodeToBlocks(block.content), context.relink)
       }))
     },
     writeMarkdownBlock

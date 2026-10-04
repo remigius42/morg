@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest"
 import { translateMarkdown, translateOrg } from "../src/translate.js"
 import { logseq } from "../src/presets/logseq.js"
+import { obsidian } from "../src/presets/obsidian.js"
 
 const TODO_LINE =
   "#+TODO: TODO NOW LATER DOING WAIT WAITING IN-PROGRESS STARTED | DONE CANCELED CANCELLED"
@@ -240,5 +241,25 @@ describe("translateMarkdown", () => {
     expect(
       translateMarkdown("1. a\n\n  > q\n  > r\n", { outputPreset: logseq() })
     ).toBe("- a\n  logseq.order-list-type:: number\n- > q\n  > r\n")
+  })
+
+  it("maps Obsidian's wikilinks to Logseq's page refs and back", () => {
+    const obsidianMarkdown =
+      "- See [[P|a]] and [[Q]], not `[[P|code]]`\n- ```\n  [[P|fenced]]\n  ```\n"
+    const logseqMarkdown =
+      "- See [a]([[P]]) and [[Q]], not `[[P|code]]`\n- ```\n  [[P|fenced]]\n  ```\n"
+
+    expect(
+      translateMarkdown(obsidianMarkdown, {
+        inputPreset: obsidian(),
+        outputPreset: logseq()
+      })
+    ).toBe(logseqMarkdown)
+    expect(
+      translateMarkdown(logseqMarkdown, {
+        inputPreset: logseq(),
+        outputPreset: obsidian()
+      })
+    ).toBe(obsidianMarkdown)
   })
 })

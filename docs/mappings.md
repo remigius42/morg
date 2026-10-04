@@ -461,7 +461,9 @@ others stay. Page properties are flat frontmatter keys, every key
 are page properties and the rest stays frontmatter. A rule after a
 Vanilla list is a block of `---`, a block's content loses the
 indentation all its lines share, and text after a list is read from
-its own column.
+its own column. Obsidian md translates as Vanilla md does, but for its
+links: `[[Page|label]]` ↔ `[label]([[Page]])` outside code
+(`[[Page]]` is both's).
 
 `obsidian`: wikilinks `[[Page]]` / `[[Page|alias]]` ↔ org fuzzy links,
 emitted unescaped in Markdown, except for the alias pipe inside a

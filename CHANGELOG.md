@@ -26,7 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Markdown ↔ Vanilla Markdown within Markdown, blocks ↔ list items and
   headings with their meta as before, page properties ↔ flat
   frontmatter, a block's org blocks ↔ fences, quotes and `query` code
-  blocks; other content stays as written.
+  blocks; other content stays as written. Obsidian Markdown ↔ Logseq
+  Markdown too, an aliased wikilink ↔ a labeled page ref.
 
 ## [0.9.2] - 2026-10-04
 

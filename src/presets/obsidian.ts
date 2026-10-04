@@ -13,20 +13,24 @@ export function obsidian(): Preset {
     name: "obsidian",
     markdown: {
       read: { org: rewriteAliasedWikilinks },
-      write: fuzzyLinksToWikilinks
+      write: fuzzyLinksToWikilinks,
+      links: {
+        read: text => text.replace(ALIASED_WIKILINK_RE, "[[$1][$2]]"),
+        write: text => text.replace(FUZZY_LINK_RE, "[[$1|$2]]")
+      }
     }
   }
 }
+
+const ALIASED_WIKILINK_RE = /\[\[([^\][|]+)\|([^\][]+)\]\]/g
+const FUZZY_LINK_RE = /\[\[([^\][]+)\]\[([^\][]+)\]\]/g
 
 // md→org: a wikilink travels as plain text; org already reads `[[Page]]`
 // as a fuzzy link, only the `[[Page|alias]]` form needs rewriting to
 // org's `[[Page][alias]]` description syntax
 function rewriteAliasedWikilinks(uniorgAst: OrgData): OrgData {
   visit(uniorgAst as Parent, "text", (node: Text) => {
-    node.value = node.value.replace(
-      /\[\[([^\][|]+)\|([^\][]+)\]\]/g,
-      "[[$1][$2]]"
-    )
+    node.value = node.value.replace(ALIASED_WIKILINK_RE, "[[$1][$2]]")
   })
   return uniorgAst
 }
