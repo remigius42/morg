@@ -2,6 +2,7 @@ import type { OrgData, Link, Text } from "uniorg"
 import type { Parent } from "unist"
 import { visit } from "unist-util-visit"
 import { toString } from "orgast-util-to-string"
+import { mapOutsideCode } from "../core/outsideCode.js"
 import type { Preset } from "./types.js"
 
 /**
@@ -18,7 +19,11 @@ export function obsidian(): Preset {
         read: text => text.replace(ALIASED_WIKILINK_RE, "[[$1][$2]]"),
         write: text => text.replace(FUZZY_LINK_RE, "[[$1|$2]]")
       }
-    }
+    },
+    // Vanilla Markdown reads Obsidian's own syntax but for these; the
+    // way back has nothing to do
+    translateMarkdown: (markdown, context) =>
+      context.side === "input" ? toVanilla(markdown) : markdown
   }
 }
 
@@ -56,4 +61,54 @@ function fuzzyLinksToWikilinks(uniorgAst: OrgData): OrgData {
     }
   )
   return uniorgAst
+}
+
+const COMMENT_RE = /%%([\s\S]*?)%%/g
+const FOOTNOTE_LABEL_RE = /\[\^(\d+)\]/g
+
+// Obsidian Markdown → Vanilla Markdown: a comment is an HTML comment,
+// an inline footnote a footnote, numbered on from the page's own, its
+// definition at the end
+function toVanilla(markdown: string): string {
+  let next =
+    Math.max(
+      0,
+      ...[...markdown.matchAll(FOOTNOTE_LABEL_RE)].map(([, n]) => Number(n))
+    ) + 1
+  const definitions: string[] = []
+  const result = mapOutsideCode(markdown, text =>
+    inlineFootnotes(text.replace(COMMENT_RE, "<!--$1-->"), note => {
+      definitions.push(`[^${next}]: ${note}`)
+      return `[^${next++}]`
+    })
+  )
+  return definitions.length
+    ? `${result.replace(/\n*$/, "")}\n\n${definitions.join("\n")}\n`
+    : result
+}
+
+// each `^[note]`, its brackets balanced, as the reference it becomes
+function inlineFootnotes(
+  text: string,
+  reference: (note: string) => string
+): string {
+  let result = ""
+  let from = 0
+  for (let start = text.indexOf("^["); start !== -1;) {
+    let depth = 0
+    let end = start + 1
+    for (; end < text.length; end++) {
+      depth += text[end] === "[" ? 1 : text[end] === "]" ? -1 : 0
+      if (!depth) {
+        break
+      }
+    }
+    if (end === text.length) {
+      break
+    }
+    result += text.slice(from, start) + reference(text.slice(start + 2, end))
+    from = end + 1
+    start = text.indexOf("^[", from)
+  }
+  return result + text.slice(from)
 }

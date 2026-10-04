@@ -51,16 +51,20 @@ export function translateMarkdown(
   options: TranslateOptions = {}
 ): string {
   const { input, output } = twoSides(options, "markdown", "normalizeMarkdown")
-  const side = input?.translateMarkdown ? "input" : "output"
-  const translate = (side === "input" ? input : output)?.translateMarkdown
   const relink = pageLinks({ input, output })
-  return translate
-    ? translate(markdown, {
-        side,
-        ...(options.onWarning && { onWarning: options.onWarning }),
-        ...(relink && { relink })
-      })
-    : markdown
+  const context = {
+    ...(options.onWarning && { onWarning: options.onWarning }),
+    ...(relink && { relink })
+  }
+  // into Vanilla from the input's dialect, then from it into the
+  // output's; a dialect does what its side needs
+  const vanilla =
+    input?.translateMarkdown?.(markdown, { ...context, side: "input" }) ??
+    markdown
+  return (
+    output?.translateMarkdown?.(vanilla, { ...context, side: "output" }) ??
+    vanilla
+  )
 }
 
 // page links between two dialects; a Vanilla side carries the other's

@@ -262,4 +262,29 @@ describe("translateMarkdown", () => {
       })
     ).toBe(obsidianMarkdown)
   })
+
+  it("writes Obsidian's comments as HTML comments", () => {
+    const markdown = "a %%hidden%% b `%%code%%`\n\n%%\nblock\n%%\n"
+
+    expect(translateMarkdown(markdown, { inputPreset: obsidian() })).toBe(
+      "a <!--hidden--> b `%%code%%`\n\n<!--\nblock\n-->\n"
+    )
+  })
+
+  it("writes Obsidian's inline footnotes as footnotes", () => {
+    const markdown = "a^[note [x](u)] b[^1] `^[code]`\n\n[^1]: one\n"
+
+    expect(translateMarkdown(markdown, { inputPreset: obsidian() })).toBe(
+      "a[^2] b[^1] `^[code]`\n\n[^1]: one\n\n[^2]: note [x](u)\n"
+    )
+  })
+
+  it("translates Obsidian md to Logseq md through Vanilla md", () => {
+    expect(
+      translateMarkdown("- a %%c%% b^[n] [[P|x]]\n", {
+        inputPreset: obsidian(),
+        outputPreset: logseq()
+      })
+    ).toBe("- a <!--c--> b[^1] [x]([[P]])\n  \n  [^1]: n\n")
+  })
 })

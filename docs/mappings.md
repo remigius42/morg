@@ -463,7 +463,13 @@ Vanilla list is a block of `---`, a block's content loses the
 indentation all its lines share, and text after a list is read from
 its own column. Obsidian md translates as Vanilla md does, but for its
 links: `[[Page|label]]` ↔ `[label]([[Page]])` outside code
-(`[[Page]]` is both's).
+(`[[Page]]` is both's). Obsidian md → Vanilla md or Logseq md writes
+a `%%comment%%` as an HTML comment (`<!--comment-->`) and an inline
+footnote `^[note]` as a footnote, numbered on from the page's own, its
+definition at the end; code, math and HTML stay as written. The way
+back has nothing to do: Obsidian reads both. Wikilinks and embeds
+(`[[Page]]`, `![[image.png]]`) stay in Vanilla md, which cannot
+resolve a note's name to its file without the vault.
 
 `obsidian`: wikilinks `[[Page]]` / `[[Page|alias]]` ↔ org fuzzy links,
 emitted unescaped in Markdown, except for the alias pipe inside a

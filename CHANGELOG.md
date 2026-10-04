@@ -27,7 +27,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   headings with their meta as before, page properties ↔ flat
   frontmatter, a block's org blocks ↔ fences, quotes and `query` code
   blocks; other content stays as written. Obsidian Markdown ↔ Logseq
-  Markdown too, an aliased wikilink ↔ a labeled page ref.
+  Markdown too, an aliased wikilink ↔ a labeled page ref, and
+  Obsidian Markdown → Vanilla Markdown: a `%%comment%%` becomes an
+  HTML comment and an inline footnote a footnote (also on the way to
+  Logseq Markdown); wikilinks stay, as resolving a note's file needs
+  the vault.
 
 ## [0.9.2] - 2026-10-04
 
