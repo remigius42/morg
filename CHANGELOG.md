@@ -34,6 +34,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The Web UI's options name the side they act on, and a table sets
   each construct's HTML reading and Spelling.
 
+### Fixed
+
+- Reading `<sup>` or `<sub>` as org (`interpretHtml`) keeps the HTML
+  where a blank precedes it (`x <sup>s</sup>`): org reads a script
+  only after a non-blank character, so it came back as the text
+  `^{s}`.
+
 ## [0.10.1] - 2026-10-04
 
 ### Fixed

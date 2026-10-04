@@ -401,6 +401,23 @@ This is a paragraph.
     )
   })
 
+  it("should interpret the html of the constructs interpretHtml names only", () => {
+    const markdown = "<u>u</u> x<sup>2</sup>\n"
+
+    expect(
+      convertMarkdownToOrg(markdown, { interpretHtml: { underline: true } })
+    ).toBe("_u_ x@@html:<sup>@@2@@html:</sup>@@\n")
+  })
+
+  it("should keep html script markup org cannot hold after a blank", () => {
+    // org reads ^{s} as a superscript only after a non-blank character
+    const markdown = "x <sup>s</sup> and <sub>t</sub>\n"
+
+    expect(convertMarkdownToOrg(markdown, { interpretHtml: true })).toBe(
+      "x @@html:<sup>@@s@@html:</sup>@@ and @@html:<sub>@@t@@html:</sub>@@\n"
+    )
+  })
+
   it("should preserve html with attributes or unknown tags despite interpretHtml", () => {
     const markdown = 'Keep <u class="x">this</u> and <kbd>that</kbd>.\n'
 

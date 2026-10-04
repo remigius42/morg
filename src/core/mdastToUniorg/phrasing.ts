@@ -21,6 +21,15 @@ const INLINE_HTML_ORG_TYPES: Record<string, HtmlObjectType> = {
   sub: "subscript"
 }
 
+// org reads a script as one only after a non-blank character; HTML it
+// cannot hold stays HTML (ADR 0007)
+function afterNonBlank(previous: PhrasingContent | undefined): boolean {
+  return (
+    previous !== undefined &&
+    !(previous.type === "text" && /\s$/.test(previous.value))
+  )
+}
+
 // tag names are case-insensitive and may have whitespace before
 // the closing > (valid html); attributes disqualify the tag
 function matchInlineHtmlPair(
@@ -34,7 +43,11 @@ function matchInlineHtmlPair(
   }
   const tag = /^<(u|sup|sub)\s*>$/i.exec(node.value)?.[1]?.toLowerCase()
   const orgType = tag ? INLINE_HTML_ORG_TYPES[tag] : undefined
-  if (!orgType || !htmlInterpreted(ctx, orgType)) {
+  if (
+    !orgType ||
+    !htmlInterpreted(ctx, orgType) ||
+    (orgType !== "underline" && !afterNonBlank(children[i - 1]))
+  ) {
     return null
   }
   const closeTag = new RegExp(`^</${tag}\\s*>$`, "i")
