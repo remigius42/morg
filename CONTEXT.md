@@ -109,8 +109,18 @@ One editor's flavour of one format (Logseq org, Logseq md, Obsidian md). A Prese
 
 ## Vanilla
 
-The Preset with no Dialect: plain Org and CommonMark/GFM as the core reads and writes them. A named value, so one side can be set back to it.
+The Preset with no Dialect: plain Org, and Markdown as CommonMark, GFM, footnotes, `$` math and YAML frontmatter, as the core reads and writes them. CommonMark and GFM are not Presets but Vanilla's base (ADR 0007). A named value, so one side can be set back to it.
 _Avoid_: none, default, generic
+
+## Spelling
+
+How a format writes a construct. For an org construct Markdown cannot write losslessly in its own syntax, Markdown has a second spelling, HTML (a definition list as `Term` / `: def` or `<dl>`); `[markdown.output]` picks which one to write, and the reader reads its Dialect's own spelling always, the HTML one only when `[markdown.input.interpretHtml]` asks. A construct with no spelling in the output goes through verbatim, as org text org re-parses (ADR 0007).
+_Avoid_: fallback, HTML mode
+
+## Input / Output Section
+
+The config sections of one format, named by side as Presets are: `[markdown.input]` is about reading Markdown, `[markdown.output]` and `[org.output]` about writing it, `[markdown]` sets both of Markdown's sides. A conversion uses the sections of the formats it reads and writes, so the same option means the same in `md → org`, `org → md` and `md → md` (ADR 0007).
+_Avoid_: markdownToOrg, orgToMarkdown
 
 ## Input Preset / Output Preset
 
