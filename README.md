@@ -238,6 +238,11 @@ preset })`: `preserveOrgisms` default `true`; `useHtml` (default
   Normalize with the same preset/config you will convert with, since
   convergence is per-config (ADR 0002).
 
+- `translateOrg(org, { inputPreset, outputPreset })`: translates
+  between two org dialects (Logseq org ↔ Vanilla org), changing only
+  what they write differently: a block's content stays as written.
+  The same preset on both sides throws; that is `normalizeOrg`.
+
 - `markdownStyle: { bullet, emphasis, strong, fence, rule, ruleRepetition }`
   (on `convertOrgToMarkdown` and `normalizeMarkdown`; CLI `--bullet`,
   `--emphasis`, `--strong`, `--fence`, `--rule`, `--rule-repetition`)

@@ -120,6 +120,14 @@ The Preset whose Dialect the input is read in, and the one the output is written
 One unit of a Logseq page's outline. On the Vanilla side a Block is what each format natively calls an outline unit: a headline in org (so planning still reaches the agenda), a list item in Markdown. A Block's meta (task marker, planning, properties) travels with it: in Markdown as a task checkbox and `key:: value` lines inside the item.
 _Avoid_: node, bullet
 
+## Translation
+
+A conversion within one format between two Dialects (Logseq org →
+Vanilla org). It changes only what the Dialects write differently and
+keeps a Block's content as written; one Dialect on both sides is
+normalizing instead (ADR 0006).
+_Avoid_: same-format conversion
+
 ## Carried Construct
 
 A Dialect construct with no Vanilla equivalent (a page or block ref, a macro, a query, a highlight). The Input Preset keeps it marked rather than interpreting it; a Dialect's writer renders it in its own syntax, a Vanilla writer as literal text, so the return trip can restore it.

@@ -399,8 +399,13 @@ after its stars (Logseq org writes bare stars, text to Emacs). A block
 whose first line starts an element that runs on below it (a src or
 other block, a table, a list, its property drawer) has that line below
 an empty headline: Logseq org puts it on the stars' line, where Emacs
-would read it as the title. Vanilla md has a shape of its own; Logseq
-org ↔ Vanilla md:
+would read it as the title. Translated within org (Logseq org ↔
+Vanilla org), only those headlines change; other lines stay as
+written, line endings become LF and an empty page stays empty. A
+Vanilla headline whose title starts a list running on below it
+(`* 3. Why?` with its body indented three spaces) stays as it is on
+the way to Logseq org, but comes back with the title below empty
+stars. Vanilla md has a shape of its own; Logseq org ↔ Vanilla md:
 
 | Logseq org                                                   | Vanilla md                                                                                  |
 | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |

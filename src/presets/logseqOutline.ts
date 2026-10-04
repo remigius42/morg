@@ -227,22 +227,28 @@ function readOrgBlock({ level, lines }: Lines, joined = false): Block {
   }
 }
 
+function splitOrgBlocks(org: string): { page: string[]; blocks: Lines[] } {
+  return splitBlocks(org.replace(/\r?\n$/, "").split(/\r?\n/), line => {
+    const match = ORG_BLOCK_RE.exec(line)
+    return match ? [match[1]?.length ?? 0, match[2] ?? ""] : null
+  })
+}
+
+// Vanilla org: a first line written below an empty title, as it starts
+// an element, is the block's first line again
+function joinTitle(lines: string[]): { lines: string[]; joined: boolean } {
+  const [title, ...rest] = lines
+  const joined = title === "" && startsElement(rest)
+  return { lines: joined ? rest : lines, joined }
+}
+
 function readOrgOutline(org: string, vanilla: boolean): Outline {
-  const { page, blocks } = splitBlocks(
-    org.replace(/\r?\n$/, "").split(/\r?\n/),
-    line => {
-      const match = ORG_BLOCK_RE.exec(line)
-      return match ? [match[1]?.length ?? 0, match[2] ?? ""] : null
-    }
-  )
+  const { page, blocks } = splitOrgBlocks(org)
   return {
     page,
     blocks: blocks.map(({ level, lines }) => {
-      // Vanilla org: a first line written below an empty title, as it
-      // starts an element, is the block's first line again
-      const [title, ...rest] = lines
-      const joined = vanilla && title === "" && startsElement(rest)
-      return readOrgBlock({ level, lines: joined ? rest : lines }, joined)
+      const read = vanilla ? joinTitle(lines) : { lines, joined: false }
+      return readOrgBlock({ level, lines: read.lines }, read.joined)
     })
   }
 }
@@ -397,15 +403,24 @@ function startsElement(lines: string[]): boolean {
 // an empty title keeps the space Logseq org leaves out, and a first line
 // that starts an element goes below the stars (ADR 0006)
 function writeOrgBlock(block: Block, vanilla = false): string {
-  const lines = arrange(
-    block.metaFirst,
-    orgMetaLines(block.meta, block.heading),
-    block.content
+  return writeOrgLines(
+    {
+      level: block.level,
+      lines: arrange(
+        block.metaFirst,
+        orgMetaLines(block.meta, block.heading),
+        block.content
+      )
+    },
+    vanilla
   )
+}
+
+function writeOrgLines({ level, lines }: Lines, vanilla: boolean): string {
   const [title = "", ...more] =
     vanilla && startsElement(lines) ? ["", ...lines] : lines
   return [
-    `${"*".repeat(block.level)}${title || vanilla ? ` ${title}` : ""}`,
+    `${"*".repeat(level)}${title || vanilla ? ` ${title}` : ""}`,
     ...more
   ].join("\n")
 }
@@ -660,4 +675,35 @@ export function markdownOutlineToOrg(
     },
     block => writeOrgBlock(block, context.side === "input")
   )
+}
+
+/**
+ * Translates an org page between Logseq org and Vanilla org, which
+ * differ in their headlines only (ADR 0006): a block's lines are kept,
+ * but for its first line, on its stars' line in Logseq org and below an
+ * empty title in Vanilla org where it starts an element.
+ * @param org The org page.
+ * @param context The side Logseq is on.
+ * @returns The page in the other dialect.
+ */
+export function translateOrgOutline(
+  org: string,
+  context: ConversionContext
+): string {
+  if (!org) {
+    return org
+  }
+  const vanilla = context.side === "input"
+  const { page, blocks } = splitOrgBlocks(org)
+  return [
+    ...page,
+    ...blocks.map(({ level, lines }) =>
+      writeOrgLines(
+        { level, lines: vanilla ? lines : joinTitle(lines).lines },
+        vanilla
+      )
+    )
+  ]
+    .join("\n")
+    .concat("\n")
 }

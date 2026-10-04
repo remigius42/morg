@@ -46,6 +46,14 @@ based script) drops planning and admonitions.
    one format is a later feature. Corpus checks of the new directions
    chain cross-format conversions, whose intermediate file locates a
    loss better than a same-format shortcut would.
+   Amended (0.10.0): within one format, two Dialects translate. A
+   Translation changes only what the two Dialects write differently
+   and keeps a Block's content as written, without a trip through the
+   other format, which would canonicalize every line (Org's community
+   docs through Logseq md: 229 of 293 files converge; translated, all
+   keep their content). One Dialect on both sides is `normalize`.
+   Vanilla org and Logseq org differ in their headlines only (§5): an
+   empty Block's space, and a first line that starts an element.
 5. **A Block's Vanilla shape depends on the format.** In org a Block
    is a headline: Logseq org already is Vanilla org, and planning only
    reaches the Emacs agenda on headlines (corpus: every task and every

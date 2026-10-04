@@ -26,7 +26,11 @@ import { tryParse } from "../core/render.js"
 import { orgNodeToText } from "../core/uniorgToMdast/shared.js"
 import type { Link as MdastLink, Root as MdastRoot } from "mdast"
 import type { Preset } from "./types.js"
-import { markdownOutlineToOrg, orgOutlineToMarkdown } from "./logseqOutline.js"
+import {
+  markdownOutlineToOrg,
+  orgOutlineToMarkdown,
+  translateOrgOutline
+} from "./logseqOutline.js"
 
 /**
  * Logseq dialect preset: the outline of blocks, page properties, page
@@ -47,7 +51,8 @@ export function logseq(): Preset {
     convertOrg: (org, convert, context) =>
       orgOutlineToMarkdown(org, convert, presets, context),
     convertMarkdown: (markdown, convert, context) =>
-      markdownOutlineToOrg(markdown, convert, presets, context)
+      markdownOutlineToOrg(markdown, convert, presets, context),
+    translateOrg: translateOrgOutline
   }
 }
 
