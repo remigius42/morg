@@ -94,12 +94,12 @@ default, writes it in Markdown's syntax, or as verbatim org text org
 re-parses where Markdown has none; `"html"` writes `<dl>`, `<u>`,
 `<sup>` or `<sub>`.
 
-| Construct        | `"markdown"`               | `"html"` |
-| ---------------- | -------------------------- | -------- |
-| `definitionList` | `- term :: def` (org text) | `<dl>`   |
-| `underline`      | `_x_` (org text)           | `<u>`    |
-| `superscript`    | `^{x}` (org text)          | `<sup>`  |
-| `subscript`      | `_{x}` (org text)          | `<sub>`  |
+| Construct        | `"markdown"`       | `"html"` |
+| ---------------- | ------------------ | -------- |
+| `definitionList` | `term` / `:   def` | `<dl>`   |
+| `underline`      | `_x_` (org text)   | `<u>`    |
+| `superscript`    | `^{x}` (org text)  | `<sup>`  |
+| `subscript`      | `_{x}` (org text)  | `<sub>`  |
 
 A construct in `[markdown]` sets both sides: `"html"` reads its bare
 HTML (no attributes) back as the construct and writes it, so the round

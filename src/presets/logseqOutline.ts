@@ -352,6 +352,13 @@ function arrange(
     : [content[0] ?? "", ...meta, ...content.slice(1)]
 }
 
+// a block's content is converted as a document of its own, where a
+// first line's `: ` could start a definition and so is escaped (`\:`);
+// after a bullet it cannot, as Logseq writes it
+function bulletTitle(title: string): string {
+  return title.replace(/^\\:(?=[ \t]|$)/, ":")
+}
+
 function propertyLine({ key, value }: { key: string; value: string }) {
   return `${key}::${value ? ` ${value}` : ""}`
 }
@@ -361,7 +368,9 @@ function writeMarkdownBlock(block: Block): string {
     "lines" in item ? logbook(item.lines, "*") : [propertyLine(item)]
   )
   const [title = "", ...more] = arrange(block.metaFirst, meta, block.content)
-  const head = ["#".repeat(block.heading), title].filter(Boolean).join(" ")
+  const head = ["#".repeat(block.heading), bulletTitle(title)]
+    .filter(Boolean)
+    .join(" ")
   const indent = "\t".repeat(block.level - 1)
   return [
     `${indent}-${head ? ` ${head}` : ""}`,
@@ -556,7 +565,9 @@ function vanillaBlock(
     const body = more.length ? `\n\n${more.join("\n")}` : ""
     return { heading: true, text: `${hashes} ${first}${body}` }
   }
-  const title = [hashes, vanillaTitle(first)].filter(Boolean).join(" ")
+  const title = [hashes, vanillaTitle(bulletTitle(first))]
+    .filter(Boolean)
+    .join(" ")
   return {
     heading: false,
     text: [

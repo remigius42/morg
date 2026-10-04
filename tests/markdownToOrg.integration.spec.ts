@@ -418,6 +418,55 @@ This is a paragraph.
     )
   })
 
+  it("should read definition lists as descriptive lists (ADR 0007)", () => {
+    const markdown = "apple\n:   a fruit\n\n*vim*\n: an *editor*\n"
+
+    expect(convertMarkdownToOrg(markdown)).toBe(
+      "- apple :: a fruit\n- /vim/ :: an /editor/\n"
+    )
+  })
+
+  it("should keep a definition's blocks in its item", () => {
+    const markdown = "fruits\n:   - apple\n    - pear\n"
+
+    expect(convertMarkdownToOrg(markdown)).toBe(
+      "- fruits ::\n  - apple\n  - pear\n"
+    )
+  })
+
+  it("should merge a term's definitions, and warn", () => {
+    const warnings: string[] = []
+    const markdown = "apple\n: a fruit\n: a company\n"
+
+    expect(
+      convertMarkdownToOrg(markdown, { onWarning: w => warnings.push(w) })
+    ).toBe("- apple :: a fruit\n  a company\n")
+    expect(warnings).toEqual([
+      "a definition list term's definitions were merged into one"
+    ])
+  })
+
+  it("should give a term without its own definition an empty one, and warn", () => {
+    const warnings: string[] = []
+    const markdown = "apple\npear\n: fruits\n"
+
+    expect(
+      convertMarkdownToOrg(markdown, { onWarning: w => warnings.push(w) })
+    ).toBe("- apple ::\n- pear :: fruits\n")
+    expect(warnings).toEqual([
+      "a definition list term without its own definition got an empty one"
+    ])
+  })
+
+  it("should keep a list item with ` :: ` an ordinary item", () => {
+    // org's descriptive list syntax is no Markdown; a zero-width space
+    // keeps org from reading a tag
+    const org = convertMarkdownToOrg("- term :: def\n- a :: b :: c\n")
+
+    expect(org).toBe("- term \u200B:: def\n- a \u200B:: b \u200B:: c\n")
+    expect(convertOrgToMarkdown(org)).toBe("- term :: def\n- a :: b :: c\n")
+  })
+
   it("should interpret <dl> as org descriptive list with interpretHtml", () => {
     const markdown =
       "<dl>\n<dt>term</dt>\n<dd>a definition</dd>\n" +

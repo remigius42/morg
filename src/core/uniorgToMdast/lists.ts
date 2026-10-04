@@ -10,13 +10,22 @@ import type { List, ListItem } from "uniorg"
 import { toString as orgastToString } from "orgast-util-to-string"
 import { htmlEnabled, type TransformContext } from "./shared.js"
 import { transformNodes } from "./elements.js"
+import { transformUniorgObjects } from "./objects.js"
+import type { DefListNode } from "mdast-util-definition-list"
 
 export function transformPlainList(
   ctx: TransformContext,
   node: List
 ): RootContent | RootContent[] {
-  if (node.listType === "descriptive" && htmlEnabled(ctx, "definitionList")) {
-    return descriptiveListToHtml(node)
+  if (node.listType === "descriptive") {
+    if (htmlEnabled(ctx, "definitionList")) {
+      return descriptiveListToHtml(node)
+    }
+    const items = listItems(node)
+    // a definition list has no entry without a term, nor a checkbox
+    if (items.every(item => listItemTag(item) && !item.checkbox)) {
+      return descriptiveListToDefList(ctx, items)
+    }
   }
   return transformUniorgList(ctx, node)
 }
@@ -26,6 +35,38 @@ function listItemTag(item: ListItem): ListItem["children"][number] | undefined {
   return (item.children || []).find(
     child => (child as { type: string }).type === "list-item-tag"
   )
+}
+
+function listItems(node: List): ListItem[] {
+  return (node.children || []).filter(
+    (child): child is ListItem => child.type === "list-item"
+  )
+}
+
+// a descriptive list in its Markdown spelling (ADR 0007): a term per
+// item, its content the description
+function descriptiveListToDefList(
+  ctx: TransformContext,
+  items: ListItem[]
+): RootContent {
+  const children = items.flatMap((item): DefListNode["children"] => {
+    const tag = listItemTag(item) as ListItem["children"][number] & {
+      children: Parameters<typeof transformUniorgObjects>[1]
+    }
+    const blocks = itemBlocks(
+      ctx,
+      item,
+      (item.children || []).filter(child => child !== tag)
+    )
+    return [
+      {
+        type: "defListTerm",
+        children: transformUniorgObjects(ctx, tag.children)
+      },
+      { type: "defListDescription", spread: false, children: blocks }
+    ]
+  })
+  return { type: "defList", children } as unknown as RootContent
 }
 
 // `&`, `<` and `>` in the text would otherwise produce invalid html that
@@ -101,6 +142,23 @@ function outdent(value: string, level: number): string {
   return value.replace(new RegExp(`^ {0,${level}}`, "gm"), "")
 }
 
+// an item's content as Markdown blocks, its code without the item's indentation
+function itemBlocks(
+  ctx: TransformContext,
+  item: ListItem,
+  content: ListItem["children"]
+): (BlockContent | DefinitionContent)[] {
+  const blocks = transformNodes(ctx, content) as (
+    BlockContent | DefinitionContent
+  )[]
+  for (const block of blocks) {
+    if (block.type === "code") {
+      block.value = outdent(block.value, item.indent + item.bullet.length)
+    }
+  }
+  return blocks
+}
+
 function transformUniorgListItem(
   ctx: TransformContext,
   item: ListItem
@@ -108,15 +166,11 @@ function transformUniorgListItem(
   // md has no descriptive lists, so keep the ` :: ` syntax literally in the
   // item text; the return trip re-parses it as a descriptive list
   const tag = listItemTag(item)
-  const children = transformNodes(
+  const children = itemBlocks(
     ctx,
+    item,
     (item.children || []).filter(child => child !== tag)
-  ) as (BlockContent | DefinitionContent)[]
-  for (const child of children) {
-    if (child.type === "code") {
-      child.value = outdent(child.value, item.indent + item.bullet.length)
-    }
-  }
+  )
   if (tag) {
     const term: PhrasingContent = {
       type: "text",
@@ -129,11 +183,31 @@ function transformUniorgListItem(
       children.unshift({ type: "paragraph", children: [term] })
     }
   }
+  keepLeadingColon(children[0])
   return {
     type: "listItem",
     spread: false,
     checked:
       item.checkbox === "on" ? true : item.checkbox === "off" ? false : null,
     children
+  }
+}
+
+// a `: ` line below text starts a definition, which the stringifier
+// escapes (`\:`); an item's first line has no text above it, so its
+// colon goes unescaped, as MDN's `- : definition` items are written
+function keepLeadingColon(
+  first: BlockContent | DefinitionContent | undefined
+): void {
+  if (first?.type !== "paragraph") {
+    return
+  }
+  const text = first.children[0]
+  if (text?.type === "text" && /^:(?=[ \t]|$)/.test(text.value)) {
+    text.value = text.value.slice(1)
+    first.children.unshift({
+      type: "verbatimInline",
+      value: ":"
+    } as unknown as PhrasingContent)
   }
 }

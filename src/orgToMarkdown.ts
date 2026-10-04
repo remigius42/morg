@@ -3,12 +3,14 @@ import remarkStringify from "remark-stringify"
 import remarkGfm from "remark-gfm"
 import remarkFrontmatter from "remark-frontmatter"
 import remarkMath from "remark-math"
+import { remarkDefinitionList } from "remark-definition-list"
 import { transformUniorgAstToMdast } from "./core/uniorgToMdast/index.js"
 import { takeRecordedStyle } from "./core/markdownStyle.js"
 import { takeFileHeader } from "./core/frontmatterBlock.js"
 import { unescapeOrgMarkup } from "./core/markupBoundary.js"
 import { unescapeLineSyntax } from "./core/lineSyntax.js"
 import { unescapeFootnoteReferences } from "./core/footnoteReferences.js"
+import { unescapeDescriptiveTags } from "./core/descriptiveTags.js"
 import { unescapeBackslashCommands } from "./core/backslashCommands.js"
 import { unescapeTablePipes } from "./core/tablePipes.js"
 import { parseOrg } from "./core/bracedScripts.js"
@@ -95,6 +97,7 @@ function convertOrgDocument(
   unescapeOrgMarkup(uniorgAst)
   unescapeLineSyntax(uniorgAst)
   unescapeFootnoteReferences(uniorgAst)
+  unescapeDescriptiveTags(uniorgAst)
   unescapeBackslashCommands(uniorgAst)
   unescapeTablePipes(uniorgAst)
 
@@ -147,6 +150,7 @@ function convertOrgDocument(
     .use(remarkGfm)
     .use(remarkFrontmatter)
     .use(remarkMath)
+    .use(remarkDefinitionList)
     .stringify(mdast)
 
   return markdownContent

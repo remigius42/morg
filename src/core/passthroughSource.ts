@@ -55,17 +55,55 @@ function elementSource(markdown: string, offset: number): string | null {
   return null
 }
 
-// the source offset where the passthrough element starting at a node
-// ends, or -1
-function passthroughEnd(node: RootContent, markdown: string): number {
+// a fixed-width line as org→md writes it, its `:` escaped (ADR 0007);
+// unescaped, a `: ` line is Markdown text
+const FIXED_WIDTH_RE = /^[ \t]*\\:(?=[ \t]|$)/
+
+// the run of fixed-width lines from `offset` on, their escapes dropped:
+// read as Markdown, inline math spanning lines would keep a `\`
+function fixedWidthSource(
+  markdown: string,
+  offset: number
+): { length: number; org: string } | null {
+  const lines: string[] = []
+  let end = offset
+  while (end < markdown.length) {
+    const next = markdown.indexOf("\n", end)
+    const line = markdown.slice(end, next === -1 ? markdown.length : next)
+    if (!FIXED_WIDTH_RE.test(line)) {
+      break
+    }
+    lines.push(line.replace("\\:", ":"))
+    end = next === -1 ? markdown.length : next + 1
+  }
+  if (!lines.length) {
+    return null
+  }
+  // up to the last line's end, without its line break
+  return {
+    length: end - offset - (end > offset && markdown[end - 1] === "\n" ? 1 : 0),
+    org: lines.join("\n")
+  }
+}
+
+// where the passthrough element starting at a node ends in the source,
+// and its org text, or null
+function passthroughSource(
+  node: RootContent,
+  markdown: string
+): { end: number; org: string } | null {
   const start = node.position?.start
   if (start?.column !== 1 || start.offset === undefined) {
-    return -1
+    return null
+  }
+  const fixed = fixedWidthSource(markdown, start.offset)
+  if (fixed && readsAsPassthrough(fixed.org)) {
+    return { end: start.offset + fixed.length, org: fixed.org }
   }
   const source = elementSource(markdown, start.offset)
   return source !== null && readsAsPassthrough(source)
-    ? start.offset + source.length
-    : -1
+    ? { end: start.offset + source.length, org: source }
+    : null
 }
 
 // the index of the last node ending at `end`, from `i` on, or -1
@@ -90,14 +128,16 @@ export function keepPassthroughSource(mdast: Root, markdown: string): void {
   const nodes = mdast.children
   for (let i = 0; i < nodes.length; i++) {
     const node = nodes[i] as RootContent
-    const end = passthroughEnd(node, markdown)
-    const last = end === -1 ? -1 : lastNodeAt(nodes, i, end)
-    if (last === -1) {
+    const source = passthroughSource(node, markdown)
+    const last = source ? lastNodeAt(nodes, i, source.end) : -1
+    if (!source || last === -1) {
       children.push(node)
       continue
     }
-    const value = markdown.slice(node.position?.start.offset, end)
-    children.push({ type: "paragraph", children: [{ type: "text", value }] })
+    children.push({
+      type: "paragraph",
+      children: [{ type: "text", value: source.org }]
+    })
     i = last
   }
   mdast.children = children

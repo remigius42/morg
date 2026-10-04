@@ -128,8 +128,17 @@ Org underline, superscript and subscript have no Markdown equivalent;
 their raw org markup (`_text_`, `^{2}`, `_{2}`) is kept verbatim as
 escaped text and re-parsed natively on the way back (same approach as
 inline org timestamps, which survive verbatim including
-active/inactive ranges). Descriptive lists keep their
-`- term :: definition` syntax literally in Markdown list items. Spelled
+active/inactive ranges). Descriptive lists become definition lists
+(`term` / `:   definition`, PHP Markdown Extra's syntax, which pandoc,
+kramdown and Logseq read too) and back, a term's markup and its
+definition's blocks included; one with an item without a term or with
+a checkbox keeps its `- term :: definition` text. Markdown's
+definitions merge into one per term, and a term without its own (one of
+several above a definition) gets an empty one, both with a warning. A
+`- term :: definition` Markdown list item stays one: a zero-width space
+before the `::` keeps org from reading a tag. A fixed-width line's `:`
+is escaped (`\: text`), as a line below text that starts with a colon starts a definition.
+Spelled
 in HTML (`spelling: "html"`, ADR 0007) these constructs render as raw
 HTML instead (`<u>`, `<sup>`, `<sub>`, `<dl>`); the HTML round-trips
 to the native org construct where `interpretHtml` reads it, else as a

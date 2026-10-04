@@ -11,6 +11,7 @@ import {
   type TransformContext
 } from "./context.js"
 import { transformPhrasingChildren } from "./phrasing.js"
+import { tagSeparator } from "./lists.js"
 import { KEYWORD_NAME } from "../frontmatterBlock.js"
 
 export function transformMdastTable(
@@ -153,7 +154,11 @@ function interpretDefinitionList(html: string): ElementType | null {
       bullet: "- ",
       counter: null,
       checkbox: null,
-      children: [{ type: "text", value: `${term} :: ${definition}\n` }],
+      children: [
+        { type: "text", value: term },
+        tagSeparator(false),
+        { type: "text", value: `${definition}\n` }
+      ],
       contentsBegin: 0,
       contentsEnd: 0
     })),

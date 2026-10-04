@@ -234,7 +234,10 @@ describe("convertOrgToMarkdown", () => {
     const org =
       "#+begin_warning\nBe careful.\n#+end_warning\n\n#+begin_verse\nroses are red\nviolets are blue\n#+end_verse\n\n: fixed one\n: fixed two\n"
 
-    expect(convertOrgToMarkdown(org)).toBe(org)
+    // a fixed-width line's `: ` would start a Markdown definition
+    expect(convertOrgToMarkdown(org)).toBe(
+      org.replace(": fixed one\n: fixed two", "\\: fixed one\n\\: fixed two")
+    )
   })
 
   it("should keep statistics cookies and citations as text", () => {
@@ -505,14 +508,29 @@ describe("convertOrgToMarkdown", () => {
     )
   })
 
-  it("should keep descriptive list terms verbatim", () => {
-    const org = "- apple :: a fruit\n- vim :: an /editor/\n"
+  it("should write descriptive lists as definition lists (ADR 0007)", () => {
+    const org = "- apple :: a fruit\n- /vim/ :: an /editor/\n"
 
-    // md has no descriptive lists; the ` :: ` syntax is kept literally so
-    // the return trip re-parses it as a descriptive list
     expect(convertOrgToMarkdown(org)).toBe(
-      "- apple :: a fruit\n- vim :: an *editor*\n"
+      "apple\n:   a fruit\n\n*vim*\n:   an *editor*\n"
     )
+  })
+
+  it("should keep a definition's blocks in its description", () => {
+    const org =
+      "- fruits ::\n  - apple\n  - pear\n- tool :: vim\n\n  and emacs\n"
+
+    expect(convertOrgToMarkdown(org)).toBe(
+      "fruits\n:   - apple\n    - pear\n\ntool\n:   vim\n\n    and emacs\n"
+    )
+  })
+
+  it("should keep a descriptive list verbatim where an item has no term", () => {
+    // org reads the whole list as descriptive by its first item; a
+    // definition list has no entry without a term
+    const org = "- apple :: a fruit\n- pear\n"
+
+    expect(convertOrgToMarkdown(org)).toBe("- apple :: a fruit\n- pear\n")
   })
 
   it("should render sub/superscript and underline as html spelled in html", () => {

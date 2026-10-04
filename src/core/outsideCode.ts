@@ -3,6 +3,7 @@ import remarkParse from "remark-parse"
 import remarkGfm from "remark-gfm"
 import remarkFrontmatter from "remark-frontmatter"
 import remarkMath from "remark-math"
+import { remarkDefinitionList } from "remark-definition-list"
 import type { Node, Parent } from "unist"
 
 // what holds no Markdown text: code, math, frontmatter and raw HTML
@@ -34,6 +35,7 @@ function parse(markdown: string): Node {
     .use(remarkGfm)
     .use(remarkFrontmatter)
     .use(remarkMath)
+    .use(remarkDefinitionList)
     .parse(markdown)
 }
 

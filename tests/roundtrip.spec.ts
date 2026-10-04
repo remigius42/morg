@@ -624,6 +624,9 @@ describe("verbatim passthrough", () => {
   it("keeps org line syntax org through a round trip", () => {
     for (const org of [
       ": fixed one\n: fixed two\n",
+      "text\n\n: fixed below text\n",
+      // inline math across lines keeps a Markdown escape (`\:`)
+      ": cd $DIR\n: ls $DIR\n",
       "* H\n:LOGBOOK:\nx\n:END:\n",
       "CLOCK: [2026-01-01 Thu 10:00]\n"
     ]) {
@@ -631,8 +634,17 @@ describe("verbatim passthrough", () => {
     }
   })
 
+  it("keeps a list item's leading colon as written", () => {
+    // MDN writes a definition as a nested `- : ` item; an item's first
+    // line has no text above it, so no definition starts there
+    const markdown = "- term\n  - : definition\n"
+
+    expect(mdRoundTrip(markdown)).toBe(markdown)
+  })
+
   it("is no line of a paragraph's or list item's text", () => {
-    expect(convertMarkdownToOrg("- a\n  : b\n\nc\n: d\n")).toBe(
+    // escaped: unescaped, a `: ` line below text starts a definition
+    expect(convertMarkdownToOrg("- a\n  \\: b\n\nc\n\\: d\n")).toBe(
       "- a\n  \u200B: b\nc\n\u200B: d\n"
     )
   })

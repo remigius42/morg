@@ -30,7 +30,7 @@ import {
   transformMdastMath,
   transformMdastTable
 } from "./blocks.js"
-import { transformMdastList } from "./lists.js"
+import { transformMdastDefList, transformMdastList } from "./lists.js"
 import { transformPhrasingChildren } from "./phrasing.js"
 
 export type { MdastToUniorgOptions, TransformContext } from "./context.js"
@@ -129,6 +129,8 @@ export function transformMdastNodeToUniorgNode(
       return { type: "text", value: node.value }
     case "list":
       return transformMdastList(ctx, node, 0)
+    case "defList":
+      return transformMdastDefList(ctx, node, 0)
     case "table":
       return transformMdastTable(ctx, node)
     case "html":

@@ -3,6 +3,7 @@ import remarkParse from "remark-parse"
 import remarkGfm from "remark-gfm"
 import remarkFrontmatter from "remark-frontmatter"
 import remarkMath from "remark-math"
+import { remarkDefinitionList } from "remark-definition-list"
 import type { Code, Emphasis, List, Root, Strong, ThematicBreak } from "mdast"
 import { visit } from "unist-util-visit"
 import type { MarkdownStyleOptions } from "../options.js"
@@ -116,6 +117,7 @@ export function restyleMarkdown(
     .use(remarkGfm)
     .use(remarkFrontmatter)
     .use(remarkMath)
+    .use(remarkDefinitionList)
     .parse(markdown)
   const edits = [
     ...(style.bullet ? bulletEdits(tree, style.bullet) : []),

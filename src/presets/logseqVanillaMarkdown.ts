@@ -3,6 +3,7 @@ import remarkParse from "remark-parse"
 import remarkGfm from "remark-gfm"
 import remarkFrontmatter from "remark-frontmatter"
 import remarkMath from "remark-math"
+import { remarkDefinitionList } from "remark-definition-list"
 import type {
   Definition,
   FootnoteDefinition,
@@ -28,6 +29,7 @@ function parse(markdown: string) {
     .use(remarkGfm)
     .use(remarkFrontmatter)
     .use(remarkMath)
+    .use(remarkDefinitionList)
     .parse(markdown)
 }
 

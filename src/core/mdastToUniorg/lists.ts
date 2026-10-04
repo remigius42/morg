@@ -1,4 +1,14 @@
-import type { List as MdastList, ListItem as MdastListItem } from "mdast"
+import type {
+  BlockContent,
+  DefinitionContent,
+  List as MdastList,
+  ListItem as MdastListItem
+} from "mdast"
+import type {
+  DefListDescriptionNode,
+  DefListNode,
+  DefListTermNode
+} from "mdast-util-definition-list"
 import type {
   Text,
   ElementType,
@@ -70,6 +80,9 @@ function transformMdastListItem(
       if (child.type === "list") {
         return [transformMdastList(ctx, child, indent + bullet.length)]
       }
+      if (child.type === "defList") {
+        return [transformMdastDefList(ctx, child, indent + bullet.length)]
+      }
       if (child.type === "heading") {
         // org headlines cannot live inside a list item; the text stays
         warn(ctx, "heading inside a list item became text")
@@ -99,4 +112,101 @@ function transformMdastListItem(
     contentsBegin: 0,
     contentsEnd: 0
   } as unknown as ListItem
+}
+
+/**
+ * The text between a descriptive item's term and its definition, which
+ * org re-parses as the tag; escapeDescriptiveTags leaves what it ends
+ * alone. A text node rather than uniorg's list-item-tag, whose
+ * stringifier splits a term at its first object.
+ */
+export function tagSeparator(blockFollows: boolean): Text {
+  return {
+    type: "text",
+    value: blockFollows ? " ::\n" : " :: ",
+    tagSeparator: true
+  } as Text
+}
+
+interface DefListEntry {
+  terms: DefListTermNode[]
+  descriptions: DefListDescriptionNode[]
+}
+
+// a run of terms and the descriptions that follow them
+function defListEntries(node: DefListNode): DefListEntry[] {
+  const entries: DefListEntry[] = []
+  for (const child of node.children) {
+    const last = entries.at(-1)
+    if (child.type === "defListDescription") {
+      last?.descriptions.push(child)
+    } else if (last && !last.descriptions.length) {
+      last.terms.push(child)
+    } else {
+      entries.push({ terms: [child], descriptions: [] })
+    }
+  }
+  return entries
+}
+
+/**
+ * A definition list becomes an org descriptive list (ADR 0007): an item
+ * per term, its definition the item's content. Org has one definition
+ * per term, so several merge into one, and a term without its own
+ * definition, one of several above a definition, gets an empty one.
+ * @param ctx The transform context.
+ * @param node The definition list.
+ * @param indent The list's indentation.
+ * @returns The descriptive list.
+ */
+export function transformMdastDefList(
+  ctx: TransformContext,
+  node: DefListNode,
+  indent: number
+): List {
+  const items = defListEntries(node).flatMap(({ terms, descriptions }) => {
+    if (terms.length > 1) {
+      warn(
+        ctx,
+        "a definition list term without its own definition got an empty one"
+      )
+    }
+    if (descriptions.length > 1) {
+      warn(ctx, "a definition list term's definitions were merged into one")
+    }
+    const blocks = descriptions.flatMap(description => description.children)
+    return terms.map((term, i) =>
+      descriptiveItem(ctx, term, i === terms.length - 1 ? blocks : [], indent)
+    )
+  })
+  return {
+    type: "plain-list",
+    listType: "descriptive",
+    indent,
+    affiliated: {},
+    children: items,
+    contentsBegin: 0,
+    contentsEnd: 0
+  } as unknown as List
+}
+
+function descriptiveItem(
+  ctx: TransformContext,
+  term: DefListTermNode,
+  blocks: (BlockContent | DefinitionContent)[],
+  indent: number
+): ListItem {
+  const item = transformMdastListItem(
+    ctx,
+    { type: "listItem", spread: false, children: blocks },
+    indent,
+    "- "
+  )
+  // an item's children are inline objects too, as transformMdastListItem
+  // flattens its paragraphs
+  ;(item.children as unknown[]).unshift(
+    ...transformPhrasingChildren(ctx, term.children),
+    tagSeparator(blocks[0]?.type !== "paragraph")
+  )
+  return item
 }

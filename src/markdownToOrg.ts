@@ -3,6 +3,7 @@ import remarkParse from "remark-parse"
 import remarkGfm from "remark-gfm"
 import remarkFrontmatter from "remark-frontmatter"
 import remarkMath from "remark-math"
+import { remarkDefinitionList } from "remark-definition-list"
 import { uniorgStringify } from "uniorg-stringify"
 import { visit } from "unist-util-visit"
 import type { Parent } from "unist"
@@ -20,6 +21,7 @@ import { escapeOrgMarkup } from "./core/markupBoundary.js"
 import { renderFileHeader } from "./core/frontmatterBlock.js"
 import { escapeLineSyntax } from "./core/lineSyntax.js"
 import { escapeFootnoteReferences } from "./core/footnoteReferences.js"
+import { escapeDescriptiveTags } from "./core/descriptiveTags.js"
 import { escapeBackslashCommands } from "./core/backslashCommands.js"
 import { escapeTablePipes } from "./core/tablePipes.js"
 import { requireBracedScripts } from "./core/bracedScripts.js"
@@ -130,6 +132,7 @@ function convertMarkdownDocument(
   escapeBackslashCommands(uniorgAst)
   escapeTablePipes(uniorgAst, options.onWarning)
   escapeFootnoteReferences(uniorgAst)
+  escapeDescriptiveTags(uniorgAst)
   escapeLineSyntax(uniorgAst)
   escapeOrgMarkup(uniorgAst)
 
@@ -181,6 +184,7 @@ function parseMarkdown(markdown: string, preset?: Preset): Root {
     .use(remarkGfm)
     .use(remarkFrontmatter)
     .use(remarkMath)
+    .use(remarkDefinitionList)
     .parse(markdown)
   keepPassthroughSource(mdast, markdown)
   preset?.markdown?.read?.mdast?.(mdast, markdown)

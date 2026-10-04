@@ -25,6 +25,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `[markdown]` or per side. The library's `spelling` and per-construct
   `interpretHtml` replace them; CLI `--html` replaces
   `--interpret-html` and sets both sides.
+- **Breaking:** org descriptive lists are written as Markdown
+  definition lists (`term` / `:   definition`) rather than as their
+  org text (`- term :: definition`), and read back from them. A
+  Markdown list item holding `::` stays a list item, and a
+  fixed-width line's `:` is escaped (`\: text`), as a line below text that starts with
+  a colon now starts a definition.
 - The Web UI's options name the side they act on, and a table sets
   each construct's HTML reading and Spelling.
 

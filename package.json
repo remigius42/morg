@@ -73,7 +73,9 @@
   },
   "dependencies": {
     "@types/mdast": "^4.0.4",
+    "mdast-util-definition-list": "^2.0.1",
     "orgast-util-to-string": "^1.1.0",
+    "remark-definition-list": "^2.0.1",
     "remark-frontmatter": "^5.0.0",
     "remark-gfm": "^4.0.1",
     "remark-math": "^6.0.0",

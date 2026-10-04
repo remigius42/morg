@@ -59,11 +59,16 @@ function transformUniorgElement(
       return transformPlanning(ctx, node)
     case "drawer":
       return transformDrawer(ctx, node)
+    case "fixed-width":
+      // its `: ` would start a Markdown definition (ADR 0007); escaped,
+      // Markdown reads the `:` as text, which org reads as fixed-width
+      return keyValueParagraph([
+        orgNodeToText(node).replace(/^([ \t]*):(?=[ \t]|$)/gm, "$1\\:")
+      ])
     case "special-block":
     case "center-block":
     case "verse-block":
     case "comment-block":
-    case "fixed-width":
     case "keyword":
     case "babel-call" as ElementType["type"]:
     case "diary-sexp" as ElementType["type"]:
