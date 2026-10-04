@@ -114,7 +114,7 @@ _Avoid_: none, default, generic
 
 ## Input Preset / Output Preset
 
-The Preset whose Dialect the input is read in, and the one the output is written in. They may differ (Logseq org → Vanilla md); `preset` sets both. Asking a Preset for a Dialect it lacks (Obsidian as the Input Preset of org) is an error. Never auto-detected: a page often carries no telling syntax, and a vault must convert the same way file by file.
+The Preset whose Dialect the input is read in, and the one the output is written in. They may differ (Logseq org → Vanilla md); `preset` sets both. Asking a Preset for a Dialect it lacks (Obsidian as the Input Preset of org) is an error. Never auto-detected, nor hinted at by a warning: a page often carries no telling syntax, and a vault must convert the same way file by file.
 
 ## Block
 

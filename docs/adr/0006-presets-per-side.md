@@ -41,6 +41,13 @@ based script) drops planning and admonitions.
 3. **No auto-detection.** Many pages carry no telling syntax, and a
    vault must convert the same way file by file. Today's default
    (Vanilla) stays.
+   Amended (0.10.0): no hint either. A warning that the input looks
+   like another Dialect than its Input Preset would rest on the same
+   guess: the syntax that tells a Dialect apart is rare on a page, and
+   what is common (`[[page]]`) is Vanilla org too, so it would be
+   silent on most pages and could warn on a Vanilla one. Converters
+   leave this to the user too: pandoc reads `--from` or the file
+   extension, never the content.
 4. **No same-format conversion, and `normalize` takes one Preset.**
    `normalize` canonicalizes within a Dialect; a dialect change within
    one format is a later feature. Corpus checks of the new directions
