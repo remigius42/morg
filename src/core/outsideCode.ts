@@ -52,3 +52,22 @@ export function maskCode(markdown: string): string {
   }
   return masked + markdown.slice(from)
 }
+
+/**
+ * Maps a Markdown string's text, each stretch between code, math,
+ * frontmatter and raw HTML on its own, leaving those as written.
+ * @param markdown The Markdown string.
+ * @param map What a stretch of text becomes.
+ * @returns The mapped Markdown string.
+ */
+export function mapOutsideCode(
+  markdown: string,
+  map: (text: string) => string
+): string {
+  return [...maskCode(markdown).matchAll(/\0+|[^\0]+/g)]
+    .map(({ 0: run, index }) => {
+      const text = markdown.slice(index, index + run.length)
+      return run.startsWith("\0") ? text : map(text)
+    })
+    .join("")
+}

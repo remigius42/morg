@@ -2,6 +2,7 @@ import { consumesBracedScripts } from "../core/bracedScripts.js"
 import { mayBeLineSyntax, readsAsLineSyntax } from "../core/lineSyntax.js"
 import { positionParser, tryParse } from "../core/render.js"
 import { ZERO_WIDTH_SPACE } from "../core/markupBoundary.js"
+import { mapOutsideCode } from "../core/outsideCode.js"
 import {
   isDrawerStart,
   isOrgBlockStart,
@@ -956,30 +957,14 @@ function dedentCommon(content: string[]): string[] {
     : content
 }
 
-const CODE_SPAN_RE = /(`+)[^`]*?\1/g
-
 // a translation's page links, but in code
 function relinkContent(
   content: string[],
   relink: ConversionContext["relink"]
 ): string[] {
-  if (!relink) {
-    return content
-  }
-  let fenced = false
-  return content.map(line => {
-    fenced = FENCE_RE.test(line) ? !fenced : fenced
-    if (fenced || FENCE_RE.test(line)) {
-      return line
-    }
-    let result = ""
-    let from = 0
-    for (const code of line.matchAll(CODE_SPAN_RE)) {
-      result += relink(line.slice(from, code.index)) + code[0]
-      from = code.index + code[0].length
-    }
-    return result + relink(line.slice(from))
-  })
+  return relink
+    ? mapOutsideCode(content.join("\n"), relink).split("\n")
+    : content
 }
 
 /**
