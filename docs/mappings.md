@@ -456,22 +456,25 @@ Translated within Markdown (Logseq md ↔ Vanilla md), the outline maps
 as in the table, a block's content stays as written but for its org
 blocks: a source or example block is fenced, a quote quoted, a query a
 `query` code block (and back: a `query` code block is a query block);
-others stay. Page properties are flat frontmatter keys, every key
-(no org is in the way to act on one); from Vanilla md, flat entries
-are page properties and the rest stays frontmatter. A rule after a
-Vanilla list is a block of `---`, a block's content loses the
-indentation all its lines share, and text after a list is read from
-its own column. Obsidian md translates as Vanilla md does, but for its
-links: `[[Page|label]]` (in a table `[[Page\|label]]`) ↔
-`[label]([[Page]])` outside code (`[[Page]]` is both's); an embed's
-size (`![[image.png|300]]`) stays. Obsidian md → Vanilla md or Logseq md writes
-a `%%comment%%` as an HTML comment (`<!--comment-->`) and an inline
-footnote `^[note]` as a footnote, numbered on from the page's own, its
-definition at the end; their delimiters count outside code, math and
-HTML only, but what they hold may be code. The way
-back has nothing to do: Obsidian reads both. Wikilinks and embeds
-(`[[Page]]`, `![[image.png]]`) stay in Vanilla md, which cannot
-resolve a note's name to its file without the vault.
+others stay. Page properties are flat frontmatter keys, every key (no
+org is in the way to act on one); from Vanilla md, flat entries are
+page properties and the rest stays frontmatter. A rule after a Vanilla
+list is a block of `---`, a block's content loses the indentation all
+its lines share, and text after a list is read from its own column. A
+`markdownStyle` option rewrites the markers it names (bullets,
+emphasis, strong, fences, rules) and nothing else; Logseq md keeps the
+`-` its blocks need, with a warning, and a fence stays whose code
+holds a run of the new marker. Obsidian md translates as Vanilla md
+does, but for its links: `[[Page|label]]` (in a table
+`[[Page\|label]]`) ↔ `[label]([[Page]])` outside code (`[[Page]]` is
+both's); an embed's size (`![[image.png|300]]`) stays. Obsidian md →
+Vanilla md or Logseq md writes a `%%comment%%` as an HTML comment
+(`<!--comment-->`) and an inline footnote `^[note]` as a footnote,
+numbered on from the page's own, its definition at the end; their
+delimiters count outside code, math and HTML only, but what they hold
+may be code. The way back has nothing to do: Obsidian reads both.
+Wikilinks and embeds (`[[Page]]`, `![[image.png]]`) stay in Vanilla
+md, which cannot resolve a note's name to its file without the vault.
 
 `obsidian`: wikilinks `[[Page]]` / `[[Page|alias]]` ↔ org fuzzy links,
 emitted unescaped in Markdown, except for the alias pipe inside a

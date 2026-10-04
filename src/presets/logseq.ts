@@ -51,6 +51,7 @@ export function logseq(): Preset {
     ...page,
     markdown: {
       ...page.markdown,
+      bullet: "-",
       links: {
         read: text => text.replace(LABELED_PAGE_REF_RE, "[[$2][$1]]"),
         write: text => text.replace(FUZZY_LINK_RE, "[$2]([[$1]])")

@@ -250,7 +250,9 @@ preset })`: `preserveOrgisms` default `true`; `useHtml` (default
   The same preset on both sides throws; that is `normalizeOrg`.
   `translateMarkdown(md, { inputPreset, outputPreset })` does the same
   within Markdown (Logseq md ↔ Vanilla md); `orgismKeys` names the
-  `key::` lines Vanilla md writes planning under, as in a conversion.
+  `key::` lines Vanilla md writes planning under, as in a conversion,
+  and `markdownStyle` rewrites the markers it names, leaving the rest
+  as written.
 
 - `markdownStyle: { bullet, emphasis, strong, fence, rule, ruleRepetition }`
   (on `convertOrgToMarkdown` and `normalizeMarkdown`; CLI `--bullet`,

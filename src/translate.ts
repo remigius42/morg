@@ -1,3 +1,6 @@
+import { restyleMarkdown } from "./core/restyle.js"
+import type { MarkdownStyleOptions } from "./options.js"
+import type { Preset } from "./presets/types.js"
 import {
   resolveSides,
   type Format,
@@ -12,6 +15,8 @@ import {
 export type TranslateOptions = PresetOptions & {
   onWarning?: (message: string) => void
   orgismKeys?: Record<string, string>
+  /** The Markdown markers to write; others stay as written. */
+  markdownStyle?: MarkdownStyleOptions
 }
 
 /**
@@ -61,10 +66,28 @@ export function translateMarkdown(
   const vanilla =
     input?.translateMarkdown?.(markdown, { ...context, side: "input" }) ??
     markdown
-  return (
+  const translated =
     output?.translateMarkdown?.(vanilla, { ...context, side: "output" }) ??
     vanilla
+  const style = outputStyle(options, output)
+  return style ? restyleMarkdown(translated, style) : translated
+}
+
+// the style to write, but for a bullet the output's outline needs
+function outputStyle(
+  { markdownStyle, onWarning }: TranslateOptions,
+  output: Preset | undefined
+): MarkdownStyleOptions | undefined {
+  const needed = output?.markdown?.bullet
+  if (!markdownStyle?.bullet || !needed || markdownStyle.bullet === needed) {
+    return markdownStyle
+  }
+  onWarning?.(
+    `${output.name} Markdown writes its blocks with '${needed}'; bullet '${markdownStyle.bullet}' not applied`
   )
+  const style = { ...markdownStyle }
+  delete style.bullet
+  return style
 }
 
 // what a dialect's translation learns of the options

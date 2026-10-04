@@ -196,6 +196,16 @@ describe("runConversion", () => {
     expect(result.output).toBe("- a\n  due:: <2026-10-04 Sun>\n")
   })
 
+  it("applies markdown style options when translating", () => {
+    const result = runConversion("- a\n", {
+      direction: "normalize-md",
+      inputPreset: "logseq",
+      outputPreset: "vanilla",
+      markdownStyle: { bullet: "*" }
+    })
+    expect(result.output).toBe("* a\n")
+  })
+
   it("applies markdown style options when normalizing", () => {
     const result = runConversion("- one", {
       direction: "normalize-md",

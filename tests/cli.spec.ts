@@ -386,6 +386,19 @@ describe("convert", () => {
     ).toBe("- a\n  due:: <2026-10-04 Sun>\n")
   })
 
+  it("translates with the style flags' markers", () => {
+    expect(
+      convert(
+        "- a\n",
+        "markdown",
+        "markdown",
+        cli({ markdownStyle: { bullet: "*" } }),
+        {},
+        { inputPreset: logseq() }
+      )
+    ).toBe("* a\n")
+  })
+
   it("reports dropped constructs as morg: warnings on stderr", () => {
     const spy = vi.spyOn(console, "error").mockImplementation(() => undefined)
     try {

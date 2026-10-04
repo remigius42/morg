@@ -317,4 +317,51 @@ describe("translateMarkdown", () => {
       })
     ).toBe("a <!-- fix `foo()` later --> b[^1] `%%`\n\n[^1]: see `x`\n")
   })
+
+  it("writes the bullets a markdownStyle names", () => {
+    expect(
+      translateMarkdown("- a\n\t- b\n", {
+        inputPreset: logseq(),
+        markdownStyle: { bullet: "*" }
+      })
+    ).toBe("* a\n  * b\n")
+  })
+
+  it("keeps the bullet Logseq md's blocks need, and says so", () => {
+    const warnings: string[] = []
+    expect(
+      translateMarkdown("* a\n  * b\n", {
+        outputPreset: logseq(),
+        markdownStyle: { bullet: "*" },
+        onWarning: m => warnings.push(m)
+      })
+    ).toBe("- a\n\t- b\n")
+    expect(warnings).toEqual([
+      "logseq Markdown writes its blocks with '-'; bullet '*' not applied"
+    ])
+  })
+
+  it("writes the emphasis and strong markers a markdownStyle names", () => {
+    expect(
+      translateMarkdown("- *a* and **b**, `*c*`, snake*case*word\n", {
+        inputPreset: logseq(),
+        markdownStyle: { emphasis: "_", strong: "_" }
+      })
+    ).toBe("- _a_ and __b__, `*c*`, snake*case*word\n")
+  })
+
+  it("writes the fence and rule markers a markdownStyle names", () => {
+    expect(
+      translateMarkdown("```sh\necho\n```\n\n---\n\n````\n~~~\n````\n", {
+        inputPreset: obsidian(),
+        markdownStyle: { fence: "~", rule: "_", ruleRepetition: 5 }
+      })
+    ).toBe("~~~sh\necho\n~~~\n\n_____\n\n````\n~~~\n````\n")
+    expect(
+      translateMarkdown("```\na\n`````\n", {
+        inputPreset: obsidian(),
+        markdownStyle: { fence: "~" }
+      })
+    ).toBe("~~~\na\n~~~~~\n")
+  })
 })

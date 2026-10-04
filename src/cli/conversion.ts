@@ -89,7 +89,8 @@ function sameFormat(
     return translate(inputContent, {
       ...presets,
       ...(options.onWarning && { onWarning: options.onWarning }),
-      ...(options.orgismKeys && { orgismKeys: options.orgismKeys })
+      ...(options.orgismKeys && { orgismKeys: options.orgismKeys }),
+      ...(options.markdownStyle && { markdownStyle: options.markdownStyle })
     })
   }
   return format === "markdown"

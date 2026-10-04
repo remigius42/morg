@@ -38,7 +38,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Obsidian Markdown → Vanilla Markdown: a `%%comment%%` becomes an
   HTML comment and an inline footnote a footnote (also on the way to
   Logseq Markdown); wikilinks stay, as resolving a note's file needs
-  the vault.
+  the vault. `markdownStyle` (CLI `--bullet`, `--emphasis`, …) rewrites
+  only the markers it names; Logseq Markdown keeps its `-` bullets.
 - Web UI: two dialects of one format translate (Input: Markdown
   (Logseq), Output: Markdown); a translated file is saved under its
   dialect (`page.vanilla.md`). Changing the input's format still moves

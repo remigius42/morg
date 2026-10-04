@@ -72,6 +72,8 @@ export interface MarkdownDialect {
    * dialects.
    */
   links?: { read: (text: string) => string; write: (text: string) => string }
+  /** The bullet its outline needs, which no style may change. */
+  bullet?: "-" | "*" | "+"
 }
 
 /**
