@@ -48,6 +48,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`morg --input-preset logseq --input page.md --output out.md`); it
   was an error.
 
+### Changed
+
+- **Breaking:** Node.js 24 or later (`engines.node` was `>=20`, which
+  nothing tested; Node 20 is end-of-life).
+
 ## [0.9.2] - 2026-10-04
 
 ### Fixed
