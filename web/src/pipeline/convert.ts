@@ -1,8 +1,7 @@
 import { convertMarkdownToOrg } from "../../../src/markdownToOrg.js"
 import { convertOrgToMarkdown } from "../../../src/orgToMarkdown.js"
-import { normalizeMarkdown, normalizeOrg } from "../../../src/normalize.js"
-import { translateMarkdown, translateOrg } from "../../../src/translate.js"
 import { parseConfig, type MorgConfig } from "../../../src/config.js"
+import { convertWithinFormat } from "../../../src/withinFormat.js"
 import {
   buildConversionOptions,
   resolvePresetOptions
@@ -64,19 +63,6 @@ function resolvePresets(
   }
 }
 
-// one format on both sides: two presets translate, one normalizes
-function sameFormat(
-  input: string,
-  direction: Direction,
-  options: Parameters<typeof normalizeMarkdown>[1] & PresetOptions
-): string {
-  const markdown = direction === "normalize-md"
-  if (options.inputPreset || options.outputPreset) {
-    return (markdown ? translateMarkdown : translateOrg)(input, options)
-  }
-  return (markdown ? normalizeMarkdown : normalizeOrg)(input, options)
-}
-
 function convert(
   input: string,
   direction: Direction,
@@ -90,10 +76,11 @@ function convert(
       return convertOrgToMarkdown(input, orgToMdOptions)
     case "normalize-md":
     case "normalize-org":
-      return sameFormat(input, direction, {
-        ...mdToOrgOptions,
-        ...orgToMdOptions
-      })
+      return convertWithinFormat(
+        input,
+        direction === "normalize-md" ? "markdown" : "org",
+        { ...mdToOrgOptions, ...orgToMdOptions }
+      )
     default:
       // out-of-union value, e.g. from a stale persisted form state
       throw new Error(`Unknown direction '${String(direction)}'`)

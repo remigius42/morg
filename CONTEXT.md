@@ -82,7 +82,8 @@ plugins (see Preset) and their registry.
 
 Anything both adapters need lives in `src/` rather than in either of
 them: `conversionOptions.ts` layers explicit overrides over the config,
-and `presets/registry.ts` maps a preset name to a Preset. Duplicating
+`withinFormat.ts` translates or normalizes when one format is on both
+sides, and `presets/registry.ts` maps a preset name to a Preset. Duplicating
 one of those in an adapter is how the two drift apart.
 
 `web/src/` splits the same way, for a reason the bundler enforces.

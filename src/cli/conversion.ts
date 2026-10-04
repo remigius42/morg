@@ -1,11 +1,6 @@
 import { convertMarkdownToOrg } from "../markdownToOrg.js"
 import { convertOrgToMarkdown } from "../orgToMarkdown.js"
-import {
-  normalizeMarkdown,
-  normalizeOrg,
-  type NormalizeOptions
-} from "../normalize.js"
-import { translateMarkdown, translateOrg } from "../translate.js"
+import { convertWithinFormat } from "../withinFormat.js"
 import type { MorgConfig } from "../config.js"
 import { buildConversionOptions as layerOptions } from "../conversionOptions.js"
 import type { MarkdownStyleOptions } from "../options.js"
@@ -63,7 +58,7 @@ export function convert(
       presets
     )
     if (fromFormat === toFormat) {
-      return sameFormat(inputContent, fromFormat, presets, {
+      return convertWithinFormat(inputContent, fromFormat, {
         ...mdToOrgOptions,
         ...orgToMdOptions
       })
@@ -75,25 +70,4 @@ export function convert(
   } catch (error) {
     throw new CliError("Conversion error:", { cause: error })
   }
-}
-
-// one preset on both sides normalizes, two translate (ADR 0006)
-function sameFormat(
-  inputContent: string,
-  format: Format,
-  presets: PresetOptions,
-  options: NormalizeOptions
-): string {
-  if (presets.inputPreset || presets.outputPreset) {
-    const translate = format === "markdown" ? translateMarkdown : translateOrg
-    return translate(inputContent, {
-      ...presets,
-      ...(options.onWarning && { onWarning: options.onWarning }),
-      ...(options.orgismKeys && { orgismKeys: options.orgismKeys }),
-      ...(options.markdownStyle && { markdownStyle: options.markdownStyle })
-    })
-  }
-  return format === "markdown"
-    ? normalizeMarkdown(inputContent, options)
-    : normalizeOrg(inputContent, options)
 }
