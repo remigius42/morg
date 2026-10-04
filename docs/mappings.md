@@ -405,7 +405,15 @@ written, line endings become LF and an empty page stays empty. A
 Vanilla headline whose title starts a list running on below it
 (`* 3. Why?` with its body indented three spaces) stays as it is on
 the way to Logseq org, but comes back with the title below empty
-stars. Vanilla md has a shape of its own; Logseq org ↔ Vanilla md:
+stars. A page whose blocks use a task marker Emacs does not know
+(`NOW`, `LATER`, `DOING`, `WAIT`, `WAITING`, `IN-PROGRESS`, `STARTED`,
+`CANCELED`, `CANCELLED`) and its own `#+TODO:` lines do not declare
+gets `#+TODO: TODO NOW LATER DOING WAIT WAITING IN-PROGRESS STARTED |
+DONE CANCELED CANCELLED` after its leading keywords in Vanilla org,
+and loses that line in Logseq org. Logseq reads no such line: an own
+one stays (a page property to Logseq), with a warning naming the
+markers Logseq shows as text. Vanilla md has a shape of its own;
+Logseq org ↔ Vanilla md:
 
 | Logseq org                                                   | Vanilla md                                                                                  |
 | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |

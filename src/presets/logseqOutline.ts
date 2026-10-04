@@ -677,6 +677,59 @@ export function markdownOutlineToOrg(
   )
 }
 
+// Logseq's task markers (mldoc's), the done ones after the bar, for
+// Emacs, which knows TODO and DONE only; Logseq reads no such line
+const TODO_LINE =
+  "#+TODO: TODO NOW LATER DOING WAIT WAITING IN-PROGRESS STARTED | DONE CANCELED CANCELLED"
+const EMACS_UNKNOWN_MARKER_RE =
+  /^(NOW|LATER|DOING|WAIT|WAITING|IN-PROGRESS|STARTED|CANCELED|CANCELLED)(?: |$)/
+const KEYWORD_LINE_RE = /^#\+\S+:/
+const OWN_TODO_LINE_RE = /^#\+(?:SEQ_|TYP_)?TODO:(.*)$/i
+
+// the markers a #+TODO: line declares, without their keys
+function declaredMarkers(line: string): string[] {
+  const [, markers = ""] = OWN_TODO_LINE_RE.exec(line) ?? []
+  return markers
+    .split(/\s+/)
+    .map(marker => marker.replace(/\(.*\)$/, ""))
+    .filter(marker => marker && marker !== "|")
+}
+
+const LOGSEQ_MARKERS = new Set(declaredMarkers(TODO_LINE))
+
+// Vanilla org: a page whose blocks use a marker Emacs does not know,
+// nor the page's own #+TODO: lines, names them all after its leading
+// keywords
+function withTodoLine(page: string[], blocks: Lines[]): string[] {
+  const declared = new Set(page.flatMap(declaredMarkers))
+  const undeclared = blocks.some(({ lines }) => {
+    const [, marker = ""] = EMACS_UNKNOWN_MARKER_RE.exec(lines[0] ?? "") ?? []
+    return marker && !declared.has(marker)
+  })
+  if (!undeclared) {
+    return page
+  }
+  const end = page.findIndex(line => !KEYWORD_LINE_RE.test(line))
+  const at = end === -1 ? page.length : end
+  return [...page.slice(0, at), TODO_LINE, ...page.slice(at)]
+}
+
+// Logseq org: the line is Vanilla org's alone; Logseq reads an own one
+// as a page property, and its markers as text, unless they are its own
+function withoutTodoLine(page: string[], context: ConversionContext): string[] {
+  for (const line of page) {
+    const unknown = declaredMarkers(line).filter(
+      marker => !LOGSEQ_MARKERS.has(marker)
+    )
+    if (unknown.length) {
+      context.onWarning?.(
+        `Logseq reads no #+TODO: line; it shows ${unknown.join(", ")} as text`
+      )
+    }
+  }
+  return page.filter(line => line !== TODO_LINE)
+}
+
 /**
  * Translates an org page between Logseq org and Vanilla org, which
  * differ in their headlines only (ADR 0006): a block's lines are kept,
@@ -696,7 +749,7 @@ export function translateOrgOutline(
   const vanilla = context.side === "input"
   const { page, blocks } = splitOrgBlocks(org)
   return [
-    ...page,
+    ...(vanilla ? withTodoLine(page, blocks) : withoutTodoLine(page, context)),
     ...blocks.map(({ level, lines }) =>
       writeOrgLines(
         { level, lines: vanilla ? lines : joinTitle(lines).lines },

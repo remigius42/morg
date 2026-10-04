@@ -15,7 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Vanilla org within org, changing only the headlines the two write
   differently (an empty block's space, a first line that starts an
   element) and keeping every other line as written (ADR 0006 §4
-  amended).
+  amended). Logseq's task markers (`NOW`, `DOING`, `WAITING`, …) are
+  declared for Emacs in a `#+TODO:` line, dropped again on the way
+  back; an own `#+TODO:` line, which Logseq ignores, warns of the
+  markers Logseq shows as text.
 
 ## [0.9.2] - 2026-10-04
 
