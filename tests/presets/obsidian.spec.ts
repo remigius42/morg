@@ -70,4 +70,39 @@ describe("obsidian preset", () => {
 
     expect(convertOrgToMarkdown(org, { preset: obsidian() })).toBe(org)
   })
+
+  it("reads an image's size as its #+ATTR_HTML: line (ADR 0007)", () => {
+    const markdown = "![a|300](img.png)\n\n> ![|300x200](b.png)\n"
+    const org =
+      "#+ATTR_HTML: :width 300\n[[file:img.png][a]]\n\n" +
+      "#+begin_quote\n#+ATTR_HTML: :width 300 :height 200\n[[file:b.png]]\n#+end_quote\n"
+
+    expect(convertMarkdownToOrg(markdown, { preset: obsidian() })).toBe(org)
+    expect(convertOrgToMarkdown(org, { preset: obsidian() })).toBe(markdown)
+  })
+
+  it("writes its own size spelling over the html one", () => {
+    const org = "#+ATTR_HTML: :width 300\n[[file:img.png][a]]\n"
+
+    expect(
+      convertOrgToMarkdown(org, { preset: obsidian(), spelling: "html" })
+    ).toBe("![a|300](img.png)\n")
+  })
+
+  it("keeps a size Obsidian cannot spell, or an image in text, as written", () => {
+    for (const org of [
+      "#+ATTR_HTML: :height 200\n[[file:img.png]]\n",
+      "#+ATTR_HTML: :width 50%\n[[file:img.png]]\n",
+      "- x\n  #+ATTR_HTML: :width 300\n  [[file:img.png]]\n"
+    ]) {
+      expect(convertOrgToMarkdown(org, { preset: obsidian() })).toContain(
+        "#+ATTR_HTML"
+      )
+    }
+    expect(
+      convertMarkdownToOrg("A ![a|300](img.png) b\n\n- ![c|3](d.png)\n", {
+        preset: obsidian()
+      })
+    ).toBe("A [[file:img.png][a|300]] b\n\n- [[file:d.png][c|3]]\n")
+  })
 })

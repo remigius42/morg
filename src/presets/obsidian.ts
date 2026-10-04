@@ -1,9 +1,15 @@
-import type { OrgData, Link, Text } from "uniorg"
+import type { OrgData, Link, Paragraph, Text } from "uniorg"
 import type { Parent } from "unist"
 import { visit } from "unist-util-visit"
 import { toString } from "orgast-util-to-string"
 import { maskCode } from "../core/outsideCode.js"
 import { FUZZY_LINK_RE } from "./links.js"
+import {
+  attrHtmlSize,
+  attrHtmlValue,
+  IMAGE_EXTENSION_RE,
+  type ImageSize
+} from "../core/sizedImages.js"
 import type { Preset } from "./types.js"
 
 /**
@@ -14,8 +20,8 @@ export function obsidian(): Preset {
   return {
     name: "obsidian",
     markdown: {
-      read: { org: rewriteAliasedWikilinks },
-      write: fuzzyLinksToWikilinks,
+      read: { org: tree => readImageSizes(rewriteAliasedWikilinks(tree)) },
+      write: tree => fuzzyLinksToWikilinks(writeImageSizes(tree)),
       links: {
         read: text => text.replace(ALIASED_PAGE_LINK_RE, "[[$1][$2]]"),
         // a bare `|` would split a table's cell
@@ -26,7 +32,7 @@ export function obsidian(): Preset {
     // Vanilla Markdown reads Obsidian's own syntax but for these; the
     // way back has nothing to do
     translateMarkdown: (markdown, context) =>
-      context.side === "input" ? toVanilla(markdown) : markdown
+      context.side === "input" ? toVanilla(markdown) : fromVanilla(markdown)
   }
 }
 
@@ -77,10 +83,172 @@ function fuzzyLinksToWikilinks(uniorgAst: OrgData): OrgData {
   return uniorgAst
 }
 
+type Edit = [start: number, end: number, text: string]
+
+// an image's size in its alt text: `![alt|300](img.png)`, `|300x200`
+const SIZE_SUFFIX_RE = /^([^]*)\|(\d+)(?:x(\d+))?$/
+const DIGITS_RE = /^\d+$/
+
+// a paragraph's lone image link, outside a list item, where org reads
+// no affiliated keyword on the bullet's line and md→org flattens the
+// item's paragraphs
+function loneImage(paragraph: Paragraph, parent: Parent): Link | undefined {
+  const [link, ...more] = paragraph.children.filter(
+    child => !(child.type === "text" && child.value.trim() === "")
+  )
+  return parent.type !== "list-item" &&
+    !more.length &&
+    link?.type === "link" &&
+    IMAGE_EXTENSION_RE.test(link.rawLink.replace(/::.*$/s, ""))
+    ? link
+    : undefined
+}
+
+function sizeOf(width: string | undefined, height: string | undefined) {
+  return { width, ...(height !== undefined && { height }) } as ImageSize
+}
+
+// md→org: a lone image's `|300` is its #+ATTR_HTML: size (ADR 0007)
+function readImageSizes(uniorgAst: OrgData): OrgData {
+  visit(
+    uniorgAst as Parent,
+    "paragraph",
+    (node: Paragraph, _index: number, parent: Parent) => {
+      const link = loneImage(node, parent)
+      const affiliated = node.affiliated ?? {}
+      const size =
+        link?.children.every(child => child.type === "text") &&
+        SIZE_SUFFIX_RE.exec(toString(link))
+      if (!link || !size || affiliated.ATTR_HTML) {
+        return undefined
+      }
+      const [, alt, width, height] = size
+      link.children = alt ? [{ type: "text", value: alt }] : []
+      node.affiliated = {
+        ...affiliated,
+        ATTR_HTML: [attrHtmlValue(sizeOf(width, height))]
+      }
+      return undefined
+    }
+  )
+  return uniorgAst
+}
+
+// the size Obsidian spells: a width, and maybe a height, in pixels
+function obsidianSize(attrHtml: unknown): ImageSize | undefined {
+  const [value, ...more] = Array.isArray(attrHtml)
+    ? (attrHtml as unknown[])
+    : []
+  const size =
+    typeof value === "string" && !more.length ? attrHtmlSize(value) : undefined
+  return size?.width !== undefined &&
+    DIGITS_RE.test(size.width) &&
+    (size.height === undefined || DIGITS_RE.test(size.height))
+    ? size
+    : undefined
+}
+
+function sizeSuffix({ width, height }: ImageSize): string {
+  return `|${width}${height === undefined ? "" : `x${height}`}`
+}
+
+// org→md: a lone image's #+ATTR_HTML: size is its `|300`, Obsidian's own
+// spelling, over the html one
+function writeImageSizes(uniorgAst: OrgData): OrgData {
+  visit(
+    uniorgAst as Parent,
+    "paragraph",
+    (node: Paragraph, _index: number, parent: Parent) => {
+      const link = loneImage(node, parent)
+      const { ATTR_HTML: attrHtml, ...others } = node.affiliated ?? {}
+      const size = obsidianSize(attrHtml)
+      if (!link || !size) {
+        return undefined
+      }
+      const alt = link.children.length ? toString(link) : ""
+      link.children = [{ type: "text", value: alt + sizeSuffix(size) }]
+      node.affiliated = others
+      return undefined
+    }
+  )
+  return uniorgAst
+}
+
+// a lone image line in Markdown, its paragraph's only line
+const LONE_IMAGE = String.raw`!\[([^\]\n]*)\]\(([^()\s]+)\)[ \t]*(?=\n\n|\n?$)`
+const SIZED_IMAGE_RE = new RegExp(String.raw`(?<=^|\n\n)${LONE_IMAGE}`, "g")
+const ATTR_HTML_IMAGE_RE = new RegExp(
+  String.raw`(?<=^|\n)#\+ATTR_HTML:[ \t]+([^\n]*)\n\n${LONE_IMAGE}`,
+  "g"
+)
+
+// Obsidian's `![alt|300](img.png)` alone in its paragraph → Vanilla's
+// #+ATTR_HTML: line above `![alt](img.png)`; code in it is masked
+function sizesToVanilla(masked: string): Edit[] {
+  const edits: Edit[] = []
+  for (const { index, 0: image, 1: text = "", 2: url = "" } of masked.matchAll(
+    SIZED_IMAGE_RE
+  )) {
+    const size = SIZE_SUFFIX_RE.exec(text)
+    if (size && !image.includes("\0") && IMAGE_EXTENSION_RE.test(url)) {
+      const [, alt, width, height] = size
+      edits.push([
+        index,
+        index + image.trimEnd().length,
+        `#+ATTR_HTML: ${attrHtmlValue(sizeOf(width, height))}\n\n![${alt}](${url})`
+      ])
+    }
+  }
+  return edits
+}
+
+// a size line and image, outside code, the line the last of a
+// paragraph of keywords
+function vanillaSized(
+  text: string,
+  url: string,
+  above: string | undefined
+): boolean {
+  return (
+    (!above || above.startsWith("#+")) &&
+    !text.includes("\0") &&
+    IMAGE_EXTENSION_RE.test(url)
+  )
+}
+
+// Vanilla → Obsidian: the inverse, where Obsidian can spell the size and
+// the line ends a paragraph of keywords
+function fromVanilla(markdown: string): string {
+  if (!markdown.includes("#+ATTR_HTML:")) {
+    return markdown
+  }
+  const masked = maskCode(markdown)
+  const edits: Edit[] = []
+  for (const match of masked.matchAll(ATTR_HTML_IMAGE_RE)) {
+    const { index, 0: text, 2: alt, 3: url = "" } = match
+    const size = obsidianSize([match[1]])
+    const above = masked.slice(0, index).split("\n").at(-2)
+    if (size && vanillaSized(text, url, above)) {
+      edits.push([
+        index - (above ? 1 : 0),
+        index + text.trimEnd().length,
+        `${above ? "\n\n" : ""}![${alt}${sizeSuffix(size)}](${url})`
+      ])
+    }
+  }
+  return applyEdits(markdown, edits)
+}
+
+function applyEdits(text: string, edits: Edit[]): string {
+  let result = text
+  for (const [start, end, replacement] of edits.sort((a, b) => b[0] - a[0])) {
+    result = result.slice(0, start) + replacement + result.slice(end)
+  }
+  return result
+}
+
 const COMMENT_RE = /%%([\s\S]*?)%%/g
 const FOOTNOTE_LABEL_RE = /\[\^(\d+)\]/g
-
-type Edit = [start: number, end: number, text: string]
 
 // Obsidian Markdown → Vanilla Markdown: a comment is an HTML comment,
 // an inline footnote a footnote, numbered on from the page's own, its
@@ -106,10 +274,8 @@ function toVanilla(markdown: string): string {
     definitions.push(`[^${next}]: ${markdown.slice(start + 2, end)}`)
     edits.push([start, end + 1, `[^${next++}]`])
   }
-  let result = markdown
-  for (const [start, end, text] of edits.sort((a, b) => b[0] - a[0])) {
-    result = result.slice(0, start) + text + result.slice(end)
-  }
+  edits.push(...sizesToVanilla(masked))
+  const result = applyEdits(markdown, edits)
   return definitions.length
     ? `${result.replace(/\n*$/, "")}\n\n${definitions.join("\n")}\n`
     : result

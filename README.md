@@ -238,7 +238,8 @@ preset })`: `preserveOrgisms` default `true`; `spelling` (`"markdown"`
   `[[((uuid))][label]]`, and `^^highlight^^` markup survives verbatim
   (it would otherwise re-parse as superscripts).
 - `obsidian()`: wikilinks `[[Page]]` / `[[Page|alias]]` ↔ org fuzzy links
-  (`[[Page\|alias]]` in a table cell). Translated to Vanilla or Logseq
+  (`[[Page\|alias]]` in a table cell); an image's size
+  `![alt|300](image.png)` ↔ `#+ATTR_HTML: :width 300`. Translated to Vanilla or Logseq
   Markdown, a `%%comment%%` becomes an HTML comment and an inline
   footnote `^[note]` a footnote.
 - `inputPreset` / `outputPreset` (on both conversions): the dialect

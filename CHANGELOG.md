@@ -15,6 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   writes an image link sized by `#+ATTR_HTML: :width`/`:height` as
   `<img src alt width height>` and reads that `<img>` back; under
   `"markdown"`, the default, the attribute line stays verbatim.
+- Obsidian md reads an image's size (`![alt|300](image.png)`,
+  `|300x200`) as its `#+ATTR_HTML: :width`/`:height` line and writes
+  it back, for an image alone in its paragraph outside a list;
+  translating Obsidian md to or from Vanilla md turns one into the
+  other. An embed's size (`![[image.png|300]]`) stays as written.
 
 ### Changed
 

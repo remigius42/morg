@@ -459,6 +459,18 @@ describe("Markdown options in a translation (ADR 0007)", () => {
     ).toBe("#+ATTR_HTML: :width 300\n\n![a](img.png)\n")
   })
 
+  it("translates an Obsidian image size to its #+ATTR_HTML: line", () => {
+    const obsidianMd =
+      "#+CAPTION: c\n\n![a|300x2](img.png)\n\nx ![b|3](c.png)\n"
+    const vanilla =
+      "#+CAPTION: c\n\n#+ATTR_HTML: :width 300 :height 2\n\n![a](img.png)\n\nx ![b|3](c.png)\n"
+
+    expect(translateMarkdown(obsidianMd, fromObsidian)).toBe(vanilla)
+    expect(translateMarkdown(vanilla, { outputPreset: obsidian() })).toBe(
+      obsidianMd
+    )
+  })
+
   it("leaves a translation without Markdown options as written", () => {
     const markdown = "Term\n:   def\n\n<dl><dt>a</dt><dd>b</dd></dl>\n"
 
