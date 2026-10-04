@@ -237,6 +237,34 @@ describe("translateMarkdown", () => {
     ).toBe("- → a\n  - ```\n    x\n    ```\n")
   })
 
+  it("drops a block's common indentation, counting a tab to its tab stop", () => {
+    expect(
+      translateMarkdown("- a\n\t-   ```\n\t  \tx\n\t    ```\n", {
+        inputPreset: logseq()
+      })
+    ).toBe("- a\n  - ```\n      x\n    ```\n")
+  })
+
+  it("reads a tab as indentation up to the next tab stop", () => {
+    // a fence indented with spaces among lines indented with tabs
+    const markdown = "- a\n\t- b\n\tc\n    ```js\n\td\n\t```\n"
+    const roundTrip = (md: string): string =>
+      translateMarkdown(translateMarkdown(md, { outputPreset: logseq() }), {
+        inputPreset: logseq()
+      })
+    const once = roundTrip(markdown)
+
+    expect(roundTrip(once)).toBe(once)
+  })
+
+  it("reads a tab-indented item's content from its content column", () => {
+    expect(
+      translateMarkdown("- a\n\t- b\n\t    ```\n\t\t x\n\t\t```\n", {
+        outputPreset: logseq()
+      })
+    ).toBe("- a\n\t- b\n\t    ```\n\t     x\n\t    ```\n")
+  })
+
   it("reads text after a list from its own column", () => {
     expect(
       translateMarkdown("1. a\n\n  > q\n  > r\n", { outputPreset: logseq() })

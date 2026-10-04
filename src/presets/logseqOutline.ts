@@ -9,7 +9,11 @@ import {
   orgElementEnd
 } from "../core/passthroughSource.js"
 import type { ConversionContext, FragmentConverter, Preset } from "./types.js"
-import { readVanillaMarkdownOutline } from "./logseqVanillaMarkdown.js"
+import {
+  columns,
+  dedent as dedentColumns,
+  readVanillaMarkdownOutline
+} from "./logseqVanillaMarkdown.js"
 
 // Logseq stores a page as an outline of blocks, each block a content
 // string it parses on its own: org writes a block as its level's stars,
@@ -965,16 +969,16 @@ function queryCodeToBlocks(content: string[]): string[] {
   return result
 }
 
-// Logseq Markdown: spaces after a bullet the whole content shares, which
-// a Vanilla list item would read as its content's column
+// Logseq Markdown: indentation after a bullet the whole content shares,
+// which a Vanilla list item would read as its content's column
 function dedentCommon(content: string[]): string[] {
   const indent = Math.min(
     ...content
       .filter(line => line.trim())
-      .map(line => /^ */.exec(line)?.[0].length ?? 0)
+      .map(line => columns(/^[ \t]*/.exec(line)?.[0] ?? ""))
   )
   return Number.isFinite(indent) && indent
-    ? content.map(line => line.slice(Math.min(indent, line.length)))
+    ? content.map(line => dedentColumns(line, indent))
     : content
 }
 

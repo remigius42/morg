@@ -462,7 +462,9 @@ others stay. Page properties are flat frontmatter keys, every key (no
 org is in the way to act on one); from Vanilla md, flat entries are
 page properties and the rest stays frontmatter. A rule after a Vanilla
 list is a block of `---`, a block's content loses the indentation all
-its lines share, and text after a list is read from its own column. A
+its lines share, and text after a list is read from its own column; a
+tab indents to the next tab stop (4), and what of it lies right of the
+column cut stays as spaces. A
 `markdownStyle` option rewrites the markers it names (bullets,
 emphasis, strong, fences, rules) and nothing else; Logseq md keeps the
 `-` its blocks need, with a warning, and a fence stays whose code

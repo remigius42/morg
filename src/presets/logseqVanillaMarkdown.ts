@@ -91,10 +91,31 @@ function readMeta(lines: string[], context: ConversionContext): Meta[] {
   return meta
 }
 
-// a lazy continuation line sits anywhere left of the column
-function dedent(line: string, column: number): string {
-  const indent = /^ */.exec(line)?.[0].length ?? 0
-  return line.slice(Math.min(indent, column))
+// a lazy continuation line sits anywhere left of the column; a tab
+// reaches the next tab stop (4), the part of it right of the column
+// stays as spaces
+export function dedent(line: string, column: number): string {
+  let width = 0
+  let i = 0
+  while (width < column && (line[i] === " " || line[i] === "\t")) {
+    width = columns(line[i++] ?? "", width)
+  }
+  return " ".repeat(Math.max(0, width - column)) + line.slice(i)
+}
+
+// the column text ends at, from a start column, a tab reaching the next
+// tab stop
+export function columns(text: string, start = 0): number {
+  let width = start
+  for (const char of text) {
+    width += char === "\t" ? 4 - (width % 4) : 1
+  }
+  return width
+}
+
+// the column a list item's content starts at
+function contentColumn(line: string): number {
+  return columns(BULLET_RE.exec(line)?.[0] ?? "")
 }
 
 function leadingProperties(lines: string[]): number {
@@ -112,9 +133,9 @@ interface Reader {
 // its checkbox read, continuation lines moved left past the bullet
 function itemSource(item: ListItem, end: number, lines: string[]): string[] {
   const [first = "", ...rest] = lines.slice(span(item)[0], end + 1)
-  const column = BULLET_RE.exec(first)?.[0].length ?? 0
+  const column = contentColumn(first)
   return [
-    taskTitle(item, first.slice(column)),
+    taskTitle(item, first.slice(BULLET_RE.exec(first)?.[0].length ?? 0)),
     ...rest.map(line => dedent(line, column))
   ]
 }
@@ -163,7 +184,7 @@ function readItem(
   reader.blocks.push(block)
   // what follows the first nested list: more lists, and text, which a
   // block's content cannot hold after its children, as child blocks
-  const column = BULLET_RE.exec(reader.lines[span(item)[0]] ?? "")?.[0].length
+  const column = contentColumn(reader.lines[span(item)[0]] ?? "")
   const rest = nested[0]
     ? item.children.slice(item.children.indexOf(nested[0]))
     : []
@@ -180,7 +201,7 @@ function readItem(
       meta: [],
       content: reader.lines
         .slice(start, end + 1)
-        .map(line => dedent(line, column ?? 0))
+        .map(line => dedent(line, column))
     })
   }
 }
@@ -355,7 +376,9 @@ function readText(
   const [start, end] = span(node)
   // a rule's source may be bulleted (`- ---`), a list in a block
   // read from its own column, as an item's content is
-  const column = (node.position?.start.column ?? 1) - 1
+  const column = columns(
+    reader.lines[start]?.slice(0, (node.position?.start.column ?? 1) - 1) ?? ""
+  )
   const source =
     node.type === "thematicBreak"
       ? ["---"]

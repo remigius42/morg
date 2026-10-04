@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   became a link description (`![[image.png][300]]`).
 - Obsidian org → md writes an embed's `!` unescaped; `\![[image.png]]`
   was a `!` and a link to Obsidian.
+- Translating Markdown to or from Logseq md counts a tab in a list
+  item's indentation to its tab stop. A fence indented with spaces among
+  tab-indented lines drifted on each trip, and a tab-indented item's
+  fence could become indented code.
 
 ## [0.10.0] - 2026-10-04
 
