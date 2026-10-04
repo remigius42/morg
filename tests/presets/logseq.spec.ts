@@ -80,6 +80,19 @@ describe("logseq outline", () => {
     expect(toOrg(toMarkdown(once))).toBe(once)
   })
 
+  it("keeps a block's title inline, as Logseq reads it", () => {
+    both("* : a ~b~\n", "- : a `b`\n")
+    both("* ** a\n", "- \\*\\* a\n")
+    both("* - a\n", "- \\- a\n")
+  })
+
+  it("converts a table or a rule that starts on the headline line", () => {
+    expect(toMarkdown("* | a | b |\n| 1 | 2 |\n")).toBe(
+      "- | a | b |\n  | - | - |\n  | 1 | 2 |\n"
+    )
+    expect(toMarkdown("* -----\n")).toBe("- ---\n")
+  })
+
   it("maps block properties to key:: lines", () => {
     both(
       "* a\n:PROPERTIES:\n:collapsed: true\n:logseq.order-list-type: number\n:END:\n",

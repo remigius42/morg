@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Logseq org ↔ Logseq Markdown reads a block's title as inline text: a
+  title that looks like org line syntax (`: a`, `- a`, `1. a`, `# a`)
+  was converted as a fixed-width line, a list or a comment, and a
+  `: a` title holding markup grew with each round trip. A table or a
+  rule on the headline line stays one, which Logseq org → Vanilla
+  Markdown now does too.
+
 ## [0.9.1] - 2026-10-04
 
 ### Fixed

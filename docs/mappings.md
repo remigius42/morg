@@ -365,8 +365,13 @@ page, `include:: x` as `#+include: x`. Outline: a page converts block
 by block, each block's content one fragment (Logseq parses it as one):
 a headline of stars, a space and the content (an empty block as the
 bare stars) ↔ a `-` bullet indented one tab per level, continuation
-lines two spaces inside it; a code block or table that starts on the
-headline line converts as a whole. `:heading: N` ↔ `- ## …`; a block's
+lines two spaces inside it; a code block, table or rule that starts on
+the headline line converts as a whole. A block's title is inline text
+otherwise: one that looks like org line syntax (`: a`, `** a`, `- a`,
+`1. a`, `# a`) stays text, escaped in Markdown (`\*\* a`, `1\. a`) as
+mldoc reads it. A known limit: Logseq reads an org title `: a` (or
+`:a: b`) as an empty title and a fixed-width line, which morg reads as
+text, as Emacs does. `:heading: N` ↔ `- ## …`; a block's
 property drawer ↔ `key:: value` lines where it was (on the headline
 line if the content starts with it, as Logseq writes a query block); planning lines and
 other drawers (`:LOGBOOK:`) stay as written, but for a repeated task's
@@ -413,8 +418,8 @@ org ↔ Vanilla md:
 | page properties (lower-case `#+key:`)                        | plain frontmatter keys; acting ones stay `morg_keywords`                                    |
 | page and block refs, macros, `#tag`, `[#A]`, hiccup, `^^…^^` | as Logseq md writes them, as text                                                           |
 
-A block's title is inline only, as Logseq reads it: a title that looks
-like org line syntax (`: a`, `** a`, `- a`) stays text. Reading Vanilla
+A block's title is inline text here too, a table or a rule on the
+headline line aside (see above). Reading Vanilla
 md, as Logseq reads a file it did not write: a heading is a block,
 nesting by heading level, the text below it up to a list its content;
 other text after a list is a block of its own; a list on an item's

@@ -417,13 +417,18 @@ function writeOutline(
   return [...page, ...blocks.map(writeBlock)].join("\n").concat("\n")
 }
 
-// a block's title is a headline's, which Logseq reads as inline text
-// only; converted with the lines below it, it must not read as a list,
+// a table or a rule, which Logseq reads on a headline's line
+const TITLE_ELEMENT_RE = /^(\||-{5,}\s*$)/
+
+// a block's title is a headline's, inline text but for a table or a
+// rule; converted with the lines below it, it must not read as a list,
 // a headline or a fixed-width line, so an escape the core drops keeps
 // it text (ADR 0006)
 function inlineTitle(block: Block): string[] {
   const [title = "", ...rest] = block.content
-  return !block.metaFirst && readsAsLineSyntax(title)
+  return !block.metaFirst &&
+    !TITLE_ELEMENT_RE.test(title) &&
+    readsAsLineSyntax(title)
     ? [`${ZERO_WIDTH_SPACE}${title}`, ...rest]
     : block.content
 }
@@ -587,6 +592,8 @@ export function orgOutlineToMarkdown(
 ): string {
   const { page, blocks } = readOrgOutline(org, context.side === "output")
   const vanilla = context.side === "input"
+  // read as Logseq org, a block's title is inline text (ADR 0006)
+  const inline = context.side !== "output"
   const pageLines = vanilla ? (presets.vanillaPage?.(page) ?? page) : page
   const convertCarried: FragmentConverter = (fragment, preset) =>
     convert(fragment, preset, vanilla ? presets.vanillaInline : undefined)
@@ -595,7 +602,7 @@ export function orgOutlineToMarkdown(
     blocks: blocks.map(block => ({
       ...block,
       content: convertContent(
-        withBracedScripts(vanilla ? inlineTitle(block) : block.content),
+        withBracedScripts(inline ? inlineTitle(block) : block.content),
         convertCarried,
         presets.block
       )
@@ -648,7 +655,7 @@ export function markdownOutlineToOrg(
             presets.block
           ).filter(line => line !== BRACED_SCRIPTS_LINE)
         }
-        return vanilla ? dropTitleEscape(converted) : converted
+        return context.side === "input" ? converted : dropTitleEscape(converted)
       })
     },
     block => writeOrgBlock(block, context.side === "input")

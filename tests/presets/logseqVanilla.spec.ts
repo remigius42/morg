@@ -93,6 +93,13 @@ describe("Logseq org → Vanilla md", () => {
     }
   })
 
+  it("converts a table or a rule that starts on the headline line", () => {
+    expect(toMarkdown("* | a | b |\n| 1 | 2 |\n")).toBe(
+      "- | a | b |\n  | - | - |\n  | 1 | 2 |\n"
+    )
+    expect(toMarkdown("* -----\n")).toBe("- ---\n")
+  })
+
   it("ends a page with or without blocks in one line break", () => {
     expect(toMarkdown("just text\n")).toBe("just text\n")
     expect(toMarkdown("just text\n\n* a\n")).toBe("just text\n\n- a\n")
