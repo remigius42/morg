@@ -57,11 +57,19 @@ function fuzzyLinksToWikilinks(uniorgAst: OrgData): OrgData {
         return undefined
       }
       const description = node.children.length ? toString(node) : ""
+      // an embed's `!` goes with it, else Markdown escapes it before `[`
+      const previous = parent.children[index - 1] as Text | undefined
+      const embed = previous?.type === "text" && previous.value.endsWith("!")
+      if (embed) {
+        previous.value = previous.value.slice(0, -1)
+      }
       parent.children[index] = {
         type: "verbatim-inline",
-        value: description
-          ? `[[${node.rawLink}|${description}]]`
-          : `[[${node.rawLink}]]`
+        value: `${embed ? "!" : ""}${
+          description
+            ? `[[${node.rawLink}|${description}]]`
+            : `[[${node.rawLink}]]`
+        }`
       } as unknown as Parent["children"][number]
       return undefined
     }

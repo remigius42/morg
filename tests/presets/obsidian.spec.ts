@@ -64,4 +64,10 @@ describe("obsidian preset", () => {
       "An ![[image.png|300]] and [[Page][alias]].\n"
     )
   })
+
+  it("writes an embed unescaped", () => {
+    const org = "![[image.png]] and ![[image.png|300]]\n"
+
+    expect(convertOrgToMarkdown(org, { preset: obsidian() })).toBe(org)
+  })
 })

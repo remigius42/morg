@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Obsidian md → org keeps an embed's size (`![[image.png|300]]`); it
   became a link description (`![[image.png][300]]`).
+- Obsidian org → md writes an embed's `!` unescaped; `\![[image.png]]`
+  was a `!` and a link to Obsidian.
 
 ## [0.10.0] - 2026-10-04
 
