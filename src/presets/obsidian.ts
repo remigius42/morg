@@ -3,6 +3,7 @@ import type { Parent } from "unist"
 import { visit } from "unist-util-visit"
 import { toString } from "orgast-util-to-string"
 import { maskCode } from "../core/outsideCode.js"
+import { FUZZY_LINK_RE } from "./links.js"
 import type { Preset } from "./types.js"
 
 /**
@@ -31,7 +32,6 @@ const ALIASED_WIKILINK_RE = /\[\[([^\][|]+)\|([^\][]+)\]\]/g
 // in Markdown text: not an embed, whose `|300` is a size, and with a
 // table cell's escaped pipe (`[[Page\|alias]]`)
 const ALIASED_PAGE_LINK_RE = /(?<!!)\[\[([^\][|\\]+)\\?\|([^\][]+)\]\]/g
-const FUZZY_LINK_RE = /\[\[([^\][]+)\]\[([^\][]+)\]\]/g
 
 // md→org: a wikilink travels as plain text; org already reads `[[Page]]`
 // as a fuzzy link, only the `[[Page|alias]]` form needs rewriting to

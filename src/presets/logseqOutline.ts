@@ -302,13 +302,19 @@ function readMarkdownBlock({ level, lines: source }: Lines): Block {
   }
 }
 
+/**
+ * How many lines a Markdown page's leading frontmatter takes, 0 for none.
+ * @param lines The page's lines.
+ * @returns The frontmatter's line count, its fences included.
+ */
+export function frontmatterLength(lines: string[]): number {
+  return lines[0] === "---" ? lines.indexOf("---", 1) + 1 : 0
+}
+
 function readMarkdownOutline(markdown: string): Outline {
   const lines = markdown.replace(/\r?\n$/, "").split(/\r?\n/)
   // a leading frontmatter is page content, its `- ` lines yaml items
-  const frontmatter = lines.slice(
-    0,
-    lines[0] === "---" ? lines.indexOf("---", 1) + 1 : 0
-  )
+  const frontmatter = lines.slice(0, frontmatterLength(lines))
   let fenced = false
   const { page, blocks } = splitBlocks(
     lines.slice(frontmatter.length),

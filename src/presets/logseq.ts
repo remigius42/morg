@@ -25,8 +25,10 @@ import { keyValueEntries } from "../core/keyValueLines.js"
 import { tryParse } from "../core/render.js"
 import { orgNodeToText } from "../core/uniorgToMdast/shared.js"
 import type { Link as MdastLink, Root as MdastRoot } from "mdast"
+import { FUZZY_LINK_RE } from "./links.js"
 import type { Preset } from "./types.js"
 import {
+  frontmatterLength,
   markdownOutlineToOrg,
   orgOutlineToMarkdown,
   translateMarkdownOutline,
@@ -92,9 +94,8 @@ function pagePreset(): Preset {
   }
 }
 
-// a labeled page ref, in Logseq Markdown and in org
+// a labeled page ref in Logseq Markdown
 const LABELED_PAGE_REF_RE = /\[([^\][]+)\]\(\[\[([^\][]+)\]\]\)/g
-const FUZZY_LINK_RE = /\[\[([^\][]+)\]\[([^\][]+)\]\]/g
 
 // the hooks for a block's content
 function blockPreset(): Preset {
@@ -455,7 +456,7 @@ const MD_PAGE_PROPERTY_KEY_RE = /^[\w.-]+$/
 // a Logseq Markdown page's lines: a frontmatter, if any, and the
 // properties below it, up to a blank line
 function splitPageLines(lines: string[]) {
-  const frontmatter = lines[0] === "---" ? lines.indexOf("---", 1) + 1 : 0
+  const frontmatter = frontmatterLength(lines)
   const blank = lines.indexOf("", frontmatter)
   const end = blank === -1 ? lines.length : blank
   return {
