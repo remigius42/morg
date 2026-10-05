@@ -446,7 +446,9 @@ function transformComment(
 }
 
 // a formula line travels verbatim below the table, where the return
-// trip writes it back
+// trip writes it back. convertOrgToMarkdown sets an org table's formulas
+// apart before the parse (see tableKeywords), so this takes a table.el
+// table's, and a tree's from elsewhere
 function tableWithFormulas(
   ctx: TransformContext,
   node: Extract<GreaterElementType, { type: "table" }>

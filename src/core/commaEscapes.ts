@@ -1,5 +1,6 @@
 import type { Parent } from "unist"
 import { visit } from "unist-util-visit"
+import { blockEndRe } from "./orgBlocks.js"
 import type { Node } from "./render.js"
 
 // ====================================================================
@@ -37,7 +38,7 @@ export function guardCommaEscapes(org: string): string {
       continue
     }
     const block = BLOCK_START_RE.exec(line)?.[1]
-    end = block ? new RegExp(`^[ \\t]*#\\+end_${block}\\s*$`, "i") : null
+    end = block ? blockEndRe(block) : null
   }
   return lines.join("\n")
 }
@@ -59,6 +60,13 @@ export function unescapeCommaEscapes(tree: Parent): void {
     const code = CODE_BLOCKS.has(node.type)
     node.value = node.value.replace(code ? UNESCAPE_RE : MARKED_RE, "$1")
   })
+}
+
+/**
+ * org-unescape-code-in-string: drops one comma of an escaped line.
+ */
+export function unescapeBlockLines(text: string): string {
+  return text.replace(/^([ \t]*,*),(\*|#\+)/gm, "$1$2")
 }
 
 /**

@@ -1,3 +1,5 @@
+import { blockEndRe } from "./orgBlocks.js"
+
 // ====================================================================
 // WORKAROUND for a bug in uniorg-parse 3.2.2 (upstream issue
 // uniorg#151; the joined formulas: not filed yet, see
@@ -46,10 +48,7 @@ export function separateTableKeywords(org: string): string {
     }
     const block = BLOCK_START_RE.exec(line)?.[1]
     if (block) {
-      end = new RegExp(
-        `^[ \\t]*#\\+end_${block.replace(/\W/g, "\\$&")}\\s*$`,
-        "i"
-      )
+      end = blockEndRe(block)
     } else if (bordersTable(line, lines[i + 1] ?? "")) {
       out.push("")
     }
