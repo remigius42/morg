@@ -19,16 +19,17 @@ export function transformPlainList(
   node: List
 ): RootContent | RootContent[] {
   const items = listItems(node)
-  // uniorg reads a numbered list with terms as descriptive; Emacs reads
-  // it as numbered
-  if (node.listType === "descriptive" && !/^\d/.test(items[0]?.bullet ?? "")) {
-    if (htmlEnabled(ctx, "definitionList")) {
-      return descriptiveListToHtml(node)
-    }
-    // a definition list has no entry without a term, nor a checkbox
-    if (items.every(item => listItemTag(item) && !item.checkbox)) {
-      return descriptiveListToDefList(ctx, items)
-    }
+  // uniorg reads a numbered list with terms as descriptive, Emacs as
+  // numbered; a definition list, Markdown's or a <dl>, has no entry
+  // without a term, nor a checkbox
+  if (
+    node.listType === "descriptive" &&
+    !/^\d/.test(items[0]?.bullet ?? "") &&
+    items.every(item => listItemTag(item) && !item.checkbox)
+  ) {
+    return htmlEnabled(ctx, "definitionList")
+      ? descriptiveListToHtml(node)
+      : descriptiveListToDefList(ctx, items)
   }
   return transformUniorgList(ctx, node)
 }

@@ -552,6 +552,14 @@ describe("convertOrgToMarkdown", () => {
     )
   })
 
+  it("should keep a list no <dl> holds below the marker spelled in html", () => {
+    const org = "- a :: b\n- plain\n- [X] c :: d\n"
+
+    expect(convertOrgToMarkdown(org, { spelling: "html" })).toBe(
+      "<!-- morg_descriptive_list -->\n\n- a :: b\n- plain\n- [x] c :: d\n"
+    )
+  })
+
   it("should html-escape descriptive list terms and definitions", () => {
     const org = "- a < b :: x & y\n"
 
