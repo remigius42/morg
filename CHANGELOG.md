@@ -104,6 +104,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   other affiliated keywords, and its `#+TBLFM:` formulas, as lines
   around the Markdown table; both were lost without a warning (the
   keywords by uniorg).
+- An org link to a `//` path keeps its `%` as written: org → md
+  percent-encoded it, md → org read the scheme-relative url as it is,
+  so `%25` gained a `25` each round trip.
 
 ## [0.10.1] - 2026-10-04
 

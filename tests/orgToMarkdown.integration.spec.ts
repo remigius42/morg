@@ -100,6 +100,14 @@ describe("convertOrgToMarkdown", () => {
     )
   })
 
+  it("should keep a `//` link as written", () => {
+    // org reads it as a file path, Markdown as a scheme-relative url,
+    // which md→org takes as it is
+    const org = "[[//%25f][R]]\n"
+    expect(convertOrgToMarkdown(org)).toBe("[R](//%25f)\n")
+    expect(convertMarkdownToOrg(convertOrgToMarkdown(org))).toBe(org)
+  })
+
   it("should map an image file link with a search option to an image", () => {
     expect(convertOrgToMarkdown("[[file:i.svg::frag][a]]\n")).toBe(
       "![a](i.svg#frag)\n"

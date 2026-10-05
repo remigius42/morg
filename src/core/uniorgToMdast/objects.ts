@@ -119,7 +119,9 @@ function encodeUrlPath(path: string): string {
 // an org file: link (or a ./ path) is a relative markdown link, the
 // search option becoming the #anchor
 function markdownUrl(node: Extract<ObjectType, { type: "link" }>): string {
-  if (node.linkType !== "file") {
+  // a `//` path is a scheme-relative url in Markdown, which md→org
+  // takes as it is
+  if (node.linkType !== "file" || node.rawLink.startsWith("//")) {
     return node.rawLink
   }
   const target = node.rawLink.replace(/^file:/, "")
