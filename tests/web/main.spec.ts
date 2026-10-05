@@ -534,6 +534,18 @@ describe("embed page", () => {
     expect(visible()).toEqual(["noOptions"])
   })
 
+  it("applies no option it hides", async () => {
+    const tasks = element<HTMLInputElement>("taskCheckboxes")
+    tasks.checked = true
+    tasks.dispatchEvent(new Event("change", { bubbles: true }))
+    choose("outputDialect", "org")
+    const input = element<HTMLTextAreaElement>("input")
+    input.value = "* TODO a\n"
+    input.dispatchEvent(new Event("input", { bubbles: true }))
+    await settle()
+    expect(element<HTMLTextAreaElement>("output").value).toBe("* TODO a\n")
+  })
+
   it("records the source style via its checkbox", async () => {
     choose("inputDialect", "markdown")
     const input = element<HTMLTextAreaElement>("input")

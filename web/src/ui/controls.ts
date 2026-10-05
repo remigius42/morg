@@ -141,21 +141,46 @@ export function findControls(runner: ConversionRunner): Controls {
   }
 }
 
+// an option of a side the conversion does not have is hidden, and
+// left to the config, as the visitor cannot see it set
+function shown(control: HTMLElement): boolean {
+  return !control.closest("[hidden]")
+}
+
+// the shown controls' values, by key
+function shownValues<T>(
+  controls: Record<string, HTMLElement>,
+  value: (control: HTMLElement) => T
+): Record<string, T> {
+  return Object.fromEntries(
+    Object.entries(controls)
+      .filter(([, control]) => shown(control))
+      .map(([key, control]) => [key, value(control)])
+  )
+}
+
 /** What the form currently asks of a conversion. */
 export function formState(controls: Controls): ConversionForm {
+  const checked = (control: HTMLElement) =>
+    (control as HTMLInputElement).checked
   return {
     direction: directionOf(controls),
     ...presetsOf(controls),
-    interpretHtml: perConstruct(
-      construct => controls.interpretHtml[construct].checked
+    interpretHtml: shownValues(controls.interpretHtml, checked),
+    spelling: shownValues(
+      controls.spelling,
+      control => (control as HTMLSelectElement).value as Spelling
     ),
-    spelling: perConstruct(
-      construct => controls.spelling[construct].value as Spelling
-    ),
-    recordMarkdownStyle: controls.recordMarkdownStyle.checked,
-    taskCheckboxes: controls.taskCheckboxes.checked,
+    ...(shown(controls.recordMarkdownStyle) && {
+      recordMarkdownStyle: controls.recordMarkdownStyle.checked
+    }),
+    ...(shown(controls.taskCheckboxes) && {
+      taskCheckboxes: controls.taskCheckboxes.checked
+    }),
     style: Object.fromEntries(
-      controls.styleSelects.map(select => [select.id, select.value])
+      controls.styleSelects
+        .filter(shown)
+        .map(select => [select.id, select.value])
     )
   }
 }
