@@ -560,6 +560,14 @@ describe("convertOrgToMarkdown", () => {
     )
   })
 
+  it("should keep a list whose definition holds blocks below the marker spelled in html", () => {
+    const org = "- a :: b\n\n  [[./x.png]]\n- c :: d\n"
+
+    expect(convertOrgToMarkdown(org, { spelling: "html" })).toContain(
+      "<!-- morg_descriptive_list -->"
+    )
+  })
+
   it("should html-escape descriptive list terms and definitions", () => {
     const org = "- a < b :: x & y\n"
 

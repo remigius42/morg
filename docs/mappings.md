@@ -154,7 +154,12 @@ Spelled
 in HTML (`spelling: "html"`, ADR 0007) these constructs render as raw
 HTML instead (`<u>`, `<sup>`, `<sub>`, `<dl>`); the HTML round-trips
 to the native org construct where `interpretHtml` reads it, else as a
-preserved md-ism.
+preserved md-ism. A `<dl>` holds text only, its markup flattened: a
+descriptive list whose definition holds blocks (an image, a nested
+list, a second paragraph) goes below the marker as `- term :: def`
+text instead, which renders as a bullet list, not a definition list
+(ADR 0007 §3: `Term` / `: def` would show such a block as code in
+GFM).
 
 Org entities render as their character (`\alpha` → `α`), matching
 org's own export (one-way normalization).

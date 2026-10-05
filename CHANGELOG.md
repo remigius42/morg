@@ -66,7 +66,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `<!-- morg_descriptive_list -->` comment, which reads it back as
   descriptive; it came back a plain list.
 - Spelled in HTML, such a list is written the same way: as a `<dl>`, it
-  lost its checkboxes and gained empty terms.
+  lost its checkboxes and gained empty terms. So is one whose
+  definition holds blocks (an image, a nested list, a second
+  paragraph), which a `<dl>` dropped.
 - Reading `<sup>` or `<sub>` as org (`interpretHtml`) keeps the HTML
   where a blank precedes it (`x <sup>s</sup>`): org reads a script
   only after a non-blank character, so it came back as the text

@@ -76,6 +76,17 @@ description list, and, under `useHtml`, a `<dl>`.
    org→md writes it), and the marker goes; one above anything else
    stays a comment. An unmarked `- term :: def` stays an ordinary
    item (§6).
+   Under `definitionList = "html"`, a list whose definition holds
+   blocks (an image, a nested list, a second paragraph) goes below the
+   marker too: a `<dl>` is an HTML block, Markdown in it is text, and
+   its reader takes only text. Rejected: falling back to `Term` /
+   `: def`, which holds the blocks, as GFM (GitHub, Obsidian) reads
+   no definition list and so a definition's indented block as code,
+   the image shown as its source; whoever spells `"html"` likely
+   renders there. Rejected: `<img>` in the `<dd>`, which covers
+   images only and contradicts `images = "markdown"`. The cost: such
+   a list renders as a bullet list with `term :: def` text, not as a
+   definition list. Markup in a `<dl>` stays flattened to text.
 4. **An org construct that Markdown cannot spell losslessly in its own
    syntax, but HTML can, has a spelling option**: `"markdown"` (the
    default) or `"html"`. Emphasis or code have none: their Markdown

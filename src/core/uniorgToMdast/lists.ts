@@ -27,9 +27,19 @@ export function transformPlainList(
     !/^\d/.test(items[0]?.bullet ?? "") &&
     items.every(item => listItemTag(item) && !item.checkbox)
   ) {
-    return htmlEnabled(ctx, "definitionList")
-      ? descriptiveListToHtml(node)
-      : descriptiveListToDefList(ctx, items)
+    if (!htmlEnabled(ctx, "definitionList")) {
+      return descriptiveListToDefList(ctx, items)
+    }
+    // a <dl> holds a definition's text, not its blocks
+    if (
+      items.every(
+        item =>
+          definition(item).length <= 1 &&
+          definition(item).every(child => child.type === "paragraph")
+      )
+    ) {
+      return descriptiveListToHtml(node)
+    }
   }
   return transformUniorgList(ctx, node)
 }
@@ -39,6 +49,12 @@ function listItemTag(item: ListItem): ListItem["children"][number] | undefined {
   return (item.children || []).find(
     child => (child as { type: string }).type === "list-item-tag"
   )
+}
+
+// what follows an item's term
+function definition(item: ListItem): ListItem["children"] {
+  const tag = listItemTag(item)
+  return (item.children || []).filter(child => child !== tag)
 }
 
 // an <img> line below text would be part of the paragraph: the item
@@ -66,11 +82,7 @@ function descriptiveListToDefList(
     const tag = listItemTag(item) as ListItem["children"][number] & {
       children: Parameters<typeof transformUniorgObjects>[1]
     }
-    const blocks = itemBlocks(
-      ctx,
-      item,
-      (item.children || []).filter(child => child !== tag)
-    )
+    const blocks = itemBlocks(ctx, item, definition(item))
     return [
       {
         type: "defListTerm",
@@ -100,13 +112,12 @@ function descriptiveListToHtml(node: List): RootContent {
       continue
     }
     const tag = listItemTag(item)
-    const definition = (item.children || []).filter(child => child !== tag)
     lines.push(
       `<dt>${escapeHtmlText(tag ? orgastToString(tag).trim() : "")}</dt>`
     )
     lines.push(
       `<dd>${escapeHtmlText(
-        definition
+        definition(item)
           .map(child => orgastToString(child))
           .join("")
           .trim()
@@ -182,11 +193,7 @@ function transformUniorgListItem(
   // a term no definition list holds stays ` :: ` text in the item,
   // which the return trip reads as a term below the marker only
   const tag = listItemTag(item)
-  const children = itemBlocks(
-    ctx,
-    item,
-    (item.children || []).filter(child => child !== tag)
-  )
+  const children = itemBlocks(ctx, item, definition(item))
   if (tag) {
     const term: PhrasingContent = {
       type: "text",
