@@ -547,6 +547,12 @@ describe("lists", () => {
     }
   })
 
+  it("keeps empty nested items below item text", () => {
+    // without the blank line, md reads `a` over a lone `-` as a heading
+    const org = "- a\n  -\n  -\n- b\n"
+    expect(orgRoundTrip(org)).toBe(org)
+  })
+
   it("keeps HTML in a list item an HTML block, text after it apart", () => {
     // uniorg keeps the item's indentation in the export block: indented
     // further, md reads the HTML as text

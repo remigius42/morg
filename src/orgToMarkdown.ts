@@ -42,6 +42,22 @@ function separateTextAfterBlock(
     : undefined
 }
 
+// an empty nested item right below a list item's paragraph needs a blank
+// line, or md reads its lone `-` as a setext underline: a heading
+function separateEmptyItemFromText(
+  left: { type: string },
+  right: { type: string; ordered?: boolean; children?: { children?: [] }[] },
+  parent: { type: string }
+): number | undefined {
+  return parent.type === "listItem" &&
+    left.type === "paragraph" &&
+    right.type === "list" &&
+    !right.ordered &&
+    right.children?.[0]?.children?.length === 0
+    ? 1
+    : undefined
+}
+
 /**
  * Converts an Org-mode string to a Markdown string.
  * @param org The Org-mode string to convert.
@@ -132,7 +148,7 @@ function convertOrgDocument(
       rule: "-",
       ...recordedStyle,
       ...options.style,
-      join: [separateTextAfterBlock],
+      join: [separateTextAfterBlock, separateEmptyItemFromText],
       handlers: {
         // key:: value blocks and preset inline passthroughs (e.g.
         // wikilinks) are emitted verbatim, unescaped; only a pipe inside

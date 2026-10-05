@@ -82,6 +82,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   item's indentation in the HTML, which Markdown then read as text.
 - Markup right after other markup (`` `a`*,* ``) comes back from org
   without a stray `&#xNAN;` between them.
+- Empty nested list items right below an item's text (`- a\n  -`)
+  survive org → md: Markdown read the text over a lone `-` as a
+  heading, losing one item each round trip.
 
 ## [0.10.1] - 2026-10-04
 
