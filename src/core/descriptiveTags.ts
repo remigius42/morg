@@ -16,7 +16,8 @@ const CONTAINERS = new Set([
   "strike-through",
   "superscript",
   "subscript",
-  "link"
+  "link",
+  "footnote-reference"
 ])
 
 interface OrgNode {

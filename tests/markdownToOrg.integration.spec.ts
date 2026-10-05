@@ -484,6 +484,12 @@ This is a paragraph.
     expect(convertOrgToMarkdown(org)).toBe("- term :: def\n- a :: b :: c\n")
   })
 
+  it("should keep a list item with ` :: ` after a footnote an ordinary item", () => {
+    const markdown = "- a[^1] b :: c\n\n[^1]: n\n"
+
+    expect(convertOrgToMarkdown(convertMarkdownToOrg(markdown))).toBe(markdown)
+  })
+
   it("should interpret <dl> as org descriptive list with interpretHtml", () => {
     const markdown =
       "<dl>\n<dt>term</dt>\n<dd>a definition</dd>\n" +
