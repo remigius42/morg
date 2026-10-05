@@ -52,6 +52,19 @@ describe("convertOrgToMarkdown", () => {
     )
   })
 
+  it("should keep the indentation of a comma-escaped code line", () => {
+    // org drops the comma only; uniorg dropped the indentation too
+    const org = "#+begin_src c\n/*\n  ,* x\n\t,,#+y\n */\n#+end_src\n"
+    expect(convertOrgToMarkdown(org)).toBe(
+      "```c\n/*\n  * x\n\t,#+y\n */\n```\n"
+    )
+    expect(
+      convertOrgToMarkdown("#+begin_export html\n  ,#+x\n#+end_export\n")
+    ).toBe("  #+x\n")
+    // text lines are no code, and keep their comma
+    expect(convertOrgToMarkdown("a\n  ,* b\n")).toBe("a\n,\\* b\n")
+  })
+
   it("should read ^:{} and consume it (md has no scripts)", () => {
     const org = "#+OPTIONS: toc:nil ^:{}\nsee a_b and H_{2}O\n"
 

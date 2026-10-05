@@ -14,6 +14,7 @@ import { unescapeDescriptiveTags } from "./core/descriptiveTags.js"
 import { unescapeBackslashCommands } from "./core/backslashCommands.js"
 import { unescapeTablePipes } from "./core/tablePipes.js"
 import { parseOrg } from "./core/bracedScripts.js"
+import { guardCommaEscapes, unescapeCommaEscapes } from "./core/commaEscapes.js"
 import {
   dropUnderscoreBulletGuards,
   guardUnderscoreBullets
@@ -99,9 +100,11 @@ function convertOrgDocument(
   // Phase 1: Parse Org-mode to uniorg-ast
   // md text has no scripts, so ^:{} is implied there and consumed here
   // (see markdownToOrg); uniorg misreads `_.` lines (see underscoreBullets)
-  const guarded = guardUnderscoreBullets(org)
+  // and comma-escaped code lines (see commaEscapes)
+  const guarded = guardCommaEscapes(guardUnderscoreBullets(org))
   let uniorgAst = parseOrg(guarded)
   dropUnderscoreBulletGuards(uniorgAst)
+  unescapeCommaEscapes(uniorgAst)
 
   // Phase 1b: a recorded style is morg's own (ADR 0004), so consume it so
   // it does not travel on as frontmatter; explicit options still win

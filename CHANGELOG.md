@@ -90,6 +90,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   heading, losing one item each round trip.
 - An org `#+OPTIONS:` line keeps an author's `^:{}` where it is: org →
   md took it out from anywhere, md → org put it back last.
+- An indented code line org escapes with a comma (`,* x` after the
+  indentation, in a src or export block) keeps its indentation in
+  Markdown: uniorg dropped it with the comma.
 
 ## [0.10.1] - 2026-10-04
 

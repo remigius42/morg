@@ -10,4 +10,11 @@ describe("uniorg-parse bugs morg works around", () => {
       /match error/
     )
   })
+
+  it("drops a comma-escaped code line's indentation (src/core/commaEscapes.ts)", () => {
+    const tree = unified()
+      .use(uniorgParse)
+      .parse("#+begin_src\n  ,* x\n#+end_src\n")
+    expect(tree.children[0]).toMatchObject({ value: "* x\n" })
+  })
 })
