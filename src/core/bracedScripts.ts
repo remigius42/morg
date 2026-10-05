@@ -5,6 +5,7 @@ import uniorgParse from "uniorg-parse"
 import { EXIT, visit } from "unist-util-visit"
 import {
   isInline,
+  ORG_VERBATIM,
   orgParser,
   positionParser,
   renderChildren,
@@ -94,7 +95,9 @@ function readsBareScriptsIn(content: string): boolean {
 function readsBareScripts(tree: Parent): boolean {
   let found = false
   visit(tree, (node: Node | Parent) => {
-    const content = renderedContent(node)
+    // org text that goes as it is (a drawer, a block) is org's to read
+    const content =
+      node.type === ORG_VERBATIM ? (node as Node).value : renderedContent(node)
     found = content !== undefined && readsBareScriptsIn(content)
     return found ? EXIT : undefined
   })

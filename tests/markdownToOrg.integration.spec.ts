@@ -744,6 +744,17 @@ describe("verbatim passthrough", () => {
     }
   })
 
+  it("should keep ^:{} for a script in a block or drawer", () => {
+    for (const org of [
+      "#+OPTIONS: ^:{}\n* H\n:NOTES:\na_b\n:END:\n",
+      "#+OPTIONS: ^:{}\n- x\n\n  #+begin_note\n  a_b\n  #+end_note\n"
+    ]) {
+      expect(convertMarkdownToOrg(convertOrgToMarkdown(org))).toContain(
+        "#+OPTIONS: ^:{}\n"
+      )
+    }
+  })
+
   it("should keep markup in a block or drawer unescaped", () => {
     for (const org of [
       "x\n\n#+begin_note\n*b* /i/ [fn:1] a\\b =#+A:=\n#+end_note\n",
