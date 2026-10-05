@@ -117,7 +117,8 @@ export function enforceOutput(
 /**
  * Shows the options of the sides the conversion has (ADR 0007): reading
  * Markdown, writing it, writing it from org (a translation converts no
- * headlines to tasks), and writing org from Markdown.
+ * headlines to tasks), and writing org from Markdown. Normalizing org
+ * goes through Markdown, so it reads and writes Markdown too.
  * @param controls The selects and the options.
  */
 function showSideOptions(controls: DialectControls): void {
@@ -125,17 +126,22 @@ function showSideOptions(controls: DialectControls): void {
   const translates =
     normalizes(direction) &&
     controls.inputDialect.value !== controls.outputDialect.value
+  const throughMarkdown = direction === "normalize-org" && !translates
+  const reads = readsMarkdown(direction) || throughMarkdown
+  const writes = writesMarkdown(direction) || throughMarkdown
   const sides: Record<string, boolean> = {
-    "markdown-input": readsMarkdown(direction),
+    markdown: reads || writes,
+    "reads-markdown": reads,
+    "writes-markdown": writes,
+    "through-markdown": throughMarkdown,
     "markdown-output": writesMarkdown(direction),
     "org-to-markdown": writesMarkdown(direction) && !translates,
     "org-output": direction === "md-to-org"
   }
-  sides.markdown = readsMarkdown(direction) || writesMarkdown(direction)
   for (const option of controls.sideOptions) {
     option.hidden = !sides[option.dataset.side ?? ""]
   }
-  controls.noOptions.hidden = sides.markdown
+  controls.noOptions.hidden = sides.markdown ?? false
 }
 
 /**

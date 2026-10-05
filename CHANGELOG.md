@@ -54,8 +54,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   does: a block holding a construct they concern is converted on its
   own, in the Spelling they name; the rest stays as written.
 - The Web UI's options are grouped by the side they act on, showing
-  only those of the sides the conversion has, and a compact table sets
-  each construct's HTML reading and Spelling.
+  only those of the sides the conversion has (normalizing Org goes
+  through Markdown, so its HTML options show too), and a compact table
+  sets each construct's HTML reading and Spelling.
 
 ### Fixed
 

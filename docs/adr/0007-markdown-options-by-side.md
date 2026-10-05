@@ -36,6 +36,10 @@ description list, and, under `useHtml`, a `<dl>`.
    `md → org` reads `[markdown.input]` and `[org.output]`, `md → md`
    both Markdown sides. `[markdownToOrg]` and `[orgToMarkdown]` go,
    without aliases: there is no dependent on npm, and 1.0 is ahead.
+   Amended (2026-10-05): normalizing goes through the other format
+   (§8), so `org → org` normalizing uses both Markdown sides as well:
+   they shape the round trip whose output is the fixed point (ADR
+   0001). A translation between two org dialects uses none.
 
    | Option                                  | Section                          |
    | --------------------------------------- | -------------------------------- |

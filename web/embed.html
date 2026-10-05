@@ -102,7 +102,12 @@
           <summary>Options</summary>
           <!-- each option belongs to a side of the conversion (ADR 0007);
                main.ts hides those of sides it does not have -->
-          <p id="noOptions" hidden>No options apply to Org → Org.</p>
+          <p id="noOptions" hidden>
+            No options apply between two Org dialects.
+          </p>
+          <p id="throughMarkdown" data-side="through-markdown" hidden>
+            Normalizing Org goes through Markdown, which these shape.
+          </p>
           <table id="htmlSpellings" data-side="markdown">
             <caption>
               Constructs Markdown can also write as HTML
@@ -110,10 +115,10 @@
             <thead>
               <tr>
                 <th scope="col">Construct</th>
-                <th scope="col" data-side="markdown-input">
+                <th scope="col" data-side="reads-markdown">
                   Read HTML <small>(Markdown input)</small>
                 </th>
-                <th scope="col" data-side="markdown-output">
+                <th scope="col" data-side="writes-markdown">
                   Write as <small>(Markdown output)</small>
                 </th>
               </tr>
@@ -121,14 +126,14 @@
             <tbody>
               <tr>
                 <th scope="row">Definition list</th>
-                <td data-side="markdown-input">
+                <td data-side="reads-markdown">
                   <input
                     type="checkbox"
                     id="interpretHtml-definitionList"
                     aria-label="Read definition list HTML"
                   />
                 </td>
-                <td data-side="markdown-output">
+                <td data-side="writes-markdown">
                   <select
                     id="spelling-definitionList"
                     aria-label="Write definition list as"
@@ -140,14 +145,14 @@
               </tr>
               <tr>
                 <th scope="row">Image size</th>
-                <td data-side="markdown-input">
+                <td data-side="reads-markdown">
                   <input
                     type="checkbox"
                     id="interpretHtml-images"
                     aria-label="Read image size HTML"
                   />
                 </td>
-                <td data-side="markdown-output">
+                <td data-side="writes-markdown">
                   <select id="spelling-images" aria-label="Write image size as">
                     <option value="markdown">Markdown</option>
                     <option value="html">HTML</option>
@@ -156,14 +161,14 @@
               </tr>
               <tr>
                 <th scope="row">Underline</th>
-                <td data-side="markdown-input">
+                <td data-side="reads-markdown">
                   <input
                     type="checkbox"
                     id="interpretHtml-underline"
                     aria-label="Read underline HTML"
                   />
                 </td>
-                <td data-side="markdown-output">
+                <td data-side="writes-markdown">
                   <select
                     id="spelling-underline"
                     aria-label="Write underline as"
@@ -175,14 +180,14 @@
               </tr>
               <tr>
                 <th scope="row">Superscript</th>
-                <td data-side="markdown-input">
+                <td data-side="reads-markdown">
                   <input
                     type="checkbox"
                     id="interpretHtml-superscript"
                     aria-label="Read superscript HTML"
                   />
                 </td>
-                <td data-side="markdown-output">
+                <td data-side="writes-markdown">
                   <select
                     id="spelling-superscript"
                     aria-label="Write superscript as"
@@ -194,14 +199,14 @@
               </tr>
               <tr>
                 <th scope="row">Subscript</th>
-                <td data-side="markdown-input">
+                <td data-side="reads-markdown">
                   <input
                     type="checkbox"
                     id="interpretHtml-subscript"
                     aria-label="Read subscript HTML"
                   />
                 </td>
-                <td data-side="markdown-output">
+                <td data-side="writes-markdown">
                   <select
                     id="spelling-subscript"
                     aria-label="Write subscript as"

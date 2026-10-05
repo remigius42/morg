@@ -499,6 +499,7 @@ describe("embed page", () => {
         "taskCheckboxes",
         "bullet",
         "recordMarkdownStyle",
+        "throughMarkdown",
         "noOptions"
       ].filter(shown)
 
@@ -520,7 +521,15 @@ describe("embed page", () => {
       "spelling-images",
       "bullet"
     ])
+    // normalizing org goes through Markdown, which the HTML options shape
     choose("inputDialect", "org")
+    choose("outputDialect", "org")
+    expect(visible()).toEqual([
+      "interpretHtml-images",
+      "spelling-images",
+      "throughMarkdown"
+    ])
+    // a translation between org dialects does not
     choose("outputDialect", "org:logseq")
     expect(visible()).toEqual(["noOptions"])
   })
