@@ -539,6 +539,13 @@ describe("lists", () => {
     expect(mdRoundTrip(markdown)).toBe(markdown)
   })
 
+  it("keeps a definition's text after a nested list out of the list", () => {
+    // org needs no blank line: `c` is no deeper than the bullet
+    const org = "- T :: a\n  - b\n  c\n"
+    expect(convertOrgToMarkdown(org)).toBe("T\n:   a\n    - b\n\n    c\n")
+    expect(orgRoundTrip(org)).toBe(org)
+  })
+
   it("keeps item text after a quote or table out of it", () => {
     // without the blank line, md reads `c` into the quote or as a row
     for (const block of ["> b", "| b |\n  | - |"]) {

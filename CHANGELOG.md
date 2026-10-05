@@ -120,6 +120,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Markup in an org block or drawer written verbatim to Markdown
   (`*b*` in a `#+begin_note`) stays org markup: md → org escaped it
   with a zero-width space, which org then read as text.
+- A definition's text after its nested list (`- T :: a\n  - b\n  c`)
+  stays apart from the list: org → md wrote no blank line between
+  them, so Markdown read the text into the list's last item.
 
 ## [0.10.1] - 2026-10-04
 
