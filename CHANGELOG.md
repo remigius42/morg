@@ -100,6 +100,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   example block's line too, which uniorg left in.
 - Adjacent Markdown tables stay apart in org: md → org wrote them
   with no blank line between them, which org reads as one table.
+- An org table keeps its `#+NAME:`, `#+CAPTION:`, `#+RESULTS:` and
+  other affiliated keywords, and its `#+TBLFM:` formulas, as lines
+  around the Markdown table; both were lost without a warning (the
+  keywords by uniorg).
 
 ## [0.10.1] - 2026-10-04
 

@@ -149,7 +149,7 @@ function transformUniorgElement(
     case "plain-list":
       return transformPlainList(ctx, node)
     case "table":
-      return transformTable(ctx, node)
+      return tableWithFormulas(ctx, node)
     case "horizontal-rule":
       return { type: "thematicBreak" }
     case "footnote-definition":
@@ -430,4 +430,16 @@ function transformComment(
     type: "html",
     value: value.includes("\n") ? `<!--\n${value}\n-->` : `<!-- ${value} -->`
   }
+}
+
+// a formula line travels verbatim below the table, where the return
+// trip writes it back
+function tableWithFormulas(
+  ctx: TransformContext,
+  node: Extract<GreaterElementType, { type: "table" }>
+): RootContent | RootContent[] {
+  const table = transformTable(ctx, node)
+  return node.tblfm
+    ? [table, keyValueParagraph([`#+TBLFM: ${node.tblfm}`])]
+    : table
 }

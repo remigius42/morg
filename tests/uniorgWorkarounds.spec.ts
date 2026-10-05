@@ -17,4 +17,10 @@ describe("uniorg-parse bugs morg works around", () => {
       .parse("#+begin_src\n  ,* x\n#+end_src\n")
     expect(tree.children[0]).toMatchObject({ value: "* x\n" })
   })
+
+  it("drops an org table's affiliated keywords (src/core/tableKeywords.ts)", () => {
+    const tree = unified().use(uniorgParse).parse("#+NAME: t\n| a |\n")
+    expect(tree.children[0]).toMatchObject({ type: "table" })
+    expect(tree.children[0]).not.toHaveProperty("affiliated")
+  })
 })

@@ -15,6 +15,7 @@ import { unescapeBackslashCommands } from "./core/backslashCommands.js"
 import { unescapeTablePipes } from "./core/tablePipes.js"
 import { parseOrg } from "./core/bracedScripts.js"
 import { guardCommaEscapes, unescapeCommaEscapes } from "./core/commaEscapes.js"
+import { separateTableKeywords } from "./core/tableKeywords.js"
 import {
   dropUnderscoreBulletGuards,
   guardUnderscoreBullets
@@ -100,8 +101,11 @@ function convertOrgDocument(
   // Phase 1: Parse Org-mode to uniorg-ast
   // md text has no scripts, so ^:{} is implied there and consumed here
   // (see markdownToOrg); uniorg misreads `_.` lines (see underscoreBullets)
-  // and comma-escaped code lines (see commaEscapes)
-  const guarded = guardCommaEscapes(guardUnderscoreBullets(org))
+  // and comma-escaped code lines (see commaEscapes), and drops a table's
+  // keywords (see tableKeywords)
+  const guarded = separateTableKeywords(
+    guardCommaEscapes(guardUnderscoreBullets(org))
+  )
   let uniorgAst = parseOrg(guarded)
   dropUnderscoreBulletGuards(uniorgAst)
   unescapeCommaEscapes(uniorgAst)

@@ -140,6 +140,20 @@ describe("convertOrgToMarkdown", () => {
     expect(convertOrgToMarkdown(org)).toBe("| a | b |\n| - | - |\n| 1 | 2 |\n")
   })
 
+  it("should keep a table's keywords and formulas as org lines", () => {
+    // uniorg drops an org table's affiliated keywords
+    const org =
+      "x\n\n#+NAME: t\n#+CAPTION: c\n| a |\n|-|\n| 1 |\n#+TBLFM: $1=2\n"
+    expect(convertOrgToMarkdown(org)).toBe(
+      "x\n\n#+NAME: t\n\n#+CAPTION: c\n\n| a |\n| - |\n| 1 |\n\n#+TBLFM: $1=2\n"
+    )
+    expect(convertMarkdownToOrg(convertOrgToMarkdown(org))).toBe(org)
+    // not in a block
+    expect(
+      convertOrgToMarkdown("#+begin_example\n#+NAME: t\n| a |\n#+end_example\n")
+    ).toBe("```\n#+NAME: t\n| a |\n```\n")
+  })
+
   it("should use the first row as header for rule-less org tables", () => {
     const org = "| a | b |\n| 1 | 2 |\n"
 
