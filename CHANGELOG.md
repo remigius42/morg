@@ -53,7 +53,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Translating Markdown honours the Markdown options, as normalizing
   does: a block holding a construct they concern is converted on its
   own, in the Spelling they name; the rest stays as written.
-- The Web UI's options name the side they act on, and a table sets
+- The Web UI's options are grouped by the side they act on, showing
+  only those of the sides the conversion has, and a compact table sets
   each construct's HTML reading and Spelling.
 
 ### Fixed

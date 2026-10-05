@@ -330,3 +330,23 @@ nav li:has(> .theme-switch) {
 .panes > #output {
   grid-area: output;
 }
+
+/* the construct table is a form's rows, not a data table: a line each */
+#htmlSpellings {
+  width: auto;
+}
+
+#htmlSpellings th,
+#htmlSpellings td {
+  padding: calc(var(--pico-spacing) * 0.25) calc(var(--pico-spacing) * 0.75);
+}
+
+#htmlSpellings input,
+#htmlSpellings select {
+  margin: 0;
+}
+
+#htmlSpellings select {
+  width: auto;
+  padding-block: calc(var(--pico-form-element-spacing-vertical) * 0.375);
+}

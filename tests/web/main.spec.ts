@@ -490,6 +490,41 @@ describe("embed page", () => {
     expect(element<HTMLTextAreaElement>("output").value).toBe("<u>under</u>\n")
   })
 
+  it("shows the options of the sides a conversion has (ADR 0007)", () => {
+    const shown = (id: string) => !element(id).closest("[hidden]")
+    const visible = () =>
+      [
+        "interpretHtml-images",
+        "spelling-images",
+        "taskCheckboxes",
+        "bullet",
+        "recordMarkdownStyle",
+        "noOptions"
+      ].filter(shown)
+
+    // org → Markdown: Markdown output only
+    expect(visible()).toEqual(["spelling-images", "taskCheckboxes", "bullet"])
+    choose("inputDialect", "markdown")
+    expect(visible()).toEqual(["interpretHtml-images", "recordMarkdownStyle"])
+    choose("outputDialect", "markdown")
+    expect(visible()).toEqual([
+      "interpretHtml-images",
+      "spelling-images",
+      "taskCheckboxes",
+      "bullet"
+    ])
+    // a translation writes no tasks: it converts no headlines
+    choose("inputDialect", "markdown:obsidian")
+    expect(visible()).toEqual([
+      "interpretHtml-images",
+      "spelling-images",
+      "bullet"
+    ])
+    choose("inputDialect", "org")
+    choose("outputDialect", "org:logseq")
+    expect(visible()).toEqual(["noOptions"])
+  })
+
   it("records the source style via its checkbox", async () => {
     choose("inputDialect", "markdown")
     const input = element<HTMLTextAreaElement>("input")

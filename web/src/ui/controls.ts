@@ -31,6 +31,8 @@ export interface Controls {
   outputDialect: HTMLSelectElement
   swapSides: HTMLButtonElement
   normalizeHint: HTMLElement
+  sideOptions: HTMLElement[]
+  noOptions: HTMLElement
   /** Per construct, whether Markdown input reads its HTML (ADR 0007). */
   interpretHtml: Record<HtmlConstruct, HTMLInputElement>
   /** Per construct, the Spelling Markdown output writes it in. */
@@ -107,6 +109,10 @@ export function findControls(runner: ConversionRunner): Controls {
     outputDialect: element<HTMLSelectElement>("outputDialect"),
     swapSides: element<HTMLButtonElement>("swapSides"),
     normalizeHint: element<HTMLElement>("normalizeHint"),
+    sideOptions: [
+      ...element("options").querySelectorAll<HTMLElement>("[data-side]")
+    ],
+    noOptions: element<HTMLElement>("noOptions"),
     interpretHtml: perConstruct(construct =>
       element<HTMLInputElement>(`interpretHtml-${construct}`)
     ),

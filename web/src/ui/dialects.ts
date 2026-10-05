@@ -5,7 +5,12 @@
  * two of one format translate.
  * Free of the pipeline, since the main bundle reads it on every change.
  */
-import { normalizes, readsMarkdown, type Direction } from "../direction.js"
+import {
+  normalizes,
+  readsMarkdown,
+  writesMarkdown,
+  type Direction
+} from "../direction.js"
 
 type Format = "markdown" | "org"
 
@@ -31,6 +36,10 @@ export interface DialectControls {
   inputDialect: HTMLSelectElement
   outputDialect: HTMLSelectElement
   normalizeHint: HTMLElement
+  /** The options, each marked with the side it belongs to (ADR 0007). */
+  sideOptions: HTMLElement[]
+  /** Says no option applies, where none does. */
+  noOptions: HTMLElement
 }
 
 // an option's value: the format, then the preset unless it is Vanilla
@@ -102,6 +111,31 @@ export function enforceOutput(
   controls.inputDialect.dataset.format = input.format
   controls.normalizeHint.hidden =
     controls.inputDialect.value !== controls.outputDialect.value
+  showSideOptions(controls)
+}
+
+/**
+ * Shows the options of the sides the conversion has (ADR 0007): reading
+ * Markdown, writing it, writing it from org (a translation converts no
+ * headlines to tasks), and writing org from Markdown.
+ * @param controls The selects and the options.
+ */
+function showSideOptions(controls: DialectControls): void {
+  const direction = directionOf(controls)
+  const translates =
+    normalizes(direction) &&
+    controls.inputDialect.value !== controls.outputDialect.value
+  const sides: Record<string, boolean> = {
+    "markdown-input": readsMarkdown(direction),
+    "markdown-output": writesMarkdown(direction),
+    "org-to-markdown": writesMarkdown(direction) && !translates,
+    "org-output": direction === "md-to-org"
+  }
+  sides.markdown = readsMarkdown(direction) || writesMarkdown(direction)
+  for (const option of controls.sideOptions) {
+    option.hidden = !sides[option.dataset.side ?? ""]
+  }
+  controls.noOptions.hidden = sides.markdown
 }
 
 /**

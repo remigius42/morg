@@ -66,7 +66,9 @@ happens in your browser, nothing is uploaded (see [ADR
 names its format and dialect (Input: Org (Logseq), Output: Markdown);
 the direction follows from the two, the same on both sides normalizes,
 two dialects of one format translate (Markdown (Logseq) → Markdown),
-and ⇄ swaps them. The
+and ⇄ swaps them. Its options are grouped by the side they act on
+(reading Markdown, writing Markdown, writing org), showing those of the
+sides the conversion has. The
 chrome-less embed page (`/embed.html`, optionally with
 `?theme=dark|light`) can be iframed into other sites. It posts its
 content height to the host on every change, so the frame can follow it

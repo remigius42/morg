@@ -100,28 +100,35 @@
         <ul id="warnings" hidden></ul>
         <details id="options">
           <summary>Options</summary>
-          <table id="htmlSpellings">
+          <!-- each option belongs to a side of the conversion (ADR 0007);
+               main.ts hides those of sides it does not have -->
+          <p id="noOptions" hidden>No options apply to Org → Org.</p>
+          <table id="htmlSpellings" data-side="markdown">
             <caption>
               Constructs Markdown can also write as HTML
             </caption>
             <thead>
               <tr>
                 <th scope="col">Construct</th>
-                <th scope="col">Read HTML (Markdown input)</th>
-                <th scope="col">Write as (Markdown output)</th>
+                <th scope="col" data-side="markdown-input">
+                  Read HTML <small>(Markdown input)</small>
+                </th>
+                <th scope="col" data-side="markdown-output">
+                  Write as <small>(Markdown output)</small>
+                </th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <th scope="row">Definition list</th>
-                <td>
+                <td data-side="markdown-input">
                   <input
                     type="checkbox"
                     id="interpretHtml-definitionList"
                     aria-label="Read definition list HTML"
                   />
                 </td>
-                <td>
+                <td data-side="markdown-output">
                   <select
                     id="spelling-definitionList"
                     aria-label="Write definition list as"
@@ -133,14 +140,14 @@
               </tr>
               <tr>
                 <th scope="row">Image size</th>
-                <td>
+                <td data-side="markdown-input">
                   <input
                     type="checkbox"
                     id="interpretHtml-images"
-                    aria-label="Read image HTML"
+                    aria-label="Read image size HTML"
                   />
                 </td>
-                <td>
+                <td data-side="markdown-output">
                   <select id="spelling-images" aria-label="Write image size as">
                     <option value="markdown">Markdown</option>
                     <option value="html">HTML</option>
@@ -149,14 +156,14 @@
               </tr>
               <tr>
                 <th scope="row">Underline</th>
-                <td>
+                <td data-side="markdown-input">
                   <input
                     type="checkbox"
                     id="interpretHtml-underline"
                     aria-label="Read underline HTML"
                   />
                 </td>
-                <td>
+                <td data-side="markdown-output">
                   <select
                     id="spelling-underline"
                     aria-label="Write underline as"
@@ -168,14 +175,14 @@
               </tr>
               <tr>
                 <th scope="row">Superscript</th>
-                <td>
+                <td data-side="markdown-input">
                   <input
                     type="checkbox"
                     id="interpretHtml-superscript"
                     aria-label="Read superscript HTML"
                   />
                 </td>
-                <td>
+                <td data-side="markdown-output">
                   <select
                     id="spelling-superscript"
                     aria-label="Write superscript as"
@@ -187,14 +194,14 @@
               </tr>
               <tr>
                 <th scope="row">Subscript</th>
-                <td>
+                <td data-side="markdown-input">
                   <input
                     type="checkbox"
                     id="interpretHtml-subscript"
                     aria-label="Read subscript HTML"
                   />
                 </td>
-                <td>
+                <td data-side="markdown-output">
                   <select
                     id="spelling-subscript"
                     aria-label="Write subscript as"
@@ -206,51 +213,57 @@
               </tr>
             </tbody>
           </table>
-          <label>
-            <input type="checkbox" id="recordMarkdownStyle" />
-            Record the source's Markdown style (Org output)
-          </label>
-          <label>
-            <input type="checkbox" id="taskCheckboxes" />
-            TODO/DONE headlines → task checkboxes (lossy)
-          </label>
-          <fieldset class="grid">
-            <label>
-              Bullet
-              <select id="bullet">
-                <option>-</option>
-                <option>*</option>
-                <option>+</option>
-              </select>
+          <fieldset data-side="markdown-output">
+            <legend>Markdown output</legend>
+            <label data-side="org-to-markdown">
+              <input type="checkbox" id="taskCheckboxes" />
+              TODO/DONE headlines → task checkboxes (lossy)
             </label>
+            <div class="grid">
+              <label>
+                Bullet
+                <select id="bullet">
+                  <option>-</option>
+                  <option>*</option>
+                  <option>+</option>
+                </select>
+              </label>
+              <label>
+                Emphasis
+                <select id="emphasis">
+                  <option>*</option>
+                  <option>_</option>
+                </select>
+              </label>
+              <label>
+                Strong
+                <select id="strong">
+                  <option>*</option>
+                  <option>_</option>
+                </select>
+              </label>
+              <label>
+                Fence
+                <select id="fence">
+                  <option>`</option>
+                  <option>~</option>
+                </select>
+              </label>
+              <label>
+                Rule
+                <select id="rule">
+                  <option>-</option>
+                  <option>*</option>
+                  <option>_</option>
+                </select>
+              </label>
+            </div>
+          </fieldset>
+          <fieldset data-side="org-output">
+            <legend>Org output</legend>
             <label>
-              Emphasis
-              <select id="emphasis">
-                <option>*</option>
-                <option>_</option>
-              </select>
-            </label>
-            <label>
-              Strong
-              <select id="strong">
-                <option>*</option>
-                <option>_</option>
-              </select>
-            </label>
-            <label>
-              Fence
-              <select id="fence">
-                <option>`</option>
-                <option>~</option>
-              </select>
-            </label>
-            <label>
-              Rule
-              <select id="rule">
-                <option>-</option>
-                <option>*</option>
-                <option>_</option>
-              </select>
+              <input type="checkbox" id="recordMarkdownStyle" />
+              Record the source's Markdown style
             </label>
           </fieldset>
         </details>
