@@ -517,6 +517,20 @@ describe("Markdown options in a translation (ADR 0007)", () => {
     )
   })
 
+  it("writes a sized image as <img> where the output spells it in html", () => {
+    const html = { spelling: { images: "html" } } as const
+
+    expect(
+      translateMarkdown("![a|300](img.png)\n", { ...fromObsidian, ...html })
+    ).toBe('<img src="img.png" alt="a" width="300">\n')
+    expect(
+      translateMarkdown(
+        "#+CAPTION: c\n#+ATTR_HTML: :width 300\n\n![a](img.png)\n",
+        { ...fromObsidian, ...html }
+      )
+    ).toBe('#+CAPTION: c\n\n<img src="img.png" alt="a" width="300">\n')
+  })
+
   it("leaves a translation without Markdown options as written", () => {
     const markdown = "Term\n:   def\n\n<dl><dt>a</dt><dd>b</dd></dl>\n"
 
