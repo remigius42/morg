@@ -108,11 +108,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - An org link to a `//` path keeps its `%` as written: org → md
   percent-encoded it, md → org read the scheme-relative url as it is,
   so `%25` gained a `25` each round trip.
-- Org keyword lines (`#+AUTHOR: Jan <jan@x.org>`, `#+CALL:`) and a
-  headline's `key:: value` property lines go back to org as written:
-  md → org read them as Markdown, so an address or url became a link
-  nested once more each round trip, and escaped them (`\n:nil` in
-  `#+OPTIONS:` gained a zero-width space).
+- Org keyword lines (`#+AUTHOR: Jan <jan@x.org>`, `#+CALL:`) go back
+  to org as written: md → org read them as Markdown, so an address or
+  url became a link nested once more each round trip, and escaped them
+  (`\n:nil` in `#+OPTIONS:` gained a zero-width space).
+- A headline's property values that Markdown may read as syntax (a
+  url, `*`, `_`) are written below a `<!-- morg_properties -->`
+  comment, and md → org takes the lines below it back as written; it
+  read them as Markdown. Unmarked `key:: value` lines below a heading
+  are Markdown, as a person writes them (an Obsidian Dataview field),
+  and convert as before.
 - An org element written verbatim to Markdown (fixed-width lines, a
   drawer, a special block) with keywords in front (`#+RESULTS:`) goes
   back to org as written: md → org read it as Markdown, so a babel

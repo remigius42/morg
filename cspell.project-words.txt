@@ -10,6 +10,7 @@ codacy
 Comeau
 commitlint
 convergently
+Dataview
 desynchronize
 desynchronizes
 dotless

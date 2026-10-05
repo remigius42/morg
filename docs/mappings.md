@@ -108,6 +108,13 @@ remappable via `orgismKeys`
 (convergence is then per-config, ADR 0002). `preserveOrgisms` accepts
 `false` or a per-key record to drop org-isms instead.
 
+Property values are org text. Where one may read as Markdown syntax (a
+url, `*`, `_`, `<…>`), org → md writes a `<!-- morg_properties -->`
+comment above the lines, and md → org takes the lines below it back
+as written. Unmarked lines are Markdown, as a person writes them (an
+Obsidian Dataview field below a heading): their values convert, and a
+paragraph whose values hold Markdown markup stays text.
+
 Verbatim passthrough (org text kept literally in Markdown, re-parsed
 natively on the return trip): generic drawers (`:LOGBOOK:` …),
 special / center / verse / comment blocks, fixed-width blocks,

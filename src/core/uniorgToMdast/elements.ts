@@ -28,6 +28,7 @@ import { transformFootnoteDefinition } from "./footnotes.js"
 import { transformTable } from "./tables.js"
 import { transformPlainList } from "./lists.js"
 import { imgTag, loneAttrHtmlSize } from "../sizedImages.js"
+import { mayReadAsMarkdown, PROPERTIES_MARKER } from "../keyValueLines.js"
 
 export function transformNodes(
   ctx: TransformContext,
@@ -293,14 +294,26 @@ function transformDrawer(
 function transformPropertyDrawer(
   ctx: TransformContext,
   node: Extract<GreaterElementType, { type: "property-drawer" }>
-): RootContent | null {
+): RootContent | RootContent[] | null {
   if (!orgismEnabled(ctx, "properties")) {
     return null
   }
-  const isms = (node.children || [])
-    .filter(child => child.type === "node-property")
-    .map(({ key, value }) => (value ? `${key}:: ${value}` : `${key}::`))
-  return isms.length ? keyValueParagraph(isms) : null
+  const properties = (node.children || []).filter(
+    child => child.type === "node-property"
+  )
+  if (!properties.length) {
+    return null
+  }
+  const lines = keyValueParagraph(
+    properties.map(({ key, value }) =>
+      value ? `${key}:: ${value}` : `${key}::`
+    )
+  )
+  // values are org text: a marker keeps md→org from reading them as
+  // Markdown
+  return properties.some(({ value }) => mayReadAsMarkdown(value ?? ""))
+    ? [{ type: "html", value: `<!-- ${PROPERTIES_MARKER} -->` }, lines]
+    : lines
 }
 
 function transformParagraph(

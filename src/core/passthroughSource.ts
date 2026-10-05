@@ -1,7 +1,7 @@
 import type { ListItem, Paragraph, Root, RootContent } from "mdast"
 import { visit } from "unist-util-visit"
 import { KEYWORD_NAME } from "./frontmatterBlock.js"
-import { keyValueEntries } from "./keyValueLines.js"
+import { keyValueEntries, PROPERTIES_MARKER } from "./keyValueLines.js"
 import { readsAsPassthrough } from "./lineSyntax.js"
 
 // the first line of an org block or drawer
@@ -144,15 +144,21 @@ function passthroughSource(
     : null
 }
 
-// a paragraph of `key:: value` lines below a heading, as org→md writes
-// a headline's properties: their values are org text
+const PROPERTIES_MARKER_RE = new RegExp(`^<!--\\s*${PROPERTIES_MARKER}\\s*-->$`)
+
+function isPropertiesMarker(node: RootContent): boolean {
+  return node.type === "html" && PROPERTIES_MARKER_RE.test(node.value.trim())
+}
+
+// a paragraph of `key:: value` lines below a properties marker, as
+// org→md writes a headline's properties: their values are org text
 function propertySource(
-  node: RootContent,
+  node: RootContent | undefined,
   markdown: string
 ): { end: number; org: string } | null {
-  const { start, end } = node.position ?? {}
+  const { start, end } = node?.position ?? {}
   if (
-    node.type !== "paragraph" ||
+    node?.type !== "paragraph" ||
     start?.offset === undefined ||
     end?.offset === undefined
   ) {
@@ -182,15 +188,17 @@ function lastNodeAt(nodes: RootContent[], i: number, end: number): number {
 export function keepPassthroughSource(mdast: Root, markdown: string): void {
   const children: RootContent[] = []
   const nodes = mdast.children
-  // below a heading, or below such a paragraph
-  let belowHeading = false
   for (let i = 0; i < nodes.length; i++) {
     const node = nodes[i] as RootContent
-    const property: { end: number; org: string } | null = belowHeading
-      ? propertySource(node, markdown)
+    const property = isPropertiesMarker(node)
+      ? propertySource(nodes[i + 1], markdown)
       : null
-    const source = property ?? passthroughSource(node, markdown)
-    belowHeading = node.type === "heading" || property !== null
+    if (property) {
+      // the marker goes, its paragraph's org text stays
+      i++
+    }
+    const source =
+      property ?? passthroughSource(nodes[i] as RootContent, markdown)
     const last = source ? lastNodeAt(nodes, i, source.end) : -1
     if (!source || last === -1) {
       children.push(node)

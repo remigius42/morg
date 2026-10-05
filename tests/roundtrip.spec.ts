@@ -798,8 +798,23 @@ describe("verbatim passthrough", () => {
   })
 
   it("keeps a headline's property values as written", () => {
+    // a marker tells them from Markdown a person wrote below a heading
     const org = "* H\n:PROPERTIES:\n:url: https://x.org/ *a* <b@c.de>\n:END:\n"
+    expect(convertOrgToMarkdown(org)).toBe(
+      "# H\n\n<!-- morg_properties -->\n\nurl:: https://x.org/ *a* <b@c.de>\n"
+    )
     expect(orgRoundTrip(org)).toBe(org)
+    // plain values need none
+    expect(convertOrgToMarkdown("* H\n:PROPERTIES:\n:id: 1\n:END:\n")).toBe(
+      "# H\n\nid:: 1\n"
+    )
+  })
+
+  it("reads unmarked key:: lines below a heading as Markdown", () => {
+    // as in an Obsidian Dataview field
+    expect(
+      convertMarkdownToOrg("## H\n\nrating:: [x](http://y.org) **b**\n")
+    ).toBe("** H\nrating:: [[http://y.org][x]] *b*\n")
   })
 
   it("loses a descriptive list nested in a list item (known limitation)", () => {
