@@ -435,6 +435,18 @@ describe("Markdown options in a translation (ADR 0007)", () => {
     ).toBe("> <dl>\n> <dt>Term</dt>\n> <dd>def</dd>\n> </dl>\n")
   })
 
+  it("leaves the Markdown as written where no construct is HTML", () => {
+    const markdown =
+      "Term\n:   def\n\n<dl><dt>a</dt><dd>b</dd></dl>\n\nx <u>u</u>\n"
+    expect(
+      translateMarkdown(markdown, {
+        ...fromObsidian,
+        spelling: "markdown",
+        interpretHtml: false
+      })
+    ).toBe(markdown)
+  })
+
   it("keeps a quote's blank lines in its block", () => {
     const html = { ...fromObsidian, spelling: "html" as const }
     expect(translateMarkdown("> Term\n> :   one\n>\n>     more\n", html)).toBe(

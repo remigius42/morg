@@ -9,6 +9,7 @@ import { SKIP, visit } from "unist-util-visit"
 import { convertMarkdownToOrg } from "./markdownToOrg.js"
 import { convertOrgToMarkdown } from "./orgToMarkdown.js"
 import {
+  HTML_CONSTRUCTS,
   spellingOf,
   toggleEnabled,
   type HtmlConstruct,
@@ -183,7 +184,14 @@ export function respellMarkdown(
   carried?: Preset
 ): string {
   const { interpretHtml, spelling, onWarning } = options
-  if (interpretHtml === undefined && spelling === undefined) {
+  // nothing to respell: no construct is HTML on either side
+  if (
+    !HTML_CONSTRUCTS.some(
+      construct =>
+        spellingOf(spelling, construct) === "html" ||
+        toggleEnabled(interpretHtml, construct, false)
+    )
+  ) {
     return markdown
   }
   // a translation's presets are not the block's: it is converted alone
