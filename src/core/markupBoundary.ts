@@ -229,6 +229,12 @@ function dropMarkupBoundaries(tree: Parent): void {
     ) {
       value = value.slice(1)
     }
+    if (value === "") {
+      // remark writes `&#xNAN;` for an empty text node before emphasis
+      parent.children.splice(index, 1)
+      return index
+    }
     node.value = value
+    return undefined
   })
 }

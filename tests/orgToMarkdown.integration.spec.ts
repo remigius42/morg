@@ -30,6 +30,11 @@ describe("convertOrgToMarkdown", () => {
     )
   })
 
+  it("should drop a zero-width space between two markups whole", () => {
+    // an empty text node left in its place made remark write `&#xNAN;`
+    expect(convertOrgToMarkdown("~a~\u200B/,/ b\n")).toBe("`a`*,* b\n")
+  })
+
   it("should drop zero-width spaces that only defuse a marker", () => {
     const org = "see /\u200Betc/, a *\u200Bb* and x =\u200By= z\n"
 
