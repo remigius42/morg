@@ -143,7 +143,14 @@ function convertBlock(
     .slice(start, end)
     .split("\n")
     .map((line, i) =>
-      i && line.startsWith(prefix) ? line.slice(prefix.length) : line
+      !i
+        ? line
+        : line.startsWith(prefix)
+          ? line.slice(prefix.length)
+          : // a blank line in the container: a quote's bare `>`
+            line.trimEnd() === prefix.trimEnd()
+            ? ""
+            : line
     )
     .join("\n")
   const converted = convertOrgToMarkdown(

@@ -435,6 +435,16 @@ describe("Markdown options in a translation (ADR 0007)", () => {
     ).toBe("> <dl>\n> <dt>Term</dt>\n> <dd>def</dd>\n> </dl>\n")
   })
 
+  it("keeps a quote's blank lines in its block", () => {
+    const html = { ...fromObsidian, spelling: "html" as const }
+    expect(translateMarkdown("> Term\n> :   one\n>\n>     more\n", html)).toBe(
+      "> <dl>\n> <dt>Term</dt>\n> <dd>one\n>   more</dd>\n> </dl>\n"
+    )
+    expect(
+      translateMarkdown("> #+ATTR_HTML: :width 300\n>\n> ![a](x.png)\n", html)
+    ).toBe('> <img src="x.png" alt="a" width="300">\n')
+  })
+
   it("reads the HTML the input names as the construct", () => {
     expect(
       translateMarkdown(
