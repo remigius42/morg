@@ -34,6 +34,7 @@ import {
 } from "./blocks.js"
 import { transformMdastDefList, transformMdastList } from "./lists.js"
 import { transformPhrasingChildren } from "./phrasing.js"
+import { ORG_VERBATIM } from "../render.js"
 import { DESCRIPTIVE_LIST_MARKER } from "../descriptiveTags.js"
 
 export type { MdastToUniorgOptions, TransformContext } from "./context.js"
@@ -140,12 +141,16 @@ export function transformMdastNodeToUniorgNode(
       return transformMdastHeading(ctx, node)
     case "paragraph": {
       // a paragraph of only #+KEY: lines is affiliated keywords (or
-      // mid-file keywords) traveling verbatim; emit as raw text so they
-      // glue to the following element without a blank line: org only
-      // attaches affiliated keywords when directly above their element
+      // mid-file keywords) traveling verbatim; emit as raw org text so
+      // they glue to the following element without a blank line (org
+      // only attaches affiliated keywords when directly above their
+      // element), and no escape touches them
       const keywordLines = keywordOnlyLines(node)
       if (keywordLines) {
-        return { type: "text", value: `${keywordLines.join("\n")}\n` }
+        return {
+          type: ORG_VERBATIM,
+          value: `${keywordLines.join("\n")}\n`
+        } as unknown as Text
       }
       return {
         type: "paragraph",

@@ -757,6 +757,23 @@ describe("verbatim passthrough", () => {
     }
   })
 
+  it("keeps keyword lines as written, Markdown syntax and all", () => {
+    for (const org of [
+      "x\n\n#+AUTHOR: Jan <jan@x.org>\n",
+      "x\n\n#+HTML_LINK_HOME: https://x.org/ *a* `b`\n",
+      "x\n\n#+OPTIONS: \\n:nil [fn:1] a\\b\n",
+      "x\n\n#+HTML: @@html:<br/>@@\n",
+      'x\n\n#+CALL: f(x=a[:r b](c="d"))\n'
+    ]) {
+      expect(orgRoundTrip(org)).toBe(org)
+    }
+  })
+
+  it("keeps a headline's property values as written", () => {
+    const org = "* H\n:PROPERTIES:\n:url: https://x.org/ *a* <b@c.de>\n:END:\n"
+    expect(orgRoundTrip(org)).toBe(org)
+  })
+
   it("loses a descriptive list nested in a list item (known limitation)", () => {
     // micromark-extension-definition-list reads no definition list
     // inside a list item; once it does, this keeps the nested list

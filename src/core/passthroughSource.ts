@@ -1,4 +1,6 @@
 import type { Root, RootContent } from "mdast"
+import { KEYWORD_NAME } from "./frontmatterBlock.js"
+import { keyValueEntries } from "./keyValueLines.js"
 import { readsAsPassthrough } from "./lineSyntax.js"
 
 // the first line of an org block or drawer
@@ -59,31 +61,49 @@ function elementSource(markdown: string, offset: number): string | null {
 // unescaped, a `: ` line is Markdown text
 const FIXED_WIDTH_RE = /^[ \t]*\\:(?=[ \t]|$)/
 
+/** A `#+KEY: value` line, which org→md writes as it is. */
+export const KEYWORD_LINE_RE = new RegExp(String.raw`^#\+${KEYWORD_NAME}: `)
+
+// the run of lines from `offset` on that `pattern` matches, up to the
+// last one's end, without its line break
+function lineRun(
+  markdown: string,
+  offset: number,
+  pattern: RegExp
+): { length: number; lines: string[] } | null {
+  const lines: string[] = []
+  let end = offset
+  while (end < markdown.length) {
+    const next = markdown.indexOf("\n", end)
+    const line = markdown.slice(end, next === -1 ? markdown.length : next)
+    if (!pattern.test(line)) {
+      break
+    }
+    lines.push(line)
+    end = next === -1 ? markdown.length : next + 1
+  }
+  if (!lines.length) {
+    return null
+  }
+  return {
+    length: end - offset - (end > offset && markdown[end - 1] === "\n" ? 1 : 0),
+    lines
+  }
+}
+
 // the run of fixed-width lines from `offset` on, their escapes dropped:
 // read as Markdown, inline math spanning lines would keep a `\`
 function fixedWidthSource(
   markdown: string,
   offset: number
 ): { length: number; org: string } | null {
-  const lines: string[] = []
-  let end = offset
-  while (end < markdown.length) {
-    const next = markdown.indexOf("\n", end)
-    const line = markdown.slice(end, next === -1 ? markdown.length : next)
-    if (!FIXED_WIDTH_RE.test(line)) {
-      break
+  const run = lineRun(markdown, offset, FIXED_WIDTH_RE)
+  return (
+    run && {
+      length: run.length,
+      org: run.lines.map(line => line.replace("\\:", ":")).join("\n")
     }
-    lines.push(line.replace("\\:", ":"))
-    end = next === -1 ? markdown.length : next + 1
-  }
-  if (!lines.length) {
-    return null
-  }
-  // up to the last line's end, without its line break
-  return {
-    length: end - offset - (end > offset && markdown[end - 1] === "\n" ? 1 : 0),
-    org: lines.join("\n")
-  }
+  )
 }
 
 // where the passthrough element starting at a node ends in the source,
@@ -101,9 +121,32 @@ function passthroughSource(
     return { end: start.offset + fixed.length, org: fixed.org }
   }
   const source = elementSource(markdown, start.offset)
-  return source !== null && readsAsPassthrough(source)
-    ? { end: start.offset + source.length, org: source }
+  if (source !== null && readsAsPassthrough(source)) {
+    return { end: start.offset + source.length, org: source }
+  }
+  // keywords, not one passthrough element: each line is one
+  const keywords = lineRun(markdown, start.offset, KEYWORD_LINE_RE)
+  return keywords
+    ? { end: start.offset + keywords.length, org: keywords.lines.join("\n") }
     : null
+}
+
+// a paragraph of `key:: value` lines below a heading, as org→md writes
+// a headline's properties: their values are org text
+function propertySource(
+  node: RootContent,
+  markdown: string
+): { end: number; org: string } | null {
+  const { start, end } = node.position ?? {}
+  if (
+    node.type !== "paragraph" ||
+    start?.offset === undefined ||
+    end?.offset === undefined
+  ) {
+    return null
+  }
+  const org = markdown.slice(start.offset, end.offset)
+  return keyValueEntries(org) ? { end: end.offset, org } : null
 }
 
 // the index of the last node ending at `end`, from `i` on, or -1
@@ -126,9 +169,15 @@ function lastNodeAt(nodes: RootContent[], i: number, end: number): number {
 export function keepPassthroughSource(mdast: Root, markdown: string): void {
   const children: RootContent[] = []
   const nodes = mdast.children
+  // below a heading, or below such a paragraph
+  let belowHeading = false
   for (let i = 0; i < nodes.length; i++) {
     const node = nodes[i] as RootContent
-    const source = passthroughSource(node, markdown)
+    const property: { end: number; org: string } | null = belowHeading
+      ? propertySource(node, markdown)
+      : null
+    const source = property ?? passthroughSource(node, markdown)
+    belowHeading = node.type === "heading" || property !== null
     const last = source ? lastNodeAt(nodes, i, source.end) : -1
     if (!source || last === -1) {
       children.push(node)

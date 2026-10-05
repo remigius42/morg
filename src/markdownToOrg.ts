@@ -20,6 +20,7 @@ import { escapeBackslashCommands } from "./core/backslashCommands.js"
 import { escapeTablePipes } from "./core/tablePipes.js"
 import { requireBracedScripts } from "./core/bracedScripts.js"
 import { keepPassthroughSource } from "./core/passthroughSource.js"
+import { ORG_VERBATIM } from "./core/render.js"
 import type { Root } from "mdast"
 import type { MarkdownStyleOptions, MarkdownToOrgOptions } from "./options.js"
 import type { Preset } from "./presets/types.js"
@@ -168,7 +169,10 @@ function emptyHeadline(node: Headline): string | null {
 // built once: a preset converts a page block by block
 const stringifier = unified()
   .use(uniorgStringify, {
-    handlers: { headline: emptyHeadline }
+    handlers: {
+      headline: emptyHeadline,
+      [ORG_VERBATIM]: (node: { value: string }) => node.value
+    }
   } as Parameters<typeof uniorgStringify>[0])
   .freeze()
 

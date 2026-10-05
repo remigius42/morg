@@ -107,6 +107,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - An org link to a `//` path keeps its `%` as written: org → md
   percent-encoded it, md → org read the scheme-relative url as it is,
   so `%25` gained a `25` each round trip.
+- Org keyword lines (`#+AUTHOR: Jan <jan@x.org>`, `#+CALL:`) and a
+  headline's `key:: value` property lines go back to org as written:
+  md → org read them as Markdown, so an address or url became a link
+  nested once more each round trip, and escaped them (`\n:nil` in
+  `#+OPTIONS:` gained a zero-width space).
 
 ## [0.10.1] - 2026-10-04
 

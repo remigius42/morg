@@ -8,6 +8,12 @@ import { uniorgStringify } from "uniorg-stringify"
 
 export type Node = Parent["children"][number] & { value?: string }
 
+/**
+ * md→org: a node of org text that goes to org as it is, untouched by the
+ * escape passes (which read text nodes only).
+ */
+export const ORG_VERBATIM = "org-verbatim"
+
 // built once: constructing a processor per parse dominates the cost
 export const orgParser = unified().use(uniorgParse).freeze()
 export const positionParser = unified()
