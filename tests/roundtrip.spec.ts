@@ -674,6 +674,12 @@ describe("braced scripts", () => {
     expect(orgRoundTrip(org)).toBe(org)
   })
 
+  it("an author's ^:{} before other options stays in place", () => {
+    // md→org appends ^:{} last, so only a last one is taken for its own
+    const org = "#+OPTIONS: ^:{} toc:nil\nsee a_b\n"
+    expect(orgRoundTrip(org)).toBe(org)
+  })
+
   it("an author's own ^:{} survives in markdown", () => {
     const markdown = "---\noptions: ^:{}\n---\n\ntext\n"
     expect(mdRoundTrip(markdown)).toBe(markdown)

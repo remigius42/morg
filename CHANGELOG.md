@@ -88,6 +88,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Empty nested list items right below an item's text (`- a\n  -`)
   survive org → md: Markdown read the text over a lone `-` as a
   heading, losing one item each round trip.
+- An org `#+OPTIONS:` line keeps an author's `^:{}` where it is: org →
+  md took it out from anywhere, md → org put it back last.
 
 ## [0.10.1] - 2026-10-04
 

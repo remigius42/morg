@@ -158,18 +158,19 @@ function usesScripts(uniorgAst: OrgData, setting: string): boolean {
   )
 }
 
-// drops `^:{}` from the top-level `#+OPTIONS:`, the whole keyword if
-// nothing else is left; md text has no scripts, so the return trip
-// re-adds it wherever it is needed
+// drops `^:{}` from the end of the top-level `#+OPTIONS:`, the whole
+// keyword if nothing else is left; md text has no scripts, so the return
+// trip re-adds it wherever it is needed, last. One before other options
+// is the author's, and stays where it is
 function takeBracedScripts(uniorgAst: OrgData): void {
   uniorgAst.children = uniorgAst.children.filter(node => {
     if (!isOptions(node)) {
       return true
     }
-    node.value = node.value
-      .split(/\s+/)
-      .filter(item => item && item !== BRACED_SCRIPTS)
-      .join(" ")
+    const items = node.value.split(/\s+/).filter(Boolean)
+    if (items.at(-1) === BRACED_SCRIPTS) {
+      node.value = items.slice(0, -1).join(" ")
+    }
     return node.value !== ""
   })
 }
