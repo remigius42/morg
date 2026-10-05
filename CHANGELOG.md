@@ -123,6 +123,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A definition's text after its nested list (`- T :: a\n  - b\n  c`)
   stays apart from the list: org → md wrote no blank line between
   them, so Markdown read the text into the list's last item.
+- A Markdown list item's paragraphs stay apart in org: md → org wrote
+  them with no blank line between them, which org reads as one
+  paragraph.
 
 ## [0.10.1] - 2026-10-04
 

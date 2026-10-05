@@ -89,6 +89,16 @@ function indentCode<T>(node: T, level: number): T {
   return node
 }
 
+// a blank line keeps an item's paragraph apart from one a blank line
+// above it, which org would read it into
+function blankAbove(item: MdastListItem, i: number): Text[] {
+  const apart =
+    item.spread &&
+    item.children[i]?.type === "paragraph" &&
+    item.children[i - 1]?.type === "paragraph"
+  return apart ? [{ type: "text", value: "\n" }] : []
+}
+
 function transformMdastListItem(
   ctx: TransformContext,
   item: MdastListItem,
@@ -100,7 +110,7 @@ function transformMdastListItem(
   // inside a list item.
   type ItemChild = GreaterElementType | ElementType | Text | ObjectType | null
   const children = item.children
-    .flatMap((child): ItemChild[] => {
+    .flatMap((child, i): ItemChild[] => {
       if (child.type === "list") {
         return [transformMdastList(ctx, child, indent + bullet.length)]
       }
@@ -112,7 +122,10 @@ function transformMdastListItem(
         warn(ctx, "heading inside a list item became text")
       }
       if (child.type === "paragraph" || child.type === "heading") {
-        const objects = transformPhrasingChildren(ctx, child.children)
+        const objects = [
+          ...blankAbove(item, i),
+          ...transformPhrasingChildren(ctx, child.children)
+        ]
         const last = objects.at(-1)
         // a definition list right below leaves the paragraph its line end
         return last?.type === "text" && last.value.endsWith("\n")

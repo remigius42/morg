@@ -539,6 +539,18 @@ describe("lists", () => {
     expect(mdRoundTrip(markdown)).toBe(markdown)
   })
 
+  it("keeps an item's paragraphs apart", () => {
+    // org reads lines with no blank line between them as one paragraph
+    // (uniorg-stringify indents the blank line too)
+    expect(convertMarkdownToOrg("- a\n\n  b\n- c\n")).toBe(
+      "- a\n  \n  b\n- c\n"
+    )
+    // the list stays loose: its first item holds a blank line
+    const markdown = "- a\n\n  b\n- c\n"
+    expect(mdRoundTrip("- a\n\n  b\n\n- c\n")).toBe(markdown)
+    expect(mdRoundTrip(markdown)).toBe(markdown)
+  })
+
   it("keeps a definition's text after a nested list out of the list", () => {
     // org needs no blank line: `c` is no deeper than the bullet
     const org = "- T :: a\n  - b\n  c\n"
