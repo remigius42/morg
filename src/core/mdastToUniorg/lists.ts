@@ -208,6 +208,12 @@ function descriptiveItem(
     indent,
     "- "
   )
+  // the term's line ends the bullet's: no line of its own before an
+  // element with keywords
+  const [first] = item.children as unknown as Text[]
+  if (first?.value === `${BULLET_LINE_END}\n`) {
+    item.children.shift()
+  }
   // an item's children are inline objects too, as transformMdastListItem
   // flattens its paragraphs
   ;(item.children as unknown[]).unshift(

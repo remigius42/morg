@@ -37,6 +37,15 @@ function listItemTag(item: ListItem): ListItem["children"][number] | undefined {
   )
 }
 
+// an <img> line below text would be part of the paragraph: the item
+// or definition takes blank lines between its blocks
+function imgBelow(blocks: (BlockContent | DefinitionContent)[]): boolean {
+  return blocks.some(
+    (block, i) =>
+      i > 0 && block.type === "html" && block.value.startsWith("<img")
+  )
+}
+
 function listItems(node: List): ListItem[] {
   return (node.children || []).filter(
     (child): child is ListItem => child.type === "list-item"
@@ -63,7 +72,7 @@ function descriptiveListToDefList(
         type: "defListTerm",
         children: transformUniorgObjects(ctx, tag.children)
       },
-      { type: "defListDescription", spread: false, children: blocks }
+      { type: "defListDescription", spread: imgBelow(blocks), children: blocks }
     ]
   })
   return { type: "defList", children } as unknown as RootContent
@@ -186,11 +195,7 @@ function transformUniorgListItem(
   keepLeadingColon(children[0])
   return {
     type: "listItem",
-    // an <img> line below text would be part of the paragraph
-    spread: children.some(
-      (child, i) =>
-        i > 0 && child.type === "html" && child.value.startsWith("<img")
-    ),
+    spread: imgBelow(children),
     checked:
       item.checkbox === "on" ? true : item.checkbox === "off" ? false : null,
     children

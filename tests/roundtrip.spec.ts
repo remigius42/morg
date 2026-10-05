@@ -444,6 +444,20 @@ describe("html spelling", () => {
     ).toBe(input)
   })
 
+  it("reads a sized image in a definition back from its html spelling", () => {
+    for (const input of [
+      "- term :: text\n  #+ATTR_HTML: :width 300\n  [[file:a.png]]\n",
+      "- term ::\n  #+ATTR_HTML: :width 300\n  [[file:a.png]]\n"
+    ]) {
+      expect(
+        convertMarkdownToOrg(
+          convertOrgToMarkdown(input, { spelling: { images: "html" } }),
+          { interpretHtml: { images: true } }
+        )
+      ).toBe(input)
+    }
+  })
+
   it("stays lossless when list terms contain html-special characters", () => {
     const input = "- a < b :: x & y\n"
     expect(
