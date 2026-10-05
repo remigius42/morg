@@ -13,11 +13,7 @@ import {
 import { transformPhrasingChildren } from "./phrasing.js"
 import { tagSeparator } from "./lists.js"
 import { KEYWORD_NAME } from "../frontmatterBlock.js"
-import {
-  attrHtmlValue,
-  IMAGE_EXTENSION_RE,
-  parseImgTag
-} from "../sizedImages.js"
+import { attrHtmlValue, isImagePath, parseImgTag } from "../sizedImages.js"
 
 export function transformMdastTable(
   ctx: TransformContext,
@@ -134,11 +130,8 @@ function interpretImg(ctx: TransformContext, html: string): ElementType | null {
   const [link] = transformPhrasingChildren(ctx, [
     { type: "image", url: img.src, alt: img.alt }
   ])
-  const path = (link as { rawLink?: string } | undefined)?.rawLink?.replace(
-    /::.*$/s,
-    ""
-  )
-  if (!path || !IMAGE_EXTENSION_RE.test(path)) {
+  const path = (link as { rawLink?: string } | undefined)?.rawLink
+  if (!path || !isImagePath(path)) {
     return null
   }
   const size = attrHtmlValue(img.size)

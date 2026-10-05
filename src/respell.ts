@@ -17,6 +17,7 @@ import {
 } from "./options.js"
 import type { Preset } from "./presets/types.js"
 import { attrHtmlSize } from "./core/sizedImages.js"
+import { inlineHtmlOpenTag } from "./core/mdastToUniorg/phrasing.js"
 import { applyEdits, type Edit } from "./core/edits.js"
 
 /** The Markdown options a translation honours (ADR 0007). */
@@ -24,12 +25,6 @@ export interface RespellOptions {
   interpretHtml?: Toggle
   spelling?: Spellings
   onWarning?: (message: string) => void
-}
-
-const INLINE_TAGS: Record<string, HtmlConstruct> = {
-  u: "underline",
-  sup: "superscript",
-  sub: "subscript"
 }
 
 // whether a construct's HTML reads as the construct and is written in
@@ -43,13 +38,11 @@ function htmlToMarkdown(options: RespellOptions, construct: HtmlConstruct) {
 
 function holdsInlineHtml(node: Parent, options: RespellOptions): boolean {
   return node.children.some(child => {
-    const tag = /^<(u|sup|sub)\s*>$/i
-      .exec((child as { value?: string }).value ?? "")?.[1]
-      ?.toLowerCase()
+    const tag = inlineHtmlOpenTag((child as { value?: string }).value ?? "")
     return (
       child.type === "html" &&
       tag !== undefined &&
-      htmlToMarkdown(options, INLINE_TAGS[tag] as HtmlConstruct)
+      htmlToMarkdown(options, tag.construct)
     )
   })
 }

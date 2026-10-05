@@ -3,12 +3,12 @@ import {
   HTML_CONSTRUCTS,
   type HtmlConstruct,
   type MarkdownStyleOptions,
+  type PerConstruct,
   type Spelling,
   type Toggle
 } from "./options.js"
 
 type SpellingTable = Partial<Record<HtmlConstruct, Spelling>>
-type PerConstruct<T> = Partial<Record<HtmlConstruct, T>>
 
 /**
  * The `[markdown]` section (ADR 0007): a construct's Spelling there sets

@@ -7,6 +7,16 @@ import type { Parent } from "unist"
 export const IMAGE_EXTENSION_RE = /\.(png|jpe?g|gif|svg|webp|avif|bmp|ico)$/i
 
 /**
+ * Whether an org link's path, without its `::` search option, is an
+ * image file's.
+ * @param rawLink The link's path.
+ * @returns Whether it is an image's.
+ */
+export function isImagePath(rawLink: string): boolean {
+  return IMAGE_EXTENSION_RE.test(rawLink.replace(/::.*$/s, ""))
+}
+
+/**
  * A paragraph's lone image link, outside a list item, where org reads no affiliated keyword on the
  * bullet's line and md→org flattens the item's paragraphs.
  * @param paragraph The paragraph.
@@ -23,7 +33,7 @@ export function loneImageLink(
   return parent.type !== "list-item" &&
     !more.length &&
     link?.type === "link" &&
-    IMAGE_EXTENSION_RE.test(link.rawLink.replace(/::.*$/s, ""))
+    isImagePath(link.rawLink)
     ? link
     : undefined
 }

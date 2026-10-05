@@ -118,9 +118,7 @@ function descriptiveListToHtml(node: List): RootContent {
 // can mix ordered and unordered bullets. Markdown cannot: split the items
 // into runs by bullet kind, one mdast list per run.
 function transformUniorgList(ctx: TransformContext, node: List): RootContent[] {
-  const items = (node.children || []).filter(
-    (child): child is ListItem => child.type === "list-item"
-  )
+  const items = listItems(node)
   const runs: ListItem[][] = []
   let previousOrdered: boolean | undefined
   for (const item of items) {

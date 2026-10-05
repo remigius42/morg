@@ -4,7 +4,7 @@ import { visit } from "unist-util-visit"
 import {
   loneAttrHtmlSize,
   attrHtmlValue,
-  IMAGE_EXTENSION_RE,
+  isImagePath,
   loneImageLink,
   type ImageSize
 } from "../core/sizedImages.js"
@@ -76,9 +76,7 @@ const ATTR_HTML_LINE_RE = /^\s*#\+ATTR_HTML:\s+(.*)$/i
 function imageLine(line: string | undefined) {
   const [, indent = "", link = "", path = "", map] =
     IMAGE_LINE_RE.exec(line ?? "") ?? []
-  return link && IMAGE_EXTENSION_RE.test(path.replace(/::.*$/s, ""))
-    ? { indent, link, map }
-    : undefined
+  return link && isImagePath(path) ? { indent, link, map } : undefined
 }
 
 // a line no paragraph continues over: org starts one after it

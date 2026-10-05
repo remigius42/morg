@@ -21,6 +21,21 @@ const INLINE_HTML_ORG_TYPES: Record<string, HtmlObjectType> = {
   sub: "subscript"
 }
 
+/**
+ * The tag and construct of an inline html open tag morg reads as an org
+ * object: tag names are case-insensitive and may have whitespace before
+ * the closing > (valid html); attributes disqualify the tag.
+ * @param html The html node's value.
+ * @returns The tag and its construct, or `undefined`.
+ */
+export function inlineHtmlOpenTag(
+  html: string
+): { tag: string; construct: HtmlObjectType } | undefined {
+  const tag = /^<(u|sup|sub)\s*>$/i.exec(html)?.[1]?.toLowerCase()
+  const construct = tag ? INLINE_HTML_ORG_TYPES[tag] : undefined
+  return tag && construct ? { tag, construct } : undefined
+}
+
 // org reads a script as one only after a non-blank character; HTML it
 // cannot hold stays HTML (ADR 0007)
 function afterNonBlank(previous: PhrasingContent | undefined): boolean {
@@ -30,8 +45,6 @@ function afterNonBlank(previous: PhrasingContent | undefined): boolean {
   )
 }
 
-// tag names are case-insensitive and may have whitespace before
-// the closing > (valid html); attributes disqualify the tag
 function matchInlineHtmlPair(
   ctx: TransformContext,
   children: PhrasingContent[],
@@ -41,8 +54,7 @@ function matchInlineHtmlPair(
   if (node.type !== "html") {
     return null
   }
-  const tag = /^<(u|sup|sub)\s*>$/i.exec(node.value)?.[1]?.toLowerCase()
-  const orgType = tag ? INLINE_HTML_ORG_TYPES[tag] : undefined
+  const { tag, construct: orgType } = inlineHtmlOpenTag(node.value) ?? {}
   if (
     !orgType ||
     !htmlInterpreted(ctx, orgType) ||

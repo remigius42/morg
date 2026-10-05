@@ -39,8 +39,11 @@ export type HtmlConstruct = (typeof HTML_CONSTRUCTS)[number]
 /** How Markdown writes a construct: its own syntax, or HTML. */
 export type Spelling = "markdown" | "html"
 
+/** A value per construct, unset ones the default. */
+export type PerConstruct<T> = Partial<Record<HtmlConstruct, T>>
+
 /** One Spelling for every construct, or one per construct. */
-export type Spellings = Spelling | Partial<Record<HtmlConstruct, Spelling>>
+export type Spellings = Spelling | PerConstruct<Spelling>
 
 export function spellingOf(
   spellings: Spellings | undefined,

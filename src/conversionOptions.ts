@@ -1,9 +1,9 @@
 import { configuredHtml, type MorgConfig } from "./config.js"
 import type {
-  HtmlConstruct,
   MarkdownStyleOptions,
   MarkdownToOrgOptions,
   OrgToMarkdownOptions,
+  PerConstruct,
   Spelling,
   Spellings,
   Toggle
@@ -30,8 +30,6 @@ export interface SharedConversionOptions extends PresetOptions {
   onWarning?: (message: string) => void
   orgismKeys?: Record<string, string>
 }
-
-type PerConstruct<T> = Partial<Record<HtmlConstruct, T>>
 
 // the entries that are set, so an unset one leaves a lower layer's
 function setEntries<T extends object>(
