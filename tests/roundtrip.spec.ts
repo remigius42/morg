@@ -547,6 +547,13 @@ describe("lists", () => {
     }
   })
 
+  it("keeps HTML in a list item an HTML block, text after it apart", () => {
+    // uniorg keeps the item's indentation in the export block: indented
+    // further, md reads the HTML as text
+    const markdown = "- a\n  <div>b</div>\n\n  c\n"
+    expect(mdRoundTrip(markdown)).toBe(markdown)
+  })
+
   it("keeps code in a list item as indented as it was", () => {
     const markdown = "- a\n  ```py\n  if x:\n      y()\n  ```\n"
     expect(mdRoundTrip(markdown)).toBe(markdown)

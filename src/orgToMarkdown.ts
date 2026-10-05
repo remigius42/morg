@@ -29,14 +29,14 @@ import { resolveSides, type Sides } from "./presets/sides.js"
 
 // a list item's paragraph after its nested list or quote needs a blank
 // line, or md reads it as a lazy continuation of the list's last item or
-// the quote, after its table as a table row
+// the quote, after its table as a table row, after HTML as HTML
 function separateTextAfterBlock(
   left: { type: string },
   right: { type: string },
   parent: { type: string }
 ): number | undefined {
   return parent.type === "listItem" &&
-    ["list", "blockquote", "table"].includes(left.type) &&
+    ["list", "blockquote", "table", "html"].includes(left.type) &&
     right.type === "paragraph"
     ? 1
     : undefined

@@ -162,14 +162,15 @@ function transformUniorgList(ctx: TransformContext, node: List): RootContent[] {
   })
 }
 
-// uniorg keeps a list item's indentation in its code blocks' values;
-// md indents them itself. Only that much is dropped, as uniorg-stringify
+// uniorg keeps a list item's indentation in its code and HTML blocks'
+// values; md indents them itself. Only that much is dropped, as uniorg-stringify
 // does, so the code keeps its own
 function outdent(value: string, level: number): string {
   return value.replace(new RegExp(`^ {0,${level}}`, "gm"), "")
 }
 
-// an item's content as Markdown blocks, its code without the item's indentation
+// an item's content as Markdown blocks, its code and HTML without the
+// item's indentation
 function itemBlocks(
   ctx: TransformContext,
   item: ListItem,
@@ -179,7 +180,7 @@ function itemBlocks(
     BlockContent | DefinitionContent
   )[]
   for (const block of blocks) {
-    if (block.type === "code") {
+    if (block.type === "code" || block.type === "html") {
       block.value = outdent(block.value, item.indent + item.bullet.length)
     }
   }

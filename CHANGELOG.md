@@ -77,6 +77,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   apart from it: org → md wrote no blank line between them, so
   Markdown read the text into the quote, gaining a `>` each round
   trip, or as a table row.
+- HTML in a list item (org's `#+begin_export html`) stays an HTML
+  block in Markdown, and so does text after it: org → md kept the
+  item's indentation in the HTML, which Markdown then read as text.
 
 ## [0.10.1] - 2026-10-04
 
