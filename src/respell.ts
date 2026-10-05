@@ -53,17 +53,23 @@ function holdsInlineHtml(node: Parent, options: RespellOptions): boolean {
   })
 }
 
-// a block a conversion would write in another spelling than its own
-function respelled(node: Node, options: RespellOptions): boolean {
+// a block a conversion would write in another spelling than its own;
+// HTML in a paragraph is no block
+function respelled(
+  node: Node,
+  parent: Parent | undefined,
+  options: RespellOptions
+): boolean {
   switch (node.type) {
     case "defList":
       return spellingOf(options.spelling, "definitionList") === "html"
     case "html": {
       const value = (node as { value?: string }).value ?? ""
       return (
-        (/^<dl[\s>]/i.test(value) &&
+        parent?.type !== "paragraph" &&
+        ((/^<dl[\s>]/i.test(value) &&
           htmlToMarkdown(options, "definitionList")) ||
-        (/^<img\s/i.test(value) && htmlToMarkdown(options, "images"))
+          (/^<img\s/i.test(value) && htmlToMarkdown(options, "images")))
       )
     }
     case "paragraph":
@@ -135,8 +141,8 @@ export function respellMarkdown(
     .use(remarkDefinitionList)
     .parse(markdown)
   const edits: Edit[] = []
-  visit(tree, (node: Node) => {
-    if (!respelled(node, own)) {
+  visit(tree, (node: Node, _index, parent: Parent | undefined) => {
+    if (!respelled(node, parent, own)) {
       return undefined
     }
     const start = node.position?.start.offset ?? 0

@@ -471,6 +471,17 @@ describe("Markdown options in a translation (ADR 0007)", () => {
     )
   })
 
+  it("leaves an <img> in a line of text as written", () => {
+    const markdown = 'see <img src="a.png" width="300"> here\n'
+
+    expect(
+      translateMarkdown(markdown, {
+        ...fromObsidian,
+        interpretHtml: { images: true }
+      })
+    ).toBe(markdown)
+  })
+
   it("leaves a translation without Markdown options as written", () => {
     const markdown = "Term\n:   def\n\n<dl><dt>a</dt><dd>b</dd></dl>\n"
 
