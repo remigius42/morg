@@ -1,0 +1,112 @@
+# Corpus checks
+
+The unit tests pin behavior on small inputs; the corpus checks run a
+build over thousands of real files and count how many converge (ADR
+0001): a round trip may normalize a file once, a second one must give
+the same result. This page explains the scripts, the corpora, and the
+non-convergences left on purpose.
+
+## Scripts
+
+All live in `scripts/corpus/` and print counts only, never file
+contents; the diffs stay in the work directory, for reading locally.
+
+- `setup.sh` builds what a run needs under `/tmp`, so a reboot loses
+  it: a worktree of `main` with its `dist` built (the baseline), shallow
+  clones of the web corpora, and the file lists. What exists is kept.
+- `roundtrip.sh` trips each file x through the other format twice: a =
+  f(x), b = g(a), c = f(b), d = g(c). It counts _identical_ (b = x) and
+  _converging_ (d = b), and leaves `*.identity.diff` and
+  `*.convergence.diff` per file in `$WORK`.
+- `all.sh` runs every corpus, one after another, on this checkout, or
+  with `MORG=/tmp/morg-base/dist/cli.js WORK=/tmp/morg-corpus-base` on
+  the baseline. Never run two at a time: a run starts node four times
+  per file.
+- `snapshot.sh` converts each file once, to compare two builds'
+  output with `diff -rq`.
+
+## Corpora
+
+| Corpus  | Files                                                         | Trip                           |
+| ------- | ------------------------------------------------------------- | ------------------------------ |
+| `obs`   | an Obsidian vault (local, private)                            | md→org→md, `--preset obsidian` |
+| `lsq`   | a Logseq org graph (local, private)                           | org→md→org, `--preset logseq`  |
+| `webmd` | the Rust book, GitHub's and MDN's docs                        | md→org→md, no flags            |
+| `worg`  | [Worg](https://git.sr.ht/~bzg/worg), the org community's docs | org→md→org, no flags           |
+
+The local corpora never enter the repo, and neither do their file
+names: this page names files of the web corpora only. The web corpora
+are clones of upstream HEAD, so counts move as upstream does; compare a
+build against the baseline's run on the same clones, not against older
+counts.
+
+## Checking a change
+
+Before committing a change that affects parsing or writing:
+
+1. `npm run build`, then `scripts/corpus/all.sh`.
+2. The baseline run (once per baseline, after `setup.sh` or moving
+   `/tmp/morg-base` to a new `main`).
+3. Compare the file names of the `*.convergence.diff` files in each
+   `/tmp/morg-corpus-<name>` with `/tmp/morg-corpus-base-<name>`: a file
+   that converges on the baseline must converge on the change (no new
+   non-convergences), and a file identical there must stay identical.
+
+## Status
+
+As of 2026-10-05, branch `fix/worg-convergence`:
+
+| Corpus  | Converging | Identical |
+| ------- | ---------- | --------- |
+| `obs`   | 24/24      | 0         |
+| `lsq`   | 406/406    | 320       |
+| `webmd` | 1268/1268  | 345       |
+| `worg`  | 284/293    | 0         |
+
+Worg files are identical in none: org→md→org writes org's canonical
+form (keyword values single-spaced, a list's blank lines dropped, a
+table's cells without padding), which hand-written org rarely is.
+
+## Known non-convergences
+
+Each of the nine left in `worg` traces to a construct rare enough that
+a fix would cost more than it saves (special cases in shared code, a
+risk to files that converge now). Each converges in a later round or
+differs in whitespace only, unless noted.
+
+- **`$` runs next to math** (`org-contrib/org-export-generic`,
+  `org-syntax`): lisp strings such as `"</date>$\n$$\n$"` hold `$\n$`,
+  which org reads as inline math. Written back as `$…$` next to the
+  literal `$`s around it, org reads the dollars differently, and each
+  round trip adds a `$`. Prose rarely puts `$` right against math.
+- **`$$` in a special block** (`org-contrib/babel/languages/ob-doc-maxima`):
+  a `#+begin_maximablock` holds a line starting `$$` without closing it
+  on that line. The block travels verbatim, but Markdown reads that line
+  as the start of display math that runs to the end of the file, so the
+  rest of the file is read as math, then as text: headings and code
+  gain escapes each round trip.
+- **A newline between HTML snippets** (`org-contrib/org-drill`,
+  `org-contrib/org-protocol`): an `@@html:…@@` snippet spanning lines
+  comes back as one snippet per line, and the line break between two
+  snippets then becomes a space. Rendered HTML is the same.
+- **A footnote's continuation indent** (`org-contribute`,
+  `archive/fireforg`): the continuation lines of a footnote (one
+  inline in a list item, one a definition) lose their indentation one
+  round trip later. Org reads the same text either way.
+- **Fixed-width lines in a quote** (`org-contrib/babel/languages/ob-doc-picolisp`):
+  verbatim passthrough works at the top level and in list items, not in
+  a quote. A fixed-width line holding only blanks there ends in two
+  spaces, which Markdown reads as a line break, written back as `\\`.
+- **A definition list right after an item's text** (`org-syntax`): the
+  known limitation in [mappings.md](mappings.md): Markdown reads no
+  definition list inside a list item, so a descriptive list nested in
+  a plain one becomes text.
+- **A special block nesting an export block and a list**
+  (`org-tutorials/images-and-xhtml-export`): Markdown does not take it
+  back as one passthrough element, so its parts are read as Markdown.
+  Separately, a passthrough element is written from the parse, not
+  the source, and uniorg-stringify braces every script (`x_y` →
+  `x_{y}`).
+
+Fixed-width lines in a list item also lose their trailing blanks once
+(org→md); the result is stable.

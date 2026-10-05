@@ -17,6 +17,7 @@ dragenter
 dragleave
 emnapi
 filetags
+fireforg
 frontmatter
 größe
 hlevel
@@ -30,6 +31,7 @@ libjxl
 lintstagedrc
 logseq
 losslessness
+maximablock
 mdast
 mdism
 mdisms
@@ -49,6 +51,7 @@ pandoc
 passthroughs
 pico
 picocss
+picolisp
 remappable
 remigius
 RESNAME

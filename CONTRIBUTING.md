@@ -68,6 +68,9 @@ Rust book, GitHub's and MDN's docs, Worg), and the file lists, all under
 `/tmp`; `all.sh` runs every corpus one after another, on this checkout
 or, with `MORG=/tmp/morg-base/dist/cli.js`, on `main`. One at a time: a
 run starts node for every file.
+[docs/corpus.md](docs/corpus.md) has how to check a change against
+the baseline, the current counts, and the non-convergences left on
+purpose.
 
 ## Development process
 
