@@ -65,15 +65,19 @@ export function translateMarkdown(
   const context = hookContext(options, pageLinks({ input, output }))
   // into Vanilla from the input's dialect, then from it into the
   // output's; a dialect does what its side needs
-  const vanilla =
+  // the Markdown options respell Vanilla, which carries the input's
+  // syntax, else the output's
+  const vanilla = respellMarkdown(
     input?.translateMarkdown?.(markdown, { ...context, side: "input" }) ??
-    markdown
+      markdown,
+    options,
+    input ?? output
+  )
   const translated =
     output?.translateMarkdown?.(vanilla, { ...context, side: "output" }) ??
     vanilla
-  const respelled = respellMarkdown(translated, options)
   const style = outputStyle(options, output)
-  return style ? restyleMarkdown(respelled, style) : respelled
+  return style ? restyleMarkdown(translated, style) : translated
 }
 
 // the style to write, but for a bullet the output's outline needs

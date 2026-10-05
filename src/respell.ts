@@ -15,6 +15,7 @@ import {
   type Spellings,
   type Toggle
 } from "./options.js"
+import type { Preset } from "./presets/types.js"
 
 /** The Markdown options a translation honours (ADR 0007). */
 export interface RespellOptions {
@@ -86,7 +87,7 @@ function convertBlock(
   markdown: string,
   start: number,
   end: number,
-  options: RespellOptions
+  options: RespellOptions & { preset?: Preset }
 ): string {
   const lineStart = markdown.lastIndexOf("\n", start - 1) + 1
   const prefix = markdown
@@ -102,7 +103,7 @@ function convertBlock(
   const converted = convertOrgToMarkdown(
     convertMarkdownToOrg(source, options),
     options
-  ).replace(/\n$/, "")
+  ).replace(/\n+$/, "")
   return converted
     .split("\n")
     .map((line, i) => (i ? (line ? prefix + line : prefix.trimEnd()) : line))
@@ -115,13 +116,17 @@ function convertBlock(
  * its own, the rest of the document stays as written. Underline and
  * scripts in their Markdown spelling, org text only morg writes, stay
  * as they are.
- * @param markdown The translated Markdown.
+ * @param markdown Vanilla Markdown, between a translation's dialects.
  * @param options The Markdown options.
+ * @param carried The dialect whose syntax the Vanilla Markdown carries,
+ * which a block keeps; an image is Vanilla's, for the output's dialect
+ * to translate.
  * @returns The Markdown in the spellings the options name.
  */
 export function respellMarkdown(
   markdown: string,
-  options: RespellOptions
+  options: RespellOptions,
+  carried?: Preset
 ): string {
   const { interpretHtml, spelling, onWarning } = options
   if (interpretHtml === undefined && spelling === undefined) {
@@ -150,7 +155,15 @@ export function respellMarkdown(
     const end =
       start +
       markdown.slice(start, node.position?.end.offset ?? 0).trimEnd().length
-    edits.push([start, end, convertBlock(markdown, start, end, own)])
+    const image = node.type === "html"
+    edits.push([
+      start,
+      end,
+      convertBlock(markdown, start, end, {
+        ...own,
+        ...(carried && !image && { preset: carried })
+      })
+    ])
     return SKIP
   })
   let result = markdown

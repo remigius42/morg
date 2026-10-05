@@ -482,6 +482,41 @@ describe("Markdown options in a translation (ADR 0007)", () => {
     ).toBe(markdown)
   })
 
+  it("keeps a dialect's links in a block it respells", () => {
+    const underline = { interpretHtml: { underline: true } }
+
+    expect(
+      translateMarkdown("See [[Page|alias]] and <u>x</u>\n", {
+        outputPreset: obsidian(),
+        ...underline
+      })
+    ).toBe("See [[Page|alias]] and \\_x\\_\n")
+    expect(
+      translateMarkdown("See [[Page|alias]] and <u>x</u>\n", {
+        ...fromObsidian,
+        ...underline
+      })
+    ).toBe("See [[Page|alias]] and \\_x\\_\n")
+    expect(
+      translateMarkdown("- See [[Page]] and <u>x</u>\n", {
+        inputPreset: logseq(),
+        ...underline
+      })
+    ).toBe("- See [[Page]] and \\_x\\_\n")
+  })
+
+  it("writes a respelled image size in the output's spelling", () => {
+    const markdown = 'text\n\n<img src="a.png" width="300">\n'
+    const images = { interpretHtml: { images: true } }
+
+    expect(
+      translateMarkdown(markdown, { outputPreset: obsidian(), ...images })
+    ).toBe("text\n\n![|300](a.png)\n")
+    expect(translateMarkdown(markdown, { ...fromObsidian, ...images })).toBe(
+      "text\n\n#+ATTR_HTML: :width 300\n\n![](a.png)\n"
+    )
+  })
+
   it("leaves a translation without Markdown options as written", () => {
     const markdown = "Term\n:   def\n\n<dl><dt>a</dt><dd>b</dd></dl>\n"
 
