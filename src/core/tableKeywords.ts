@@ -7,15 +7,28 @@
 // `#+CAPTION:`, `#+RESULTS:`), then leaves them off the table node: they
 // are lost. A blank line in between makes them keywords of their own,
 // which org→md writes as lines above the table; md→org writes them
-// right above it again, where org attaches them
+// right above it again, where org attaches them. It joins the
+// `#+TBLFM:` lines below a table into one formula, with nothing in
+// between: set apart, they are keywords too, which md→org writes right
+// below the table again
 const AFFILIATED_RE =
   /^[ \t]*#\+(?:(?:CAPTION|RESULTS)(?:\[.*\])?|DATA|HEADERS?|LABEL|NAME|PLOT|RESNAME|RESULT|SOURCE|SRCNAME|TBLNAME|ATTR_[-\w]+):/i
 const TABLE_RE = /^[ \t]*\|/
+const FORMULA_RE = /^[ \t]*#\+TBLFM:/i
 const BLOCK_START_RE = /^[ \t]*#\+begin_(\S+)/i
 
+// whether a line and the next are a keyword and its table, or a table
+// and its formula
+function bordersTable(line: string, next: string): boolean {
+  return (
+    (AFFILIATED_RE.test(line) && TABLE_RE.test(next)) ||
+    (TABLE_RE.test(line) && FORMULA_RE.test(next))
+  )
+}
+
 /**
- * org→md: sets the affiliated keywords above an org table apart from it
- * before parsing, outside blocks.
+ * org→md: sets the affiliated keywords above an org table, and the
+ * formulas below it, apart from it before parsing, outside blocks.
  */
 export function separateTableKeywords(org: string): string {
   if (!org.includes("#+")) {
@@ -36,7 +49,7 @@ export function separateTableKeywords(org: string): string {
         `^[ \\t]*#\\+end_${block.replace(/\W/g, "\\$&")}[ \\t]*$`,
         "i"
       )
-    } else if (AFFILIATED_RE.test(line) && TABLE_RE.test(lines[i + 1] ?? "")) {
+    } else if (bordersTable(line, lines[i + 1] ?? "")) {
       out.push("")
     }
   }

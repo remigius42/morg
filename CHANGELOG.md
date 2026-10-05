@@ -103,7 +103,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - An org table keeps its `#+NAME:`, `#+CAPTION:`, `#+RESULTS:` and
   other affiliated keywords, and its `#+TBLFM:` formulas, as lines
   around the Markdown table; both were lost without a warning (the
-  keywords by uniorg).
+  keywords by uniorg). Several `#+TBLFM:` lines stay apart: uniorg
+  joined them into one.
 - An org link to a `//` path keeps its `%` as written: org → md
   percent-encoded it, md → org read the scheme-relative url as it is,
   so `%25` gained a `25` each round trip.

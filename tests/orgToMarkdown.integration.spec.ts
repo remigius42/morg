@@ -156,6 +156,11 @@ describe("convertOrgToMarkdown", () => {
       "x\n\n#+NAME: t\n\n#+CAPTION: c\n\n| a |\n| - |\n| 1 |\n\n#+TBLFM: $1=2\n"
     )
     expect(convertMarkdownToOrg(convertOrgToMarkdown(org))).toBe(org)
+    // several formula lines stay apart (uniorg joins them)
+    const formulas = "x\n\n| 1 |\n#+TBLFM: $1=2\n#+TBLFM: $1=3\n"
+    expect(convertMarkdownToOrg(convertOrgToMarkdown(formulas))).toBe(
+      "x\n\n| 1 |\n|-|\n#+TBLFM: $1=2\n#+TBLFM: $1=3\n"
+    )
     // not in a block
     expect(
       convertOrgToMarkdown("#+begin_example\n#+NAME: t\n| a |\n#+end_example\n")
