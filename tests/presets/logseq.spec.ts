@@ -22,6 +22,16 @@ describe("logseq outline", () => {
     )
   })
 
+  it("keeps a block's checkbox descriptive list below a marker", () => {
+    // Logseq md hides the comment (ADR 0007 §3)
+    const org = "* Phase\n\n- [ ] Foam :: 1 set\n- [ ] Cat :: 2 sets\n"
+
+    expect(toMarkdown(org)).toContain(
+      "  <!-- morg_descriptive_list -->\n  \n  - [ ] Foam :: 1 set\n"
+    )
+    expect(toOrg(toMarkdown(org))).toBe(org)
+  })
+
   it("maps an empty block to a bare bullet", () => {
     both("* a\n**\n", "- a\n\t-\n")
   })

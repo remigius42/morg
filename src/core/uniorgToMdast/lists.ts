@@ -9,6 +9,7 @@ import type {
 import type { List, ListItem } from "uniorg"
 import { toString as orgastToString } from "orgast-util-to-string"
 import { htmlEnabled, type TransformContext } from "./shared.js"
+import { DESCRIPTIVE_LIST_MARKER } from "../descriptiveTags.js"
 import { transformNodes } from "./elements.js"
 import { transformUniorgObjects } from "./objects.js"
 import type { DefListNode } from "mdast-util-definition-list"
@@ -116,7 +117,7 @@ function descriptiveListToHtml(node: List): RootContent {
 // A single blank line does not end a list in org, so one uniorg plain-list
 // can mix ordered and unordered bullets. Markdown cannot: split the items
 // into runs by bullet kind, one mdast list per run.
-function transformUniorgList(ctx: TransformContext, node: List): MdastList[] {
+function transformUniorgList(ctx: TransformContext, node: List): RootContent[] {
   const items = (node.children || []).filter(
     (child): child is ListItem => child.type === "list-item"
   )
@@ -131,16 +132,21 @@ function transformUniorgList(ctx: TransformContext, node: List): MdastList[] {
       previousOrdered = ordered
     }
   }
-  return runs.map(run => {
+  return runs.flatMap((run): RootContent[] => {
     const firstBullet = run[0]?.bullet ?? "- "
     const ordered = /^\d/.test(firstBullet)
-    return {
+    const list: MdastList = {
       type: "list",
       ordered,
       start: ordered ? parseInt(firstBullet, 10) : null,
       spread: false,
       children: run.map(item => transformUniorgListItem(ctx, item))
     }
+    // a run with a term keeps its ` :: ` text below the marker, which
+    // tells md→org the terms are org's (ADR 0007 §3)
+    return run.some(listItemTag)
+      ? [{ type: "html", value: `<!-- ${DESCRIPTIVE_LIST_MARKER} -->` }, list]
+      : [list]
   })
 }
 
@@ -172,8 +178,8 @@ function transformUniorgListItem(
   ctx: TransformContext,
   item: ListItem
 ): MdastListItem {
-  // md has no descriptive lists, so keep the ` :: ` syntax literally in the
-  // item text; the return trip re-parses it as a descriptive list
+  // a term no definition list holds stays ` :: ` text in the item,
+  // which the return trip reads as a term below the marker only
   const tag = listItemTag(item)
   const children = itemBlocks(
     ctx,

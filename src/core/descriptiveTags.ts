@@ -20,12 +20,22 @@ const CONTAINERS = new Set([
   "footnote-reference"
 ])
 
+/**
+ * The comment org→md writes above a descriptive list no definition list
+ * can hold (an item with a checkbox or without a term), kept in its
+ * ` :: ` text; md→org reads the list below it back as descriptive
+ * (ADR 0007 §3).
+ */
+export const DESCRIPTIVE_LIST_MARKER = "morg_descriptive_list"
+
 interface OrgNode {
   type: string
   value?: string
   children?: OrgNode[]
   // a descriptive item's own ` :: ` (tagSeparator in mdastToUniorg)
   tagSeparator?: boolean
+  // a list below the marker, its tags org's own
+  descriptiveMarked?: boolean
 }
 
 // escapes a text node's part on the line; whether the line ended there
@@ -59,11 +69,13 @@ function escapeLine(nodes: OrgNode[]): boolean {
 /**
  * md→org: escapes a literal ` :: ` on a list item's first line, which
  * org would read as a descriptive item's tag (ADR 0007); a descriptive
- * item's own separator stays.
+ * item's own separator stays, as does every ` :: ` of a marked list.
  */
 export function escapeDescriptiveTags(tree: Parent): void {
-  visit(tree, "list-item", (item: OrgNode) => {
-    escapeLine(item.children ?? [])
+  visit(tree, "list-item", (item: OrgNode, _index, list?: OrgNode) => {
+    if (!list?.descriptiveMarked) {
+      escapeLine(item.children ?? [])
+    }
   })
 }
 

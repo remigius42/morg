@@ -527,10 +527,13 @@ describe("convertOrgToMarkdown", () => {
 
   it("should keep a descriptive list verbatim where an item has no term", () => {
     // org reads the whole list as descriptive by its first item; a
-    // definition list has no entry without a term
+    // definition list has no entry without a term; the marker reads
+    // it back as descriptive (ADR 0007 §3)
     const org = "- apple :: a fruit\n- pear\n"
 
-    expect(convertOrgToMarkdown(org)).toBe("- apple :: a fruit\n- pear\n")
+    expect(convertOrgToMarkdown(org)).toBe(
+      "<!-- morg_descriptive_list -->\n\n- apple :: a fruit\n- pear\n"
+    )
   })
 
   it("should render sub/superscript and underline as html spelled in html", () => {

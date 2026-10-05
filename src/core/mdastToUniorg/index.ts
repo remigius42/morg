@@ -2,7 +2,9 @@ import type {
   Root as MdastRoot,
   RootContent,
   PhrasingContent,
-  Definition
+  Definition,
+  Html,
+  List
 } from "mdast"
 import { visit } from "unist-util-visit"
 import type {
@@ -32,6 +34,7 @@ import {
 } from "./blocks.js"
 import { transformMdastDefList, transformMdastList } from "./lists.js"
 import { transformPhrasingChildren } from "./phrasing.js"
+import { DESCRIPTIVE_LIST_MARKER } from "../descriptiveTags.js"
 
 export type { MdastToUniorgOptions, TransformContext } from "./context.js"
 import type { MdastToUniorgOptions } from "./context.js"
@@ -60,7 +63,11 @@ export function transformMdastToUniorgDraft(
   mdast: MdastRoot,
   options: MdastToUniorgOptions = {}
 ): OrgData {
-  const ctx: TransformContext = { options, definitions: new Map() }
+  const ctx: TransformContext = {
+    options,
+    definitions: new Map(),
+    markedLists: takeDescriptiveListMarkers(mdast)
+  }
   visit(mdast, "definition", (definition: Definition) => {
     ctx.definitions.set(definition.identifier, {
       url: definition.url,
@@ -91,6 +98,28 @@ export function transformMdastToUniorgDraft(
   }
 
   return orgAst
+}
+
+const MARKER_RE = new RegExp(`^<!--\\s*${DESCRIPTIVE_LIST_MARKER}\\s*-->$`)
+
+// a marker comment right above a list is morg's: the list below it is
+// org's descriptive one, its ` :: ` the terms' (ADR 0007 §3)
+function takeDescriptiveListMarkers(mdast: MdastRoot): Set<List> {
+  const lists = new Set<List>()
+  visit(mdast, "html", (node: Html, index, parent) => {
+    const list = parent?.children[(index ?? 0) + 1]
+    if (
+      index === undefined ||
+      list?.type !== "list" ||
+      !MARKER_RE.test(node.value.trim())
+    ) {
+      return
+    }
+    lists.add(list)
+    parent?.children.splice(index, 1)
+    return index
+  })
+  return lists
 }
 
 function transformBlockChildren(

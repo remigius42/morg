@@ -60,6 +60,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- An org descriptive list no definition list can hold (an item with a
+  checkbox, or without a term) survives a round trip again: its
+  `- term :: definition` text is written below a
+  `<!-- morg_descriptive_list -->` comment, which reads it back as
+  descriptive; it came back a plain list.
 - Reading `<sup>` or `<sub>` as org (`interpretHtml`) keeps the HTML
   where a blank precedes it (`x <sup>s</sup>`): org reads a script
   only after a non-blank character, so it came back as the text

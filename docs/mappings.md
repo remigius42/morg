@@ -137,14 +137,16 @@ active/inactive ranges). Descriptive lists become definition lists
 (`term` / `:   definition`, PHP Markdown Extra's syntax, which pandoc,
 kramdown and Logseq read too) and back, a term's markup and its
 definition's blocks included; one with an item without a term or with
-a checkbox keeps its `- term :: definition` text. Markdown's
+a checkbox keeps its `- term :: definition` text below a
+`<!-- morg_descriptive_list -->` comment, which reads the list back as
+descriptive (ADR 0007 §3). Markdown's
 definitions merge into one per term, and a term without its own (one of
 several above a definition) gets an empty one, both with a warning.
 Known limitation: Markdown does not read a definition list inside a
 list item (upstream, micromark-extension-definition-list), so a
 descriptive list nested in an org list item comes back as the item's
 text; it converges, but its terms are lost. In a quote or another
-definition it is read. A
+definition it is read. An unmarked
 `- term :: definition` Markdown list item stays one: a zero-width space
 before the `::` keeps org from reading a tag. A fixed-width line's `:`
 is escaped (`\: text`), as a line below text that starts with a colon starts a definition.

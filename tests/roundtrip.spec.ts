@@ -567,6 +567,69 @@ describe("lists", () => {
   })
 })
 
+describe("a descriptive list no definition list can hold (ADR 0007 §3)", () => {
+  const MARKER = "<!-- morg_descriptive_list -->\n\n"
+
+  it("goes through below a marker", () => {
+    for (const org of [
+      "- [ ] term :: def\n- [X] b :: c\n",
+      "- term :: def\n- plain item\n",
+      "- plain item\n- term :: def\n"
+    ]) {
+      expect(convertOrgToMarkdown(org)).toBe(MARKER + org.replace("[X]", "[x]"))
+      expect(orgRoundTrip(org)).toBe(org)
+    }
+  })
+
+  it("is read back from Markdown below a marker", () => {
+    const markdown = `${MARKER}- [ ] term :: def\n- plain item\n`
+    expect(convertMarkdownToOrg(markdown)).toBe(
+      "- [ ] term :: def\n- plain item\n"
+    )
+    expect(mdRoundTrip(markdown)).toBe(markdown)
+  })
+
+  it("goes through in a list item and a quote", () => {
+    for (const org of [
+      "- outer\n  - [ ] term :: def\n",
+      "#+begin_quote\n- [ ] term :: def\n#+end_quote\n"
+    ]) {
+      expect(convertOrgToMarkdown(org)).toContain(MARKER.trim())
+      expect(orgRoundTrip(org)).toBe(org)
+    }
+    for (const markdown of [
+      "- outer\n\n  <!-- morg_descriptive_list -->\n  - [ ] term :: def\n",
+      "> <!-- morg_descriptive_list -->\n> - [ ] term :: def\n"
+    ]) {
+      expect(convertMarkdownToOrg(markdown)).not.toContain("\u200B")
+    }
+  })
+
+  it("reads a term on a line of its own onto its definition's", () => {
+    // org reads both as one item; the term line org→md writes
+    expect(convertMarkdownToOrg(`${MARKER}- [ ] *a* ::\n  b\n- c\n`)).toBe(
+      "- [ ] /a/ :: b\n- c\n"
+    )
+    // a definition list in the item comes back as its text
+    const org = "- a ::\n  - b :: c\n- [ ] d\n"
+    const once = orgRoundTrip(org)
+    expect(orgRoundTrip(once)).toBe(once)
+  })
+
+  it("leaves a marker without a list below an ordinary comment", () => {
+    const markdown = `${MARKER}text\n`
+    expect(convertMarkdownToOrg(markdown)).toBe(
+      "# morg_descriptive_list\ntext\n"
+    )
+    expect(mdRoundTrip(markdown)).toBe(markdown)
+  })
+
+  it("leaves an unmarked list below a marked one ordinary", () => {
+    const markdown = `${MARKER}- a :: b\n\n<!-- -->\n\n- c :: d\n`
+    expect(convertMarkdownToOrg(markdown)).toContain("- c \u200B:: d")
+  })
+})
+
 describe("braced scripts", () => {
   it("bare underscores survive both round trips", () => {
     // remark's canonical form escapes underscores inside words

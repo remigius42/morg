@@ -2,7 +2,8 @@ import type {
   BlockContent,
   DefinitionContent,
   List as MdastList,
-  ListItem as MdastListItem
+  ListItem as MdastListItem,
+  Text as MdastText
 } from "mdast"
 import type {
   DefListDescriptionNode,
@@ -32,11 +33,16 @@ export function transformMdastList(
   indent: number
 ): List {
   const start = listNode.start ?? 1
+  if (ctx.markedLists.has(listNode)) {
+    listNode.children.forEach(joinTermLine)
+  }
   return {
     type: "plain-list",
     listType: listNode.ordered ? "ordered" : "unordered",
     indent,
     affiliated: {},
+    // escapeDescriptiveTags keeps a marked list's terms
+    ...(ctx.markedLists.has(listNode) && { descriptiveMarked: true }),
     children: listNode.children.map((item, i) =>
       transformMdastListItem(
         ctx,
@@ -48,6 +54,22 @@ export function transformMdastList(
     contentsBegin: 0,
     contentsEnd: 0
   } as unknown as List
+}
+
+// a marked item's term alone on its line, its definition on the next,
+// joins it: org reads the same item, and org→md writes the term on the
+// definition's line, so the return trip would move it (ADR 0007 §3)
+function joinTermLine(item: MdastListItem): void {
+  const first = item.children[0]
+  if (first?.type !== "paragraph") {
+    return
+  }
+  const text = first.children.find(
+    child => child.type === "text" && child.value.includes("\n")
+  ) as MdastText | undefined
+  if (text) {
+    text.value = text.value.replace(/^([^\n]*?(?:^|[ \t])::)[ \t]*\n/, "$1 ")
+  }
 }
 
 // uniorg-stringify re-indents a list item's block by stripping up to

@@ -67,6 +67,15 @@ description list, and, under `useHtml`, a `<dl>`.
    org text that org re-parses on the way back (`^{2}`, `_u_`, an
    `#+ATTR_HTML:` line). Not an option: a fallback that is not the
    source loses what the next trip needs.
+   Amended (2026-10-05): a descriptive list no definition list can
+   hold (an item with a checkbox, or without a term) keeps its
+   `- term :: def` text below a `<!-- morg_descriptive_list -->`
+   comment, in every Dialect (Logseq md hides it too). Reading
+   Markdown, the list right below the marker is descriptive, its
+   `::` org's (a term alone on its line joins its definition's, as
+   org→md writes it), and the marker goes; one above anything else
+   stays a comment. An unmarked `- term :: def` stays an ordinary
+   item (§6).
 4. **An org construct that Markdown cannot spell losslessly in its own
    syntax, but HTML can, has a spelling option**: `"markdown"` (the
    default) or `"html"`. Emphasis or code have none: their Markdown

@@ -1,3 +1,4 @@
+import type { List } from "mdast"
 import {
   toggleEnabled,
   type HtmlConstruct,
@@ -19,6 +20,8 @@ export interface TransformContext {
   // link definitions of the current run, for resolving reference-style
   // links and images to inline (org has no reference links)
   definitions: Map<string, { url: string; title?: string }>
+  // lists below a descriptive list marker (ADR 0007 §3)
+  markedLists: Set<List>
 }
 
 export function mdismEnabled(ctx: TransformContext, key: string): boolean {
