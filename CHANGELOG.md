@@ -98,6 +98,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   gets org's comma escape in its example or export block; that line
   ended the block or became a headline. Org → md drops the comma of an
   example block's line too, which uniorg left in.
+- Adjacent Markdown tables stay apart in org: md → org wrote them
+  with no blank line between them, which org reads as one table.
 
 ## [0.10.1] - 2026-10-04
 

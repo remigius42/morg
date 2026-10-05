@@ -278,6 +278,15 @@ This is a paragraph.
     expect(convertMarkdownToOrg(markdown)).toBe("| a | b |\n|-|\n| 1 | 2 |\n")
   })
 
+  it("should keep adjacent tables apart", () => {
+    // org reads tables with no blank line between them as one
+    const markdown = "| a |\n| - |\n| 1 |\n\n| b |\n| - |\n| 2 |\n"
+
+    expect(convertMarkdownToOrg(markdown)).toBe(
+      "| a |\n|-|\n| 1 |\n\n| b |\n|-|\n| 2 |\n"
+    )
+  })
+
   it("should convert column alignment to an org cookie row", () => {
     const markdown = "| a | b | c |\n| :-- | --: | :-: |\n| 1 | 2 | 3 |\n"
 

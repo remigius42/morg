@@ -7,14 +7,7 @@ import { remarkDefinitionList } from "remark-definition-list"
 import { uniorgStringify } from "uniorg-stringify"
 import { visit } from "unist-util-visit"
 import type { Parent } from "unist"
-import type {
-  Headline,
-  List,
-  NodeProperty,
-  OrgData,
-  Text,
-  Timestamp
-} from "uniorg"
+import type { Headline, NodeProperty, OrgData, Text, Timestamp } from "uniorg"
 import { transformMdastToUniorgDraft } from "./core/mdastToUniorg/index.js"
 import { BULLET_LINE_END } from "./core/mdastToUniorg/context.js"
 import { detectMarkdownStyle, STYLE_KEYWORD } from "./core/markdownStyle.js"
@@ -109,8 +102,8 @@ function convertMarkdownDocument(
   restoreOrgisms(uniorgAst, canonicalKeys)
 
   // Phase 2c: formatting-as-structure. Adjacent lists need two blank
-  // lines between them, or org's parser merges them into one list.
-  separateAdjacentLists(uniorgAst)
+  // lines between them, adjacent tables one, or org's parser merges them
+  separateAdjacentElements(uniorgAst)
 
   // Phase 2d: record the source's own style markers, so the return trip
   // can reproduce them instead of morg's canonical ones (ADR 0004)
@@ -342,17 +335,27 @@ function restoreOrgisms(
   }
 }
 
-function separateAdjacentLists(uniorgAst: Parent): void {
+// the blank lines that keep two adjacent elements of a type apart
+const SEPARATORS: Record<string, string> = {
+  "plain-list": "\n\n",
+  table: "\n"
+}
+
+function separateAdjacentElements(uniorgAst: Parent): void {
   visit(
     uniorgAst,
-    "plain-list",
-    (_node: List, index: number, parent: Parent) => {
-      if (parent.children[index + 1]?.type === "plain-list") {
-        const separator: Text = { type: "text", value: "\n\n" }
-        parent.children.splice(index + 1, 0, separator)
-        return index + 2
+    (node: { type: string }, index, parent: Parent | undefined) => {
+      const value = SEPARATORS[node.type]
+      if (
+        value === undefined ||
+        index === undefined ||
+        parent?.children[index + 1]?.type !== node.type
+      ) {
+        return undefined
       }
-      return undefined
+      const separator: Text = { type: "text", value }
+      parent.children.splice(index + 1, 0, separator)
+      return index + 2
     }
   )
 }
