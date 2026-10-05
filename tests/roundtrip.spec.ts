@@ -539,6 +539,14 @@ describe("lists", () => {
     expect(mdRoundTrip(markdown)).toBe(markdown)
   })
 
+  it("keeps item text after a quote or table out of it", () => {
+    // without the blank line, md reads `c` into the quote or as a row
+    for (const block of ["> b", "| b |\n  | - |"]) {
+      const markdown = `- a\n  ${block}\n\n  c\n`
+      expect(mdRoundTrip(markdown)).toBe(markdown)
+    }
+  })
+
   it("keeps code in a list item as indented as it was", () => {
     const markdown = "- a\n  ```py\n  if x:\n      y()\n  ```\n"
     expect(mdRoundTrip(markdown)).toBe(markdown)

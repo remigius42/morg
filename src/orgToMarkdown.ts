@@ -27,15 +27,16 @@ import {
 } from "./presets/hooks.js"
 import { resolveSides, type Sides } from "./presets/sides.js"
 
-// a list item's paragraph after its nested list needs a blank line, or
-// md reads it as a lazy continuation of the nested list's last item
-function separateTextAfterNestedList(
+// a list item's paragraph after its nested list or quote needs a blank
+// line, or md reads it as a lazy continuation of the list's last item or
+// the quote, after its table as a table row
+function separateTextAfterBlock(
   left: { type: string },
   right: { type: string },
   parent: { type: string }
 ): number | undefined {
   return parent.type === "listItem" &&
-    left.type === "list" &&
+    ["list", "blockquote", "table"].includes(left.type) &&
     right.type === "paragraph"
     ? 1
     : undefined
@@ -131,7 +132,7 @@ function convertOrgDocument(
       rule: "-",
       ...recordedStyle,
       ...options.style,
-      join: [separateTextAfterNestedList],
+      join: [separateTextAfterBlock],
       handlers: {
         // key:: value blocks and preset inline passthroughs (e.g.
         // wikilinks) are emitted verbatim, unescaped; only a pipe inside

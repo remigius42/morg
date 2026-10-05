@@ -73,6 +73,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   where a blank precedes it (`x <sup>s</sup>`): org reads a script
   only after a non-blank character, so it came back as the text
   `^{s}`.
+- List item text after a quote or table (`- a\n  > b\n\n  c`) stays
+  apart from it: org → md wrote no blank line between them, so
+  Markdown read the text into the quote, gaining a `>` each round
+  trip, or as a table row.
 
 ## [0.10.1] - 2026-10-04
 
