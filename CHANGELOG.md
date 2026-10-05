@@ -20,6 +20,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   it back, for an image alone in its paragraph outside a list;
   translating Obsidian md to or from Vanilla md turns one into the
   other. An embed's size (`![[image.png|300]]`) stays as written.
+- Logseq's image size (`[[image.png]]{:width 300}`, in Logseq md
+  `![alt](image.png){:width 300}`, `:height` too) is the image's
+  `#+ATTR_HTML:` line in Vanilla org and back, for an image line below
+  a block's title that is a paragraph of its own. A block's title is
+  a headline, which org cannot size, so a title image keeps its size.
 
 ### Changed
 

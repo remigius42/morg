@@ -27,6 +27,7 @@ import { orgNodeToText } from "../core/uniorgToMdast/shared.js"
 import type { Link as MdastLink, Root as MdastRoot } from "mdast"
 import { FUZZY_LINK_RE } from "./links.js"
 import type { Preset } from "./types.js"
+import { writeSizeMaps } from "./logseqImageSizes.js"
 import {
   frontmatterLength,
   markdownOutlineToOrg,
@@ -111,6 +112,7 @@ function blockPreset(): Preset {
         org: rewriteLabeledPageRefs
       },
       write: uniorgAst => {
+        writeSizeMaps(uniorgAst)
         codeToQueryBlocks(uniorgAst)
         bareUrlsToText(uniorgAst)
         return extractInlineSpecifics(uniorgAst)
@@ -121,7 +123,7 @@ function blockPreset(): Preset {
         bareUrlsToText(uniorgAst)
         return readOrgInline(uniorgAst)
       },
-      write: uniorgAst => restoreBareUrls(uniorgAst, bareUrls)
+      write: uniorgAst => writeSizeMaps(restoreBareUrls(uniorgAst, bareUrls))
     }
   }
 }

@@ -420,7 +420,7 @@ whose first line starts an element that runs on below it (a src or
 other block, a table, a list, its property drawer) has that line below
 an empty headline: Logseq org puts it on the stars' line, where Emacs
 would read it as the title. Translated within org (Logseq org ↔
-Vanilla org), only those headlines change; other lines stay as
+Vanilla org), only those headlines and image sizes change; other lines stay as
 written, line endings become LF and an empty page stays empty. A
 Vanilla headline whose title starts a list running on below it
 (`* 3. Why?` with its body indented three spaces) stays as it is on
@@ -435,7 +435,14 @@ one stays (a page property to Logseq), with a warning naming the
 markers Logseq shows as text. A block's `:collapsed: true` property
 is `:VISIBILITY: folded` in Vanilla org, which Emacs folds the
 headline by on opening the file; another `VISIBILITY` (`children`,
-`content`, `all`) stays, with a warning, as Logseq has none. What
+`content`, `all`) stays, with a warning, as Logseq has none. An
+image's size (`[[image.png]]{:height 200, :width 300}`, in Logseq md
+`![alt](image.png){:width 300}`) is its `#+ATTR_HTML: :height 200
+:width 300` line in Vanilla org, in the order written, and back, for
+an image line below a block's title that is a paragraph of its own; a
+block's title is a headline, which org sizes not, so a title image
+keeps its size map, as does Vanilla md, which carries Logseq's syntax.
+What
 Logseq reads otherwise than Emacs stays as written, with a warning per
 kind: a `[[*heading]]` or `[[#custom-id]]` link (labeled or not) and
 an `[[id:…]]` link without a label are refs to pages of that name to

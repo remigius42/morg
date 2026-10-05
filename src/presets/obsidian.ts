@@ -8,6 +8,7 @@ import {
   attrHtmlSize,
   attrHtmlValue,
   IMAGE_EXTENSION_RE,
+  loneImageLink,
   type ImageSize
 } from "../core/sizedImages.js"
 import type { Preset } from "./types.js"
@@ -89,21 +90,6 @@ type Edit = [start: number, end: number, text: string]
 const SIZE_SUFFIX_RE = /^([^]*)\|(\d+)(?:x(\d+))?$/
 const DIGITS_RE = /^\d+$/
 
-// a paragraph's lone image link, outside a list item, where org reads
-// no affiliated keyword on the bullet's line and md→org flattens the
-// item's paragraphs
-function loneImage(paragraph: Paragraph, parent: Parent): Link | undefined {
-  const [link, ...more] = paragraph.children.filter(
-    child => !(child.type === "text" && child.value.trim() === "")
-  )
-  return parent.type !== "list-item" &&
-    !more.length &&
-    link?.type === "link" &&
-    IMAGE_EXTENSION_RE.test(link.rawLink.replace(/::.*$/s, ""))
-    ? link
-    : undefined
-}
-
 function sizeOf(width: string | undefined, height: string | undefined) {
   return { width, ...(height !== undefined && { height }) } as ImageSize
 }
@@ -114,7 +100,7 @@ function readImageSizes(uniorgAst: OrgData): OrgData {
     uniorgAst as Parent,
     "paragraph",
     (node: Paragraph, _index: number, parent: Parent) => {
-      const link = loneImage(node, parent)
+      const link = loneImageLink(node, parent)
       const affiliated = node.affiliated ?? {}
       const size =
         link?.children.every(child => child.type === "text") &&
@@ -159,7 +145,7 @@ function writeImageSizes(uniorgAst: OrgData): OrgData {
     uniorgAst as Parent,
     "paragraph",
     (node: Paragraph, _index: number, parent: Parent) => {
-      const link = loneImage(node, parent)
+      const link = loneImageLink(node, parent)
       const { ATTR_HTML: attrHtml, ...others } = node.affiliated ?? {}
       const size = obsidianSize(attrHtml)
       if (!link || !size) {

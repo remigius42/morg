@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest"
 import { logseq } from "../../src/presets/logseq.js"
 import { convertMarkdownToOrg } from "../../src/markdownToOrg.js"
 import { convertOrgToMarkdown } from "../../src/orgToMarkdown.js"
+import { translateOrg } from "../../src/translate.js"
 import { parse as parseYaml } from "yaml"
 
 describe("logseq outline", () => {
@@ -466,5 +467,54 @@ describe("logseq page properties", () => {
       const once = toMd(toOrg(markdown))
       expect(toMd(toOrg(once))).toBe(once)
     }
+  })
+})
+
+describe("logseq image sizes (ADR 0007)", () => {
+  const fromLogseq = { inputPreset: logseq() }
+  const toLogseq = { outputPreset: logseq() }
+
+  it("maps a body image's size to its #+ATTR_HTML: line and back", () => {
+    const logseqOrg = "* b\n[[../assets/j.png]]{:height 200, :width 300}\n"
+    const vanillaOrg =
+      "* b\n#+ATTR_HTML: :height 200 :width 300\n[[../assets/j.png]]\n"
+
+    expect(translateOrg(logseqOrg, fromLogseq)).toBe(vanillaOrg)
+    expect(translateOrg(vanillaOrg, toLogseq)).toBe(logseqOrg)
+  })
+
+  it("reads Logseq md's size as the #+ATTR_HTML: line", () => {
+    const markdown = "- b\n\n  ![x](../assets/j.png){:width 300}\n"
+
+    expect(convertMarkdownToOrg(markdown, fromLogseq)).toContain(
+      "#+ATTR_HTML: :width 300\n[[file:../assets/j.png][x]]\n"
+    )
+    expect(
+      convertOrgToMarkdown(
+        "* b\n#+ATTR_HTML: :width 300\n[[file:../assets/j.png][x]]\n",
+        toLogseq
+      )
+    ).toContain("\n  ![x](../assets/j.png){:width 300}\n")
+  })
+
+  it("keeps the size as written between Logseq md and Logseq org", () => {
+    const org = "* b\n[[../assets/j.png]]{:height 2, :width 3}\n"
+    const markdown = "- b\n  ![](../assets/j.png){:height 2, :width 3}\n"
+
+    expect(convertOrgToMarkdown(org, { preset: logseq() })).toBe(markdown)
+    expect(convertMarkdownToOrg(markdown, { preset: logseq() })).toContain(
+      "{:height 2, :width 3}"
+    )
+  })
+
+  it("keeps a block title's size as written: org sizes no headline", () => {
+    // the corpus's one case: an image that is the whole block title
+    const org =
+      "*** [[https://x.org/a.jpg][a.jpg (1200×1200)]]{:height 977, :width 969}\n"
+
+    expect(translateOrg(org, fromLogseq)).toBe(org)
+    expect(convertOrgToMarkdown(org, { preset: logseq() })).toContain(
+      "{:height 977, :width 969}"
+    )
   })
 })

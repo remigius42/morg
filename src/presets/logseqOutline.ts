@@ -14,6 +14,7 @@ import {
   dedent as dedentColumns,
   readVanillaMarkdownOutline
 } from "./logseqVanillaMarkdown.js"
+import { attrHtmlToSizeMaps, sizeMapsToAttrHtml } from "./logseqImageSizes.js"
 
 // Logseq stores a page as an outline of blocks, each block a content
 // string it parses on its own: org writes a block as its level's stars,
@@ -437,7 +438,7 @@ function writeOrgBlock(block: Block, vanilla = false): string {
       lines: arrange(
         block.metaFirst,
         orgMetaLines(block.meta, block.heading),
-        block.content
+        vanilla ? sizeMapsToAttrHtml(block.content) : block.content
       )
     },
     vanilla
@@ -895,7 +896,9 @@ export function translateOrgOutline(
         {
           level,
           lines: foldedProperties(
-            vanilla ? lines : joinTitle(lines).lines,
+            vanilla
+              ? sizeMapsToAttrHtml(lines)
+              : attrHtmlToSizeMaps(joinTitle(lines).lines),
             vanilla,
             context
           )

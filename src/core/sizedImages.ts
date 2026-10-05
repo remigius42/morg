@@ -1,7 +1,32 @@
 // An image's size, org's `#+ATTR_HTML: :width 300 :height 200` above an
 // image link, spelled in html as `<img src alt width height>` (ADR 0007)
 
+import type { Link, Paragraph } from "uniorg"
+import type { Parent } from "unist"
+
 export const IMAGE_EXTENSION_RE = /\.(png|jpe?g|gif|svg|webp|avif|bmp|ico)$/i
+
+/**
+ * A paragraph's lone image link, outside a list item, where org reads no affiliated keyword on the
+ * bullet's line and md→org flattens the item's paragraphs.
+ * @param paragraph The paragraph.
+ * @param parent Its parent.
+ * @returns The link, or `undefined`.
+ */
+export function loneImageLink(
+  paragraph: Paragraph,
+  parent: Parent
+): Link | undefined {
+  const [link, ...more] = paragraph.children.filter(
+    child => !(child.type === "text" && child.value.trim() === "")
+  )
+  return parent.type !== "list-item" &&
+    !more.length &&
+    link?.type === "link" &&
+    IMAGE_EXTENSION_RE.test(link.rawLink.replace(/::.*$/s, ""))
+    ? link
+    : undefined
+}
 
 const SIZES = ["width", "height"] as const
 
@@ -37,10 +62,10 @@ export function attrHtmlSize(value: string): ImageSize | undefined {
   return size
 }
 
-/** The `#+ATTR_HTML:` value of a size. */
+/** The `#+ATTR_HTML:` value of a size, in the order it was given. */
 export function attrHtmlValue(size: ImageSize): string {
-  return SIZES.filter(key => size[key] !== undefined)
-    .map(key => `:${key} ${size[key]}`)
+  return Object.entries(size)
+    .map(([key, value]) => `:${key} ${value}`)
     .join(" ")
 }
 
@@ -58,9 +83,7 @@ function unescapeAttribute(value: string): string {
 
 /** An image's html spelling. */
 export function imgTag(src: string, alt: string, size: ImageSize): string {
-  const sizes = SIZES.filter(key => size[key] !== undefined).map(
-    key => ` ${key}="${size[key]}"`
-  )
+  const sizes = Object.entries(size).map(([key, value]) => ` ${key}="${value}"`)
   return `<img src="${escapeAttribute(src)}" alt="${escapeAttribute(alt)}"${sizes.join("")}>`
 }
 
@@ -68,6 +91,13 @@ const IMG_RE = /^<img((?:\s+[a-z]+="[^"]*")+)\s*\/?>$/i
 const ATTRIBUTE_RE = /([a-z]+)="([^"]*)"/gi
 
 const KNOWN: readonly string[] = ["src", "alt", ...SIZES]
+
+// the sizes among attribute names, in their order
+function sizesIn(names: string[]): Size[] {
+  return names.filter((name): name is Size =>
+    (SIZES as readonly string[]).includes(name)
+  )
+}
 
 // an <img>'s attributes, each named once, lower-cased
 function imgAttributes(html: string): Map<string, string> | undefined {
@@ -101,7 +131,7 @@ export function parseImgTag(
   if (!values || !src || [...values.keys()].some(key => !KNOWN.includes(key))) {
     return undefined
   }
-  const sizes = SIZES.filter(key => values.has(key))
+  const sizes = sizesIn([...values.keys()])
   if (sizes.some(key => !VALUE_RE.test(values.get(key) ?? ""))) {
     return undefined
   }

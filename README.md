@@ -236,7 +236,9 @@ preset })`: `preserveOrgisms` default `true`; `spelling` (`"markdown"`
   references `[[page]]` and labeled forms `[label]([[page]])` ↔ org
   fuzzy links `[[page][label]]`, block refs `[label](((uuid)))` ↔
   `[[((uuid))][label]]`, and `^^highlight^^` markup survives verbatim
-  (it would otherwise re-parse as superscripts).
+  (it would otherwise re-parse as superscripts). An image's size
+  `{:width 300}` below a block's title ↔ `#+ATTR_HTML: :width 300` in
+  Vanilla org.
 - `obsidian()`: wikilinks `[[Page]]` / `[[Page|alias]]` ↔ org fuzzy links
   (`[[Page\|alias]]` in a table cell); an image's size
   `![alt|300](image.png)` ↔ `#+ATTR_HTML: :width 300`. Translated to Vanilla or Logseq
