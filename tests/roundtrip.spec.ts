@@ -574,7 +574,9 @@ describe("a descriptive list no definition list can hold (ADR 0007 §3)", () => 
     for (const org of [
       "- [ ] term :: def\n- [X] b :: c\n",
       "- term :: def\n- plain item\n",
-      "- plain item\n- term :: def\n"
+      "- plain item\n- term :: def\n",
+      // Emacs reads a numbered list as one, terms or not
+      "1. a :: b\n2. c :: d\n"
     ]) {
       expect(convertOrgToMarkdown(org)).toBe(MARKER + org.replace("[X]", "[x]"))
       expect(orgRoundTrip(org)).toBe(org)

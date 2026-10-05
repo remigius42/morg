@@ -137,7 +137,7 @@ active/inactive ranges). Descriptive lists become definition lists
 (`term` / `:   definition`, PHP Markdown Extra's syntax, which pandoc,
 kramdown and Logseq read too) and back, a term's markup and its
 definition's blocks included; one with an item without a term or with
-a checkbox keeps its `- term :: definition` text below a
+a checkbox, or a numbered one (Emacs reads it as numbered), keeps its `- term :: definition` text below a
 `<!-- morg_descriptive_list -->` comment, which reads the list back as
 descriptive (ADR 0007 §3). Markdown's
 definitions merge into one per term, and a term without its own (one of

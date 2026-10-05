@@ -18,11 +18,13 @@ export function transformPlainList(
   ctx: TransformContext,
   node: List
 ): RootContent | RootContent[] {
-  if (node.listType === "descriptive") {
+  const items = listItems(node)
+  // uniorg reads a numbered list with terms as descriptive; Emacs reads
+  // it as numbered
+  if (node.listType === "descriptive" && !/^\d/.test(items[0]?.bullet ?? "")) {
     if (htmlEnabled(ctx, "definitionList")) {
       return descriptiveListToHtml(node)
     }
-    const items = listItems(node)
     // a definition list has no entry without a term, nor a checkbox
     if (items.every(item => listItemTag(item) && !item.checkbox)) {
       return descriptiveListToDefList(ctx, items)
