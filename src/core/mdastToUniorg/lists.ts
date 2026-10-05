@@ -110,10 +110,12 @@ function transformMdastListItem(
         warn(ctx, "heading inside a list item became text")
       }
       if (child.type === "paragraph" || child.type === "heading") {
-        return [
-          ...transformPhrasingChildren(ctx, child.children),
-          { type: "text", value: "\n" }
-        ]
+        const objects = transformPhrasingChildren(ctx, child.children)
+        const last = objects.at(-1)
+        // a definition list right below leaves the paragraph its line end
+        return last?.type === "text" && last.value.endsWith("\n")
+          ? objects
+          : [...objects, { type: "text", value: "\n" }]
       }
       return [
         indentCode(

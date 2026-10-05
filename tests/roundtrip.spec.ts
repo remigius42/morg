@@ -734,6 +734,12 @@ describe("verbatim passthrough", () => {
     expect(orgRoundTrip(orgRoundTrip(org))).toBe(orgRoundTrip(org))
   })
 
+  it("keeps a descriptive list nested in a definition", () => {
+    const org = "- a :: b\n  - nested :: x\n"
+
+    expect(orgRoundTrip(org)).toBe(org)
+  })
+
   it("keeps a list item's leading colon as written", () => {
     // MDN writes a definition as a nested `- : ` item; an item's first
     // line has no text above it, so no definition starts there
