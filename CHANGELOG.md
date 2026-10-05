@@ -80,6 +80,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - HTML in a list item (org's `#+begin_export html`) stays an HTML
   block in Markdown, and so does text after it: org → md kept the
   item's indentation in the HTML, which Markdown then read as text.
+- HTML in a Markdown list item keeps its own indentation in org: md →
+  org lost up to the item's indentation from each line, each round
+  trip.
 - Markup right after other markup (`` `a`*,* ``) comes back from org
   without a stray `&#xNAN;` between them.
 - Empty nested list items right below an item's text (`- a\n  -`)

@@ -73,13 +73,15 @@ function joinTermLine(item: MdastListItem): void {
 }
 
 // uniorg-stringify re-indents a list item's block by stripping up to
-// the item's indentation from each line first: a code block's value
-// has to carry that indentation (as uniorg's parser reads it), or its
-// own indentation shrinks
+// the item's indentation from each line first: a code or HTML block's
+// value has to carry that indentation (as uniorg's parser reads it), or
+// its own indentation shrinks
 function indentCode<T>(node: T, level: number): T {
   const block = node as { type?: string; value?: string } | null
   if (
-    (block?.type === "src-block" || block?.type === "example-block") &&
+    (block?.type === "src-block" ||
+      block?.type === "example-block" ||
+      block?.type === "export-block") &&
     block.value !== undefined
   ) {
     block.value = block.value.replace(/^(?=.)/gm, " ".repeat(level))

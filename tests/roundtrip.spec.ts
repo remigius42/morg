@@ -560,6 +560,11 @@ describe("lists", () => {
     expect(mdRoundTrip(markdown)).toBe(markdown)
   })
 
+  it("keeps HTML in a list item as indented as it was", () => {
+    const markdown = "- a\n  <div>\n    <p>b</p>\n  </div>\n"
+    expect(mdRoundTrip(markdown)).toBe(markdown)
+  })
+
   it("keeps code in a list item as indented as it was", () => {
     const markdown = "- a\n  ```py\n  if x:\n      y()\n  ```\n"
     expect(mdRoundTrip(markdown)).toBe(markdown)
