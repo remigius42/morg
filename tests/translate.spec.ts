@@ -460,6 +460,15 @@ describe("Markdown options in a translation (ADR 0007)", () => {
     ).toBe("x \\_u\\_  y\n")
   })
 
+  it("keeps the input's syntax in a <dl> it reads", () => {
+    expect(
+      translateMarkdown(
+        "<dl>\n<dt>T</dt>\n<dd>see [[Page|alias]]</dd>\n</dl>\n",
+        { ...fromObsidian, interpretHtml: true }
+      )
+    ).toBe("T\n:   see [[Page|alias]]\n")
+  })
+
   it("writes an <img> the input reads in Markdown's spelling", () => {
     expect(
       translateMarkdown('<img src="img.png" alt="a" width="300">\n', {

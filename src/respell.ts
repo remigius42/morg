@@ -214,7 +214,9 @@ export function respellMarkdown(
       return undefined
     }
     const [start, end] = span(markdown, node)
-    const image = node.type === "html"
+    const image =
+      node.type === "html" &&
+      /^<img\s/i.test((node as { value?: string }).value ?? "")
     edits.push([
       start,
       end,
