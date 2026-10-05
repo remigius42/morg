@@ -1,6 +1,7 @@
 // ====================================================================
-// WORKAROUND for a bug in uniorg-parse 3.2.2 (upstream issue: not filed
-// yet, see TODO.md). Drop this module once a fixed version is in; the
+// WORKAROUND for a bug in uniorg-parse 3.2.2 (upstream issue
+// uniorg#151; the joined formulas: not filed yet, see
+// TODO.md). Drop this module once a fixed version is in; the
 // canary in tests/uniorgWorkarounds.spec.ts fails then.
 // ====================================================================
 // uniorg reads the affiliated keywords above an org table (`#+NAME:`,

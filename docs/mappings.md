@@ -127,8 +127,13 @@ line, a `#` or `-` line). Statistics cookies (`[1/2]`) and
 Affiliated keywords (`#+CAPTION:`, `#+NAME:`, `#+ATTR_*`) travel as
 verbatim lines directly above their element and re-attach natively on
 the return trip, a dual value included (`#+CAPTION[short]: long`,
-`#+RESULTS[hash]: …`), except on org tables, which discard them at parse
-time (upstream [uniorg#151](https://github.com/rasendubi/uniorg/issues/151)).
+`#+RESULTS[hash]: …`). uniorg discards an org table's at parse time
+(upstream [uniorg#151](https://github.com/rasendubi/uniorg/issues/151)),
+so org → md sets them apart from the table first, where they travel as
+keywords of their own and md → org writes them right above it again.
+Known limitation: on a table that leads the file they become the
+file's keywords instead, which go to frontmatter and come back apart
+from the table, so it loses its name and caption.
 
 Org comments (`# …`) map to HTML comments (`<!-- … -->`) and back.
 Both are invisible in rendered output, so the mapping is lossless in
