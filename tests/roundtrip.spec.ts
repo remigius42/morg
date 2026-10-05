@@ -769,6 +769,15 @@ describe("verbatim passthrough", () => {
     }
   })
 
+  it("keeps an element with keywords in front org", () => {
+    for (const org of [
+      "x\n\n#+RESULTS: r\n: a `b`  \n: c\n",
+      "x\n\n#+NAME: n\n#+RESULTS: r\n#+begin_foo\n- a\n#+end_foo\n"
+    ]) {
+      expect(orgRoundTrip(org)).toBe(org)
+    }
+  })
+
   it("keeps a headline's property values as written", () => {
     const org = "* H\n:PROPERTIES:\n:url: https://x.org/ *a* <b@c.de>\n:END:\n"
     expect(orgRoundTrip(org)).toBe(org)

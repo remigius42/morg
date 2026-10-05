@@ -113,6 +113,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   md → org read them as Markdown, so an address or url became a link
   nested once more each round trip, and escaped them (`\n:nil` in
   `#+OPTIONS:` gained a zero-width space).
+- An org element written verbatim to Markdown (fixed-width lines, a
+  drawer, a special block) with keywords in front (`#+RESULTS:`) goes
+  back to org as written: md → org read it as Markdown, so a babel
+  result's `` `x` `` became `~x~`, its trailing spaces a line break.
 
 ## [0.10.1] - 2026-10-04
 

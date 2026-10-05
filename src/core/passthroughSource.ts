@@ -106,6 +106,19 @@ function fixedWidthSource(
   )
 }
 
+// the fixed-width lines, or the block or drawer, from `offset` on
+function elementAt(
+  markdown: string,
+  offset: number
+): { length: number; org: string } | null {
+  const fixed = fixedWidthSource(markdown, offset)
+  if (fixed) {
+    return fixed
+  }
+  const org = elementSource(markdown, offset)
+  return org === null ? null : { length: org.length, org }
+}
+
 // where the passthrough element starting at a node ends in the source,
 // and its org text, or null
 function passthroughSource(
@@ -116,16 +129,15 @@ function passthroughSource(
   if (start?.column !== 1 || start.offset === undefined) {
     return null
   }
-  const fixed = fixedWidthSource(markdown, start.offset)
-  if (fixed && readsAsPassthrough(fixed.org)) {
-    return { end: start.offset + fixed.length, org: fixed.org }
-  }
-  const source = elementSource(markdown, start.offset)
-  if (source !== null && readsAsPassthrough(source)) {
-    return { end: start.offset + source.length, org: source }
+  // affiliated keywords may lead the element (`#+RESULTS:`)
+  const keywords = lineRun(markdown, start.offset, KEYWORD_LINE_RE)
+  const lead = keywords ? `${keywords.lines.join("\n")}\n` : ""
+  const offset = start.offset + (keywords ? keywords.length + 1 : 0)
+  const element = elementAt(markdown, offset)
+  if (element && readsAsPassthrough(lead + element.org)) {
+    return { end: offset + element.length, org: lead + element.org }
   }
   // keywords, not one passthrough element: each line is one
-  const keywords = lineRun(markdown, start.offset, KEYWORD_LINE_RE)
   return keywords
     ? { end: start.offset + keywords.length, org: keywords.lines.join("\n") }
     : null
