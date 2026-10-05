@@ -1,3 +1,4 @@
+import { escapingBlockHandlers } from "../commaEscapes.js"
 import type { PhrasingContent, RootContent } from "mdast"
 import type { AffiliatedKeywords, OrgData } from "uniorg"
 import { affiliatedEntries } from "../affiliated.js"
@@ -74,6 +75,7 @@ export function orgNodeToText(node: unknown): string {
     // a preset's verbatim-inline text is org text already
     .use(uniorgStringify, {
       handlers: {
+        ...escapingBlockHandlers,
         "verbatim-inline": (inline: { value: string }) => inline.value
       }
     } as Parameters<typeof uniorgStringify>[0])

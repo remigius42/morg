@@ -24,6 +24,7 @@ import {
   keepPassthroughSource
 } from "./core/passthroughSource.js"
 import { ORG_VERBATIM } from "./core/render.js"
+import { escapingBlockHandlers } from "./core/commaEscapes.js"
 import type { Root } from "mdast"
 import type { MarkdownStyleOptions, MarkdownToOrgOptions } from "./options.js"
 import type { Preset } from "./presets/types.js"
@@ -173,6 +174,7 @@ function emptyHeadline(node: Headline): string | null {
 const stringifier = unified()
   .use(uniorgStringify, {
     handlers: {
+      ...escapingBlockHandlers,
       headline: emptyHeadline,
       [ORG_VERBATIM]: (node: { value: string }) => node.value
     }

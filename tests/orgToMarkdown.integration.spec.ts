@@ -52,6 +52,16 @@ describe("convertOrgToMarkdown", () => {
     )
   })
 
+  it("should keep the escapes of a block in a passthrough element", () => {
+    // the drawer or special block travels as org text, which needs them
+    for (const org of [
+      ":LOGBOOK:\n#+begin_example\n,#+end_example\n#+end_example\n:END:\n",
+      "#+begin_note\n#+begin_export html\n,* x\n#+end_export\n#+end_note\n"
+    ]) {
+      expect(convertOrgToMarkdown(org)).toBe(org)
+    }
+  })
+
   it("should keep the indentation of a comma-escaped code line", () => {
     // org drops the comma only; uniorg dropped the indentation too
     const org = "#+begin_src c\n/*\n  ,* x\n\t,,#+y\n */\n#+end_src\n"

@@ -97,7 +97,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   line org would read as a headline or keyword (`* x`, `#+end_example`)
   gets org's comma escape in its example or export block; that line
   ended the block or became a headline. Org → md drops the comma of an
-  example block's line too, which uniorg left in.
+  example block's line too, which uniorg left in, but keeps the escapes
+  of a block in a drawer or special block, which travels as org text.
 - Adjacent Markdown tables stay apart in org: md → org wrote them
   with no blank line between them, which org reads as one table.
 - An org table keeps its `#+NAME:`, `#+CAPTION:`, `#+RESULTS:` and

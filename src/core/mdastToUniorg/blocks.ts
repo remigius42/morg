@@ -13,7 +13,6 @@ import {
 import { transformPhrasingChildren } from "./phrasing.js"
 import { tagSeparator } from "./lists.js"
 import { KEYWORD_NAME } from "../frontmatterBlock.js"
-import { escapeBlockLines } from "../commaEscapes.js"
 import { mayBeLineSyntax, readsAsPassthrough } from "../lineSyntax.js"
 import { attrHtmlValue, isImagePath, parseImgTag } from "../sizedImages.js"
 
@@ -117,8 +116,7 @@ export function transformMdastHtml(
     ? ({
         type: "export-block",
         backend: "html",
-        // uniorg-stringify escapes a src block's lines only
-        value: escapeBlockLines(node.value)
+        value: node.value
       } as unknown as ElementType)
     : null
 }
@@ -221,7 +219,7 @@ export function transformMdastCode(
     ? { type: "src-block", language, value: node.value }
     : {
         type: "example-block",
-        value: escapeBlockLines(node.value)
+        value: node.value
       }) as unknown as ElementType
 }
 

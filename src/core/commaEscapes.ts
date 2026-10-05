@@ -69,3 +69,22 @@ export function unescapeCommaEscapes(tree: Parent): void {
 export function escapeBlockLines(text: string): string {
   return text.replace(/^([ \t]*)(,*(?:\*|#\+))/gm, "$1,$2")
 }
+
+// uniorg-stringify escapes a src block's lines only; otherwise as it
+// writes a block (its value's trailing blanks trimmed)
+function block(name: string, parameters: string | null, value: string) {
+  const begin = parameters ? `#+begin_${name} ${parameters}` : `#+begin_${name}`
+  return `${begin}\n${escapeBlockLines(`${value.trimEnd()}\n`)}#+end_${name}\n`
+}
+
+/**
+ * uniorg-stringify handlers that write example and export blocks with
+ * org's escapes, as it writes src blocks: wherever morg writes org text,
+ * a passthrough element's nested block included.
+ */
+export const escapingBlockHandlers = {
+  "example-block": (node: { value: string }) =>
+    block("example", null, node.value),
+  "export-block": (node: { backend: string | null; value: string }) =>
+    block("export", node.backend, node.value)
+}
