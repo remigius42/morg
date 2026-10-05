@@ -62,6 +62,12 @@ dialects) and prints counts only: how many came back identical, how
 many converge (ADR 0001). `snapshot.sh` converts each file once, to
 compare two builds with `diff -rq old new | wc -l`. The diffs stay in
 the work directory, for you to read locally.
+`setup.sh` builds what they compare: a worktree of `main` with its
+`dist` built, shallow clones of public Markdown and org corpora (the
+Rust book, GitHub's and MDN's docs, Worg), and the file lists, all under
+`/tmp`; `all.sh` runs every corpus one after another, on this checkout
+or, with `MORG=/tmp/morg-base/dist/cli.js`, on `main`. One at a time: a
+run starts node for every file.
 
 ## Development process
 
