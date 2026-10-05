@@ -62,6 +62,21 @@ export function attrHtmlSize(value: string): ImageSize | undefined {
   return size
 }
 
+/**
+ * The size an element's `#+ATTR_HTML:` lines give an image, if there is
+ * one line and it gives nothing else.
+ * @param attrHtml The element's `ATTR_HTML` affiliated keyword.
+ * @returns The size, or `undefined`.
+ */
+export function loneAttrHtmlSize(attrHtml: unknown): ImageSize | undefined {
+  const [value, ...more] = Array.isArray(attrHtml)
+    ? (attrHtml as unknown[])
+    : []
+  return typeof value === "string" && !more.length
+    ? attrHtmlSize(value)
+    : undefined
+}
+
 /** The `#+ATTR_HTML:` value of a size, in the order it was given. */
 export function attrHtmlValue(size: ImageSize): string {
   return Object.entries(size)

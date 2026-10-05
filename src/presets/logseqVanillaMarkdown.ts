@@ -18,6 +18,7 @@ import type { Node } from "unist"
 import { visit } from "unist-util-visit"
 import type { Block, Meta, Outline } from "./logseqOutline.js"
 import type { ConversionContext } from "./types.js"
+import { applyEdits, type Edit } from "../core/edits.js"
 
 // Vanilla Markdown read as Logseq's outline (ADR 0006), as Logseq reads
 // a file it did not write: a list item is a block, its nested list its
@@ -241,8 +242,6 @@ function destination(url: string): string {
   return /[\s()<>]/.test(url) ? `<${url}>` : url
 }
 
-type Edit = [start: number, end: number, text: string]
-
 function offsets(node: Node): [number, number] {
   return [node.position?.start.offset ?? 0, node.position?.end.offset ?? 0]
 }
@@ -289,15 +288,6 @@ function inlineReferences(markdown: string): string {
     }
   })
   return applyEdits(markdown, edits)
-}
-
-// edits of nodes that do not nest, last first so offsets hold
-function applyEdits(text: string, edits: Edit[]): string {
-  let result = text
-  for (const [start, end, replacement] of edits.sort((a, b) => b[0] - a[0])) {
-    result = result.slice(0, start) + replacement + result.slice(end)
-  }
-  return result
 }
 
 function inlineLink(

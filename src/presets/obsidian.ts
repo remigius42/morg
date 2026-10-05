@@ -5,12 +5,13 @@ import { toString } from "orgast-util-to-string"
 import { maskCode } from "../core/outsideCode.js"
 import { FUZZY_LINK_RE } from "./links.js"
 import {
-  attrHtmlSize,
+  loneAttrHtmlSize,
   attrHtmlValue,
   IMAGE_EXTENSION_RE,
   loneImageLink,
   type ImageSize
 } from "../core/sizedImages.js"
+import { applyEdits, type Edit } from "../core/edits.js"
 import type { Preset } from "./types.js"
 
 /**
@@ -84,8 +85,6 @@ function fuzzyLinksToWikilinks(uniorgAst: OrgData): OrgData {
   return uniorgAst
 }
 
-type Edit = [start: number, end: number, text: string]
-
 // an image's size in its alt text: `![alt|300](img.png)`, `|300x200`
 const SIZE_SUFFIX_RE = /^([^]*)\|(\d+)(?:x(\d+))?$/
 const DIGITS_RE = /^\d+$/
@@ -122,11 +121,7 @@ function readImageSizes(uniorgAst: OrgData): OrgData {
 
 // the size Obsidian spells: a width, and maybe a height, in pixels
 function obsidianSize(attrHtml: unknown): ImageSize | undefined {
-  const [value, ...more] = Array.isArray(attrHtml)
-    ? (attrHtml as unknown[])
-    : []
-  const size =
-    typeof value === "string" && !more.length ? attrHtmlSize(value) : undefined
+  const size = loneAttrHtmlSize(attrHtml)
   return size?.width !== undefined &&
     DIGITS_RE.test(size.width) &&
     (size.height === undefined || DIGITS_RE.test(size.height))
@@ -223,14 +218,6 @@ function fromVanilla(markdown: string): string {
     }
   }
   return applyEdits(markdown, edits)
-}
-
-function applyEdits(text: string, edits: Edit[]): string {
-  let result = text
-  for (const [start, end, replacement] of edits.sort((a, b) => b[0] - a[0])) {
-    result = result.slice(0, start) + replacement + result.slice(end)
-  }
-  return result
 }
 
 const COMMENT_RE = /%%([\s\S]*?)%%/g

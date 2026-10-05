@@ -2,7 +2,7 @@ import type { OrgData, Paragraph, Text } from "uniorg"
 import type { Parent } from "unist"
 import { visit } from "unist-util-visit"
 import {
-  attrHtmlSize,
+  loneAttrHtmlSize,
   attrHtmlValue,
   IMAGE_EXTENSION_RE,
   loneImageLink,
@@ -34,11 +34,7 @@ function sizeMap(size: ImageSize): string {
 
 // the size Logseq spells: numbers only
 function logseqSize(attrHtml: unknown): ImageSize | undefined {
-  const [value, ...more] = Array.isArray(attrHtml)
-    ? (attrHtml as unknown[])
-    : []
-  const size =
-    typeof value === "string" && !more.length ? attrHtmlSize(value) : undefined
+  const size = loneAttrHtmlSize(attrHtml)
   return size && Object.values(size).every(given => NUMBER_RE.test(given))
     ? size
     : undefined

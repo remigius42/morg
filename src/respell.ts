@@ -17,6 +17,7 @@ import {
 } from "./options.js"
 import type { Preset } from "./presets/types.js"
 import { attrHtmlSize } from "./core/sizedImages.js"
+import { applyEdits, type Edit } from "./core/edits.js"
 
 /** The Markdown options a translation honours (ADR 0007). */
 export interface RespellOptions {
@@ -24,8 +25,6 @@ export interface RespellOptions {
   spelling?: Spellings
   onWarning?: (message: string) => void
 }
-
-type Edit = [start: number, end: number, text: string]
 
 const INLINE_TAGS: Record<string, HtmlConstruct> = {
   u: "underline",
@@ -226,9 +225,5 @@ export function respellMarkdown(
     ])
     return SKIP
   })
-  let result = markdown
-  for (const [start, end, text] of edits.sort((a, b) => b[0] - a[0])) {
-    result = result.slice(0, start) + text + result.slice(end)
-  }
-  return result
+  return applyEdits(markdown, edits)
 }

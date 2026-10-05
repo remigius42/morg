@@ -27,7 +27,7 @@ import { transformUniorgObjects } from "./objects.js"
 import { transformFootnoteDefinition } from "./footnotes.js"
 import { transformTable } from "./tables.js"
 import { transformPlainList } from "./lists.js"
-import { attrHtmlSize, imgTag } from "../sizedImages.js"
+import { imgTag, loneAttrHtmlSize } from "../sizedImages.js"
 
 export function transformNodes(
   ctx: TransformContext,
@@ -66,10 +66,7 @@ function transformUniorgNodeToMdastNode(
 // the size a lone #+ATTR_HTML: line gives, and the other keywords
 function imageSize(affiliated: AffiliatedKeywords = {}) {
   const { ATTR_HTML: attrHtml, ...others } = affiliated
-  const [value, ...more] = Array.isArray(attrHtml) ? attrHtml : []
-  const size =
-    typeof value === "string" && !more.length ? attrHtmlSize(value) : undefined
-  return { size, others }
+  return { size: loneAttrHtmlSize(attrHtml), others }
 }
 
 // the image a paragraph's lone link shows, if it is one

@@ -7,8 +7,7 @@ import { remarkDefinitionList } from "remark-definition-list"
 import type { Code, Emphasis, List, Root, Strong, ThematicBreak } from "mdast"
 import { visit } from "unist-util-visit"
 import type { MarkdownStyleOptions } from "../options.js"
-
-type Edit = [start: number, end: number, text: string]
+import { applyEdits, type Edit } from "./edits.js"
 
 function offsets(node: {
   position?: { start: { offset?: number }; end: { offset?: number } }
@@ -132,9 +131,5 @@ export function restyleMarkdown(
       ? ruleEdits(tree, markdown, style)
       : [])
   ]
-  let result = markdown
-  for (const [start, end, text] of edits.sort((a, b) => b[0] - a[0])) {
-    result = result.slice(0, start) + text + result.slice(end)
-  }
-  return result
+  return applyEdits(markdown, edits)
 }
