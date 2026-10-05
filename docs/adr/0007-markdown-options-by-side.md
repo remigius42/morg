@@ -105,6 +105,14 @@ description list, and, under `useHtml`, a `<dl>`.
    `ATTR_ORG`'s width first, else the first `#+ATTR_…` that has one.
    An `ATTR_ORG`-only width stays verbatim. Logseq's `:height` maps to
    `#+ATTR_HTML: :height` alongside.
+   Amended (2026-10-05): for an image link alone in its paragraph,
+   outside a list, as org attaches the line to a paragraph and reads
+   none on a bullet's line; elsewhere a size stays as written. A
+   Logseq block's title is a headline, which org cannot size, so a
+   title image keeps its size map, and Vanilla md carries it as it
+   does Logseq's syntax. Obsidian writes its own spelling over
+   `"html"` where it can spell the size (a width in pixels, and a
+   height).
 8. **Translation honours the Markdown options** of its sides, as
    normalizing does. Normalizing still goes through the other format
    (ADR 0001).

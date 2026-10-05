@@ -24,7 +24,8 @@ and who pays for it.
 1. **A `#+MORG_MARKDOWN_STYLE:` keyword records the detected style**, JSON on one
    line (ADR 0002 §3), leading the document. On `org → md` it is
    consumed rather than turned into frontmatter; explicit
-   `markdownStyle` options still win over it.
+   `markdownStyle` options still win over it. Amended (ADR 0007): the
+   options are `style`, in `[markdown.output.style]`.
 2. **Document-level scope only**: `bullet`, `emphasis`, `strong`,
    `fence`, `rule`, `ruleRepetition`, the per-document marker knobs
    `remark-stringify` takes. Per-node style (mixed bullets across
