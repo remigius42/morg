@@ -35,6 +35,7 @@ import {
 import { transformMdastDefList, transformMdastList } from "./lists.js"
 import { transformPhrasingChildren } from "./phrasing.js"
 import { ORG_VERBATIM } from "../render.js"
+import { mayBeLineSyntax, readsAsPassthrough } from "../lineSyntax.js"
 import { DESCRIPTIVE_LIST_MARKER } from "../descriptiveTags.js"
 
 export type { MdastToUniorgOptions, TransformContext } from "./context.js"
@@ -132,6 +133,53 @@ function transformBlockChildren(
     .filter(Boolean) as (GreaterElementType | ElementType | Text)[]
 }
 
+// a paragraph's text, if it is all text and org reads it as one
+// passthrough element
+function passthroughText(node: {
+  children: PhrasingContent[]
+}): string | undefined {
+  const [only, ...rest] = node.children
+  return only?.type === "text" &&
+    !rest.length &&
+    mayBeLineSyntax(only.value) &&
+    readsAsPassthrough(only.value)
+    ? only.value
+    : undefined
+}
+
+function transformMdastParagraph(
+  ctx: TransformContext,
+  node: { children: PhrasingContent[] }
+): ElementType | Text {
+  // a paragraph of only #+KEY: lines is affiliated keywords (or
+  // mid-file keywords) traveling verbatim; emit as raw org text so
+  // they glue to the following element without a blank line (org
+  // only attaches affiliated keywords when directly above their
+  // element), and no escape touches them
+  const keywordLines = keywordOnlyLines(node)
+  if (keywordLines) {
+    return {
+      type: ORG_VERBATIM,
+      value: `${keywordLines.join("\n")}\n`
+    } as unknown as Text
+  }
+  // one passthrough element's org text (a block, a drawer) goes back
+  // as it is, a paragraph's blank line after it
+  const passthrough = passthroughText(node)
+  if (passthrough !== undefined) {
+    return {
+      type: ORG_VERBATIM,
+      value: `${passthrough}\n\n`
+    } as unknown as Text
+  }
+  return {
+    type: "paragraph",
+    children: transformPhrasingChildren(ctx, node.children),
+    contentsBegin: 0, // Placeholder
+    contentsEnd: 0 // Placeholder
+  } as Paragraph
+}
+
 export function transformMdastNodeToUniorgNode(
   ctx: TransformContext,
   node: RootContent | PhrasingContent
@@ -139,26 +187,8 @@ export function transformMdastNodeToUniorgNode(
   switch (node.type) {
     case "heading":
       return transformMdastHeading(ctx, node)
-    case "paragraph": {
-      // a paragraph of only #+KEY: lines is affiliated keywords (or
-      // mid-file keywords) traveling verbatim; emit as raw org text so
-      // they glue to the following element without a blank line (org
-      // only attaches affiliated keywords when directly above their
-      // element), and no escape touches them
-      const keywordLines = keywordOnlyLines(node)
-      if (keywordLines) {
-        return {
-          type: ORG_VERBATIM,
-          value: `${keywordLines.join("\n")}\n`
-        } as unknown as Text
-      }
-      return {
-        type: "paragraph",
-        children: transformPhrasingChildren(ctx, node.children),
-        contentsBegin: 0, // Placeholder
-        contentsEnd: 0 // Placeholder
-      } as Paragraph
-    }
+    case "paragraph":
+      return transformMdastParagraph(ctx, node)
     case "text":
       return { type: "text", value: node.value }
     case "list":

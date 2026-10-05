@@ -117,6 +117,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   drawer, a special block) with keywords in front (`#+RESULTS:`) goes
   back to org as written: md → org read it as Markdown, so a babel
   result's `` `x` `` became `~x~`, its trailing spaces a line break.
+- Markup in an org block or drawer written verbatim to Markdown
+  (`*b*` in a `#+begin_note`) stays org markup: md → org escaped it
+  with a zero-width space, which org then read as text.
 
 ## [0.10.1] - 2026-10-04
 

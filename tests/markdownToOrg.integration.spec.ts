@@ -734,6 +734,15 @@ This is a paragraph.
 })
 
 describe("verbatim passthrough", () => {
+  it("should keep markup in a block or drawer unescaped", () => {
+    for (const org of [
+      "x\n\n#+begin_note\n*b* /i/ [fn:1] a\\b =#+A:=\n#+end_note\n",
+      "* H\n:LOGBOOK:\n*b* [fn:1]\n:END:\n"
+    ]) {
+      expect(convertMarkdownToOrg(convertOrgToMarkdown(org))).toBe(org)
+    }
+  })
+
   it("should keep an org block whose lines read as md syntax whole", () => {
     // a blank line and an indented one would be md code, `# ` a heading
     const org = "#+begin_verse\n  a\n\n      b\n# c\n- d\n#+end_verse\n"
