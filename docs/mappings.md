@@ -499,9 +499,11 @@ holds a run of the new marker. The Markdown options apply as in a
 conversion (ADR 0007): a definition list written in the Spelling they
 name, `<dl>`, `<u>`, `<sup>` and `<sub>` read where `interpretHtml`
 asks, each block holding one converted on its own, the rest as written;
-underline and scripts in their Markdown spelling, org text only morg
-writes, stay as written, but an image's `#+ATTR_HTML:` size line above
-it, which the HTML spelling writes into its `<img>`. Obsidian md translates as Vanilla md
+an image's `#+ATTR_HTML:` size line above it is written into its
+`<img>` where `images = "html"`. Known limitation: underline and
+scripts in their Markdown spelling (`\_x\_`, `^{x}`), org text inside
+Markdown text that a user's own escapes look alike to, stay as written
+under `"html"` too, where a conversion writes `<u>`, `<sup>`, `<sub>`. Obsidian md translates as Vanilla md
 does, but for its links: `[[Page|label]]` (in a table
 `[[Page\|label]]`) ↔ `[label]([[Page]])` outside code (`[[Page]]` is
 both's); an embed's size (`![[image.png|300]]`) stays, an image's
