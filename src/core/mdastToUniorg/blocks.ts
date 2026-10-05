@@ -14,6 +14,7 @@ import { transformPhrasingChildren } from "./phrasing.js"
 import { tagSeparator } from "./lists.js"
 import { KEYWORD_NAME } from "../frontmatterBlock.js"
 import { escapeBlockLines } from "../commaEscapes.js"
+import { mayBeLineSyntax, readsAsPassthrough } from "../lineSyntax.js"
 import { attrHtmlValue, isImagePath, parseImgTag } from "../sizedImages.js"
 
 export function transformMdastTable(
@@ -282,4 +283,18 @@ export function keywordOnlyLines(node: {
   return lines.length && lines.every(line => KEYWORD_LINE_RE.test(line))
     ? lines
     : null
+}
+
+// a paragraph's text, if it is all text and org reads it as one
+// passthrough element
+export function passthroughText(node: {
+  children: PhrasingContent[]
+}): string | undefined {
+  const [only, ...rest] = node.children
+  return only?.type === "text" &&
+    !rest.length &&
+    mayBeLineSyntax(only.value) &&
+    readsAsPassthrough(only.value)
+    ? only.value
+    : undefined
 }

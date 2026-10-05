@@ -126,6 +126,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A Markdown list item's paragraphs stay apart in org: md → org wrote
   them with no blank line between them, which org reads as one
   paragraph.
+- Fixed-width lines and keywords in an org list item go back to org as
+  written: org → md wrote them into the item's text, where md → org
+  read them as text (`: git clone git@x.org:a` gained a zero-width
+  space and a mail link). They are a paragraph of their own now, set
+  apart by blank lines, which makes the Markdown list loose.
 
 ## [0.10.1] - 2026-10-04
 

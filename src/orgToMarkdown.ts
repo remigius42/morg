@@ -61,6 +61,26 @@ function separateEmptyItemFromText(
     : undefined
 }
 
+// an org element a list item holds verbatim (fixed-width lines,
+// keywords) is a paragraph of its own, set apart by blank lines: in the
+// item's text, md→org reads its lines as text
+function separateVerbatimInItem(
+  left: { type: string },
+  right: { type: string },
+  parent: { type: string }
+): number | undefined {
+  return ["listItem", "defListDescription"].includes(parent.type) &&
+    (left.type === "keyValue" || right.type === "keyValue")
+    ? 1
+    : undefined
+}
+
+const JOINS = [
+  separateTextAfterBlock,
+  separateEmptyItemFromText,
+  separateVerbatimInItem
+]
+
 /**
  * Converts an Org-mode string to a Markdown string.
  * @param org The Org-mode string to convert.
@@ -156,7 +176,7 @@ function convertOrgDocument(
       rule: "-",
       ...recordedStyle,
       ...options.style,
-      join: [separateTextAfterBlock, separateEmptyItemFromText],
+      join: JOINS,
       handlers: {
         // key:: value blocks and preset inline passthroughs (e.g.
         // wikilinks) are emitted verbatim, unescaped; only a pipe inside

@@ -19,7 +19,10 @@ import { escapeDescriptiveTags } from "./core/descriptiveTags.js"
 import { escapeBackslashCommands } from "./core/backslashCommands.js"
 import { escapeTablePipes } from "./core/tablePipes.js"
 import { requireBracedScripts } from "./core/bracedScripts.js"
-import { keepPassthroughSource } from "./core/passthroughSource.js"
+import {
+  keepItemPassthroughSource,
+  keepPassthroughSource
+} from "./core/passthroughSource.js"
 import { ORG_VERBATIM } from "./core/render.js"
 import type { Root } from "mdast"
 import type { MarkdownStyleOptions, MarkdownToOrgOptions } from "./options.js"
@@ -187,6 +190,7 @@ function parseMarkdown(markdown: string, preset?: Preset): Root {
     .use(remarkDefinitionList)
     .parse(markdown)
   keepPassthroughSource(mdast, markdown)
+  keepItemPassthroughSource(mdast, markdown)
   preset?.markdown?.read?.mdast?.(mdast, markdown)
   return mdast
 }

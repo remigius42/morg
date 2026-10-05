@@ -1,4 +1,5 @@
-import type { Root, RootContent } from "mdast"
+import type { ListItem, Paragraph, Root, RootContent } from "mdast"
+import { visit } from "unist-util-visit"
 import { KEYWORD_NAME } from "./frontmatterBlock.js"
 import { keyValueEntries } from "./keyValueLines.js"
 import { readsAsPassthrough } from "./lineSyntax.js"
@@ -202,4 +203,54 @@ export function keepPassthroughSource(mdast: Root, markdown: string): void {
     i = last
   }
   mdast.children = children
+}
+
+// the org text of a list item's paragraph that holds only fixed-width
+// and keyword lines, as org→md writes an element there, or null
+function itemPassthroughSource(
+  node: Paragraph,
+  markdown: string
+): string | null {
+  const { start, end } = node.position ?? {}
+  if (start?.offset === undefined || end?.offset === undefined) {
+    return null
+  }
+  // through the line's end: Markdown leaves trailing blanks out
+  const lineEnd = markdown.indexOf("\n", end.offset)
+  const lines = markdown
+    .slice(start.offset, lineEnd === -1 ? markdown.length : lineEnd)
+    .split("\n")
+    .map(line => line.trimStart())
+  const verbatim = lines.every(
+    line => FIXED_WIDTH_RE.test(line) || KEYWORD_LINE_RE.test(line)
+  )
+  if (!verbatim) {
+    return null
+  }
+  const org = lines.map(line => line.replace(/^\\:/, ":")).join("\n")
+  return lines.every(line => KEYWORD_LINE_RE.test(line)) ||
+    readsAsPassthrough(org)
+    ? org
+    : null
+}
+
+/**
+ * md→org: a list item's paragraph of fixed-width or keyword lines, set
+ * apart as org→md writes them, becomes their org text again; the item's
+ * first paragraph follows the bullet, where org reads none.
+ * @param mdast The parsed Markdown.
+ * @param markdown Its source.
+ */
+export function keepItemPassthroughSource(mdast: Root, markdown: string): void {
+  visit(mdast, "listItem", (item: ListItem) => {
+    for (const [i, child] of item.children.entries()) {
+      const org =
+        i > 0 && child.type === "paragraph"
+          ? itemPassthroughSource(child, markdown)
+          : null
+      if (org !== null) {
+        ;(child as Paragraph).children = [{ type: "text", value: org }]
+      }
+    }
+  })
 }

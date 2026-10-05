@@ -26,6 +26,7 @@ import {
 } from "../frontmatterBlock.js"
 import {
   keywordOnlyLines,
+  passthroughText,
   transformMdastCode,
   transformMdastHeading,
   transformMdastHtml,
@@ -35,7 +36,6 @@ import {
 import { transformMdastDefList, transformMdastList } from "./lists.js"
 import { transformPhrasingChildren } from "./phrasing.js"
 import { ORG_VERBATIM } from "../render.js"
-import { mayBeLineSyntax, readsAsPassthrough } from "../lineSyntax.js"
 import { DESCRIPTIVE_LIST_MARKER } from "../descriptiveTags.js"
 
 export type { MdastToUniorgOptions, TransformContext } from "./context.js"
@@ -131,20 +131,6 @@ function transformBlockChildren(
   return children
     .map(child => transformMdastNodeToUniorgNode(ctx, child))
     .filter(Boolean) as (GreaterElementType | ElementType | Text)[]
-}
-
-// a paragraph's text, if it is all text and org reads it as one
-// passthrough element
-function passthroughText(node: {
-  children: PhrasingContent[]
-}): string | undefined {
-  const [only, ...rest] = node.children
-  return only?.type === "text" &&
-    !rest.length &&
-    mayBeLineSyntax(only.value) &&
-    readsAsPassthrough(only.value)
-    ? only.value
-    : undefined
 }
 
 function transformMdastParagraph(

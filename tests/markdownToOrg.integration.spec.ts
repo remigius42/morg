@@ -734,6 +734,16 @@ This is a paragraph.
 })
 
 describe("verbatim passthrough", () => {
+  it("should keep fixed-width and keyword lines in a list item org", () => {
+    for (const org of [
+      "- run\n  : git clone git@x.org:~a/b `c`\n  then *this*\n- next\n",
+      "- a\n  #+NAME: t\n  | 1 |\n  |-|\n  | 2 |\n",
+      "1. x\n   #+RESULTS: r\n   : y\n"
+    ]) {
+      expect(convertMarkdownToOrg(convertOrgToMarkdown(org))).toBe(org)
+    }
+  })
+
   it("should keep markup in a block or drawer unescaped", () => {
     for (const org of [
       "x\n\n#+begin_note\n*b* /i/ [fn:1] a\\b =#+A:=\n#+end_note\n",

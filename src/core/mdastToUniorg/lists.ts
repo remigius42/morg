@@ -20,6 +20,8 @@ import type {
 } from "uniorg"
 import { BULLET_LINE_END, warn, type TransformContext } from "./context.js"
 import { transformPhrasingChildren } from "./phrasing.js"
+import { keywordOnlyLines, passthroughText } from "./blocks.js"
+import { ORG_VERBATIM } from "../render.js"
 // circular import with index.js is fine in ESM: both sides only export
 // hoisted function declarations called after module initialization
 import { transformMdastNodeToUniorgNode } from "./index.js"
@@ -90,13 +92,33 @@ function indentCode<T>(node: T, level: number): T {
 }
 
 // a blank line keeps an item's paragraph apart from one a blank line
-// above it, which org would read it into
-function blankAbove(item: MdastListItem, i: number): Text[] {
+// above it, which org would read it into (an element's org text ends
+// itself)
+function blankAbove(
+  item: MdastListItem,
+  i: number,
+  verbatim: (Text | null)[]
+): Text[] {
   const apart =
     item.spread &&
     item.children[i]?.type === "paragraph" &&
-    item.children[i - 1]?.type === "paragraph"
+    item.children[i - 1]?.type === "paragraph" &&
+    !verbatim[i - 1]
   return apart ? [{ type: "text", value: "\n" }] : []
+}
+
+// a paragraph below an item's first, of an element's org text
+// (fixed-width lines, keywords) as org→md writes it, as it is
+function verbatimParagraph(
+  child: BlockContent | DefinitionContent
+): Text | null {
+  if (child.type !== "paragraph") {
+    return null
+  }
+  const org = keywordOnlyLines(child)?.join("\n") ?? passthroughText(child)
+  return org === undefined
+    ? null
+    : ({ type: ORG_VERBATIM, value: `${org}\n` } as unknown as Text)
 }
 
 function transformMdastListItem(
@@ -109,6 +131,9 @@ function transformMdastListItem(
   // paragraph handler appends a separating blank line, which is wrong
   // inside a list item.
   type ItemChild = GreaterElementType | ElementType | Text | ObjectType | null
+  const verbatim = item.children.map((child, i) =>
+    i > 0 ? verbatimParagraph(child) : null
+  )
   const children = item.children
     .flatMap((child, i): ItemChild[] => {
       if (child.type === "list") {
@@ -121,9 +146,12 @@ function transformMdastListItem(
         // org headlines cannot live inside a list item; the text stays
         warn(ctx, "heading inside a list item became text")
       }
+      if (verbatim[i]) {
+        return [verbatim[i]]
+      }
       if (child.type === "paragraph" || child.type === "heading") {
         const objects = [
-          ...blankAbove(item, i),
+          ...blankAbove(item, i, verbatim),
           ...transformPhrasingChildren(ctx, child.children)
         ]
         const last = objects.at(-1)
