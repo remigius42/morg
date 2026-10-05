@@ -54,7 +54,7 @@ describe("logseq outline", () => {
       "* #+BEGIN_SRC\nread_flash x_y\n#+END_SRC\n"
     )
     expect(toOrg("- a\n  ```\n  #+BEGIN_X\n  #+END_X\n  ```\n")).toBe(
-      "* a\n\n#+begin_example\n#+BEGIN_X\n#+END_X\n#+end_example\n"
+      "* a\n\n#+begin_example\n,#+BEGIN_X\n,#+END_X\n#+end_example\n"
     )
   })
 

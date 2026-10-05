@@ -1,5 +1,6 @@
 import type { CommentBlock, OrgData } from "uniorg"
 import { affiliatedEntries, DUAL_NAMES } from "./affiliated.js"
+import { escapeBlockLines } from "./commaEscapes.js"
 import { positionParser } from "./render.js"
 import {
   CST,
@@ -512,12 +513,6 @@ function leadWithFileHeader(uniorgAst: OrgData): void {
     0,
     drawer as { type: string }
   )
-}
-
-// Org's own block escaping (org-escape-code-in-string): a line org would
-// read as a headline or a keyword, or one already escaped, gets a comma
-function escapeBlockLines(text: string): string {
-  return text.replace(/^([ \t]*)(,*(?:\*|#\+))/gm, "$1,$2")
 }
 
 // org-unescape-code-in-string: drops one comma of an escaped line

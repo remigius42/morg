@@ -899,6 +899,24 @@ describe("a literal backslash before a letter", () => {
   })
 })
 
+describe("org line syntax in code", () => {
+  it("is comma-escaped in an example block, and only there", () => {
+    const markdown = "```\n* x\n  #+end_example\n```\n"
+    expect(convertMarkdownToOrg(markdown)).toBe(
+      "#+begin_example\n,* x\n  ,#+end_example\n#+end_example\n"
+    )
+    expect(mdRoundTrip(markdown)).toBe(markdown)
+  })
+
+  it("is comma-escaped in an export block, and only there", () => {
+    const markdown = "<div>\n* x\n#+end_export\n</div>\n"
+    expect(convertMarkdownToOrg(markdown)).toBe(
+      "#+begin_export html\n<div>\n,* x\n,#+end_export\n</div>\n#+end_export\n"
+    )
+    expect(mdRoundTrip(markdown)).toBe(markdown)
+  })
+})
+
 describe("relative links", () => {
   it("keep # and % in org file paths and search options", () => {
     const org = "[[file:C# notes.md::100% done][x]]\n"

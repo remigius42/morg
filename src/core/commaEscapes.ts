@@ -15,11 +15,11 @@ import type { Node } from "./render.js"
 const MARK = "\uE000"
 
 const ESCAPED_LINE_RE = /^([ \t]*)(?=,+(?:\*|#\+))/
-const BLOCK_START_RE = /^[ \t]*#\+begin_(src|export)(?:[ \t]|$)/i
+const BLOCK_START_RE = /^[ \t]*#\+begin_(src|export|example)(?:[ \t]|$)/i
 
 /**
- * org→md: marks the comma-escaped lines of src and export blocks before
- * parsing.
+ * org→md: marks the comma-escaped lines of src, export and example
+ * blocks before parsing.
  */
 export function guardCommaEscapes(org: string): string {
   if (!org.includes(",")) {
@@ -42,19 +42,30 @@ export function guardCommaEscapes(org: string): string {
   return lines.join("\n")
 }
 
+const CODE_BLOCKS = new Set(["src-block", "export-block", "example-block"])
 const MARKED_RE = new RegExp(`^([ \\t]*)${MARK}`, "gm")
 const UNESCAPE_RE = new RegExp(`^([ \\t]*)${MARK},`, "gm")
 
 /**
- * org→md: unescapes the marked lines of src and export blocks, keeping
- * their indentation; drops a mark anywhere else uniorg put the line.
+ * org→md: unescapes the marked lines of src, export and example blocks
+ * (which uniorg leaves escaped), keeping their indentation; drops a mark
+ * anywhere else uniorg put the line.
  */
 export function unescapeCommaEscapes(tree: Parent): void {
   visit(tree, (node: Node) => {
     if (typeof node.value !== "string" || !node.value.includes(MARK)) {
       return
     }
-    const code = node.type === "src-block" || node.type === "export-block"
+    const code = CODE_BLOCKS.has(node.type)
     node.value = node.value.replace(code ? UNESCAPE_RE : MARKED_RE, "$1")
   })
+}
+
+/**
+ * md→org: org's own block escaping (org-escape-code-in-string): a line
+ * org would read as a headline or a keyword, or one already escaped,
+ * gets a comma.
+ */
+export function escapeBlockLines(text: string): string {
+  return text.replace(/^([ \t]*)(,*(?:\*|#\+))/gm, "$1,$2")
 }

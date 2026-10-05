@@ -93,6 +93,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - An indented code line org escapes with a comma (`,* x` after the
   indentation, in a src or export block) keeps its indentation in
   Markdown: uniorg dropped it with the comma.
+- A Markdown code block without a language, or an HTML block, whose
+  line org would read as a headline or keyword (`* x`, `#+end_example`)
+  gets org's comma escape in its example or export block; that line
+  ended the block or became a headline. Org → md drops the comma of an
+  example block's line too, which uniorg left in.
 
 ## [0.10.1] - 2026-10-04
 
