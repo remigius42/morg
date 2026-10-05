@@ -46,7 +46,7 @@ export function separateTableKeywords(org: string): string {
     const block = BLOCK_START_RE.exec(line)?.[1]
     if (block) {
       end = new RegExp(
-        `^[ \\t]*#\\+end_${block.replace(/\W/g, "\\$&")}[ \\t]*$`,
+        `^[ \\t]*#\\+end_${block.replace(/\W/g, "\\$&")}\\s*$`,
         "i"
       )
     } else if (bordersTable(line, lines[i + 1] ?? "")) {

@@ -37,7 +37,7 @@ export function guardCommaEscapes(org: string): string {
       continue
     }
     const block = BLOCK_START_RE.exec(line)?.[1]
-    end = block ? new RegExp(`^[ \\t]*#\\+end_${block}[ \\t]*$`, "i") : null
+    end = block ? new RegExp(`^[ \\t]*#\\+end_${block}\\s*$`, "i") : null
   }
   return lines.join("\n")
 }

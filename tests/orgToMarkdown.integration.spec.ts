@@ -171,6 +171,12 @@ describe("convertOrgToMarkdown", () => {
     expect(convertMarkdownToOrg(convertOrgToMarkdown(formulas))).toBe(
       "x\n\n| 1 |\n|-|\n#+TBLFM: $1=2\n#+TBLFM: $1=3\n"
     )
+    // after a block in a CRLF file too
+    expect(
+      convertOrgToMarkdown(
+        "x\r\n\r\n#+begin_src\r\n,* a\r\n#+end_src\r\n\r\n#+NAME: t\r\n| a |\r\n"
+      )
+    ).toContain("#+NAME: t")
     // not in a block
     expect(
       convertOrgToMarkdown("#+begin_example\n#+NAME: t\n| a |\n#+end_example\n")
