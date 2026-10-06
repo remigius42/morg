@@ -5,7 +5,11 @@ import { CONVERTING_AFTER_MS, DEBOUNCE_MS } from "../../web/src/ui/runLoop.js"
 import { runConversion } from "../../web/src/pipeline/convert.js"
 import { readState, writeState } from "../../web/src/ui/persistence.js"
 import type { ConversionRunner } from "../../web/src/pipeline/runner.js"
-import { LOGSEQ_MD_DEMO, LOGSEQ_ORG_DEMO } from "../../web/src/ui/demos.js"
+import {
+  LOGSEQ_MD_DEMO,
+  LOGSEQ_ORG_DEMO,
+  OBSIDIAN_MD_DEMO
+} from "../../web/src/ui/demos.js"
 
 // Smoke check: the Embed Page markup wired by main.ts converts on input.
 function loadEmbedPageBody(): string {
@@ -208,6 +212,8 @@ describe("embed page", () => {
     expect(element<HTMLTextAreaElement>("input").value).toBe(LOGSEQ_ORG_DEMO)
     choose("inputDialect", "markdown:logseq")
     expect(element<HTMLTextAreaElement>("input").value).toBe(LOGSEQ_MD_DEMO)
+    choose("inputDialect", "markdown:obsidian")
+    expect(element<HTMLTextAreaElement>("input").value).toBe(OBSIDIAN_MD_DEMO)
   })
 
   it("swaps the untouched demo for a preset the config sets", () => {

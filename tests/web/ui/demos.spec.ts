@@ -7,9 +7,11 @@ import {
   LOGSEQ_MD_DEMO,
   LOGSEQ_ORG_DEMO,
   MD_DEMO,
+  OBSIDIAN_MD_DEMO,
   ORG_DEMO
 } from "../../../web/src/ui/demos.js"
 import { logseq } from "../../../src/presets/logseq.js"
+import { obsidian } from "../../../src/presets/obsidian.js"
 
 // the demos are the first thing every visitor converts, so pin that they
 // round-trip convergently and warning-free under default options
@@ -50,6 +52,23 @@ describe("demo documents", () => {
     expect(demoFor("org-to-md", "obsidian")).toBe(ORG_DEMO)
     expect(isDemo(LOGSEQ_MD_DEMO)).toBe(true)
     expect(isDemo(`${ORG_DEMO} `)).toBe(false)
+  })
+
+  it("offers the obsidian demo for obsidian markdown", () => {
+    expect(demoFor("md-to-org", "obsidian")).toBe(OBSIDIAN_MD_DEMO)
+    expect(demoFor("normalize-md", "obsidian")).toBe(OBSIDIAN_MD_DEMO)
+    expect(isDemo(OBSIDIAN_MD_DEMO)).toBe(true)
+  })
+
+  it("obsidian demo is canonical and converges without warnings", () => {
+    const warnings: string[] = []
+    const options = {
+      preset: obsidian(),
+      onWarning: (message: string) => warnings.push(message)
+    }
+    const org = convertMarkdownToOrg(OBSIDIAN_MD_DEMO, options)
+    expect(convertOrgToMarkdown(org, options)).toBe(OBSIDIAN_MD_DEMO)
+    expect(warnings).toEqual([])
   })
 
   it("logseq demos convert into each other without warnings", () => {

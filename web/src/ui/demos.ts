@@ -1,7 +1,7 @@
 /**
  * The documents the converter offers an empty input. Its own module
- * because they are content rather than behavior: fifty lines of literal
- * text that say nothing about how the page works, sitting in the middle
+ * because they are content rather than behavior: literal text that
+ * says nothing about how the page works, sitting in the middle
  * of the file that does.
  */
 import { readsMarkdown, type Direction } from "../direction.js"
@@ -131,7 +131,30 @@ export const LOGSEQ_MD_DEMO = `<!-- Paste your Logseq Markdown page here, or con
 \t  #+end_query
 `
 
-const DEMOS = [ORG_DEMO, MD_DEMO, LOGSEQ_ORG_DEMO, LOGSEQ_MD_DEMO]
+// the Obsidian preset's demo: Obsidian writes no org, so its org side
+// is the Vanilla demo (pinned by test)
+export const OBSIDIAN_MD_DEMO = `<!-- Paste your Obsidian note here, or convert this demo -->
+
+# Obsidian demo
+
+Wikilinks to [[Another note]] and [[Another note|with an alias]].
+
+> [!tip]- Callouts fold
+>
+> and become org special blocks.
+
+![diagram|300](diagram.png)
+
+- [ ] A task
+`
+
+const DEMOS = [
+  ORG_DEMO,
+  MD_DEMO,
+  LOGSEQ_ORG_DEMO,
+  LOGSEQ_MD_DEMO,
+  OBSIDIAN_MD_DEMO
+]
 
 /**
  * The demo written in the format a direction takes as its input, in the
@@ -143,6 +166,9 @@ const DEMOS = [ORG_DEMO, MD_DEMO, LOGSEQ_ORG_DEMO, LOGSEQ_MD_DEMO]
 export function demoFor(direction: Direction, preset = ""): string {
   const logseq = preset === "logseq"
   if (readsMarkdown(direction)) {
+    if (preset === "obsidian") {
+      return OBSIDIAN_MD_DEMO
+    }
     return logseq ? LOGSEQ_MD_DEMO : MD_DEMO
   }
   return logseq ? LOGSEQ_ORG_DEMO : ORG_DEMO
