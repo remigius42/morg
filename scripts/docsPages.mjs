@@ -62,13 +62,17 @@ export async function renderPage(file, markdown, published) {
   const tree = unified().use(remarkParse).use(remarkGfm).parse(markdown)
   const title = toText(tree.children.find(node => node.type === "heading"))
   rewriteLinks(tree, file, published)
+  // the docs are this repository's own, so their HTML is kept as
+  // written, as GitHub shows it, rather than dropped as untrusted
   const hast = await unified()
-    .use(remarkRehype)
+    .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypeSlug)
     .use(rehypeShiki, highlighting)
     .use(() => scrollTables)
     .run(tree)
-  const body = unified().use(rehypeStringify).stringify(hast)
+  const body = unified()
+    .use(rehypeStringify, { allowDangerousHtml: true })
+    .stringify(hast)
   return { title, html: page(pagePath(file), title, body) }
 }
 

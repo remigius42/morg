@@ -93,6 +93,17 @@ describe("renderPage", () => {
     expect(html).toContain(`href="mailto:g@h.i"`)
   })
 
+  it("keeps a doc's own HTML, as GitHub shows it", async () => {
+    const { html } = await render(
+      "docs/mappings.md",
+      "a<br>b <kbd>C</kbd>\n\n<details><summary>d</summary>\n\ne\n\n</details>"
+    )
+
+    expect(html).toContain("a<br>b <kbd>C</kbd>")
+    expect(html).toContain("<details><summary>d</summary>")
+    expect(html).toContain("<p>e</p>\n</details>")
+  })
+
   it("anchors headings as GitHub does", async () => {
     const { html } = await render("docs/mappings.md", "## Org-only: `key::`")
 

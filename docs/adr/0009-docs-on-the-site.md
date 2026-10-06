@@ -49,7 +49,9 @@ the docs pages use the same placeholders, and the nav gains a Docs link.
 - The rendered pages are generated and gitignored, like the license
   lists (ADR 0008); the dev server renders them at start, not on
   every edit of a doc.
-- Raw HTML in a doc is dropped, not rendered; the docs have none.
+- A doc's own HTML is kept as written, as GitHub shows it, though not
+  sanitized as GitHub does: the docs are the repository's own. A
+  heading or code block written in HTML gets no anchor or highlighting.
 - A code block in a language not loaded in scripts/docsPages.mjs
   (bash, markdown, org, toml, yaml) stays plain.
 - Rejected: a static site generator such as VitePress (a second
