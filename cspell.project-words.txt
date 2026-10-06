@@ -54,6 +54,7 @@ passthroughs
 pico
 picocss
 picolisp
+predev
 remappable
 remigius
 renice

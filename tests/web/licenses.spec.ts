@@ -83,8 +83,8 @@ describe("licenses page", () => {
   })
 
   it("says so in the table when the list cannot be loaded", async () => {
-    // the dev server has no list: scripts/write-licenses.mjs runs before
-    // a build only
+    // the lists are written by scripts/write-licenses.mjs, before a
+    // build or the dev server; a page served without them says so
     vi.stubGlobal(
       "fetch",
       vi.fn(() => Promise.resolve(new Response("", { status: 404 })))

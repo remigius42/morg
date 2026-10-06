@@ -23,7 +23,7 @@ would install a CSS framework with the CLI.
 ## Decision
 
 `scripts/write-licenses.mjs` runs license-checker-rseidelsohn before
-every Web UI build and writes two lists into `web/public/`, one per
+every Web UI build and dev server start, and writes two lists into `web/public/`, one per
 scope, production and development; `web/licenses.html` shows them as
 two tables, linked from the footer of every page. The two lists
 split the installed packages between them: production what
@@ -47,8 +47,8 @@ several are MPL-2.0, BlueOak or Python-2.0.
   gzipped, fetched only by the licenses page.
 - A license text unfolds within its table cell and scrolls sideways
   there, so it keeps its line breaks without widening the page.
-- The lists are built output, gitignored; the dev server has none, and
-  the page says so.
+- The lists are generated, gitignored, and written afresh before
+  every build and dev server start, so neither serves stale ones.
 - Rejected: Vite's `build.license` (misses the worker and CSS);
   moving bundled development dependencies to `dependencies` (installs
   them with the CLI); an explicit list of bundled development

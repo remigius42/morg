@@ -1,7 +1,8 @@
-// Runs before every Web UI build (`prebuild:web`): writes the license
-// notices web/licenses.html shows, one file per dependency scope, into
-// web/public/, which the build copies to the site root. Why both scopes
-// and not the bundle's own list: docs/adr/0008-third-party-licenses-page.md.
+// Runs before every Web UI build and dev server start (`prebuild:web`,
+// `predev:web`): writes the license notices web/licenses.html shows, one
+// file per dependency scope, into web/public/, which the build copies to
+// the site root. Why both scopes and not the bundle's own list:
+// docs/adr/0008-third-party-licenses-page.md.
 import { writeFileSync } from "node:fs"
 import process from "node:process"
 import { promisify } from "node:util"

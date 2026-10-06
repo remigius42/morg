@@ -50,6 +50,7 @@
     "build": "tsc -p tsconfig.build.json",
     "prebuild:web": "node scripts/write-licenses.mjs",
     "build:web": "vite build web",
+    "predev:web": "node scripts/write-licenses.mjs",
     "dev:web": "vite web",
     "preview:web": "vite preview web --port 4173 --strictPort",
     "typecheck": "tsc --noEmit -p tsconfig.json",
