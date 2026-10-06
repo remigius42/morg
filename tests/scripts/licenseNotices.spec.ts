@@ -14,7 +14,6 @@ interface Notice {
   name: string
   version: string
   license: string
-  repository?: string
   copyright?: string
   text?: string
 }
@@ -39,7 +38,6 @@ describe("toNotices", () => {
         name: "uniorg",
         version: "1.4.0",
         license: "GPL-3.0-or-later",
-        repository: "https://github.com/rasendubi/uniorg",
         copyright: "Copyright (C) 2020 Jane Doe",
         text: "GNU GENERAL PUBLIC LICENSE"
       }
