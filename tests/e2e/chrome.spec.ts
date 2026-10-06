@@ -27,4 +27,16 @@ test.describe("page chrome", () => {
       )
     }
   })
+
+  test("links every footer to the third-party licenses", async ({ page }) => {
+    // the embed page has no footer: it is chrome-less by contract (ADR 0003)
+    for (const url of ["/", "/convert.html", "/licenses.html"]) {
+      await page.goto(url)
+      await page
+        .locator("footer")
+        .getByRole("link", { name: "Third-party licenses" })
+        .click()
+      await expect(page).toHaveURL(/licenses\.html$/)
+    }
+  })
 })
