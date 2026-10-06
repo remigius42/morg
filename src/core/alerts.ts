@@ -130,9 +130,7 @@ export interface Alert extends Parent {
 
 // the marker line, in the source: an escaped `\[!NOTE]` is text. An
 // Obsidian callout's fold follows the marker
-const MARKER_RE = /\[!([^\]\s]+)\](?:[ \t]+([^\n]*?))?[ \t]*(?:\r?\n|$)/y
-const CALLOUT_MARKER_RE =
-  /\[!([^\]\s]+)\]([+-]?)(?:[ \t]+([^\n]*?))?[ \t]*(?:\r?\n|$)/y
+const MARKER_RE = /\[!([^\]\s]+)\]([+-]?)(?:[ \t]+([^\n]*?))?[ \t]*(?:\r?\n|$)/y
 
 /**
  * md→org: reads each quote opening with an alert's marker line as an
@@ -169,14 +167,14 @@ function alertMarkerAt(
   markdown: string,
   callouts: boolean
 ): Pick<Alert, "type" | "blockType" | "parameters"> | undefined {
-  const re = callouts ? CALLOUT_MARKER_RE : MARKER_RE
-  re.lastIndex = paragraph.position?.start.offset ?? markdown.length
-  const [, type, ...rest] = re.exec(markdown) ?? []
-  if (!type || !isAlertType(type)) {
+  MARKER_RE.lastIndex = paragraph.position?.start.offset ?? markdown.length
+  const [, type, fold, title] = MARKER_RE.exec(markdown) ?? []
+  // a fold makes no GFM alert
+  if (!type || !isAlertType(type) || (fold && !callouts)) {
     return undefined
   }
   // the fold, if any, then the title
-  const parameters = rest.filter(Boolean).join(" ")
+  const parameters = [fold, title].filter(Boolean).join(" ")
   return {
     type: "alert",
     blockType: type.toLowerCase(),
