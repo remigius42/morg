@@ -65,6 +65,14 @@ describe("renderPage", () => {
     expect(html.match(/href="adr\/index\.html"/g)).toHaveLength(2)
   })
 
+  it("links a folder without a published README on GitHub", async () => {
+    const { html } = await render("docs/mappings.md", "[a](../tests/fixtures/)")
+
+    expect(html).toContain(
+      `href="https://github.com/remigius42/morg/tree/main/tests/fixtures/"`
+    )
+  })
+
   it("links any other file of the repository on GitHub", async () => {
     const { html } = await render("docs/adr/0001-x.md", "[a](../../src/cli.ts)")
 

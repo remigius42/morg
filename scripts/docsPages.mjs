@@ -7,7 +7,7 @@ import remarkParse from "remark-parse"
 import remarkRehype from "remark-rehype"
 import { unified } from "unified"
 
-const repository = "https://github.com/remigius42/morg/blob/main/"
+const repository = "https://github.com/remigius42/morg/"
 const site = "https://morg.binarypoetry.ch/"
 
 /**
@@ -129,13 +129,12 @@ function isRelative(url) {
 
 function siteUrl(url, file, published) {
   const [path, fragment] = url.split(/(?=#)/)
-  let target = posix.normalize(posix.join(posix.dirname(file), path))
-  if (path.endsWith("/") || published.has(`${target}/README.md`)) {
-    target = `${target.replace(/\/$/, "")}/README.md`
-  }
-  const resolved = published.has(target)
-    ? posix.relative(posix.dirname(pagePath(file)), pagePath(target))
-    : repository + target
+  const target = posix.normalize(posix.join(posix.dirname(file), path))
+  const readme = posix.join(target, "README.md")
+  const doc = [target, readme].find(candidate => published.has(candidate))
+  const resolved = doc
+    ? posix.relative(posix.dirname(pagePath(file)), pagePath(doc))
+    : `${repository}${path.endsWith("/") ? "tree" : "blob"}/main/${target}`
   return resolved + (fragment ?? "")
 }
 
