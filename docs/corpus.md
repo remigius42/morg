@@ -75,9 +75,9 @@ As of 2026-10-06, branch `fix/worg-convergence`:
 | Corpus  | Converging | Identical | Same content |
 | ------- | ---------- | --------- | ------------ |
 | `obs`   | 24/24      | 0         | 23           |
-| `lsq`   | 406/406    | 320       | 402          |
-| `webmd` | 1268/1268  | 345       | 1268         |
-| `worg`  | 284/293    | 0         | 190          |
+| `lsq`   | 406/406    | 320       | 403          |
+| `webmd` | 1268/1268  | 384       | 1268         |
+| `worg`  | 284/293    | 0         | 210          |
 
 Worg files are identical in none: org→md→org writes org's canonical
 form (keyword values single-spaced, a list's blank lines dropped, a
