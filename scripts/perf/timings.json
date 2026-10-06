@@ -82,11 +82,11 @@
   "head": {
     "reason": "escape passes check how org reads the output; org\u2192md guards `_.` lines and drops the escapes",
     "md-org": {
-      "normalizedTime": 0.77,
+      "normalizedTime": 0.95,
       "uniorgParses": 68
     },
     "md-org obsidian": {
-      "normalizedTime": 0.76,
+      "normalizedTime": 0.98,
       "uniorgParses": 68
     },
     "md-org scriptless": {
