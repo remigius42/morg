@@ -66,6 +66,7 @@ function taskTitle(item: ListItem, title: string): string {
 }
 
 const PLANNING_KEYS = new Set(["scheduled", "deadline", "closed"])
+const TIMESTAMP_RE = /^[<[][^>\]]*[>\]]$/
 
 // key:: lines: planning under its org-ism names (orgismKeys maps them),
 // one planning line where the first of them was, and properties
@@ -81,7 +82,9 @@ function readMeta(lines: string[], context: ConversionContext): Meta[] {
   for (const line of lines) {
     const [, rawKey = "", value = ""] = PROPERTY_RE.exec(line) ?? []
     const key = canonical.get(rawKey) ?? rawKey
-    if (!PLANNING_KEYS.has(key)) {
+    // a planning key's value is a timestamp; anything else is a
+    // property of that name (an issue tracker's `closed:: yes`)
+    if (!PLANNING_KEYS.has(key) || !TIMESTAMP_RE.test(value)) {
       meta.push({ key: rawKey, value })
       continue
     }

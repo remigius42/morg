@@ -149,7 +149,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `SCHEDULED:`/`DEADLINE:` line stays its properties: Logseq md read
   the drawer as text, whose `:END:` gained a zero-width space.
   Translated to Vanilla Markdown, a `CLOSED:` line is a `closed::` line
-  and back.
+  and back; a `closed::`, `scheduled::` or `deadline::` line holding no
+  timestamp stays a property.
 
 ## [0.10.1] - 2026-10-04
 

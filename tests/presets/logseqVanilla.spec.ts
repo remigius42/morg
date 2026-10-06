@@ -211,6 +211,12 @@ describe("Vanilla md → Logseq org", () => {
     )
   })
 
+  it("reads a planning key holding no timestamp as a property", () => {
+    expect(toOrg("- a\n  closed:: yes\n  deadline:: soon\n")).toBe(
+      "* a\n:PROPERTIES:\n:closed: yes\n:deadline: soon\n:END:\n"
+    )
+  })
+
   it("reads key:: lines below the title as planning and properties", () => {
     expect(
       toOrg(
