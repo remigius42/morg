@@ -321,7 +321,7 @@ function transformMdastImage(
 ): ObjectType {
   // org has no dedicated image syntax: a plain file link renders
   // inline, alt text becomes the link description; the title
-  // attribute has no org slot and is dropped (see README)
+  // attribute has no org slot and is dropped (see docs/mappings/core.md)
   if (node.title) {
     warn(ctx, `dropped image title "${node.title}" (${node.url})`)
   }

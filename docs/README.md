@@ -1,5 +1,6 @@
 # Documentation
 
+- [Library](library.md): the library's functions and options
 - [Configuration](configuration.md): `morg.toml` reference and
   formatter compatibility snippets
 - [Mapping reference](mappings/README.md): how each construct maps between
