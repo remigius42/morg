@@ -25,7 +25,8 @@ would install a CSS framework with the CLI.
 `scripts/write-licenses.mjs` runs license-checker-rseidelsohn before
 every Web UI build and dev server start, and writes two lists into `web/public/`, one per
 scope, production and development; `web/licenses.html` shows them as
-two tables, linked from the footer of every page. The two lists
+two tables, linked from the footer of every page that has one (the
+Embed Page is chrome-less, ADR 0003). The two lists
 split the installed packages between them: production what
 `dependencies` reach, development what only development dependencies
 reach, Pico among them. Together they cannot miss a bundled package,
