@@ -981,6 +981,98 @@ describe("org line syntax in code", () => {
   })
 })
 
+describe("internal links", () => {
+  it("keep a heading link as a GitHub slug anchor", () => {
+    const org = "* Some Heading\nSee [[*Some Heading][there]].\n"
+    expect(convertOrgToMarkdown(org)).toBe(
+      "# Some Heading\n\nSee [there](#some-heading).\n"
+    )
+    expect(orgRoundTrip(org)).toBe(org)
+  })
+
+  it("keep a fuzzy link to a headline, as a heading link", () => {
+    // org finds the headline by its name either way
+    expect(orgRoundTrip("* Intro\n- [[Intro]]\n- [[Intro][the intro]]\n")).toBe(
+      "* Intro\n- [[*Intro]]\n- [[*Intro][the intro]]\n"
+    )
+  })
+
+  it("keep a link to a target", () => {
+    const org =
+      "A <<my target>> here.\n\nSee [[my target]] and [[my target][it]].\n"
+    expect(convertOrgToMarkdown(org)).toContain(
+      "[my target](#my%20target) and [it](#my%20target)"
+    )
+    expect(orgRoundTrip(org)).toBe(org)
+  })
+
+  it("keep a link to a named element", () => {
+    const org =
+      "x\n\n#+NAME: tbl\n| a |\n\n#+NAME: code\n#+begin_src sh\nls\n#+end_src\n\nSee [[tbl]] and [[code][the code]].\n"
+    expect(convertOrgToMarkdown(org)).toContain(
+      "See [tbl](#tbl) and [the code](#code)."
+    )
+    expect(orgRoundTrip(org)).toContain("See [[tbl]] and [[code][the code]].")
+  })
+
+  it("read a Markdown anchor of a heading as a heading link", () => {
+    const markdown =
+      "## Getting Started\n\nSee [setup](#getting-started) and [x](#nowhere).\n"
+    expect(convertMarkdownToOrg(markdown)).toBe(
+      "** Getting Started\nSee [[*Getting Started][setup]] and [[#nowhere][x]].\n"
+    )
+    expect(mdRoundTrip(markdown)).toBe(markdown)
+  })
+
+  it("keep a Markdown anchor of a heading with code", () => {
+    const markdown = "## Using `Result`\n\nSee [x](#using-result).\n"
+    expect(mdRoundTrip(markdown)).toBe(markdown)
+  })
+
+  it("number the anchors of headings of one name, as GitHub does", () => {
+    const markdown = "# A\n\n# A\n\nSee [first](#a) and [second](#a-1).\n"
+    expect(convertMarkdownToOrg(markdown)).toContain(
+      "See [[*A][first]] and [[*A][second]]."
+    )
+  })
+
+  it("name a heading with markup by its text (known limitation)", () => {
+    // org may not find `Foo bar` in a headline `Foo *bar*`
+    const org = "* Foo *bar*\nSee [[*Foo *bar*]].\n"
+    expect(convertOrgToMarkdown(org)).toContain("See [Foo bar](#foo-bar).")
+    expect(orgRoundTrip(org)).toBe("* Foo *bar*\nSee [[*Foo bar]].\n")
+  })
+
+  it("keep a custom ID link, a heading holding that ID", () => {
+    const org =
+      "* Accessors\n:PROPERTIES:\n:CUSTOM_ID: accessors\n:END:\nSee [[#accessors][the accessors]].\n"
+    expect(orgRoundTrip(org)).toBe(org)
+  })
+
+  it("keep a heading link's description in code", () => {
+    const org = "* =:x=\nSee [[*=:x=][~:x~]].\n"
+    const once = orgRoundTrip(org)
+    expect(once).toContain("[[*:x][~:x~]]")
+    expect(orgRoundTrip(once)).toBe(once)
+  })
+
+  it("read an anchor of a heading with a trailing blank in one trip", () => {
+    // org drops the blank, so the second trip would find the heading
+    const org = "** Links \nx\n\nSee [[#links][h]].\n"
+    const once = orgRoundTrip(org)
+    expect(once).toBe("** Links\nx\n\nSee [[*Links][h]].\n")
+    expect(orgRoundTrip(once)).toBe(once)
+  })
+
+  it("keep a heading link without a description", () => {
+    const org = "* Some Heading\nSee [[*Some Heading]].\n"
+    expect(convertOrgToMarkdown(org)).toBe(
+      "# Some Heading\n\nSee [Some Heading](#some-heading).\n"
+    )
+    expect(orgRoundTrip(org)).toBe(org)
+  })
+})
+
 describe("relative links", () => {
   it("keep # and % in org file paths and search options", () => {
     const org = "[[file:C# notes.md::100% done][x]]\n"

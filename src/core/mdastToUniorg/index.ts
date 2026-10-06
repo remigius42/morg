@@ -37,6 +37,7 @@ import { transformMdastDefList, transformMdastList } from "./lists.js"
 import { transformPhrasingChildren } from "./phrasing.js"
 import { ORG_VERBATIM } from "../render.js"
 import { DESCRIPTIVE_LIST_MARKER } from "../descriptiveTags.js"
+import { markdownAnchors } from "../internalLinks.js"
 
 export type { MdastToUniorgOptions, TransformContext } from "./context.js"
 import type { MdastToUniorgOptions } from "./context.js"
@@ -68,7 +69,8 @@ export function transformMdastToUniorgDraft(
   const ctx: TransformContext = {
     options,
     definitions: new Map(),
-    markedLists: takeDescriptiveListMarkers(mdast)
+    markedLists: takeDescriptiveListMarkers(mdast),
+    anchors: markdownAnchors(mdast)
   }
   visit(mdast, "definition", (definition: Definition) => {
     ctx.definitions.set(definition.identifier, {

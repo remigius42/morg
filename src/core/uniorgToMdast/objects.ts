@@ -10,6 +10,7 @@ import {
 import { transformFootnoteReference } from "./footnotes.js"
 import { unescapeOrgPath } from "../orgPath.js"
 import { IMAGE_EXTENSION_RE } from "../sizedImages.js"
+import type { Anchor } from "../internalLinks.js"
 
 export function transformUniorgObjects(
   ctx: TransformContext,
@@ -117,8 +118,14 @@ function encodeUrlPath(path: string): string {
 }
 
 // an org file: link (or a ./ path) is a relative markdown link, the
-// search option becoming the #anchor
-function markdownUrl(node: Extract<ObjectType, { type: "link" }>): string {
+// search option becoming the #anchor; a link within the file an anchor
+function markdownUrl(
+  node: Extract<ObjectType, { type: "link" }>,
+  internal: Anchor | null
+): string {
+  if (internal) {
+    return `#${encodeUrlPart(internal.anchor)}`
+  }
   // a `//` path is a scheme-relative url in Markdown, which md→org
   // takes as it is
   if (node.linkType !== "file" || node.rawLink.startsWith("//")) {
@@ -131,12 +138,39 @@ function markdownUrl(node: Extract<ObjectType, { type: "link" }>): string {
     : `${encodeUrlPath(target.slice(0, search))}#${encodeUrlPart(target.slice(search + 2))}`
 }
 
+// a description equal to the url (a common Logseq pattern) is no
+// description: text === url makes remark-stringify emit an autolink
+// (<url>), which restores to a plain org link. Urls full of / and _
+// re-parse as italic/subscript inside the description (and even
+// uniorg-stringify garbles them back), so compare with org's
+// emphasis-marker characters stripped from both sides. An internal
+// link's description is none where it is the text the link shows,
+// markup and all: `~:x~` is code that text is not
+function repeatsLinkTarget(
+  node: Extract<ObjectType, { type: "link" }>,
+  internal: Anchor | null
+): boolean {
+  const description = orgNodeToText({
+    type: "paragraph",
+    children: node.children,
+    contentsBegin: 0,
+    contentsEnd: 0
+  }).trim()
+  if (internal) {
+    return description === internal.text
+  }
+  const withoutMarkers = (value: string): string =>
+    value.replace(/[/*_+~={}]/g, "")
+  return withoutMarkers(description) === withoutMarkers(node.rawLink)
+}
+
 function transformUniorgLink(
   ctx: TransformContext,
   node: Extract<ObjectType, { type: "link" }>
 ): PhrasingContent {
   const descriptionText = orgastToString(node)
-  const url = markdownUrl(node)
+  const internal = node.linkType === "fuzzy" ? ctx.anchors(node.rawLink) : null
+  const url = markdownUrl(node, internal)
   // org has no dedicated image syntax; the common convention is a
   // link to an image file, so map those to markdown images; a file
   // link's ::search option is no part of the file name
@@ -145,30 +179,12 @@ function transformUniorgLink(
   if (IMAGE_EXTENSION_RE.test(path)) {
     return { type: "image", url, alt: descriptionText }
   }
-  // a description equal to the url (a common Logseq pattern) is no
-  // description: text === url makes remark-stringify emit an
-  // autolink (<url>), which restores to a plain org link. Urls full
-  // of / and _ re-parse as italic/subscript inside the description
-  // (and even uniorg-stringify garbles them back), so compare with
-  // org's emphasis-marker characters stripped from both sides
-  const withoutMarkers = (value: string): string =>
-    value.replace(/[/*_+~={}]/g, "")
-  const serializedDescription = node.children.length
-    ? orgNodeToText({
-        type: "paragraph",
-        children: node.children,
-        contentsBegin: 0,
-        contentsEnd: 0
-      }).trim()
-    : ""
-  if (
-    !node.children.length ||
-    withoutMarkers(serializedDescription) === withoutMarkers(node.rawLink)
-  ) {
+  const repeatsTarget = repeatsLinkTarget(node, internal)
+  if (!node.children.length || repeatsTarget) {
     return {
       type: "link",
       url,
-      children: [{ type: "text", value: url }]
+      children: [{ type: "text", value: internal?.text ?? url }]
     }
   }
   const children = transformUniorgObjects(ctx, node.children)

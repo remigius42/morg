@@ -12,6 +12,7 @@ import {
   takeRenderedFileHeader
 } from "../frontmatterBlock.js"
 import { collectFootnoteLabels } from "./footnotes.js"
+import { orgAnchors } from "../internalLinks.js"
 import { transformNodes } from "./elements.js"
 
 export type { UniorgToMdastOptions } from "./shared.js"
@@ -42,7 +43,8 @@ export function transformUniorgAstToMdast(
   const ctx: TransformContext = {
     options,
     inlineFootnotes: [],
-    usedFootnoteLabels: new Set()
+    usedFootnoteLabels: new Set(),
+    anchors: orgAnchors(uniorgAst)
   }
   collectFootnoteLabels(ctx, uniorgAst)
   const nodes = uniorgAst.children || []

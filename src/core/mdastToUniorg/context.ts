@@ -4,6 +4,7 @@ import {
   type HtmlConstruct,
   type Toggle
 } from "../../options.js"
+import type { markdownAnchors } from "../internalLinks.js"
 
 // ends a bullet's line where uniorg-stringify would trim the line
 // break, taken out with the space before it once stringified
@@ -22,6 +23,8 @@ export interface TransformContext {
   definitions: Map<string, { url: string; title?: string }>
   // lists below a descriptive list marker (ADR 0007 §3)
   markedLists: Set<List>
+  // the org link of an anchor in the document
+  anchors: ReturnType<typeof markdownAnchors>
 }
 
 export function mdismEnabled(ctx: TransformContext, key: string): boolean {

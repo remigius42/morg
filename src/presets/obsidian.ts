@@ -55,13 +55,14 @@ function rewriteAliasedWikilinks(uniorgAst: OrgData): OrgData {
 }
 
 // org→md: fuzzy links become wikilink text; a verbatim-inline node keeps
-// the brackets unescaped in the Markdown output
+// the brackets unescaped in the Markdown output. A link to a headline
+// (`[[*Heading]]`) stays a link to its anchor, as core writes it
 function fuzzyLinksToWikilinks(uniorgAst: OrgData): OrgData {
   visit(
     uniorgAst as Parent,
     "link",
     (node: Link, index: number, parent: Parent) => {
-      if (node.linkType !== "fuzzy") {
+      if (node.linkType !== "fuzzy" || node.rawLink.startsWith("*")) {
         return undefined
       }
       const description = node.children.length ? toString(node) : ""

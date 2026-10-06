@@ -44,6 +44,21 @@ so the encoding stays reversible.
 Urls starting with `[` or `(` are dialect references (Logseq's
 `[[page]]`), not paths.
 
+Links within the file: an org link to a headline (`[[*Some Heading]]`,
+or a fuzzy `[[Some Heading]]` that names one) links the slug GitHub
+gives the heading (`[Some Heading](#some-heading)`), so it works where
+Markdown renders; a link to a `<<target>>` or a `#+NAME:` links
+`#name`. md → org looks an anchor up in the document: a target's or
+name's is a fuzzy link (`[[name]]`), a heading's slug a heading link
+(`[[*Some Heading]]`), so a Markdown author's `#getting-started` finds
+its heading in Emacs; any other anchor is a custom ID link
+(`[[#custom-id]]` ↔ `#custom-id`). Link text equal to the heading or
+name is no description. Known limitations: of two headings of one
+name, org finds the first (`#a-1` comes back as `[[*A]]`); a heading
+with markup (`* Foo *bar*`) is named by its text (`[[*Foo bar]]`),
+which org may not find; a fuzzy link to a name the file does not hold
+stays a relative path, a `file:` link on the way back.
+
 Markup touching a word character (`` `x`s ``, `foo**bar**baz`) has no
 valid org boundary; md → org inserts a zero-width space (U+200B, the
 org manual's escape character) between marker and neighbor. The

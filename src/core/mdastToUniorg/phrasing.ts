@@ -230,16 +230,23 @@ function transformMdastLink(
   linkNode: Extract<PhrasingContent, { type: "link" }>
 ): ObjectType {
   const [only] = linkNode.children
-  // text equal to the url (autolinks) is no description; a plain
-  // [[url]] keeps the org side canonical
+  // an anchor of the document is a link within it
+  const internal = linkNode.url.startsWith("#")
+    ? ctx.anchors(decodeUrlPart(linkNode.url.slice(1)))
+    : null
+  // text equal to the url (autolinks), or to the heading an internal
+  // link names, is no description; a plain [[url]] keeps the org side
+  // canonical
   const linkChildren =
     linkNode.children.length === 1 &&
     only?.type === "text" &&
-    only.value === linkNode.url
+    only.value === (internal?.text ?? linkNode.url)
       ? []
       : transformPhrasingChildren(ctx, linkNode.children)
   // rawLink should just be the URL, uniorg-stringify adds the brackets
-  const { rawLink, linkType } = orgLinkTarget(linkNode.url)
+  const { rawLink, linkType } = internal
+    ? { rawLink: internal.path, linkType: "fuzzy" }
+    : orgLinkTarget(linkNode.url)
   return {
     type: "link",
     format: "bracket", // Assuming bracket format for Markdown links

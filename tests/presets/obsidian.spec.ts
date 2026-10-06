@@ -57,6 +57,14 @@ describe("obsidian preset", () => {
     expect(convertOrgToMarkdown(org, { preset: obsidian() })).toBe(markdown)
   })
 
+  it("keeps a link to a heading a Markdown link, not a wikilink", () => {
+    const markdown =
+      "## General plugins\n\nSee [the plugins](#general-plugins).\n"
+    const org = convertMarkdownToOrg(markdown, { preset: obsidian() })
+
+    expect(convertOrgToMarkdown(org, { preset: obsidian() })).toBe(markdown)
+  })
+
   it("keeps an embed's size, not reading it as an alias", () => {
     const markdown = "An ![[image.png|300]] and [[Page|alias]].\n"
 

@@ -2,6 +2,7 @@ import { escapingBlockHandlers } from "../commaEscapes.js"
 import type { PhrasingContent, RootContent } from "mdast"
 import type { AffiliatedKeywords, OrgData } from "uniorg"
 import { affiliatedEntries } from "../affiliated.js"
+import type { Anchor } from "../internalLinks.js"
 import { unified } from "unified"
 import { uniorgStringify } from "uniorg-stringify"
 import {
@@ -40,6 +41,8 @@ export interface TransformContext {
   options: UniorgToMdastOptions
   inlineFootnotes: { label: string; children: PhrasingContent[] }[]
   usedFootnoteLabels: Set<string>
+  // the anchor of an internal link's path
+  anchors: (path: string) => Anchor | null
 }
 
 export function orgismEnabled(ctx: TransformContext, key: string): boolean {

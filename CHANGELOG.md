@@ -107,6 +107,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   formulas, as lines around the Markdown table; both were lost
   without a warning (the keywords by uniorg), in a CRLF file too.
   Several `#+TBLFM:` lines stay apart: uniorg joined them into one.
+- Org links within a file survive a round trip: a link to a headline
+  (`[[*Some Heading]]`, or a fuzzy `[[Some Heading]]`) is a link to the
+  heading's GitHub slug (`#some-heading`), a link to a `<<target>>` or
+  a `#+NAME:` one to `#name`, and md → org links them back. They came
+  back as `file:` links to files of that name. A Markdown anchor of a
+  heading (`[setup](#getting-started)`) becomes a heading link, which
+  Emacs follows; it was a custom ID link that found nothing.
 - An org link to a `//` path keeps its `%` as written: org → md
   percent-encoded it, md → org read the scheme-relative url as it is,
   so `%25` gained a `25` each round trip.
