@@ -196,7 +196,7 @@ export function escapeLineSyntax(tree: Parent): void {
 }
 
 // org→md writes these org elements as md paragraphs of their org text,
-// to be read back as such (verbatim passthrough, see mappings.md)
+// to be read back as such (verbatim passthrough, see docs/mappings/org-isms.md)
 const PASSTHROUGH_TYPES = new Set([
   "fixed-width",
   "drawer",

@@ -125,7 +125,7 @@ for what you submit.
   [ADR 0002](docs/adr/0002-mdism-property-namespace.md) for how
   md-isms/org-isms are preserved.
 - Project vocabulary lives in [CONTEXT.md](CONTEXT.md); construct
-  mappings are documented in [docs/mappings.md](docs/mappings.md) and
+  mappings are documented in [docs/mappings/](docs/mappings/README.md) and
   notable changes in [CHANGELOG.md](CHANGELOG.md); keep both updated
   with behavior changes.
 - Core pipelines stay dialect-agnostic; anything Logseq- or

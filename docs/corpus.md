@@ -82,8 +82,8 @@ As of 2026-10-06, branch `fix/worg-convergence`:
 Of the 83 worg files whose content differs, 51 differ in links only: a
 fuzzy link naming a heading comes back as a heading link (`[[X]]` →
 `[[*X]]`, the same heading in Emacs), and a fuzzy link to a name the
-file does not hold becomes a `file:` link (a known limitation in
-[mappings.md](mappings.md)).
+file does not hold becomes a `file:` link (a known limitation, see
+[Links](mappings/core.md#links)).
 
 Worg files are identical in none: org→md→org writes org's canonical
 form (keyword values single-spaced, a list's blank lines dropped, a
@@ -120,7 +120,9 @@ differs in whitespace only, unless noted.
   a quote. A fixed-width line holding only blanks there ends in two
   spaces, which Markdown reads as a line break, written back as `\\`.
 - **A definition list right after an item's text** (`org-syntax`): the
-  known limitation in [mappings.md](mappings.md): Markdown reads no
+  known limitation in
+  [Org-isms](mappings/org-isms.md#underline-scripts-and-descriptive-lists):
+  Markdown reads no
   definition list inside a list item, so a descriptive list nested in
   a plain one becomes text.
 - **A special block nesting an export block and a list**

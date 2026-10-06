@@ -47,7 +47,7 @@ guarantee is to be **semantically faithful and convergent** instead
   Logseq preset instead maps page properties natively ([ADR
   0005](docs/adr/0005-frontmatter-as-a-marked-comment-block.md)).
 - The few constructs that cannot be carried are documented in the
-  [mapping reference](docs/mappings.md) and reported as warnings.
+  [mapping reference](docs/mappings/README.md) and reported as warnings.
 
 Round-trip fixture tests are the backbone of the test suite
 (`tests/roundtrip.spec.ts`). The Web UI is covered by vitest specs under
@@ -327,7 +327,7 @@ the [contributing guide](CONTRIBUTING.md#development-process).
 
 How each construct maps, including deliberate normalizations and
 documented drops, is covered in the
-[mapping reference](docs/mappings.md). Notable changes are tracked in
+[mapping reference](docs/mappings/README.md). Notable changes are tracked in
 the [changelog](CHANGELOG.md).
 
 ## Contributing

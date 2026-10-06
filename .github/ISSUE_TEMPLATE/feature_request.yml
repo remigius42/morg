@@ -22,7 +22,7 @@ body:
         Describe the problem you're trying to solve and your proposed
         solution. For new construct mappings, an input/output example in both
         formats helps a lot (see the
-        [mapping reference](https://github.com/remigius42/morg/blob/main/docs/mappings.md)).
+        [mapping reference](https://github.com/remigius42/morg/blob/main/docs/mappings/README.md)).
     validations:
       required: true
   - type: checkboxes

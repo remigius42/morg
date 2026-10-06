@@ -17,7 +17,7 @@ createAccessibilityTests("/licenses.html", page =>
 )
 createAccessibilityTests("/docs/index.html")
 // the longest page, and the one with the most tables
-createAccessibilityTests("/docs/mappings.html")
+createAccessibilityTests("/docs/mappings/index.html")
 // every page with highlighted code: each theme's colors against the
 // code background, in TOML, YAML and org
 createAccessibilityTests("/docs/configuration.html")
