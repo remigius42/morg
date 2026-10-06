@@ -138,6 +138,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   read them as text (`: git clone git@x.org:a` gained a zero-width
   space and a mail link). They are a paragraph of their own now, set
   apart by blank lines, which makes the Markdown list loose.
+- A Logseq block's properties drawer below a `CLOSED:` or an indented
+  `SCHEDULED:`/`DEADLINE:` line stays its properties: Logseq md read
+  the drawer as text, whose `:END:` gained a zero-width space.
+  Translated to Vanilla Markdown, a `CLOSED:` line is a `closed::` line
+  and back.
 
 ## [0.10.1] - 2026-10-04
 

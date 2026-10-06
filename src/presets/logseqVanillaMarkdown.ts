@@ -65,6 +65,8 @@ function taskTitle(item: ListItem, title: string): string {
   return UNCHECKED_MARKER_RE.test(text) ? text : `TODO ${text}`
 }
 
+const PLANNING_KEYS = new Set(["scheduled", "deadline", "closed"])
+
 // key:: lines: planning under its org-ism names (orgismKeys maps them),
 // one planning line where the first of them was, and properties
 function readMeta(lines: string[], context: ConversionContext): Meta[] {
@@ -79,7 +81,7 @@ function readMeta(lines: string[], context: ConversionContext): Meta[] {
   for (const line of lines) {
     const [, rawKey = "", value = ""] = PROPERTY_RE.exec(line) ?? []
     const key = canonical.get(rawKey) ?? rawKey
-    if (key !== "scheduled" && key !== "deadline") {
+    if (!PLANNING_KEYS.has(key)) {
       meta.push({ key: rawKey, value })
       continue
     }

@@ -25,7 +25,7 @@ import { attrHtmlToSizeMaps, sizeMapsToAttrHtml } from "./logseqImageSizes.js"
 
 const ORG_BLOCK_RE = /^(\*+)(?: (.*))?$/
 const MD_BLOCK_RE = /^(\t*)-(?: (.*))?$/
-const PLANNING_RE = /^(?:SCHEDULED|DEADLINE): /
+const PLANNING_RE = /^[ \t]*(?:SCHEDULED|DEADLINE|CLOSED): /
 const ORG_PROPERTY_RE = /^:([^\s:]+):(?: (.*))?$/
 const MD_PROPERTY_RE = /^([\w.-]+)::(?: (.*))?$/
 // a repeated task's log line, which Logseq bullets per format
@@ -124,7 +124,8 @@ function takeMeta(lines: string[], isMeta: (line: string) => boolean) {
       meta.push(lines.slice(i, end + 1))
       i = end + 1
     } else if (PLANNING_RE.test(line) || isMeta(line)) {
-      meta.push([line])
+      // Emacs indents a planning line, Logseq does not
+      meta.push([PLANNING_RE.test(line) ? line.trimStart() : line])
       i++
     } else {
       break
@@ -504,7 +505,7 @@ function vanillaTitle(title: string): string {
   return marker === "TODO" ? `[ ] ${text}` : `[ ] ${marker} ${text}`
 }
 
-const PLANNING_ENTRY_RE = /(SCHEDULED|DEADLINE): ([<[][^>\]]*[>\]])/g
+const PLANNING_ENTRY_RE = /(SCHEDULED|DEADLINE|CLOSED): ([<[][^>\]]*[>\]])/g
 
 // Vanilla Markdown: planning and properties as key:: lines, under the
 // org-ism names; a drawer and Logseq's view state have no form there

@@ -34,6 +34,12 @@ describe("Logseq org → Vanilla md", () => {
     )
   })
 
+  it("writes a closed task's planning line as a key:: line", () => {
+    expect(toMarkdown("* DONE a\nCLOSED: [2026-10-04 Sat 10:00]\nmore\n")).toBe(
+      "- [x] a\n  closed:: [2026-10-04 Sat 10:00]\n  more\n"
+    )
+  })
+
   it("names planning keys as orgismKeys says", () => {
     expect(
       convertOrgToMarkdown("* a\nSCHEDULED: <2026-10-04 Sat>\n", {
@@ -197,6 +203,12 @@ describe("Vanilla md → Logseq org", () => {
     expect(
       toOrg("- [ ] a\n- [x] b\n- [X] c\n- [ ] LATER d\n- CANCELED e\n")
     ).toBe("* TODO a\n* DONE b\n* DONE c\n* LATER d\n* CANCELED e\n")
+  })
+
+  it("reads a closed:: line as the closed task's planning line", () => {
+    expect(toOrg("- [x] a\n  closed:: [2026-10-04 Sat 10:00]\n  more\n")).toBe(
+      "* DONE a\nCLOSED: [2026-10-04 Sat 10:00]\nmore\n"
+    )
   })
 
   it("reads key:: lines below the title as planning and properties", () => {

@@ -125,6 +125,19 @@ describe("logseq outline", () => {
     )
   })
 
+  it("keeps a drawer below an indented planning line a drawer", () => {
+    // Emacs indents the planning line below a headline
+    const org =
+      "* TODO a\n  SCHEDULED: <2026-01-01 Thu>\n:PROPERTIES:\n:id: x\n:END:\n** b\n"
+    expect(toOrg(toMarkdown(org))).toBe(
+      "* TODO a\nSCHEDULED: <2026-01-01 Thu>\n:PROPERTIES:\n:id: x\n:END:\n** b\n"
+    )
+    // a closed task's planning line too
+    const closed =
+      "* DONE a\nCLOSED: [2026-01-01 Thu 10:00]\n:PROPERTIES:\n:id: x\n:END:\n** b\n"
+    expect(toOrg(toMarkdown(closed))).toBe(closed)
+  })
+
   it("bullets a repeated task's state log as Logseq does per format", () => {
     both(
       '* DONE a\n:LOGBOOK:\n- State "DONE" from "TODO" [2026-01-01 Thu 10:00]\n:END:\n',
