@@ -28,9 +28,12 @@ describe("fillChrome", () => {
     )
   })
 
-  it("marks Docs current on every docs page", () => {
+  it("marks Docs as the current section on every other docs page", () => {
+    expect(fillChrome(page, "/docs/index.html")).toContain(
+      `href="../docs/index.html" aria-current="page"`
+    )
     expect(fillChrome(page, "/docs/adr/index.html")).toContain(
-      `href="../../docs/index.html" aria-current="page"`
+      `href="../../docs/index.html" aria-current="location"`
     )
   })
 

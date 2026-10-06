@@ -94,12 +94,14 @@ const themeSwitch = `<div class="theme-switch" role="group" aria-label="Color sc
             </div>`
 
 function header(root: string, page: string): string {
-  // a docs page is in the docs section, so Docs is current on all of them
+  // any other docs page is in the section Docs leads to, which the link
+  // marks as where the reader is rather than as the page itself
   const current = (target: string) =>
-    page === target ||
-    (target === "docs/index.html" && page.startsWith("docs/"))
+    page === target
       ? ` aria-current="page"`
-      : ""
+      : target === "docs/index.html" && page.startsWith("docs/")
+        ? ` aria-current="location"`
+        : ""
   const link = (target: string, label: string) =>
     `<li><a href="${root}${target}"${current(target)}>${label}</a></li>`
   return `<header class="container">

@@ -12,7 +12,7 @@ test.describe("docs pages", () => {
     )
     await expect(
       page.locator("header").getByRole("link", { name: "Docs" })
-    ).toHaveAttribute("aria-current", "page")
+    ).toHaveAttribute("aria-current", "location")
   })
 
   test("link only to pages and anchors that exist", async ({
