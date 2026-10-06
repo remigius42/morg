@@ -3,8 +3,10 @@
 The unit tests pin behavior on small inputs; the corpus checks run a
 build over thousands of real files and count how many converge (ADR
 0001): a round trip may normalize a file once, a second one must give
-the same result. This page explains the scripts, the corpora, and the
-non-convergences left on purpose.
+the same result. Converging is not enough: a round trip can lose
+content once and then keep the loss, so they also count the files whose
+round trip kept their content. This page explains the scripts, the
+corpora, and the non-convergences left on purpose.
 
 ## Scripts
 
@@ -15,13 +17,23 @@ contents; the diffs stay in the work directory, for reading locally.
   it: a worktree of `main` with its `dist` built (the baseline), shallow
   clones of the web corpora, and the file lists. What exists is kept.
 - `roundtrip.sh` trips each file x through the other format twice: a =
-  f(x), b = g(a), c = f(b), d = g(c). It counts _identical_ (b = x) and
-  _converging_ (d = b), and leaves `*.identity.diff` and
-  `*.convergence.diff` per file in `$WORK`.
+  f(x), b = g(a), c = f(b), d = g(c). It counts _identical_ (b = x),
+  _converging_ (d = b) and _same-content_ (`content.mjs`), and leaves
+  `*.identity.diff` and `*.convergence.diff` per file in `$WORK`.
+- `content.mjs` compares each x with its b: the words of the text, code
+  and keywords (case aside) and the link targets, a link's kind
+  included (a heading link that becomes a file link changes). Style
+  does not count: emphasis markers, a reference link inlined, a url's
+  percent-encoding, a link's description that only repeats its target.
+  It reads org with morg's uniorg workarounds, from this checkout's
+  `dist`. What differs per file goes to `$WORK/content.txt`.
 - `all.sh` runs every corpus, one after another, on this checkout, or
   with `MORG=/tmp/morg-base/dist/cli.js WORK=/tmp/morg-corpus-base` on
   the baseline. Never run two at a time: a run starts node four times
   per file.
+- `compare.sh` compares a run with the baseline's: per corpus, the
+  files that converge, are identical or keep their content on the
+  baseline but not on the run.
 - `snapshot.sh` converts each file once, to compare two builds'
   output with `diff -rq`.
 
@@ -47,21 +59,21 @@ Before committing a change that affects parsing or writing:
 1. `npm run build`, then `scripts/corpus/all.sh`.
 2. The baseline run (once per baseline, after `setup.sh` or moving
    `/tmp/morg-base` to a new `main`).
-3. Compare the file names of the `*.convergence.diff` files in each
-   `/tmp/morg-corpus-<name>` with `/tmp/morg-corpus-base-<name>`: a file
-   that converges on the baseline must converge on the change (no new
-   non-convergences), and a file identical there must stay identical.
+3. `scripts/corpus/compare.sh`: a file that converges on the baseline
+   must converge on the change (no new non-convergences), a file
+   identical there must stay identical, and a file that keeps its
+   content there must keep it.
 
 ## Status
 
-As of 2026-10-05, branch `fix/worg-convergence`:
+As of 2026-10-06, branch `fix/worg-convergence`:
 
-| Corpus  | Converging | Identical |
-| ------- | ---------- | --------- |
-| `obs`   | 24/24      | 0         |
-| `lsq`   | 406/406    | 320       |
-| `webmd` | 1268/1268  | 345       |
-| `worg`  | 284/293    | 0         |
+| Corpus  | Converging | Identical | Same content |
+| ------- | ---------- | --------- | ------------ |
+| `obs`   | 24/24      | 0         | 23           |
+| `lsq`   | 406/406    | 320       | 402          |
+| `webmd` | 1268/1268  | 345       | 1268         |
+| `worg`  | 284/293    | 0         | 190          |
 
 Worg files are identical in none: org→md→org writes org's canonical
 form (keyword values single-spaced, a list's blank lines dropped, a

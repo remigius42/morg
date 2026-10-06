@@ -3,8 +3,9 @@
 # Round trips a local corpus and prints counts only, never note contents:
 # per file x, a = f(x), b = g(a), c = f(b), d = g(c), with f taking
 # $FORWARD flags and g $BACK flags (ADR 0001, 0006). Identical: b == x
-# (modulo a final newline); converging: d == b. Diffs land in $WORK for
-# local inspection.
+# (modulo a final newline); converging: d == b; same-content: b keeps
+# x's words and links (content.mjs). Diffs and content.txt land in $WORK
+# for local inspection.
 #
 #   FORWARD="--preset logseq" BACK="--preset logseq" \
 #     scripts/corpus/roundtrip.sh ~/notes/pages/*.org
@@ -63,5 +64,6 @@ touch "$WORK/status"
 printf '%s\0' "${files[@]}" | xargs -0 -P "$(nproc)" -I{} bash -c 'trip "$1"' _ {}
 
 count() { grep -cx "$1" "$WORK/status" || true; }
+content=$(printf '%s\0' "${files[@]}" | node "$root/scripts/corpus/content.mjs" "$WORK")
 echo "files=${#files[@]} identical=$(count identical)" \
-  "converging=$(count converging) failing=$(count failing)"
+  "converging=$(count converging) failing=$(count failing) $content"
