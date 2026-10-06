@@ -791,7 +791,11 @@ describe("verbatim passthrough", () => {
   it("keeps an element with keywords in front org", () => {
     for (const org of [
       "x\n\n#+RESULTS: r\n: a `b`  \n: c\n",
-      "x\n\n#+NAME: n\n#+RESULTS: r\n#+begin_foo\n- a\n#+end_foo\n"
+      "x\n\n#+NAME: n\n#+RESULTS: r\n#+begin_foo\n- a\n#+end_foo\n",
+      // an empty keyword gains no trailing blank
+      "x\n\n#+RESULTS:\n: a\n",
+      "x\n\n#+NAME:\n#+begin_foo\na\n#+end_foo\n",
+      "- x\n  #+RESULTS:\n  #+NAME:\n  : a\n"
     ]) {
       expect(orgRoundTrip(org)).toBe(org)
     }

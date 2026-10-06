@@ -65,6 +65,12 @@ const FIXED_WIDTH_RE = /^[ \t]*\\:(?=[ \t]|$)/
 /** A `#+KEY: value` line, which org→md writes as it is. */
 export const KEYWORD_LINE_RE = new RegExp(String.raw`^#\+${KEYWORD_NAME}: `)
 
+// keyword lines' org text: org→md writes an empty keyword's value
+// after a blank (`#+RESULTS: `), which org does not
+function keywordText(lines: string[]): string {
+  return lines.map(line => line.trimEnd()).join("\n")
+}
+
 // the run of lines from `offset` on that `pattern` matches, up to the
 // last one's end, without its line break
 function lineRun(
@@ -132,7 +138,7 @@ function passthroughSource(
   }
   // affiliated keywords may lead the element (`#+RESULTS:`)
   const keywords = lineRun(markdown, start.offset, KEYWORD_LINE_RE)
-  const lead = keywords ? `${keywords.lines.join("\n")}\n` : ""
+  const lead = keywords ? `${keywordText(keywords.lines)}\n` : ""
   const offset = start.offset + (keywords ? keywords.length + 1 : 0)
   const element = elementAt(markdown, offset)
   if (element && readsAsPassthrough(lead + element.org)) {
@@ -140,7 +146,7 @@ function passthroughSource(
   }
   // keywords, not one passthrough element: each line is one
   return keywords
-    ? { end: start.offset + keywords.length, org: keywords.lines.join("\n") }
+    ? { end: start.offset + keywords.length, org: keywordText(keywords.lines) }
     : null
 }
 
@@ -235,7 +241,11 @@ function itemPassthroughSource(
   if (!verbatim) {
     return null
   }
-  const org = lines.map(line => line.replace(/^\\:/, ":")).join("\n")
+  const org = lines
+    .map(line =>
+      KEYWORD_LINE_RE.test(line) ? line.trimEnd() : line.replace(/^\\:/, ":")
+    )
+    .join("\n")
   return lines.every(line => KEYWORD_LINE_RE.test(line)) ||
     readsAsPassthrough(org)
     ? org
