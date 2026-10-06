@@ -10,7 +10,8 @@ export type Node = Parent["children"][number] & { value?: string }
 
 /**
  * md→org: a node of org text that goes to org as it is, untouched by the
- * escape passes (which read text nodes only).
+ * escape passes (which read text nodes only); org→md: an element a
+ * preset keeps as org text.
  */
 export const ORG_VERBATIM = "org-verbatim"
 

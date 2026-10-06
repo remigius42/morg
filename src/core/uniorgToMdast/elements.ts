@@ -29,6 +29,7 @@ import { transformTable } from "./tables.js"
 import { transformPlainList } from "./lists.js"
 import { imgTag, loneAttrHtmlSize } from "../sizedImages.js"
 import { mayReadAsMarkdown, PROPERTIES_MARKER } from "../keyValueLines.js"
+import { ORG_VERBATIM } from "../render.js"
 
 export function transformNodes(
   ctx: TransformContext,
@@ -108,7 +109,8 @@ function sizedImage(
 
 // org-only blocks with no md equivalent travel the same way as
 // drawers: verbatim org text, re-parsed natively on the return trip
-// (keywords here are mid-file ones; leading ones became frontmatter)
+// (keywords here are mid-file ones; leading ones became frontmatter),
+// as does a preset's org text
 const VERBATIM_TYPES = new Set<string>([
   "special-block",
   "center-block",
@@ -117,7 +119,8 @@ const VERBATIM_TYPES = new Set<string>([
   "keyword",
   "babel-call",
   "diary-sexp",
-  "clock"
+  "clock",
+  ORG_VERBATIM
 ])
 
 function transformUniorgElement(

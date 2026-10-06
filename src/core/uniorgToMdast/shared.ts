@@ -1,5 +1,6 @@
 import { escapingBlockHandlers } from "../commaEscapes.js"
 import { specialBlockHandlers } from "../specialBlocks.js"
+import { ORG_VERBATIM } from "../render.js"
 import type { PhrasingContent, RootContent } from "mdast"
 import type { AffiliatedKeywords, OrgData } from "uniorg"
 import { affiliatedEntries } from "../affiliated.js"
@@ -81,7 +82,8 @@ export function orgNodeToText(node: unknown): string {
       handlers: {
         ...escapingBlockHandlers,
         ...specialBlockHandlers,
-        "verbatim-inline": (inline: { value: string }) => inline.value
+        "verbatim-inline": (inline: { value: string }) => inline.value,
+        [ORG_VERBATIM]: (verbatim: { value: string }) => verbatim.value
       }
     } as Parameters<typeof uniorgStringify>[0])
     .stringify({

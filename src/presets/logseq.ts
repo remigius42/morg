@@ -8,7 +8,7 @@ import type {
   SrcBlock
 } from "uniorg"
 import type { Parent } from "unist"
-import { visit } from "unist-util-visit"
+import { SKIP, visit } from "unist-util-visit"
 import { toString } from "orgast-util-to-string"
 import { isScalar, isSeq, stringify as stringifyYaml, type Scalar } from "yaml"
 import {
@@ -22,7 +22,7 @@ import {
   type FrontmatterNode
 } from "../core/frontmatterBlock.js"
 import { keyValueEntries } from "../core/keyValueLines.js"
-import { tryParse } from "../core/render.js"
+import { ORG_VERBATIM, tryParse } from "../core/render.js"
 import { orgNodeToText } from "../core/uniorgToMdast/shared.js"
 import type { Link as MdastLink, Root as MdastRoot } from "mdast"
 import { FUZZY_LINK_RE } from "./links.js"
@@ -84,6 +84,7 @@ function pagePreset(): Preset {
       },
       write: uniorgAst => {
         codeToQueryBlocks(uniorgAst)
+        keepSpecialBlocks(uniorgAst)
         pageProperties(uniorgAst)
         return extractInlineSpecifics(uniorgAst)
       }
@@ -114,6 +115,7 @@ function blockPreset(): Preset {
       write: uniorgAst => {
         writeSizeMaps(uniorgAst)
         codeToQueryBlocks(uniorgAst)
+        keepSpecialBlocks(uniorgAst)
         bareUrlsToText(uniorgAst)
         return extractInlineSpecifics(uniorgAst)
       }
@@ -595,6 +597,29 @@ const vanillaInline: Preset = {
       return uniorgAst
     }
   }
+}
+
+// Logseq md writes a special block as org does (`#+BEGIN_NOTE`), which
+// Logseq shows as a box, where it shows a GFM alert as a quote
+function keepSpecialBlocks(uniorgAst: OrgData): void {
+  visit(
+    uniorgAst as Parent,
+    "special-block",
+    (
+      node: SpecialBlock,
+      index: number | undefined,
+      parent: Parent | undefined
+    ) => {
+      if (!parent || index === undefined) {
+        return undefined
+      }
+      parent.children[index] = {
+        type: ORG_VERBATIM,
+        value: orgNodeToText(node)
+      } as unknown as SpecialBlock
+      return [SKIP, index]
+    }
+  )
 }
 
 // a query block: Vanilla Markdown has none, so a code block in the
