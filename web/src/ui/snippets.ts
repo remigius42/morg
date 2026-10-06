@@ -1,6 +1,6 @@
 /**
  * morg.toml snippets aligning morg's canonical Markdown with other
- * formatters. Documented in docs/CONFIGURATION.md (pinned by test).
+ * formatters. Documented in docs/configuration.md (pinned by test).
  */
 export const CONFIG_SNIPPETS = {
   prettier: {

@@ -144,7 +144,7 @@ description list, and, under `useHtml`, a `<dl>`.
 ## Consequences
 
 - `useHtml` and `interpretHtml` go, and with them the four-way
-  pairing in `docs/CONFIGURATION.md`. With one value in `[markdown]`
+  pairing in `docs/configuration.md`. With one value in `[markdown]`
   a spelling is read back as it is written, so the round trip
   converges, per config as before (ADR 0002 §5).
 - Different sides migrate: `interpretHtml` on and `"markdown"` out

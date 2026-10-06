@@ -32,8 +32,8 @@ Quoted.
 `
 
 describe("formatter compatibility snippets", () => {
-  it("documents every snippet in docs/CONFIGURATION.md verbatim", () => {
-    const docs = readFileSync("docs/CONFIGURATION.md", "utf8")
+  it("documents every snippet in docs/configuration.md verbatim", () => {
+    const docs = readFileSync("docs/configuration.md", "utf8")
     for (const snippet of Object.values(CONFIG_SNIPPETS)) {
       expect(docs).toContain(snippet.toml.trim())
     }

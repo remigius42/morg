@@ -902,7 +902,7 @@ review and fuzzing; each of these silently changed text.
   `--strong`, `--fence`, `--rule`, `--rule-repetition`)
 - Formatter compatibility snippets for prettier (test-verified fixed
   point) and mdformat in
-  [docs/CONFIGURATION.md](docs/CONFIGURATION.md), loadable in the Web
+  [docs/configuration.md](docs/configuration.md), loadable in the Web
   UI's config panel
 - Opt-in lossy export flag `taskCheckboxes` (`--task-checkboxes`):
   bare TODO/DONE leaf headlines → GFM task items

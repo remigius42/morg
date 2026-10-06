@@ -173,7 +173,7 @@ emphasis = "_" # align with prettier
 
 The full reference, covering all sections and compatibility snippets
 for prettier and mdformat, is in
-[docs/CONFIGURATION.md](docs/CONFIGURATION.md).
+[docs/configuration.md](docs/configuration.md).
 
 ### Library
 
