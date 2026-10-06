@@ -12,6 +12,14 @@ test.describe("page chrome", () => {
     ).toHaveValue(/morg demo/)
   })
 
+  test("leads home from the brand on every page but home", async ({ page }) => {
+    for (const url of ["/convert.html", "/licenses.html"]) {
+      await page.goto(url)
+      await page.locator("header").getByRole("link", { name: "morg" }).click()
+      await expect(page).toHaveURL(/\/$/)
+    }
+  })
+
   test("stamps every page with the build version", async ({ page }) => {
     // `git describe --tags --always --dirty`, injected at build time; the
     // fallback string is what a build with no git history leaves behind
