@@ -14,6 +14,33 @@ normalizations to expect. Terms are defined in
 - [Logseq](logseq.md): the `logseq` preset and its dialects
 - [Obsidian](obsidian.md): the `obsidian` preset and Obsidian md
 
+## Round-trip convergence
+
+Strict byte-losslessness between the two formats is impossible. morg's
+guarantee is to be **semantically faithful and convergent** instead
+(see [ADR 0001](../adr/0001-convergence-over-losslessness.md)):
+
+- One round trip (`md → org → md` or `org → md → org`) may normalize formatting,
+  but its output is a fixed point: converting again reproduces it byte-for-byte.
+- Input already in canonical form is a round-trip identity. Opt-in
+  `recordMarkdownStyle` widens that set: a file whose bullet, emphasis, fence
+  and rule markers are used consistently has them recorded in the org
+  file and restored on the way back, so it is left untouched
+  ([ADR 0004](../adr/0004-record-source-markdown-style.md)).
+- `md → org` preserves Markdown-only constructs ("md-isms") as `morg_`-prefixed
+  org properties; `org → md` serializes Org-only constructs ("org-isms") as
+  `key:: value` conventions ([ADR
+  0002](../adr/0002-mdism-property-namespace.md)).
+- Frontmatter travels verbatim and inert in a
+  `#+begin_comment morg_frontmatter` block, not as org keywords, which
+  can act in Emacs; an org file's own leading keywords travel as a
+  `morg_keywords` frontmatter entry and come back as keywords, a
+  file-level drawer (org-roam's `:ID:`) as `morg_properties`. The
+  Logseq preset instead maps page properties natively ([ADR
+  0005](../adr/0005-frontmatter-as-a-marked-comment-block.md)).
+- The few constructs that cannot be carried are documented on these
+  pages and reported as warnings.
+
 ## Recorded style (md → org, opt-in)
 
 With `recordMarkdownStyle`, the markdown style the source was written in is
