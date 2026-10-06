@@ -2,6 +2,7 @@ node_modules/
 dist/
 coverage/
 tests/e2e/reports/
+.claude/worktrees/
 package-lock.json
 tests/fixtures/
 LICENSE

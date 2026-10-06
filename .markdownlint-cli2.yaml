@@ -6,4 +6,5 @@ ignores:
   - node_modules
   - tests/fixtures # conversion inputs, not documentation
   - tests/e2e/reports # playwright's own failure reports
+  - .claude/worktrees # other checkouts of this repo
   - TODO.md # private, gitignored working notes
