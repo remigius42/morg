@@ -138,7 +138,9 @@ special / center / verse / comment blocks, fixed-width blocks,
 mid-file keywords, babel calls, clocks, diary sexps, non-HTML export
 blocks and `@@backend:…@@` snippets. A block or drawer comes back whole even
 where its lines read as Markdown syntax (a blank line and an indented
-line, a `#` or `-` line). Statistics cookies (`[1/2]`) and
+line, a `#` or `-` line), a special block with its parameters
+(`#+begin_x Title`), which uniorg drops and morg reads from the begin
+line. Statistics cookies (`[1/2]`) and
 `[cite:…]` citations travel as plain text the same way.
 
 Affiliated keywords (`#+CAPTION:`, `#+NAME:`, `#+ATTR_*`) travel as

@@ -16,10 +16,12 @@ import { unescapeTablePipes } from "./core/tablePipes.js"
 import { parseOrg } from "./core/bracedScripts.js"
 import { guardCommaEscapes, unescapeCommaEscapes } from "./core/commaEscapes.js"
 import { separateTableKeywords } from "./core/tableKeywords.js"
+import { readSpecialBlockParameters } from "./core/specialBlocks.js"
 import {
   dropUnderscoreBulletGuards,
   guardUnderscoreBullets
 } from "./core/underscoreBullets.js"
+import type { OrgData } from "uniorg"
 import type { OrgToMarkdownOptions } from "./options.js"
 import {
   conversionContext,
@@ -114,22 +116,31 @@ function convertOrgSides(
     : convertOrgDocument(org, options, sides)
 }
 
+// md text has no scripts, so ^:{} is implied there and consumed here
+// (see markdownToOrg); uniorg misreads `_.` lines (see underscoreBullets)
+// and comma-escaped code lines (see commaEscapes), and drops a table's
+// keywords (see tableKeywords) and a special block's parameters (see
+// specialBlocks)
+function parseGuardedOrg(org: string): { uniorgAst: OrgData; guarded: string } {
+  const guarded = separateTableKeywords(
+    guardCommaEscapes(guardUnderscoreBullets(org))
+  )
+  const uniorgAst = parseOrg(guarded)
+  dropUnderscoreBulletGuards(uniorgAst)
+  unescapeCommaEscapes(uniorgAst, org)
+  readSpecialBlockParameters(uniorgAst, guarded)
+  return { uniorgAst, guarded }
+}
+
 function convertOrgDocument(
   org: string,
   options: OrgToMarkdownOptions,
   sides: Sides
 ): string {
   // Phase 1: Parse Org-mode to uniorg-ast
-  // md text has no scripts, so ^:{} is implied there and consumed here
-  // (see markdownToOrg); uniorg misreads `_.` lines (see underscoreBullets)
-  // and comma-escaped code lines (see commaEscapes), and drops a table's
-  // keywords (see tableKeywords)
-  const guarded = separateTableKeywords(
-    guardCommaEscapes(guardUnderscoreBullets(org))
-  )
-  let uniorgAst = parseOrg(guarded)
-  dropUnderscoreBulletGuards(uniorgAst)
-  unescapeCommaEscapes(uniorgAst, org)
+  const parsed = parseGuardedOrg(org)
+  const guarded = parsed.guarded
+  let uniorgAst = parsed.uniorgAst
 
   // Phase 1b: a recorded style is morg's own (ADR 0004), so consume it so
   // it does not travel on as frontmatter; explicit options still win

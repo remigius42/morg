@@ -64,6 +64,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A special block's parameters (`#+begin_tip Stretch first`) survive
+  org → md: uniorg reads and writes none, so they were dropped without
+  a warning; morg reads them from the block's begin line.
 - An org descriptive list no definition list can hold (an item with a
   checkbox, or without a term) survives a round trip again: its
   `- term :: definition` text is written below a

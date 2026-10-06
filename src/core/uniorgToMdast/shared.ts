@@ -1,4 +1,5 @@
 import { escapingBlockHandlers } from "../commaEscapes.js"
+import { specialBlockHandlers } from "../specialBlocks.js"
 import type { PhrasingContent, RootContent } from "mdast"
 import type { AffiliatedKeywords, OrgData } from "uniorg"
 import { affiliatedEntries } from "../affiliated.js"
@@ -79,6 +80,7 @@ export function orgNodeToText(node: unknown): string {
     .use(uniorgStringify, {
       handlers: {
         ...escapingBlockHandlers,
+        ...specialBlockHandlers,
         "verbatim-inline": (inline: { value: string }) => inline.value
       }
     } as Parameters<typeof uniorgStringify>[0])

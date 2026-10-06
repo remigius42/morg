@@ -801,6 +801,17 @@ describe("verbatim passthrough", () => {
     }
   })
 
+  it("keeps a special block's parameters", () => {
+    // uniorg keeps none; morg reads them from the begin line
+    for (const org of [
+      "#+begin_a.b Stretch *first* :x 1\nbody\n#+end_a.b\n",
+      "- x\n  #+begin_query :title q\n  b\n  #+end_query\n",
+      "#+begin_a.b T\n#+end_a.b\n"
+    ]) {
+      expect(orgRoundTrip(org)).toBe(org)
+    }
+  })
+
   it("keeps a headline's property values as written", () => {
     // a marker tells them from Markdown a person wrote below a heading
     const org = "* H\n:PROPERTIES:\n:url: https://x.org/ *a* <b@c.de>\n:END:\n"
