@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`> [!TIP] Stretch first` ↔ `#+begin_tip Stretch first`). A query
   block, and a type Obsidian's callouts read otherwise (`a.b`), stay
   org text; Logseq md keeps writing special blocks as org does.
+- Obsidian md writes an alert as a callout, its type lower case
+  (`> [!note]`), and keeps a callout's fold as the block's parameters'
+  leading token (`> [!tip]- T` ↔ `#+begin_tip - T`).
 
 - The Web UI lists the licenses of the third-party packages it is
   built from, runtime and development, on a licenses page

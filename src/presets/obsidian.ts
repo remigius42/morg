@@ -13,6 +13,13 @@ import {
 } from "../core/sizedImages.js"
 import { applyEdits, type Edit } from "../core/edits.js"
 import type { Preset } from "./types.js"
+import {
+  alertQuote,
+  calloutMarker,
+  isAlertType,
+  readAlerts
+} from "../core/alerts.js"
+import type { ParameterizedBlock } from "../core/specialBlocks.js"
 
 /**
  * Obsidian dialect preset: `[[Page]]` / `[[Page|alias]]` wikilinks map
@@ -22,8 +29,12 @@ export function obsidian(): Preset {
   return {
     name: "obsidian",
     markdown: {
-      read: { org: tree => readImageSizes(rewriteAliasedWikilinks(tree)) },
-      write: tree => fuzzyLinksToWikilinks(writeImageSizes(tree)),
+      read: {
+        mdast: (mdast, markdown) => readAlerts(mdast, markdown, true),
+        org: tree => readImageSizes(rewriteAliasedWikilinks(tree))
+      },
+      write: tree =>
+        writeCallouts(fuzzyLinksToWikilinks(writeImageSizes(tree))),
       links: {
         read: text => text.replace(ALIASED_PAGE_LINK_RE, "[[$1][$2]]"),
         // a bare `|` would split a table's cell
@@ -36,6 +47,27 @@ export function obsidian(): Preset {
     translateMarkdown: (markdown, context) =>
       context.side === "input" ? toVanilla(markdown) : fromVanilla(markdown)
   }
+}
+
+// org→md: an alert is a callout, its type lower case as Obsidian
+// writes it
+function writeCallouts(uniorgAst: OrgData): OrgData {
+  visit(
+    uniorgAst as Parent,
+    "special-block",
+    (
+      node: ParameterizedBlock,
+      index: number | undefined,
+      parent: Parent | undefined
+    ) => {
+      if (!parent || index === undefined || !isAlertType(node.blockType)) {
+        return undefined
+      }
+      parent.children[index] = alertQuote(node, calloutMarker(node))
+      return undefined
+    }
+  )
+  return uniorgAst
 }
 
 // not an embed, whose `|300` is a size

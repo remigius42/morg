@@ -114,3 +114,33 @@ describe("obsidian preset", () => {
     ).toBe("A [[file:img.png][a|300]] b\n\n- [[file:d.png][c|3]]\n")
   })
 })
+
+describe("obsidian callouts", () => {
+  const both = (org: string, markdown: string): void => {
+    expect(convertOrgToMarkdown(org, { preset: obsidian() })).toBe(markdown)
+    expect(convertMarkdownToOrg(markdown, { preset: obsidian() })).toBe(org)
+  }
+
+  it("write an alert's type lower case, as Obsidian does", () => {
+    both("#+begin_note\nb\n#+end_note\n", "> [!note]\n>\n> b\n")
+  })
+
+  it("keep folding as the parameters' leading token", () => {
+    both(
+      "#+begin_tip - Stretch first\nb\n#+end_tip\n",
+      "> [!tip]- Stretch first\n>\n> b\n"
+    )
+    both("#+begin_faq +\nb\n#+end_faq\n", "> [!faq]+\n>\n> b\n")
+    // a known limit: a title starting `- ` comes back folded
+    expect(convertMarkdownToOrg("> [!tip] - T\n", { preset: obsidian() })).toBe(
+      "#+begin_tip - T\n#+end_tip\n"
+    )
+  })
+
+  it("fold only in Obsidian Markdown", () => {
+    // no alert elsewhere: the marker's `]` is followed by no space
+    expect(convertMarkdownToOrg("> [!tip]- T\n")).toBe(
+      "#+begin_quote\n[!tip]- T\n#+end_quote\n"
+    )
+  })
+})

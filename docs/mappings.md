@@ -584,4 +584,9 @@ written in org. An image's size (`![alt|300](image.png)`,
 list (in a list, org reads no keyword on the bullet's line, and md→org
 keeps the item's lines together); Obsidian writes it so, over the html
 spelling, where the size is a width in pixels and maybe a height.
-Elsewhere the `|300` stays in the link's description.
+Elsewhere the `|300` stays in the link's description. A GFM alert is
+a callout, its type lower case (`> [!note]`), as Obsidian writes it; a
+fold after the marker ↔ the parameters' leading token
+(`> [!tip]- Stretch first` ↔ `#+begin_tip - Stretch first`). A known
+limit: a title starting with a lone `-` or `+` (`> [!tip] - T`) comes
+back folded.

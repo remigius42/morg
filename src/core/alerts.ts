@@ -1,6 +1,8 @@
 import type { BlockContent, Paragraph, PhrasingContent, Root } from "mdast"
 import type { Parent } from "unist"
 import { visit } from "unist-util-visit"
+import type { QuoteBlock } from "uniorg"
+import type { ParameterizedBlock } from "./specialBlocks.js"
 
 // a GFM alert (`> [!NOTE]`) is an org special block (`#+begin_note`).
 // A type of other characters stays org text: `.`, `:`, `|`, `+` mean
@@ -27,12 +29,61 @@ export function isAlertType(type: string): boolean {
 
 /**
  * org→md: an alert's marker line, its title the block's parameters.
- * @param type The special block's type.
- * @param parameters The block's parameters, if any.
+ * @param node The special block.
  * @returns The marker line, as Markdown text.
  */
-export function alertMarker(type: string, parameters?: string): string {
-  return `[!${type.toUpperCase()}]${parameters ? ` ${parameters}` : ""}`
+export function alertMarker({
+  blockType,
+  parameters
+}: ParameterizedBlock): string {
+  return `[!${blockType.toUpperCase()}]${parameters ? ` ${parameters}` : ""}`
+}
+
+/**
+ * org→md: an Obsidian callout's marker line, the type lower case, a
+ * fold the parameters' leading `+` or `-` (`#+begin_tip - T` ↔
+ * `[!tip]- T`).
+ * @param node The special block.
+ * @returns The marker line, as Markdown text.
+ */
+export function calloutMarker({
+  blockType,
+  parameters = ""
+}: ParameterizedBlock): string {
+  // a leading `+` or `-` folds it, written next to the marker
+  const fold = /^[+-](?=[ \t]|$)/.exec(parameters)?.[0] ?? ""
+  const title = parameters.slice(fold.length).trim()
+  return `[!${blockType.toLowerCase()}]${fold}${title ? ` ${title}` : ""}`
+}
+
+/**
+ * org→md: an alert as the quote that writes it, its marker line a
+ * paragraph of its own: next to the body's first line, Markdown would
+ * not escape what that line starts with.
+ * @param node The special block.
+ * @param marker The marker line.
+ * @returns The quote block.
+ */
+export function alertQuote(
+  node: ParameterizedBlock,
+  marker: string
+): QuoteBlock {
+  return {
+    type: "quote-block",
+    affiliated: node.affiliated,
+    contentsBegin: node.contentsBegin,
+    contentsEnd: node.contentsEnd,
+    children: [
+      {
+        type: "paragraph",
+        affiliated: {},
+        contentsBegin: 0,
+        contentsEnd: 0,
+        children: [{ type: "verbatim-inline", value: marker }]
+      } as unknown as QuoteBlock["children"][number],
+      ...node.children
+    ]
+  }
 }
 
 // a callout's marker in a quote's text, of a type that is no alert
@@ -76,22 +127,30 @@ export interface Alert extends Parent {
   children: BlockContent[]
 }
 
-// the marker line, in the source: an escaped `\[!NOTE]` is text
+// the marker line, in the source: an escaped `\[!NOTE]` is text. An
+// Obsidian callout's fold follows the marker
 const MARKER_RE = /\[!([^\]\s]+)\](?:[ \t]+([^\n]*?))?[ \t]*(?:\r?\n|$)/y
+const CALLOUT_MARKER_RE =
+  /\[!([^\]\s]+)\]([+-]?)(?:[ \t]+([^\n]*?))?[ \t]*(?:\r?\n|$)/y
 
 /**
  * md→org: reads each quote opening with an alert's marker line as an
  * alert, its title taken from the source as written.
  * @param mdast The tree parsed from `markdown`.
  * @param markdown The Markdown source.
+ * @param callouts Whether to read Obsidian's fold (`[!tip]- T`).
  */
-export function readAlerts(mdast: Root, markdown: string): void {
+export function readAlerts(
+  mdast: Root,
+  markdown: string,
+  callouts = false
+): void {
   if (!markdown.includes("[!")) {
     return
   }
   visit(mdast as Parent, "blockquote", (node: Parent) => {
     const first = leadingParagraph(node.children)
-    const marker = first && alertMarkerAt(first, markdown)
+    const marker = first && alertMarkerAt(first, markdown, callouts)
     if (!first || !marker) {
       return
     }
@@ -106,13 +165,17 @@ export function readAlerts(mdast: Root, markdown: string): void {
 // the alert a paragraph's marker line starts, in the source
 function alertMarkerAt(
   paragraph: Paragraph,
-  markdown: string
+  markdown: string,
+  callouts: boolean
 ): Pick<Alert, "type" | "blockType" | "parameters"> | undefined {
-  MARKER_RE.lastIndex = paragraph.position?.start.offset ?? markdown.length
-  const [, type, parameters] = MARKER_RE.exec(markdown) ?? []
+  const re = callouts ? CALLOUT_MARKER_RE : MARKER_RE
+  re.lastIndex = paragraph.position?.start.offset ?? markdown.length
+  const [, type, ...rest] = re.exec(markdown) ?? []
   if (!type || !isAlertType(type)) {
     return undefined
   }
+  // the fold, if any, then the title
+  const parameters = rest.filter(Boolean).join(" ")
   return {
     type: "alert",
     blockType: type.toLowerCase(),
