@@ -197,7 +197,7 @@ function parseMarkdown(markdown: string, preset?: Preset): Root {
   keepPassthroughSource(mdast, markdown)
   keepItemPassthroughSource(mdast, markdown)
   preset?.markdown?.read?.mdast?.(mdast, markdown)
-  readAlerts(mdast, markdown)
+  readAlerts(mdast, markdown, preset?.markdown?.callouts)
   return mdast
 }
 

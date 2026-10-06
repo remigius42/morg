@@ -1,6 +1,6 @@
 import type { OrgData, Link, Paragraph, Text } from "uniorg"
 import type { Parent } from "unist"
-import { SKIP, visit } from "unist-util-visit"
+import { visit } from "unist-util-visit"
 import { toString } from "orgast-util-to-string"
 import { maskCode } from "../core/outsideCode.js"
 import { FUZZY_LINK_RE } from "./links.js"
@@ -13,13 +13,6 @@ import {
 } from "../core/sizedImages.js"
 import { applyEdits, type Edit } from "../core/edits.js"
 import type { Preset } from "./types.js"
-import {
-  alertQuote,
-  calloutMarker,
-  isAlertType,
-  readAlerts
-} from "../core/alerts.js"
-import type { ParameterizedBlock } from "../core/specialBlocks.js"
 
 /**
  * Obsidian dialect preset: `[[Page]]` / `[[Page|alias]]` wikilinks map
@@ -29,12 +22,9 @@ export function obsidian(): Preset {
   return {
     name: "obsidian",
     markdown: {
-      read: {
-        mdast: (mdast, markdown) => readAlerts(mdast, markdown, true),
-        org: tree => readImageSizes(rewriteAliasedWikilinks(tree))
-      },
-      write: tree =>
-        writeCallouts(fuzzyLinksToWikilinks(writeImageSizes(tree))),
+      read: { org: tree => readImageSizes(rewriteAliasedWikilinks(tree)) },
+      write: tree => fuzzyLinksToWikilinks(writeImageSizes(tree)),
+      callouts: true,
       links: {
         read: text => text.replace(ALIASED_PAGE_LINK_RE, "[[$1][$2]]"),
         // a bare `|` would split a table's cell
@@ -47,33 +37,6 @@ export function obsidian(): Preset {
     translateMarkdown: (markdown, context) =>
       context.side === "input" ? toVanilla(markdown) : fromVanilla(markdown)
   }
-}
-
-// org→md: an alert is a callout, its type lower case as Obsidian
-// writes it
-function writeCallouts(uniorgAst: OrgData): OrgData {
-  writeCalloutsIn(uniorgAst)
-  return uniorgAst
-}
-
-// the inner ones first: the quote takes a copy of the block's children
-function writeCalloutsIn(tree: Parent): void {
-  visit(
-    tree,
-    "special-block",
-    (
-      node: ParameterizedBlock,
-      index: number | undefined,
-      parent: Parent | undefined
-    ) => {
-      if (!parent || index === undefined || !isAlertType(node.blockType)) {
-        return undefined
-      }
-      writeCalloutsIn(node)
-      parent.children[index] = alertQuote(node, calloutMarker(node))
-      return SKIP
-    }
-  )
 }
 
 // not an embed, whose `|300` is a size

@@ -144,6 +144,17 @@ describe("obsidian callouts", () => {
     )
   })
 
+  it("leave an alert in org text org text", () => {
+    for (const org of [
+      "#+begin_center\n#+begin_note\nx\n#+end_note\n#+end_center\n",
+      "* H\n:LOGBOOK:\n#+begin_note\nx\n#+end_note\n:END:\n"
+    ]) {
+      expect(convertOrgToMarkdown(org, { preset: obsidian() })).toContain(
+        "#+begin_note\n"
+      )
+    }
+  })
+
   it("fold only in Obsidian Markdown", () => {
     // no alert elsewhere: the marker's `]` is followed by no space
     expect(convertMarkdownToOrg("> [!tip]- T\n")).toBe(

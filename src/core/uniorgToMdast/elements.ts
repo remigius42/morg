@@ -33,6 +33,7 @@ import { ORG_VERBATIM } from "../render.js"
 import {
   alertMarker,
   alertQuote,
+  calloutMarker,
   isAlertType,
   keepCalloutMarker
 } from "../alerts.js"
@@ -134,7 +135,11 @@ function transformUniorgElement(
   node: GreaterElementType | ElementType | Text
 ): RootContent | RootContent[] | null {
   if (node.type === "special-block" && isAlertType(node.blockType)) {
-    return transformQuoteBlock(ctx, alertQuote(node, alertMarker(node)))
+    // an Obsidian callout, or a GFM alert
+    const marker = ctx.options.callouts
+      ? calloutMarker(node)
+      : alertMarker(node)
+    return transformQuoteBlock(ctx, alertQuote(node, marker))
   }
   if (VERBATIM_TYPES.has(node.type)) {
     return keyValueParagraph([orgNodeToText(node)])

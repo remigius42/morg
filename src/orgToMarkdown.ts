@@ -189,6 +189,7 @@ function convertOrgDocument(
       orgismKeys: options.orgismKeys
     }),
     ...(options.onWarning !== undefined && { onWarning: options.onWarning }),
+    ...(sides.output?.markdown?.callouts && { callouts: true }),
     ...fileHeader
   })
 

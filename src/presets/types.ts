@@ -78,6 +78,12 @@ export interface MarkdownDialect {
     read: (text: string) => string
     write: (text: string, inTable: boolean) => string
   }
+  /**
+   * Whether it writes a special block as a callout, its type lower case
+   * and a fold next to the marker (`[!tip]- T` ↔ `#+begin_tip - T`), and
+   * reads that fold, not as a GFM alert.
+   */
+  callouts?: boolean
   /** The bullet its outline needs, which no style may change. */
   bullet?: "-" | "*" | "+"
 }

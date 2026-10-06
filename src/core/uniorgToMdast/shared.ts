@@ -21,6 +21,9 @@ export interface UniorgToMdastOptions {
   taskCheckboxes?: boolean
   orgismKeys?: Record<string, string>
   onWarning?: (message: string) => void
+  // whether a special block is an Obsidian callout (`[!note]-`), not a
+  // GFM alert (`[!NOTE]`)
+  callouts?: boolean
   // YAML text of the marked frontmatter block (ADR 0005), taken out of
   // the document before the transform
   frontmatter?: string
