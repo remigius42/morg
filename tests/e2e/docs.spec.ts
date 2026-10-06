@@ -124,15 +124,22 @@ test.describe("docs pages", () => {
   test("mark the section being read in the outline", async ({ page }) => {
     const outline = page.getByRole("navigation", { name: "On this page" })
     const current = outline.locator(`[aria-current="location"]`)
+    // scrolled there rather than read off the page as loaded: where the
+    // first heading lands depends on the viewport and the engine's fonts
+    const scrollToHeading = (name: string) =>
+      page
+        .getByRole("heading", { name })
+        .evaluate(heading => heading.scrollIntoView())
     await page.goto("/docs/adr/0009-docs-on-the-site.html")
-    await expect(current).toHaveText("Status")
+    await scrollToHeading("Context")
+    await expect(current).toHaveText("Context")
 
-    await page
-      .getByRole("heading", { name: "Decision" })
-      .evaluate(heading => heading.scrollIntoView())
+    await scrollToHeading("Decision")
     await expect(current).toHaveText("Decision")
 
-    await page.keyboard.press("End")
+    await page.evaluate(() =>
+      scrollTo(0, document.documentElement.scrollHeight)
+    )
     await expect(current).toHaveText("Consequences")
   })
 
