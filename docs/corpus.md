@@ -79,6 +79,12 @@ As of 2026-10-06, branch `fix/worg-convergence`:
 | `webmd` | 1268/1268  | 384       | 1268         |
 | `worg`  | 284/293    | 0         | 210          |
 
+Of the 83 worg files whose content differs, 51 differ in links only: a
+fuzzy link naming a heading comes back as a heading link (`[[X]]` →
+`[[*X]]`, the same heading in Emacs), and a fuzzy link to a name the
+file does not hold becomes a `file:` link (a known limitation in
+[mappings.md](mappings.md)).
+
 Worg files are identical in none: org→md→org writes org's canonical
 form (keyword values single-spaced, a list's blank lines dropped, a
 table's cells without padding), which hand-written org rarely is.
