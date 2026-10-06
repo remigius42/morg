@@ -13,8 +13,11 @@
 # MORG: the CLI (default: this checkout's dist/cli.js); WORK: output
 # directory (default: /tmp/morg-corpus); EXCLUDE: a glob of files to skip;
 # TO: the middle format, md or org (default: the other one), so a
-# same-format trip translates between the flags' dialects.
+# same-format trip translates between the flags' dialects; NICE: the
+# run's niceness (default: 10), so it leaves the machine usable.
 set -euo pipefail
+
+renice -n "${NICE:-10}" -p $$ > /dev/null
 
 root=$(cd "$(dirname "$0")/../.." && pwd)
 export MORG=${MORG:-$root/dist/cli.js}

@@ -55,6 +55,7 @@ picocss
 picolisp
 remappable
 remigius
+renice
 RESNAME
 scriptless
 setext

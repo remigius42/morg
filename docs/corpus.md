@@ -30,7 +30,8 @@ contents; the diffs stay in the work directory, for reading locally.
 - `all.sh` runs every corpus, one after another, on this checkout, or
   with `MORG=/tmp/morg-base/dist/cli.js WORK=/tmp/morg-corpus-base` on
   the baseline. Never run two at a time: a run starts node four times
-  per file.
+  per file. A run's niceness is `NICE` (default 10), so the machine
+  stays usable.
 - `compare.sh` compares a run with the baseline's: per corpus, the
   files that converge, are identical or keep their content on the
   baseline but not on the run.
