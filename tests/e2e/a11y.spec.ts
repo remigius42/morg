@@ -88,3 +88,16 @@ test.describe("Accessibility of transient states", () => {
     expect(results.violations).toEqual([])
   })
 })
+
+test.describe("Accessibility on a phone", () => {
+  test("has no violations where wide tables overflow", async ({ page }) => {
+    // the tables scroll within the page here, which only a scroll area a
+    // keyboard can reach lets every reader do
+    await page.setViewportSize({ width: 375, height: 800 })
+    await page.goto("/docs/configuration.html")
+
+    const results = await audit(page).analyze()
+
+    expect(results.violations).toEqual([])
+  })
+})

@@ -139,7 +139,10 @@ function siteUrl(url, file, published) {
   return resolved + (fragment ?? "")
 }
 
-/** Lets a table wider than the page scroll on its own. */
+/**
+ * Lets a table wider than the page scroll on its own, the scroll area
+ * focusable so a keyboard can scroll it, as Shiki makes a code block.
+ */
 function scrollTables(node) {
   if (!node.children) return
   node.children = node.children.map(child => {
@@ -148,7 +151,7 @@ function scrollTables(node) {
       ? {
           type: "element",
           tagName: "div",
-          properties: { className: ["overflow-auto"] },
+          properties: { className: ["overflow-auto"], tabIndex: 0 },
           children: [child]
         }
       : child

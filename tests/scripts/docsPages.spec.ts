@@ -91,10 +91,10 @@ describe("renderPage", () => {
     expect(html).toContain(`<h2 id="org-only-key">`)
   })
 
-  it("lets a table scroll on its own", async () => {
+  it("lets a table scroll on its own, by keyboard too", async () => {
     const { html } = await render("docs/mappings.md", "| a |\n| - |\n| b |")
 
-    expect(html).toContain(`<div class="overflow-auto"><table>`)
+    expect(html).toContain(`<div class="overflow-auto" tabindex="0"><table>`)
   })
 })
 
