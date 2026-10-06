@@ -21,7 +21,7 @@ back folded.
 ## Obsidian md
 
 Translated within Markdown, Obsidian md translates as
-[Vanilla md](logseq.md) does, but for its links: `[[Page|label]]` (in a table
+[Vanilla md](logseq.md#within-markdown) does, but for its links: `[[Page|label]]` (in a table
 `[[Page\|label]]`) ↔ `[label]([[Page]])` outside code (`[[Page]]` is
 both's); an embed's size (`![[image.png|300]]`) stays, an image's
 (`![alt|300](image.png)`, alone in its paragraph outside a list)
