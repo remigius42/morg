@@ -1,5 +1,6 @@
 # Documentation
 
+- [CLI](cli.md): the command line, its flags and config file
 - [Library](library.md): the library's functions and options
 - [Configuration](configuration.md): `morg.toml` reference and
   formatter compatibility snippets
