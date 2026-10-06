@@ -21,7 +21,9 @@ writing it upper case, org lower case. The marker line is a paragraph
 of its own (`> [!NOTE]`, `>`, then the body); md → org also reads the
 body on the next line, as GitHub writes it. A title on the marker line
 ↔ the block's parameters, as written (`> [!TIP] Stretch first` ↔
-`#+begin_tip Stretch first`). A type of other characters than letters,
+`#+begin_tip Stretch first`); a title is source text, so a quote whose
+marker line ends inside markup or holds a reference or footnote stays
+a quote. A type of other characters than letters,
 digits, `_` and `-`, or not starting with a letter, stays org text, as
 do `query` blocks (a query is no Markdown) and the names of org's own
 blocks, which are no special blocks (`center`, `comment`, `example`,

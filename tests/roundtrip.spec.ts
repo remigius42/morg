@@ -1209,6 +1209,21 @@ describe("GFM alerts", () => {
     expect(mdRoundTrip(markdown)).toBe(markdown)
   })
 
+  it("leave a quote a quote where the title line would lose text", () => {
+    // markup running past the line, a reference: a title is source text
+    const cases: [string, string][] = [
+      ["> [!TIP] a *b\n> c* d\n> e\n", "c/ d"],
+      ["> [!TIP] a `b\n> c` d\n", "c~ d"],
+      ["> [!TIP] see[^1]\n> b\n\n[^1]: the note\n", "see[fn:1]"],
+      ["> [!TIP] see [x][r]\n> b\n\n[r]: http://e.org\n", "http://e.org"]
+    ]
+    for (const [markdown, kept] of cases) {
+      const org = convertMarkdownToOrg(markdown)
+      expect(org).toContain("#+begin_quote\n[!TIP]")
+      expect(org).toContain(kept)
+    }
+  })
+
   it("leave a folded callout of no alert type as written", () => {
     for (const markdown of [
       "> [!example]- Title\n> b\n",

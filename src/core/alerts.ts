@@ -150,7 +150,7 @@ export function readAlerts(
   visit(mdast as Parent, "blockquote", (node: Parent) => {
     const first = leadingParagraph(node.children)
     const marker = first && alertMarkerAt(first, markdown, callouts)
-    if (!first || !marker) {
+    if (!first || !marker || !isTitleLine(first)) {
       return
     }
     dropFirstLine(first)
@@ -180,6 +180,39 @@ function alertMarkerAt(
     blockType: type.toLowerCase(),
     ...(parameters && { parameters })
   }
+}
+
+// a title is source text: the quote stays a quote where its line ends
+// inside markup, whose text would go with the line, or holds a
+// reference, whose definition then has none
+function isTitleLine(paragraph: Paragraph): boolean {
+  for (const node of paragraph.children) {
+    if (node.type === "break") {
+      return true
+    }
+    if (node.type === "text") {
+      if (node.value.includes("\n")) {
+        return true
+      }
+    } else if (REFERENCES.has(node.type) || spansLines(node)) {
+      return false
+    }
+  }
+  return true
+}
+
+const REFERENCES = new Set([
+  "footnoteReference",
+  "linkReference",
+  "imageReference"
+])
+
+function spansLines(node: unknown): boolean {
+  const { value, children } = node as { value?: unknown; children?: unknown[] }
+  return (
+    (typeof value === "string" && value.includes("\n")) ||
+    (children ?? []).some(spansLines)
+  )
 }
 
 // a paragraph's first line, up to its first line break
