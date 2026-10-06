@@ -62,6 +62,33 @@ test.describe("docs pages", () => {
     expect(ems).toBeLessThanOrEqual(43)
   })
 
+  test("leave the text a readable width beside the outline", async ({
+    page
+  }) => {
+    // Pico's container is 950px here, its type 19px: about 35em
+    await page.setViewportSize({ width: 1024, height: 900 })
+    await page.goto("/docs/adr/0009-docs-on-the-site.html")
+    const ems = await page
+      .locator("main p")
+      .first()
+      .evaluate(p => p.clientWidth / parseFloat(getComputedStyle(p).fontSize))
+
+    expect(ems).toBeGreaterThanOrEqual(34)
+  })
+
+  test("outline the page beside the text, on a wide screen only", async ({
+    page
+  }) => {
+    const outline = page.getByRole("navigation", { name: "On this page" })
+    await page.goto("/docs/adr/0009-docs-on-the-site.html")
+    await expect(outline).toBeVisible()
+    await outline.getByRole("link", { name: "Consequences" }).click()
+    await expect(page).toHaveURL(/#consequences$/)
+
+    await page.setViewportSize({ width: 800, height: 900 })
+    await expect(outline).toBeHidden()
+  })
+
   test("color code by the chosen theme, not the OS's", async ({ page }) => {
     // light-plus's and synthwave-84's color for a TOML table name
     const name = page

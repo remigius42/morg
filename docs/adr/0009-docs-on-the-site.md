@@ -33,8 +33,12 @@ docs/README.md stays the index on GitHub.
 The pages' layout is VitePress's, as binarypoetry.ch's pages are: the
 text keeps its reading width, 688px at 16px, as 43rem so the measure,
 about 90 characters, holds as Pico scales the type up with the
-viewport. Beyond that, the styling is Pico's, but for a scrolling
-wrapper for wide tables and Shiki's bold and italic.
+viewport. A page's outline, its second-level headings, stays in view
+beside the text on a screen 1024px wide or more. Beside it the text
+narrows, to about 75 characters, until 1280px: Pico's container widens
+more slowly than its type, and a measure that short still reads well.
+Beyond that, the styling is Pico's, but for a scrolling wrapper for
+wide tables and Shiki's bold and italic.
 
 Code is highlighted at build time in binarypoetry.ch's Shiki themes,
 Light Plus with the brand colors in place of the three it replaces for

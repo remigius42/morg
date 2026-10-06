@@ -73,7 +73,7 @@ export async function renderPage(file, markdown, published) {
   const body = unified()
     .use(rehypeStringify, { allowDangerousHtml: true })
     .stringify(hast)
-  return { title, html: page(pagePath(file), title, body) }
+  return { title, html: page(pagePath(file), title, body, outline(hast)) }
 }
 
 /**
@@ -144,6 +144,27 @@ function siteUrl(url, file, published) {
 }
 
 /**
+ * The page's sections, its second-level headings, as VitePress lists
+ * them beside the text; none for a page without any.
+ */
+function outline(hast) {
+  const sections = hast.children.filter(
+    node => node.type === "element" && node.tagName === "h2"
+  )
+  if (sections.length === 0) return ""
+  const items = sections.map(
+    heading =>
+      `<li><a href="#${heading.properties.id}">${escape(toText(heading))}</a></li>`
+  )
+  return `<nav class="docs-outline" aria-labelledby="outline-label">
+        <p id="outline-label">On this page</p>
+        <ul>
+${items.join("\n")}
+        </ul>
+      </nav>`
+}
+
+/**
  * Lets a table wider than the page scroll on its own, the scroll area
  * focusable so a keyboard can scroll it, as Shiki makes a code block.
  */
@@ -173,7 +194,7 @@ function escape(text) {
     .replaceAll(">", "&gt;")
 }
 
-function page(at, title, body) {
+function page(at, title, body, aside = "") {
   return `<!doctype html>
 <html lang="en">
   <head>
@@ -187,6 +208,7 @@ function page(at, title, body) {
       <main>
 ${body}
       </main>
+      ${aside}
     </div>
     <!-- chrome:footer -->
     <script type="module" src="/src/site.ts"></script>

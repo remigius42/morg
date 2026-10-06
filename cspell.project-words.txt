@@ -28,6 +28,7 @@ iframed
 infojs
 katex
 koma
+labelledby
 libicu
 libjxl
 lintstagedrc

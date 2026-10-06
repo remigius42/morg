@@ -110,6 +110,23 @@ describe("renderPage", () => {
     expect(html).toContain(`<h2 id="org-only-key">`)
   })
 
+  it("outlines the page by its sections", async () => {
+    const { html } = await render(
+      "docs/mappings.md",
+      "# T\n\n## A & `b`\n\n### C\n\n## D"
+    )
+
+    expect(html).toContain(`<li><a href="#a--b">A &amp; b</a></li>`)
+    expect(html).toContain(`<li><a href="#d">D</a></li>`)
+    expect(html).not.toContain(`href="#c"`)
+  })
+
+  it("leaves the outline out of a page without sections", async () => {
+    const { html } = await render("docs/mappings.md", "# T\n\n### C")
+
+    expect(html).not.toContain("docs-outline")
+  })
+
   it("lets a table scroll on its own, by keyboard too", async () => {
     const { html } = await render("docs/mappings.md", "| a |\n| - |\n| b |")
 

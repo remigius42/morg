@@ -414,3 +414,50 @@ nav li:has(> .theme-switch) {
   min-width: 0;
   max-width: 43rem;
 }
+
+/* the outline beside the text, as VitePress has it: from 1024px, in
+   view while the text scrolls. Pico's container widens more slowly
+   than its type, so beside it the text narrows, to about 35em, until
+   1280px */
+.docs > nav {
+  display: none;
+  flex: none;
+  position: sticky;
+  top: var(--pico-spacing);
+  align-self: flex-start;
+  max-height: calc(100vh - 2 * var(--pico-spacing));
+  overflow-y: auto;
+  font-size: 0.875em;
+}
+
+.docs > nav p {
+  margin-bottom: 0.5em;
+  font-weight: 600;
+}
+
+.docs > nav ul,
+.docs > nav li {
+  display: block;
+  margin: 0;
+  padding: 0;
+}
+
+.docs > nav li {
+  padding-block: 0.25em;
+}
+
+.docs > nav a {
+  margin: 0;
+  padding: 0;
+  color: var(--pico-muted-color);
+}
+
+.docs-outline {
+  width: 13rem;
+}
+
+@media (min-width: 1024px) {
+  .docs > .docs-outline {
+    display: block;
+  }
+}
