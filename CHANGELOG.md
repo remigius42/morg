@@ -20,6 +20,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`> [!note]`), and keeps a callout's fold as the block's parameters'
   leading token (`> [!tip]- T` ↔ `#+begin_tip - T`).
 
+- The docs are on the site: docs/ and CONTEXT.md render as pages under
+  `/docs/`, listed on a generated index linked from every page's nav
+  (ADR 0009); a link between docs stays on the site.
 - The Web UI lists the licenses of the third-party packages it is
   built from, runtime and development, on a licenses page
   (`licenses.html`), with each package's license text (ADR 0008),

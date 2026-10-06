@@ -10,3 +10,4 @@
 | [0006](0006-presets-per-side.md)                      | Presets per side                                                        | Accepted (2026-10-03)                                 |
 | [0007](0007-markdown-options-by-side.md)              | Markdown options by side                                                | Accepted (2026-10-04)                                 |
 | [0008](0008-third-party-licenses-page.md)             | Third-party licenses page, both dependency scopes                       | Accepted (2026-10-06)                                 |
+| [0009](0009-docs-on-the-site.md)                      | Docs on the site                                                        | Accepted (2026-10-06)                                 |

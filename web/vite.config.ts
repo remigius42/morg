@@ -1,3 +1,4 @@
+import { existsSync, readdirSync } from "node:fs"
 import { createRequire } from "node:module"
 import { resolve } from "node:path"
 import { defineConfig, type Plugin } from "vite"
@@ -33,6 +34,20 @@ function domFreeEntityDecoder(): Plugin {
   }
 }
 
+/**
+ * The pages scripts/write-docs.mjs renders from docs/ before the build,
+ * keyed by their path so two folders' index pages stay apart.
+ */
+function docsPages(): Record<string, string> {
+  const docs = resolve(import.meta.dirname, "docs")
+  if (!existsSync(docs)) return {}
+  return Object.fromEntries(
+    readdirSync(docs, { recursive: true, encoding: "utf8" })
+      .filter(file => file.endsWith(".html"))
+      .map(file => [`docs/${file.replace(/\.html$/, "")}`, resolve(docs, file)])
+  )
+}
+
 export default defineConfig({
   plugins: [siteChrome()],
   define: {
@@ -48,7 +63,8 @@ export default defineConfig({
         index: resolve(import.meta.dirname, "index.html"),
         convert: resolve(import.meta.dirname, "convert.html"),
         embed: resolve(import.meta.dirname, "embed.html"),
-        licenses: resolve(import.meta.dirname, "licenses.html")
+        licenses: resolve(import.meta.dirname, "licenses.html"),
+        ...docsPages()
       }
     }
   }

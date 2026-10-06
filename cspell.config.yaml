@@ -18,4 +18,5 @@ ignorePaths:
   - package-lock.json
   - web/public/licenses-*.json # third-party license texts, written by the web build
   - LICENSE
+  - web/docs # rendered from docs/ by the web build
   - cspell.project-words.txt

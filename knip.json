@@ -8,7 +8,7 @@
     "web/src/licensesPage.ts",
     "web/src/pipeline/worker.ts"
   ],
-  "project": ["src/**/*.ts", "web/src/**/*.ts"],
+  "project": ["src/**/*.ts", "web/src/**/*.ts", "scripts/*.mjs"],
   "vite": {
     "config": ["web/vite.config.ts"]
   },

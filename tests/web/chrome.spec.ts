@@ -28,6 +28,12 @@ describe("fillChrome", () => {
     )
   })
 
+  it("marks Docs current on every docs page", () => {
+    expect(fillChrome(page, "/docs/adr/index.html")).toContain(
+      `href="../../docs/index.html" aria-current="page"`
+    )
+  })
+
   it("leaves a page without placeholders alone", () => {
     expect(fillChrome("<p>x</p>", "/x.html")).toBe("<p>x</p>")
   })

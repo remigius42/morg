@@ -8,4 +8,5 @@
   collections and what their counts mean
 - [Architecture decision records](adr/README.md): design decisions
 
-Project vocabulary lives in [CONTEXT.md](../CONTEXT.md).
+Project vocabulary lives in [CONTEXT.md](../CONTEXT.md). All of these
+are also on the [website](https://morg.binarypoetry.ch/docs/index.html).

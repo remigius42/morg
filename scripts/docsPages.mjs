@@ -1,0 +1,162 @@
+import { posix } from "node:path"
+import rehypeSlug from "rehype-slug"
+import rehypeStringify from "rehype-stringify"
+import remarkGfm from "remark-gfm"
+import remarkParse from "remark-parse"
+import remarkRehype from "remark-rehype"
+import { unified } from "unified"
+
+const repository = "https://github.com/remigius42/morg/blob/main/"
+const site = "https://morg.binarypoetry.ch/"
+
+/**
+ * Where a published Markdown file lands on the site, relative to the
+ * site root: `docs/` keeps its layout, a folder's README becomes its
+ * index, and CONTEXT.md, outside `docs/`, joins it as the glossary.
+ * docs/README.md becomes the docs index, which the site generates
+ * (`indexPage`) rather than renders.
+ * @param {string} file repository-relative path of a Markdown file
+ * @returns {string}
+ */
+export function pagePath(file) {
+  if (file === "CONTEXT.md") return "docs/context.html"
+  return file
+    .replace(/(^|\/)README\.md$/, "$1index.md")
+    .replace(/\.md$/, ".html")
+}
+
+/**
+ * Renders one published Markdown file as a site page.
+ * @param {string} file repository-relative path of the file
+ * @param {string} markdown its content
+ * @param {Set<string>} published repository-relative paths of every
+ *   published file, which a link to stays on the site; a link to
+ *   anything else in the repository goes to GitHub
+ * @returns {{ title: string, html: string }}
+ */
+export function renderPage(file, markdown, published) {
+  const tree = unified().use(remarkParse).use(remarkGfm).parse(markdown)
+  const title = toText(tree.children.find(node => node.type === "heading"))
+  rewriteLinks(tree, file, published)
+  const hast = unified()
+    .use(remarkRehype)
+    .use(rehypeSlug)
+    .use(() => scrollTables)
+    .runSync(tree)
+  const body = unified().use(rehypeStringify).stringify(hast)
+  return { title, html: page(pagePath(file), title, body) }
+}
+
+/**
+ * The docs index: every published page by title, a folder's pages
+ * nested under its own index page.
+ * @param {{ file: string, title: string }[]} pages
+ * @returns {string}
+ */
+export function indexPage(pages) {
+  const at = "docs/index.html"
+  const href = file => posix.relative(posix.dirname(at), pagePath(file))
+  const item = ({ file, title }) =>
+    `<li><a href="${href(file)}">${escape(title)}</a></li>`
+  const inFolder = ({ file }) =>
+    file.startsWith("docs/") && posix.dirname(file) !== "docs"
+  const top = pages.filter(p => !inFolder(p) && p.file !== "docs/README.md")
+  const folders = Object.groupBy(pages.filter(inFolder), ({ file }) =>
+    posix.dirname(file)
+  )
+  const nested = Object.entries(folders).map(([folder, inside]) => {
+    const readme = inside.find(({ file }) => file === `${folder}/README.md`)
+    const rest = inside
+      .filter(p => p !== readme)
+      .map(item)
+      .join("\n")
+    const label = readme
+      ? `<a href="${href(readme.file)}">${escape(readme.title)}</a>`
+      : escape(folder)
+    return `<li>${label}<ul>\n${rest}\n</ul></li>`
+  })
+  const list = [...top.map(item), ...nested]
+  return page(
+    at,
+    "Documentation",
+    `<h1>Documentation</h1>\n<ul>\n${list.join("\n")}\n</ul>`
+  )
+}
+
+/**
+ * Points each relative link at what it names on the site: another
+ * published file's page, or, for any other file of the repository,
+ * GitHub's view of it. A link with a scheme or only a fragment stays.
+ */
+function rewriteLinks(node, file, published) {
+  if (
+    (node.type === "link" || node.type === "definition") &&
+    isRelative(node.url)
+  ) {
+    node.url = siteUrl(node.url, file, published)
+  }
+  for (const child of node.children ?? []) rewriteLinks(child, file, published)
+}
+
+function isRelative(url) {
+  return !/^([a-z][a-z\d+.-]*:|#|\/)/i.test(url)
+}
+
+function siteUrl(url, file, published) {
+  const [path, fragment] = url.split(/(?=#)/)
+  let target = posix.normalize(posix.join(posix.dirname(file), path))
+  if (path.endsWith("/") || published.has(`${target}/README.md`)) {
+    target = `${target.replace(/\/$/, "")}/README.md`
+  }
+  const resolved = published.has(target)
+    ? posix.relative(posix.dirname(pagePath(file)), pagePath(target))
+    : repository + target
+  return resolved + (fragment ?? "")
+}
+
+/** Lets a table wider than the page scroll on its own. */
+function scrollTables(node) {
+  if (!node.children) return
+  node.children = node.children.map(child => {
+    scrollTables(child)
+    return child.type === "element" && child.tagName === "table"
+      ? {
+          type: "element",
+          tagName: "div",
+          properties: { className: ["overflow-auto"] },
+          children: [child]
+        }
+      : child
+  })
+}
+
+function toText(node) {
+  return node?.value ?? node?.children?.map(toText).join("") ?? ""
+}
+
+function escape(text) {
+  return text
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+}
+
+function page(at, title, body) {
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <!-- chrome:head -->
+    <title>morg: ${escape(title)}</title>
+    <link rel="canonical" href="${site}${at}" />
+  </head>
+  <body>
+    <!-- chrome:header -->
+    <main class="container">
+${body}
+    </main>
+    <!-- chrome:footer -->
+    <script type="module" src="/src/site.ts"></script>
+  </body>
+</html>
+`
+}

@@ -15,6 +15,9 @@ createAccessibilityTests("/embed.html", page =>
 createAccessibilityTests("/licenses.html", page =>
   expect(page.locator("#development tr").first()).toBeVisible()
 )
+createAccessibilityTests("/docs/index.html")
+// the longest page, and the one with the most tables and code
+createAccessibilityTests("/docs/mappings.html")
 
 /**
  * States the pages only reach after an interaction. They matter more than

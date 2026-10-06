@@ -6,3 +6,5 @@ tests/e2e/reports/
 TODO.md
 # written by scripts/write-licenses.mjs before every web build
 web/public/licenses-*.json
+# written by scripts/write-docs.mjs before every web build
+web/docs/

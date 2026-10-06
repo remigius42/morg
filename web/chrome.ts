@@ -94,8 +94,12 @@ const themeSwitch = `<div class="theme-switch" role="group" aria-label="Color sc
             </div>`
 
 function header(root: string, page: string): string {
+  // a docs page is in the docs section, so Docs is current on all of them
   const current = (target: string) =>
-    page === target ? ` aria-current="page"` : ""
+    page === target ||
+    (target === "docs/index.html" && page.startsWith("docs/"))
+      ? ` aria-current="page"`
+      : ""
   const link = (target: string, label: string) =>
     `<li><a href="${root}${target}"${current(target)}>${label}</a></li>`
   return `<header class="container">
@@ -107,6 +111,7 @@ function header(root: string, page: string): string {
         </ul>
         <ul>
           ${link("convert.html", "Converter")}
+          ${link("docs/index.html", "Docs")}
           <li>
             <a href="https://www.npmjs.com/package/@remigius42/morg">npm</a>
           </li>

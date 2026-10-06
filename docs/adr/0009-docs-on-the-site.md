@@ -1,0 +1,51 @@
+# 0009: Docs on the site
+
+## Status
+
+Accepted (2026-10-06)
+
+## Context
+
+The docs (docs/ and CONTEXT.md) were readable only in the repository,
+in GitHub's file view, while the site's landing page pointed there for
+the mapping reference and configuration. The site already parses
+Markdown with remark and is styled by Pico, which styles plain HTML
+(headings, tables, code) without classes.
+
+## Decision
+
+`scripts/write-docs.mjs` renders docs/ and CONTEXT.md as site pages
+before every Web UI build and dev server start, into web/docs/, which
+web/vite.config.ts builds along with the other pages. The rendering is
+remark-parse and remark-gfm, as the converter reads Markdown, then
+remark-rehype, rehype-slug for GitHub's heading anchors, and
+rehype-stringify; no new styling beyond a scrolling wrapper for wide
+tables. docs/ keeps its layout under `/docs/`, a folder's README
+becomes its index page, and CONTEXT.md becomes `/docs/context.html`. A
+relative link to a published file goes to its page, a link to any other
+file of the repository to GitHub, so the Markdown links stay as they
+read on GitHub.
+
+`/docs/index.html` is generated, not rendered from docs/README.md: it
+lists every published page by its first heading, a folder's pages
+nested under its index, so a new doc appears without editing a list.
+docs/README.md stays the index on GitHub.
+
+Every page's head boilerplate, header and footer come from one place,
+web/chrome.ts, which a Vite plugin fills into each page's placeholders;
+the docs pages use the same placeholders, and the nav gains a Docs link.
+
+## Consequences
+
+- The site's docs are as current as `main`: they deploy with it, as
+  the Web UI does (ADR 0003).
+- The rendered pages are generated and gitignored, like the license
+  lists (ADR 0008); the dev server renders them at start, not on
+  every edit of a doc.
+- Raw HTML in a doc is dropped, not rendered; the docs have none.
+- No syntax highlighting: code blocks are plain, as on the rest of
+  the site.
+- Rejected: a static site generator such as VitePress (a second
+  theme to keep matching the site, for some fifteen pages); rendering
+  docs/README.md as the index (one more list to keep current by hand,
+  and it leaves out the ADRs and CONTEXT.md).
