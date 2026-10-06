@@ -23,7 +23,9 @@ const BLOCK_START_RE = /^[ \t]*#\+begin_(src|export|example)(?=\s|$)/i
  * blocks before parsing.
  */
 export function guardCommaEscapes(org: string): string {
-  if (!org.includes(",")) {
+  // the mark in the input is text (a Nerd Font glyph), which the
+  // unescape would take for its own
+  if (!org.includes(",") || org.includes(MARK)) {
     return org
   }
   const lines = org.split("\n")
@@ -50,9 +52,13 @@ const UNESCAPE_RE = new RegExp(`^([ \\t]*)${MARK},`, "gm")
 /**
  * org→md: unescapes the marked lines of src, export and example blocks
  * (which uniorg leaves escaped), keeping their indentation; drops a mark
- * anywhere else uniorg put the line.
+ * anywhere else uniorg put the line; none if the org text held the
+ * mark itself, as guardCommaEscapes then set none.
  */
-export function unescapeCommaEscapes(tree: Parent): void {
+export function unescapeCommaEscapes(tree: Parent, org: string): void {
+  if (org.includes(MARK)) {
+    return
+  }
   visit(tree, (node: Node) => {
     if (typeof node.value !== "string" || !node.value.includes(MARK)) {
       return

@@ -75,6 +75,8 @@ describe("convertOrgToMarkdown", () => {
     expect(
       convertOrgToMarkdown("#+begin_example\r\n,* x\r\n#+end_example\r\n")
     ).toBe("```\n* x\r\n```\n")
+    // a private-use glyph like the guard's mark stays (a Nerd Font icon)
+    expect(convertOrgToMarkdown("\uE000 a, b\n")).toBe("\uE000 a, b\n")
     // text lines are no code, and keep their comma
     expect(convertOrgToMarkdown("a\n  ,* b\n")).toBe("a\n,\\* b\n")
   })

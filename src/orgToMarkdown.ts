@@ -129,7 +129,7 @@ function convertOrgDocument(
   )
   let uniorgAst = parseOrg(guarded)
   dropUnderscoreBulletGuards(uniorgAst)
-  unescapeCommaEscapes(uniorgAst)
+  unescapeCommaEscapes(uniorgAst, org)
 
   // Phase 1b: a recorded style is morg's own (ADR 0004), so consume it so
   // it does not travel on as frontmatter; explicit options still win
