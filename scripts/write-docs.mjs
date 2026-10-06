@@ -11,7 +11,7 @@ import {
 } from "node:fs"
 import { dirname, join } from "node:path"
 import process from "node:process"
-import { indexPage, pagePath, renderPage } from "./docsPages.mjs"
+import { indexPage, pagePath, pageTitle, renderPage } from "./docsPages.mjs"
 
 const files = [
   ...readdirSync("docs", { recursive: true })
@@ -23,17 +23,17 @@ const files = [
 const published = new Set(files)
 
 rmSync("web/docs", { recursive: true, force: true })
-const pages = []
 // docs/README.md is linked to, as the index, but not rendered: the
 // index is generated
-for (const file of files.filter(file => file !== "docs/README.md")) {
-  const { title, html } = await renderPage(
-    file,
-    readFileSync(file, "utf8"),
-    published
-  )
+const pages = files
+  .filter(file => file !== "docs/README.md")
+  .map(file => {
+    const markdown = readFileSync(file, "utf8")
+    return { file, markdown, title: pageTitle(markdown) }
+  })
+for (const { file, markdown } of pages) {
+  const { html } = await renderPage(file, markdown, published, pages)
   write(pagePath(file), html)
-  pages.push({ file, title })
 }
 write("docs/index.html", indexPage(pages))
 process.stdout.write(`web/docs/: ${pages.length} pages\n`)

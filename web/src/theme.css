@@ -415,10 +415,11 @@ nav li:has(> .theme-switch) {
   max-width: 43rem;
 }
 
-/* the outline beside the text, as VitePress has it: from 1024px, in
-   view while the text scrolls. Pico's container widens more slowly
-   than its type, so beside it the text narrows, to about 35em, until
-   1280px */
+/* the docs and the page's outline beside the text, as VitePress has
+   them: the outline from 1024px, the docs from 1280px, each in view
+   while the text scrolls. Pico's container widens more slowly than
+   its type, so beside them the text narrows, to about 35em and 29em,
+   until 1536px */
 .docs > nav {
   display: none;
   flex: none;
@@ -446,6 +447,10 @@ nav li:has(> .theme-switch) {
   padding-block: 0.25em;
 }
 
+.docs > nav ul ul {
+  padding-inline-start: 1em;
+}
+
 .docs > nav a {
   margin: 0;
   padding: 0;
@@ -456,12 +461,22 @@ nav li:has(> .theme-switch) {
   color: var(--pico-primary);
 }
 
+.docs-tree {
+  width: 14rem;
+}
+
 .docs-outline {
   width: 13rem;
 }
 
 @media (min-width: 1024px) {
   .docs > .docs-outline {
+    display: block;
+  }
+}
+
+@media (min-width: 1280px) {
+  .docs > .docs-tree {
     display: block;
   }
 }

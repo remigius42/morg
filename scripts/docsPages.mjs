@@ -56,11 +56,13 @@ export function pagePath(file) {
  * @param {Set<string>} published repository-relative paths of every
  *   published file, which a link to stays on the site; a link to
  *   anything else in the repository goes to GitHub
+ * @param {{ file: string, title: string }[]} pages the pages to list
+ *   beside the text, as on the docs index
  * @returns {Promise<{ title: string, html: string }>}
  */
-export async function renderPage(file, markdown, published) {
-  const tree = unified().use(remarkParse).use(remarkGfm).parse(markdown)
-  const title = toText(tree.children.find(node => node.type === "heading"))
+export async function renderPage(file, markdown, published, pages) {
+  const tree = parse(markdown)
+  const title = pageTitle(markdown)
   rewriteLinks(tree, file, published)
   // the docs are this repository's own, so their HTML is kept as
   // written, as GitHub shows it, rather than dropped as untrusted
@@ -73,7 +75,24 @@ export async function renderPage(file, markdown, published) {
   const body = unified()
     .use(rehypeStringify, { allowDangerousHtml: true })
     .stringify(hast)
-  return { title, html: page(pagePath(file), title, body, outline(hast)) }
+  const at = pagePath(file)
+  const docs = `<nav class="docs-tree" aria-label="Documentation">
+        ${pageList(pages, at)}
+      </nav>`
+  return { title, html: page(at, title, body, docs, outline(hast)) }
+}
+
+/**
+ * A page's title, its first heading.
+ * @param {string} markdown the page's content
+ * @returns {string}
+ */
+export function pageTitle(markdown) {
+  return toText(parse(markdown).children.find(node => node.type === "heading"))
+}
+
+function parse(markdown) {
+  return unified().use(remarkParse).use(remarkGfm).parse(markdown)
 }
 
 /**
@@ -85,9 +104,22 @@ export async function renderPage(file, markdown, published) {
  */
 export function indexPage(pages) {
   const at = "docs/index.html"
+  return page(
+    at,
+    "Documentation",
+    `<h1>Documentation</h1>\n${pageList(pages, at)}`
+  )
+}
+
+/**
+ * Every page by title, a folder's pages nested under its own index
+ * page, linked from the page at `at`, which is marked as the current.
+ */
+function pageList(pages, at) {
   const href = file => posix.relative(posix.dirname(at), pagePath(file))
-  const item = ({ file, title }) =>
-    `<li><a href="${href(file)}">${escape(title)}</a></li>`
+  const link = ({ file, title }) =>
+    `<a href="${href(file)}"${pagePath(file) === at ? ` aria-current="page"` : ""}>${escape(title)}</a>`
+  const item = p => `<li>${link(p)}</li>`
   const inFolder = ({ file }) =>
     file.startsWith("docs/") && posix.dirname(file) !== "docs"
   const top = pages.filter(p => !inFolder(p))
@@ -100,17 +132,11 @@ export function indexPage(pages) {
       .filter(p => p !== readme)
       .map(item)
       .join("\n")
-    const label = readme
-      ? `<a href="${href(readme.file)}">${escape(readme.title)}</a>`
-      : escape(folder)
+    const label = readme ? link(readme) : escape(folder)
     return `<li>${label}<ul>\n${rest}\n</ul></li>`
   })
   const list = [...top.map(item), ...nested]
-  return page(
-    at,
-    "Documentation",
-    `<h1>Documentation</h1>\n<ul>\n${list.join("\n")}\n</ul>`
-  )
+  return `<ul>\n${list.join("\n")}\n</ul>`
 }
 
 /**
@@ -194,7 +220,7 @@ function escape(text) {
     .replaceAll(">", "&gt;")
 }
 
-function page(at, title, body, aside = "") {
+function page(at, title, body, docs = "", outline = "") {
   return `<!doctype html>
 <html lang="en">
   <head>
@@ -205,10 +231,11 @@ function page(at, title, body, aside = "") {
   <body>
     <!-- chrome:header -->
     <div class="container docs">
+      ${docs}
       <main>
 ${body}
       </main>
-      ${aside}
+      ${outline}
     </div>
     <!-- chrome:footer -->
     <script type="module" src="/src/site.ts"></script>

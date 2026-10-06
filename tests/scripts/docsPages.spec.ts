@@ -2,12 +2,14 @@ import { describe, expect, it } from "vitest"
 // @ts-expect-error -- plain ESM helper, no declarations emitted for scripts/
 import * as docsPages from "../../scripts/docsPages.mjs"
 
-const { pagePath, renderPage, indexPage } = docsPages as {
+const { pagePath, pageTitle, renderPage, indexPage } = docsPages as {
   pagePath: (file: string) => string
+  pageTitle: (markdown: string) => string
   renderPage: (
     file: string,
     markdown: string,
-    published: Set<string>
+    published: Set<string>,
+    pages: { file: string; title: string }[]
   ) => Promise<{ title: string; html: string }>
   indexPage: (pages: { file: string; title: string }[]) => string
 }
@@ -19,8 +21,13 @@ const published = new Set([
   "docs/adr/README.md",
   "docs/adr/0001-x.md"
 ])
+const pages = [
+  { file: "docs/mappings.md", title: "Mappings" },
+  { file: "docs/adr/README.md", title: "ADRs" },
+  { file: "docs/adr/0001-x.md", title: "0001" }
+]
 const render = (file: string, markdown: string) =>
-  renderPage(file, markdown, published)
+  renderPage(file, markdown, published, pages)
 
 describe("pagePath", () => {
   it("keeps docs/'s layout, a README as its folder's index", () => {
@@ -31,6 +38,12 @@ describe("pagePath", () => {
 
   it("puts CONTEXT.md among the docs", () => {
     expect(pagePath("CONTEXT.md")).toBe("docs/context.html")
+  })
+})
+
+describe("pageTitle", () => {
+  it("is the first heading's text", () => {
+    expect(pageTitle("text\n\n## A `b` c\n\n# D")).toBe("A b c")
   })
 })
 
@@ -61,8 +74,9 @@ describe("renderPage", () => {
 
   it("links a folder to its index page", async () => {
     const { html } = await render("docs/mappings.md", "[a](adr/) [b](adr)")
+    const main = html.slice(html.indexOf("<main>"))
 
-    expect(html.match(/href="adr\/index\.html"/g)).toHaveLength(2)
+    expect(main.match(/href="adr\/index\.html"/g)).toHaveLength(2)
   })
 
   it("links a folder without a published README on GitHub", async () => {
@@ -125,6 +139,16 @@ describe("renderPage", () => {
     const { html } = await render("docs/mappings.md", "# T\n\n### C")
 
     expect(html).not.toContain("docs-outline")
+  })
+
+  it("lists the docs beside the text, the page itself marked", async () => {
+    const { html } = await render("docs/adr/0001-x.md", "# X")
+
+    expect(html).toContain(`<nav class="docs-tree" aria-label="Documentation">`)
+    expect(html).toContain(`<a href="../mappings.html">Mappings</a>`)
+    expect(html).toContain(
+      `<li><a href="0001-x.html" aria-current="page">0001</a></li>`
+    )
   })
 
   it("lets a table scroll on its own, by keyboard too", async () => {

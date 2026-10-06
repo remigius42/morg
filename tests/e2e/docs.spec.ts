@@ -76,6 +76,20 @@ test.describe("docs pages", () => {
     expect(ems).toBeGreaterThanOrEqual(34)
   })
 
+  test("leave the text a readable width beside both lists", async ({
+    page
+  }) => {
+    // Pico's container is 1200px here, its type 20px: about 29em
+    await page.setViewportSize({ width: 1280, height: 900 })
+    await page.goto("/docs/adr/0009-docs-on-the-site.html")
+    const ems = await page
+      .locator("main p")
+      .first()
+      .evaluate(p => p.clientWidth / parseFloat(getComputedStyle(p).fontSize))
+
+    expect(ems).toBeGreaterThanOrEqual(28)
+  })
+
   test("outline the page beside the text, on a wide screen only", async ({
     page
   }) => {
@@ -87,6 +101,24 @@ test.describe("docs pages", () => {
 
     await page.setViewportSize({ width: 800, height: 900 })
     await expect(outline).toBeHidden()
+  })
+
+  test("list the docs beside the text, on the widest screens only", async ({
+    page
+  }) => {
+    const docs = page.getByRole("navigation", { name: "Documentation" })
+    const outline = page.getByRole("navigation", { name: "On this page" })
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.goto("/docs/adr/0009-docs-on-the-site.html")
+    await expect(docs.locator(`[aria-current="page"]`)).toHaveText(
+      "0009: Docs on the site"
+    )
+    await docs.getByRole("link", { name: "Configuration" }).click()
+    await expect(page).toHaveURL(/docs\/configuration\.html$/)
+
+    await page.setViewportSize({ width: 1100, height: 900 })
+    await expect(docs).toBeHidden()
+    await expect(outline).toBeVisible()
   })
 
   test("mark the section being read in the outline", async ({ page }) => {
