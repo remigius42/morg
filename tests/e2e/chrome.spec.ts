@@ -40,11 +40,20 @@ test.describe("page chrome", () => {
     // the embed page has no footer: it is chrome-less by contract (ADR 0003)
     for (const url of ["/", "/convert.html", "/licenses.html"]) {
       await page.goto(url)
-      await page
-        .locator("footer")
-        .getByRole("link", { name: "Third-party licenses" })
-        .click()
-      await expect(page).toHaveURL(/licenses\.html$/)
+      // the target, not a click: on the licenses page itself, a link that
+      // goes nowhere would leave the URL just as expected
+      await expect(
+        page
+          .locator("footer")
+          .getByRole("link", { name: "Third-party licenses" })
+      ).toHaveAttribute("href", "./licenses.html")
     }
+
+    await page.goto("/")
+    await page
+      .locator("footer")
+      .getByRole("link", { name: "Third-party licenses" })
+      .click()
+    await expect(page).toHaveURL(/licenses\.html$/)
   })
 })
