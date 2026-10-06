@@ -4,7 +4,7 @@ import { expect, test } from "./baseFixture.js"
 /**
  * A host page standing in for a third-party site. It frames the embed
  * page at a deliberately wrong height and records what it is told;
- * `follows` decides whether it then does what the README tells a host
+ * `follows` decides whether it then does what docs/web-ui.md tells a host
  * to do and applies it.
  *
  * Both halves are needed. A host that stays at its wrong height is the
