@@ -16,6 +16,7 @@ npm install
 npm run test:unit   # vitest watch mode (test:unit:ci for one-shot)
 npm run test:e2e    # playwright against the built Web UI
 npm run lint        # prettier, cspell, markdownlint, eslint, knip, typecheck
+npm run licenses:check  # production dependencies' licenses, GPL-compatible
 npm run build       # tsc → dist/
 ```
 

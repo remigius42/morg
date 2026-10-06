@@ -58,6 +58,7 @@ remappable
 remigius
 renice
 RESNAME
+rseidelsohn
 scriptless
 setext
 setupfile
