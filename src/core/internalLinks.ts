@@ -1,4 +1,4 @@
-import type { Root } from "mdast"
+import type { Heading, Root } from "mdast"
 import type { Headline, Keyword, OrgData, Text } from "uniorg"
 import { toString as orgastToString } from "orgast-util-to-string"
 import { visit } from "unist-util-visit"
@@ -30,8 +30,8 @@ function slugger(): (text: string) => string {
   }
 }
 
-// org reads a bracket in a link's path as the link's end
-const LINKABLE_RE = /^[^[\]]+$/
+/** Whether org can hold `path` in a link: a bracket would end it. */
+export const isLinkable = (path: string): boolean => /^[^[\]]+$/.test(path)
 
 // a `<<target>>`, text on both sides
 const TARGET_RE = /<<([^<>\n]+)>>/g
@@ -42,7 +42,8 @@ const NAME_RE = /^[ \t]*#\+name:[ \t]*(\S.*)$/gim
 // a headline's `:CUSTOM_ID:`, as org→md writes its property
 const CUSTOM_ID_RE = /^custom_id::[ \t]*(\S+)/gim
 
-const normalized = (text: string): string => text.trim().replace(/\s+/g, " ")
+export const normalized = (text: string): string =>
+  text.trim().replace(/\s+/g, " ")
 
 /** An internal link's anchor in Markdown and its text. */
 export interface Anchor {
@@ -98,19 +99,25 @@ export function orgAnchors(tree: OrgData): (path: string) => Anchor | null {
   }
 }
 
+/** What a Markdown anchor names, and its link's text. */
+export type MarkdownAnchor = ({ path: string } | { heading: Heading }) & {
+  text: string
+}
+
 /**
  * md→org: the org links of a document's anchors.
  * @param root The parsed Markdown.
- * @returns The fuzzy link path of an anchor (`*Heading`, `name`) and the
- * text that is no description of its own, or null where the document
- * holds nothing of that anchor.
+ * @returns The anchor's target: a name, the fuzzy link's path, or a
+ * heading, whose org title the caller renders, markup and all, as org
+ * finds a headline by it; with the text that is no description of its
+ * own. Null where the document holds nothing of that anchor.
  */
 export function markdownAnchors(
   root: Root
-): (anchor: string) => { path: string; text: string } | null {
+): (anchor: string) => MarkdownAnchor | null {
   const names = new Set<string>()
   const customIds = new Set<string>()
-  const headings = new Map<string, string>()
+  const headings = new Map<string, Heading>()
   const slug = slugger()
   visit(root, node => {
     if (node.type === "text") {
@@ -127,8 +134,7 @@ export function markdownAnchors(
     // org drops a title's trailing blanks, which GitHub's slug keeps:
     // slugged without them, as org→md slugs the headline
     if (node.type === "heading") {
-      const title = orgastToString(node).trim()
-      headings.set(slug(title), normalized(title))
+      headings.set(slug(orgastToString(node).trim()), node)
     }
   })
   return anchor => {
@@ -136,12 +142,12 @@ export function markdownAnchors(
     if (customIds.has(anchor)) {
       return null
     }
-    if (names.has(anchor) && LINKABLE_RE.test(anchor)) {
+    if (names.has(anchor) && isLinkable(anchor)) {
       return { path: anchor, text: anchor }
     }
-    const title = headings.get(anchor)
-    return title !== undefined && LINKABLE_RE.test(title)
-      ? { path: `*${title}`, text: title }
+    const heading = headings.get(anchor)
+    return heading
+      ? { heading, text: normalized(orgastToString(heading)) }
       : null
   }
 }

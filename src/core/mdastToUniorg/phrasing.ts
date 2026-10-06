@@ -9,7 +9,13 @@ import {
 import type { Parent } from "unist"
 import { visit } from "unist-util-visit"
 import { escapeOrgPath } from "../orgPath.js"
-import { orgParser, renderInline, type Node } from "../render.js"
+import {
+  orgParser,
+  renderChildren,
+  renderInline,
+  type Node
+} from "../render.js"
+import { isLinkable, normalized } from "../internalLinks.js"
 
 type HtmlObjectType = "underline" | "superscript" | "subscript"
 
@@ -225,15 +231,36 @@ function orgLinkTarget(url: string): {
   return { rawLink: `file:${path}${search}`, linkType: "file" }
 }
 
+// an anchor of the document is a link within it: to a name, or to a
+// heading by its org title, as org finds a headline (`~foo~` and all);
+// a title org cannot hold in a link leaves the anchor a custom ID link
+function internalLink(
+  ctx: TransformContext,
+  url: string
+): { path: string; text: string } | null {
+  const anchor = url.startsWith("#")
+    ? ctx.anchors(decodeUrlPart(url.slice(1)))
+    : null
+  if (!anchor || "path" in anchor) {
+    return anchor
+  }
+  // rendered quietly: the heading warns once, where it is converted
+  const quiet = { ...ctx, options: { ...ctx.options, onWarning: undefined } }
+  const title = normalized(
+    renderChildren(
+      transformPhrasingChildren(quiet, anchor.heading.children)
+    ).join("")
+  )
+  return isLinkable(title) ? { path: `*${title}`, text: anchor.text } : null
+}
+
 function transformMdastLink(
   ctx: TransformContext,
   linkNode: Extract<PhrasingContent, { type: "link" }>
 ): ObjectType {
   const [only] = linkNode.children
   // an anchor of the document is a link within it
-  const internal = linkNode.url.startsWith("#")
-    ? ctx.anchors(decodeUrlPart(linkNode.url.slice(1)))
-    : null
+  const internal = internalLink(ctx, linkNode.url)
   // text equal to the url (autolinks), or to the heading an internal
   // link names, is no description; a plain [[url]] keeps the org side
   // canonical

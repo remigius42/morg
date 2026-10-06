@@ -1036,11 +1036,20 @@ describe("internal links", () => {
     )
   })
 
-  it("name a heading with markup by its text (known limitation)", () => {
-    // org may not find `Foo bar` in a headline `Foo *bar*`
-    const org = "* Foo *bar*\nSee [[*Foo *bar*]].\n"
-    expect(convertOrgToMarkdown(org)).toContain("See [Foo bar](#foo-bar).")
-    expect(orgRoundTrip(org)).toBe("* Foo *bar*\nSee [[*Foo bar]].\n")
+  it("keep a link to a heading with markup", () => {
+    // org finds a headline by its title as written, markup and all
+    for (const org of [
+      "* Foo *bar*\nSee [[*Foo *bar*]].\n",
+      "* Use ~foo~ now\nSee [[*Use ~foo~ now][it]].\n"
+    ]) {
+      expect(orgRoundTrip(org)).toBe(org)
+    }
+    expect(
+      convertOrgToMarkdown("* Foo *bar*\nSee [[*Foo *bar*]].\n")
+    ).toContain("See [Foo bar](#foo-bar).")
+    expect(
+      convertMarkdownToOrg("## Use `foo` now\n\nSee [it](#use-foo-now).\n")
+    ).toBe("** Use ~foo~ now\nSee [[*Use ~foo~ now][it]].\n")
   })
 
   it("keep a custom ID link, a heading holding that ID", () => {
@@ -1052,7 +1061,7 @@ describe("internal links", () => {
   it("keep a heading link's description in code", () => {
     const org = "* =:x=\nSee [[*=:x=][~:x~]].\n"
     const once = orgRoundTrip(org)
-    expect(once).toContain("[[*:x][~:x~]]")
+    expect(once).toBe("* ~:x~\nSee [[*~:x~][~:x~]].\n")
     expect(orgRoundTrip(once)).toBe(once)
   })
 

@@ -54,10 +54,9 @@ name's is a fuzzy link (`[[name]]`), a heading's slug a heading link
 its heading in Emacs; any other anchor is a custom ID link
 (`[[#custom-id]]` ↔ `#custom-id`). Link text equal to the heading or
 name is no description. Known limitations: of two headings of one
-name, org finds the first (`#a-1` comes back as `[[*A]]`); a heading
-with markup (`* Foo *bar*`) is named by its text (`[[*Foo bar]]`),
-which org may not find; a fuzzy link to a name the file does not hold
-stays a relative path, a `file:` link on the way back.
+name, org finds the first (`#a-1` comes back as `[[*A]]`); a fuzzy
+link to a name the file does not hold stays a relative path, a `file:`
+link on the way back.
 
 Markup touching a word character (`` `x`s ``, `foo**bar**baz`) has no
 valid org boundary; md → org inserts a zero-width space (U+200B, the
