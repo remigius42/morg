@@ -48,4 +48,17 @@ test.describe("docs pages", () => {
       }
     }
   })
+
+  test("color code by the chosen theme, not the OS's", async ({ page }) => {
+    // light-plus's and synthwave-84's color for a TOML table name
+    const name = page
+      .locator(".shiki .line > span")
+      .getByText("orgismKeys", { exact: true })
+    await page.emulateMedia({ colorScheme: "light" })
+    await page.goto("/docs/configuration.html")
+    await expect(name).toHaveCSS("color", "rgb(0, 0, 0)")
+
+    await page.locator("#themeDark").click()
+    await expect(name).toHaveCSS("color", "rgb(255, 126, 219)")
+  })
 })

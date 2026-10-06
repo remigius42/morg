@@ -378,3 +378,23 @@ nav li:has(> .theme-switch) {
   padding: var(--pico-spacing);
   font-size: 0.75em;
 }
+
+/* Highlighted code (scripts/docsPages.mjs): the colors follow the
+   color-scheme by light-dark(); a theme's bold and italic come as
+   variables per scheme, applied here */
+.shiki span {
+  font-style: var(--shiki-light-font-style);
+  font-weight: var(--shiki-light-font-weight);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .shiki span {
+    font-style: var(--shiki-dark-font-style);
+    font-weight: var(--shiki-dark-font-weight);
+  }
+}
+
+[data-theme="dark"] .shiki span {
+  font-style: var(--shiki-dark-font-style);
+  font-weight: var(--shiki-dark-font-weight);
+}

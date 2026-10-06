@@ -1,4 +1,5 @@
 import { posix } from "node:path"
+import rehypeShiki from "@shikijs/rehype"
 import rehypeSlug from "rehype-slug"
 import rehypeStringify from "rehype-stringify"
 import remarkGfm from "remark-gfm"
@@ -8,6 +9,29 @@ import { unified } from "unified"
 
 const repository = "https://github.com/remigius42/morg/blob/main/"
 const site = "https://morg.binarypoetry.ch/"
+
+/**
+ * Code blocks are highlighted at build time in binarypoetry.ch's theme
+ * pair, its light theme's colors that fail contrast replaced as it does
+ * by the brand's. `light-dark()` follows the `color-scheme` Pico sets
+ * for the theme toggle, and the block keeps Pico's own background and
+ * text color, which the transformer leaves in place by dropping
+ * Shiki's. A language not loaded here stays plain.
+ */
+const highlighting = {
+  themes: { light: "light-plus", dark: "synthwave-84" },
+  colorReplacements: {
+    "light-plus": {
+      "#267f99": "var(--theme-color)",
+      "#098658": "var(--theme-color-2)",
+      "#e50000": "var(--theme-color)"
+    }
+  },
+  defaultColor: "light-dark()",
+  langs: ["bash", "markdown", "org", "toml", "yaml"],
+  fallbackLanguage: "text",
+  transformers: [{ pre: node => void delete node.properties.style }]
+}
 
 /**
  * Where a published Markdown file lands on the site, relative to the
@@ -32,17 +56,18 @@ export function pagePath(file) {
  * @param {Set<string>} published repository-relative paths of every
  *   published file, which a link to stays on the site; a link to
  *   anything else in the repository goes to GitHub
- * @returns {{ title: string, html: string }}
+ * @returns {Promise<{ title: string, html: string }>}
  */
-export function renderPage(file, markdown, published) {
+export async function renderPage(file, markdown, published) {
   const tree = unified().use(remarkParse).use(remarkGfm).parse(markdown)
   const title = toText(tree.children.find(node => node.type === "heading"))
   rewriteLinks(tree, file, published)
-  const hast = unified()
+  const hast = await unified()
     .use(remarkRehype)
     .use(rehypeSlug)
+    .use(rehypeShiki, highlighting)
     .use(() => scrollTables)
-    .runSync(tree)
+    .run(tree)
   const body = unified().use(rehypeStringify).stringify(hast)
   return { title, html: page(pagePath(file), title, body) }
 }

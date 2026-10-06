@@ -8,7 +8,7 @@ const { pagePath, renderPage, indexPage } = docsPages as {
     file: string,
     markdown: string,
     published: Set<string>
-  ) => { title: string; html: string }
+  ) => Promise<{ title: string; html: string }>
   indexPage: (pages: { file: string; title: string }[]) => string
 }
 
@@ -35,8 +35,11 @@ describe("pagePath", () => {
 })
 
 describe("renderPage", () => {
-  it("titles the page after its first heading", () => {
-    const { title, html } = render("docs/mappings.md", "# A `b` c\n\ntext")
+  it("titles the page after its first heading", async () => {
+    const { title, html } = await render(
+      "docs/mappings.md",
+      "# A `b` c\n\ntext"
+    )
 
     expect(title).toBe("A b c")
     expect(html).toContain("<title>morg: A b c</title>")
@@ -45,8 +48,8 @@ describe("renderPage", () => {
     )
   })
 
-  it("links a published file to its page, fragment kept", () => {
-    const { html } = render(
+  it("links a published file to its page, fragment kept", async () => {
+    const { html } = await render(
       "docs/adr/0001-x.md",
       "[a](../mappings.md#lists) [b](../../CONTEXT.md) [c](README.md)"
     )
@@ -56,22 +59,22 @@ describe("renderPage", () => {
     expect(html).toContain(`href="index.html"`)
   })
 
-  it("links a folder to its index page", () => {
-    const { html } = render("docs/mappings.md", "[a](adr/) [b](adr)")
+  it("links a folder to its index page", async () => {
+    const { html } = await render("docs/mappings.md", "[a](adr/) [b](adr)")
 
     expect(html.match(/href="adr\/index\.html"/g)).toHaveLength(2)
   })
 
-  it("links any other file of the repository on GitHub", () => {
-    const { html } = render("docs/adr/0001-x.md", "[a](../../src/cli.ts)")
+  it("links any other file of the repository on GitHub", async () => {
+    const { html } = await render("docs/adr/0001-x.md", "[a](../../src/cli.ts)")
 
     expect(html).toContain(
       `href="https://github.com/remigius42/morg/blob/main/src/cli.ts"`
     )
   })
 
-  it("leaves absolute links, fragments and code alone", () => {
-    const { html } = render(
+  it("leaves absolute links, fragments and code alone", async () => {
+    const { html } = await render(
       "docs/mappings.md",
       "[a](https://x.org/y.md) [b](#z) `[c](d.md)` [e][f]\n\n[f]: mailto:g@h.i"
     )
@@ -82,16 +85,40 @@ describe("renderPage", () => {
     expect(html).toContain(`href="mailto:g@h.i"`)
   })
 
-  it("anchors headings as GitHub does", () => {
-    const { html } = render("docs/mappings.md", "## Org-only: `key::`")
+  it("anchors headings as GitHub does", async () => {
+    const { html } = await render("docs/mappings.md", "## Org-only: `key::`")
 
     expect(html).toContain(`<h2 id="org-only-key">`)
   })
 
-  it("lets a table scroll on its own", () => {
-    const { html } = render("docs/mappings.md", "| a |\n| - |\n| b |")
+  it("lets a table scroll on its own", async () => {
+    const { html } = await render("docs/mappings.md", "| a |\n| - |\n| b |")
 
     expect(html).toContain(`<div class="overflow-auto"><table>`)
+  })
+})
+
+describe("renderPage's code blocks", () => {
+  it("highlights a block in both color schemes", async () => {
+    const { html } = await render("docs/mappings.md", "```org\n* TODO a\n```")
+
+    expect(html).toContain(
+      `<pre class="shiki shiki-themes light-plus synthwave-84"`
+    )
+    expect(html).toMatch(/style="color:light-dark\([^,]+, #[\dA-Fa-f]+\);/)
+  })
+
+  it("leaves the block's own colors to the site", async () => {
+    const { html } = await render("docs/mappings.md", "```toml\na = 1\n```")
+
+    expect(html).not.toMatch(/<pre [^>]*style=/)
+  })
+
+  it("leaves a block in a language it has not loaded plain", async () => {
+    const { html } = await render("docs/mappings.md", "```cobol\nX\n```")
+
+    expect(html).toContain("<pre")
+    expect(html).toContain(">X<")
   })
 })
 

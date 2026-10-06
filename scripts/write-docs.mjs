@@ -23,15 +23,16 @@ const files = [
 const published = new Set(files)
 
 rmSync("web/docs", { recursive: true, force: true })
-const pages = files.map(file => {
-  const { title, html } = renderPage(
+const pages = []
+for (const file of files) {
+  const { title, html } = await renderPage(
     file,
     readFileSync(file, "utf8"),
     published
   )
   if (file !== "docs/README.md") write(pagePath(file), html)
-  return { file, title }
-})
+  pages.push({ file, title })
+}
 write("docs/index.html", indexPage(pages))
 process.stdout.write(`web/docs/: ${pages.length} pages\n`)
 

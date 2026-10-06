@@ -16,8 +16,14 @@ createAccessibilityTests("/licenses.html", page =>
   expect(page.locator("#development tr").first()).toBeVisible()
 )
 createAccessibilityTests("/docs/index.html")
-// the longest page, and the one with the most tables and code
+// the longest page, and the one with the most tables
 createAccessibilityTests("/docs/mappings.html")
+// every page with highlighted code: each theme's colors against the
+// code background, in TOML, YAML and org
+createAccessibilityTests("/docs/configuration.html")
+createAccessibilityTests(
+  "/docs/adr/0005-frontmatter-as-a-marked-comment-block.html"
+)
 
 /**
  * States the pages only reach after an interaction. They matter more than

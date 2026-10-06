@@ -65,6 +65,8 @@ setext
 setupfile
 sexp
 sexps
+shiki
+shikijs
 smol
 SRCNAME
 strikethrough
@@ -72,6 +74,7 @@ stringifier
 stringifiers
 stringify
 stversions
+synthwave
 tblfm
 TBLNAME
 texinfo

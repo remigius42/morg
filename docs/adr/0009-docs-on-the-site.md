@@ -18,9 +18,9 @@ Markdown with remark and is styled by Pico, which styles plain HTML
 before every Web UI build and dev server start, into web/docs/, which
 web/vite.config.ts builds along with the other pages. The rendering is
 remark-parse and remark-gfm, as the converter reads Markdown, then
-remark-rehype, rehype-slug for GitHub's heading anchors, and
-rehype-stringify; no new styling beyond a scrolling wrapper for wide
-tables. docs/ keeps its layout under `/docs/`, a folder's README
+remark-rehype, rehype-slug for GitHub's heading anchors, Shiki for
+code blocks, and rehype-stringify; no new styling beyond a scrolling
+wrapper for wide tables and Shiki's bold and italic. docs/ keeps its layout under `/docs/`, a folder's README
 becomes its index page, and CONTEXT.md becomes `/docs/context.html`. A
 relative link to a published file goes to its page, a link to any other
 file of the repository to GitHub, so the Markdown links stay as they
@@ -30,6 +30,13 @@ read on GitHub.
 lists every published page by its first heading, a folder's pages
 nested under its index, so a new doc appears without editing a list.
 docs/README.md stays the index on GitHub.
+
+Code is highlighted at build time in binarypoetry.ch's Shiki themes,
+Light Plus with the brand colors in place of the three it replaces for
+contrast, and Synthwave '84, on Pico's code background. Shiki is the
+one highlighter with an org grammar (highlight.js and Prism have
+none). Its `light-dark()` colors follow the `color-scheme` Pico sets
+for the theme toggle, so the pages ship no highlighting script.
 
 Every page's head boilerplate, header and footer come from one place,
 web/chrome.ts, which a Vite plugin fills into each page's placeholders;
@@ -43,8 +50,8 @@ the docs pages use the same placeholders, and the nav gains a Docs link.
   lists (ADR 0008); the dev server renders them at start, not on
   every edit of a doc.
 - Raw HTML in a doc is dropped, not rendered; the docs have none.
-- No syntax highlighting: code blocks are plain, as on the rest of
-  the site.
+- A code block in a language not loaded in scripts/docsPages.mjs
+  (bash, markdown, org, toml, yaml) stays plain.
 - Rejected: a static site generator such as VitePress (a second
   theme to keep matching the site, for some fifteen pages); rendering
   docs/README.md as the index (one more list to keep current by hand,
