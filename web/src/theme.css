@@ -398,3 +398,19 @@ nav li:has(> .theme-switch) {
   font-style: var(--shiki-dark-font-style);
   font-weight: var(--shiki-dark-font-weight);
 }
+
+/* Docs pages (scripts/docsPages.mjs): VitePress's reading width, its
+   688px at 16px, in rem so the measure holds as Pico scales the type
+   up with the viewport */
+.docs {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  padding-block: var(--pico-block-spacing-vertical);
+}
+
+.docs > main {
+  flex: 1;
+  min-width: 0;
+  max-width: 43rem;
+}

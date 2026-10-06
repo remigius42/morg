@@ -19,18 +19,22 @@ before every Web UI build and dev server start, into web/docs/, which
 web/vite.config.ts builds along with the other pages. The rendering is
 remark-parse and remark-gfm, as the converter reads Markdown, then
 remark-rehype, rehype-slug for GitHub's heading anchors, Shiki for
-code blocks, and rehype-stringify; no new styling beyond a scrolling
-wrapper for wide tables and Shiki's bold and italic. docs/ keeps its
-layout under `/docs/`, a folder's README becomes its index page, and
-CONTEXT.md becomes `/docs/context.html`. A relative link to a
-published file goes to its page, a link to any other file of the
-repository to GitHub, so the Markdown links stay as they read on
-GitHub.
+code blocks, and rehype-stringify. docs/ keeps its layout under
+`/docs/`, a folder's README becomes its index page, and CONTEXT.md
+becomes `/docs/context.html`. A relative link to a published file goes
+to its page, a link to any other file of the repository to GitHub, so
+the Markdown links stay as they read on GitHub.
 
 `/docs/index.html` is generated, not rendered from docs/README.md: it
 lists every published page by its first heading, a folder's pages
 nested under its index, so a new doc appears without editing a list.
 docs/README.md stays the index on GitHub.
+
+The pages' layout is VitePress's, as binarypoetry.ch's pages are: the
+text keeps its reading width, 688px at 16px, as 43rem so the measure,
+about 90 characters, holds as Pico scales the type up with the
+viewport. Beyond that, the styling is Pico's, but for a scrolling
+wrapper for wide tables and Shiki's bold and italic.
 
 Code is highlighted at build time in binarypoetry.ch's Shiki themes,
 Light Plus with the brand colors in place of the three it replaces for

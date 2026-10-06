@@ -49,6 +49,19 @@ test.describe("docs pages", () => {
     }
   })
 
+  test("keep the text to a reading width on a wide screen", async ({
+    page
+  }) => {
+    await page.setViewportSize({ width: 1920, height: 1080 })
+    await page.goto("/docs/adr/0009-docs-on-the-site.html")
+    const ems = await page
+      .locator("main p")
+      .first()
+      .evaluate(p => p.clientWidth / parseFloat(getComputedStyle(p).fontSize))
+
+    expect(ems).toBeLessThanOrEqual(43)
+  })
+
   test("color code by the chosen theme, not the OS's", async ({ page }) => {
     // light-plus's and synthwave-84's color for a TOML table name
     const name = page

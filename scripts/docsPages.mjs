@@ -183,9 +183,11 @@ function page(at, title, body) {
   </head>
   <body>
     <!-- chrome:header -->
-    <main class="container">
+    <div class="container docs">
+      <main>
 ${body}
-    </main>
+      </main>
+    </div>
     <!-- chrome:footer -->
     <script type="module" src="/src/site.ts"></script>
   </body>
