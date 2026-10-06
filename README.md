@@ -305,7 +305,8 @@ not by custom stringifier handlers. The default, battle-tested
 stringifiers do the rendering.
 
 Project vocabulary lives in [CONTEXT.md](CONTEXT.md); design decisions in
-[docs/adr/](docs/adr/README.md).
+[docs/adr/](docs/adr/README.md); all docs are listed in the
+[docs index](docs/README.md).
 
 ## Status
 
