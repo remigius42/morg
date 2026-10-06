@@ -35,7 +35,8 @@ morg --input notes.md --output notes.org --silent
 morg --input notes.md --output notes.org --record-markdown-style
 
 # Write and read HTML for what Markdown cannot spell in its own
-# syntax (<u>, <sup>, <sub>, <dl>); per construct in the config
+# syntax (<u>, <sup>, <sub>, <dl>, a sized <img>); per construct in
+# the config
 morg --input notes.org --output notes.md --html
 
 # Translate between two dialects of one format, changing only what
