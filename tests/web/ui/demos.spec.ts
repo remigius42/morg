@@ -38,6 +38,12 @@ describe("demo documents", () => {
     expect(warnings).toEqual([])
   })
 
+  it("org and md demos are the same document", () => {
+    // only the leading comment names its own format
+    const body = (text: string) => text.replace(/^.*\n/, "")
+    expect(body(convertOrgToMarkdown(ORG_DEMO))).toBe(body(MD_DEMO))
+  })
+
   it("offers the logseq demos with the logseq preset", () => {
     expect(demoFor("md-to-org", "logseq")).toBe(LOGSEQ_MD_DEMO)
     expect(demoFor("org-to-md", "logseq")).toBe(LOGSEQ_ORG_DEMO)

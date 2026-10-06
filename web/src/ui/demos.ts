@@ -6,8 +6,9 @@
  */
 import { readsMarkdown, type Direction } from "../direction.js"
 
-// the two demos are the same document in both dialects; convergence and
-// zero warnings are pinned by test (tests/web/ui/demos.spec.ts)
+// the two demos are the same document in both formats; that,
+// convergence and zero warnings are pinned by test
+// (tests/web/ui/demos.spec.ts)
 export const ORG_DEMO = `# Paste your Org here, or convert this demo
 
 * morg demo
@@ -65,7 +66,8 @@ Some **bold**, *italic* and \`code\` text[^1].
 console.log("fenced code survives")
 \`\`\`
 
-- term :: a definition list entry
+term
+:   a definition list entry
 
 [^1]: Footnotes survive the round trip.
 `
