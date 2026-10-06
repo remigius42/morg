@@ -1143,3 +1143,69 @@ describe("normalizations", () => {
     expect(orgRoundTrip("Use =bar= here.\n")).toBe("Use ~bar~ here.\n")
   })
 })
+
+describe("GFM alerts", () => {
+  it("are an org special block's Markdown", () => {
+    const org = "#+begin_note\nBe careful.\n#+end_note\n"
+    const markdown = "> [!NOTE]\n>\n> Be careful.\n"
+
+    expect(convertOrgToMarkdown(org)).toBe(markdown)
+    expect(convertMarkdownToOrg(markdown)).toBe(org)
+  })
+
+  it("take a block's parameters for their title, as written", () => {
+    const org = "#+begin_tip Stretch *first*\nb\n#+end_tip\n"
+    const markdown = "> [!TIP] Stretch *first*\n>\n> b\n"
+
+    expect(convertOrgToMarkdown(org)).toBe(markdown)
+    expect(convertMarkdownToOrg(markdown)).toBe(org)
+  })
+
+  it("read as GitHub writes them, a type in any case", () => {
+    expect(
+      convertMarkdownToOrg("> [!Warning] **Hot** _x_\n> a\n> b\n>\n> - c\n")
+    ).toBe("#+begin_warning **Hot** _x_\na\nb\n\n- c\n#+end_warning\n")
+  })
+
+  it("may be empty", () => {
+    const org = "#+begin_note\n#+end_note\n"
+
+    expect(convertOrgToMarkdown(org)).toBe("> [!NOTE]\n")
+    expect(orgRoundTrip(org)).toBe(org)
+  })
+
+  it("nest in list items and quotes", () => {
+    for (const org of [
+      "- a\n  #+begin_tip T\n  b\n  #+end_tip\n",
+      "#+begin_quote\n#+begin_tip\nb\n#+end_tip\n#+end_quote\n"
+    ]) {
+      expect(orgRoundTrip(org)).toBe(org)
+    }
+  })
+
+  it("leave other block types org text", () => {
+    // a query block's body is no Markdown; `.`, `|`, `+` mean something
+    // else in Obsidian's callouts
+    for (const type of ["query", "a.b", "a|b", "x+", "ünï"]) {
+      const org = `#+begin_${type}\nb\n#+end_${type}\n`
+      expect(convertOrgToMarkdown(org)).toBe(org)
+    }
+  })
+
+  it("leave a quote whose text starts with a marker a quote", () => {
+    const org = "#+begin_quote\n[!NOTE] b\n#+end_quote\n"
+
+    expect(convertOrgToMarkdown(org)).toBe("> \\[!NOTE] b\n")
+    expect(orgRoundTrip(org)).toBe(org)
+  })
+
+  it("leave a callout of no alert type a quote, as written", () => {
+    // org's example block would be literal text, Obsidian's is a callout
+    const markdown = "> [!example] Title\n> b\n"
+
+    expect(convertMarkdownToOrg(markdown)).toBe(
+      "#+begin_quote\n[!example] Title\nb\n#+end_quote\n"
+    )
+    expect(mdRoundTrip(markdown)).toBe(markdown)
+  })
+})

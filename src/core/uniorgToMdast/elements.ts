@@ -30,6 +30,8 @@ import { transformPlainList } from "./lists.js"
 import { imgTag, loneAttrHtmlSize } from "../sizedImages.js"
 import { mayReadAsMarkdown, PROPERTIES_MARKER } from "../keyValueLines.js"
 import { ORG_VERBATIM } from "../render.js"
+import { alertMarker, isAlertType, keepCalloutMarker } from "../alerts.js"
+import type { ParameterizedBlock } from "../specialBlocks.js"
 
 export function transformNodes(
   ctx: TransformContext,
@@ -127,6 +129,9 @@ function transformUniorgElement(
   ctx: TransformContext,
   node: GreaterElementType | ElementType | Text
 ): RootContent | RootContent[] | null {
+  if (node.type === "special-block" && isAlertType(node.blockType)) {
+    return transformAlert(ctx, node)
+  }
   if (VERBATIM_TYPES.has(node.type)) {
     return keyValueParagraph([orgNodeToText(node)])
   }
@@ -406,9 +411,32 @@ function transformQuoteBlock(
   ctx: TransformContext,
   node: Extract<GreaterElementType, { type: "quote-block" }>
 ): RootContent {
+  const children = transformNodes(ctx, node.children || []) as BlockContent[]
+  keepCalloutMarker(children)
+  return { type: "blockquote", children }
+}
+
+// the marker line a paragraph of its own: next to the body's first
+// line, Markdown would not escape what that line starts with
+function transformAlert(
+  ctx: TransformContext,
+  node: ParameterizedBlock
+): RootContent {
+  const marker = alertMarker(node.blockType, node.parameters)
   return {
     type: "blockquote",
-    children: transformNodes(ctx, node.children || []) as BlockContent[]
+    children: [
+      {
+        type: "paragraph",
+        children: [
+          {
+            type: "verbatimInline",
+            value: marker
+          } as unknown as PhrasingContent
+        ]
+      },
+      ...(transformNodes(ctx, node.children || []) as BlockContent[])
+    ]
   }
 }
 

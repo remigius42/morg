@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- GFM alerts ↔ org special blocks: `> [!NOTE]` ↔ `#+begin_note`, a
+  title on the marker line ↔ the block's parameters
+  (`> [!TIP] Stretch first` ↔ `#+begin_tip Stretch first`). A query
+  block, and a type Obsidian's callouts read otherwise (`a.b`), stay
+  org text; Logseq md keeps writing special blocks as org does.
+
 - The Web UI lists the licenses of the third-party packages it is
   built from, runtime and development, on a licenses page
   (`licenses.html`), with each package's license text (ADR 0008),

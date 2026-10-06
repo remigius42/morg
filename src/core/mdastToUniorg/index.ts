@@ -36,6 +36,7 @@ import {
 import { transformMdastDefList, transformMdastList } from "./lists.js"
 import { transformPhrasingChildren } from "./phrasing.js"
 import { ORG_VERBATIM } from "../render.js"
+import type { Alert } from "../alerts.js"
 import { DESCRIPTIVE_LIST_MARKER } from "../descriptiveTags.js"
 import { markdownAnchors } from "../internalLinks.js"
 
@@ -204,6 +205,18 @@ export function transformMdastNodeToUniorgNode(
           node.children.map(child => quotedHeadingAsText(ctx, child))
         )
       } as unknown as ElementType
+    case "alert" as RootContent["type"]: {
+      const alert = node as unknown as Alert
+      return {
+        type: "special-block",
+        blockType: alert.blockType,
+        ...(alert.parameters && { parameters: alert.parameters }),
+        children: transformBlockChildren(
+          ctx,
+          alert.children.map(child => quotedHeadingAsText(ctx, child))
+        )
+      } as unknown as ElementType
+    }
     case "code":
       return transformMdastCode(node)
     case "math" as RootContent["type"]:

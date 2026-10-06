@@ -757,7 +757,7 @@ describe("verbatim passthrough", () => {
 
   it("should keep markup in a block or drawer unescaped", () => {
     for (const org of [
-      "x\n\n#+begin_note\n*b* /i/ [fn:1] a\\b =#+A:=\n#+end_note\n",
+      "x\n\n#+begin_center\n*b* /i/ [fn:1] a\\b =#+A:=\n#+end_center\n",
       "* H\n:LOGBOOK:\n*b* [fn:1]\n:END:\n"
     ]) {
       expect(convertMarkdownToOrg(convertOrgToMarkdown(org))).toBe(org)

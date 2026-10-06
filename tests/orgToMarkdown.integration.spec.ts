@@ -53,10 +53,10 @@ describe("convertOrgToMarkdown", () => {
   })
 
   it("should keep the escapes of a block in a passthrough element", () => {
-    // the drawer or special block travels as org text, which needs them
+    // the drawer or block travels as org text, which needs them
     for (const org of [
       ":LOGBOOK:\n#+begin_example\n,#+end_example\n#+end_example\n:END:\n",
-      "#+begin_note\n#+begin_export html\n,* x\n#+end_export\n#+end_note\n"
+      "#+begin_center\n#+begin_export html\n,* x\n#+end_export\n#+end_center\n"
     ]) {
       expect(convertOrgToMarkdown(org)).toBe(org)
     }
@@ -301,9 +301,9 @@ describe("convertOrgToMarkdown", () => {
     )
   })
 
-  it("should keep special, verse and fixed-width blocks verbatim", () => {
+  it("should keep query, verse and fixed-width blocks verbatim", () => {
     const org =
-      "#+begin_warning\nBe careful.\n#+end_warning\n\n#+begin_verse\nroses are red\nviolets are blue\n#+end_verse\n\n: fixed one\n: fixed two\n"
+      "#+begin_query\n(and [[a]] b)\n#+end_query\n\n#+begin_verse\nroses are red\nviolets are blue\n#+end_verse\n\n: fixed one\n: fixed two\n"
 
     // a fixed-width line's `: ` would start a Markdown definition
     expect(convertOrgToMarkdown(org)).toBe(

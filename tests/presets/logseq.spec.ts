@@ -80,6 +80,14 @@ describe("logseq outline", () => {
     )
   })
 
+  it("writes a special block as org does, no GFM alert", () => {
+    // Logseq shows `#+BEGIN_TIP` as a box, `> [!TIP]` as a quote
+    both(
+      "* x\n#+begin_tip Stretch first\nb\n#+end_tip\n",
+      "- x\n  \n  #+begin_tip Stretch first\n  b\n  #+end_tip\n"
+    )
+  })
+
   it("keeps a md block's other org blocks as written, in both directions", () => {
     const markdown = "- #+BEGIN_TIP\n  *emphasis* and **strong**\n  #+END_TIP\n"
     const org = toOrg(markdown)

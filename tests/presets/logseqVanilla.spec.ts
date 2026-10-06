@@ -8,6 +8,12 @@ describe("Logseq org → Vanilla md", () => {
   const toMarkdown = (org: string): string =>
     convertOrgToMarkdown(org, { inputPreset: logseq() })
 
+  it("writes a special block as a GFM alert", () => {
+    expect(toMarkdown("* x\n#+BEGIN_TIP Stretch\nb\n#+END_TIP\n")).toBe(
+      "- x\n\n  > [!TIP] Stretch\n  >\n  > b\n"
+    )
+  })
+
   it("writes the blocks as a nested list", () => {
     expect(toMarkdown("* a\n** b\n*** c\n* d\n")).toBe(
       "- a\n  - b\n    - c\n- d\n"

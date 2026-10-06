@@ -34,18 +34,16 @@ export function readSpecialBlockParameters(
 
 /**
  * uniorg-stringify handlers that write a special block's parameters,
- * wherever morg writes org text.
+ * and no blank line for an empty one, wherever morg writes org text.
  */
 export const specialBlockHandlers = {
   "special-block": (
     node: ParameterizedBlock,
     options: Parameters<typeof stringify>[1]
   ) => {
-    if (!node.parameters) {
-      return null
-    }
     // as uniorg-stringify writes the contents, an empty block's none
     const contents = stringify(node.children, options).trimEnd()
-    return `#+begin_${node.blockType} ${node.parameters}\n${contents && `${contents}\n`}#+end_${node.blockType}\n`
+    const parameters = node.parameters ? ` ${node.parameters}` : ""
+    return `#+begin_${node.blockType}${parameters}\n${contents && `${contents}\n`}#+end_${node.blockType}\n`
   }
 }

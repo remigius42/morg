@@ -25,6 +25,8 @@ import {
 } from "./core/passthroughSource.js"
 import { ORG_VERBATIM } from "./core/render.js"
 import { escapingBlockHandlers } from "./core/commaEscapes.js"
+import { specialBlockHandlers } from "./core/specialBlocks.js"
+import { readAlerts } from "./core/alerts.js"
 import type { Root } from "mdast"
 import type { MarkdownStyleOptions, MarkdownToOrgOptions } from "./options.js"
 import type { Preset } from "./presets/types.js"
@@ -175,6 +177,7 @@ const stringifier = unified()
   .use(uniorgStringify, {
     handlers: {
       ...escapingBlockHandlers,
+      ...specialBlockHandlers,
       headline: emptyHeadline,
       [ORG_VERBATIM]: (node: { value: string }) => node.value
     }
@@ -194,6 +197,7 @@ function parseMarkdown(markdown: string, preset?: Preset): Root {
   keepPassthroughSource(mdast, markdown)
   keepItemPassthroughSource(mdast, markdown)
   preset?.markdown?.read?.mdast?.(mdast, markdown)
+  readAlerts(mdast, markdown)
   return mdast
 }
 

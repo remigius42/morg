@@ -15,6 +15,20 @@ fence's meta after the language), blockquotes/quote blocks, and horizontal rules
 spaces) ↔ org `\\`. Markdown is parsed and serialized with GFM
 enabled.
 
+GFM alerts ↔ special blocks: `> [!NOTE]` ↔ `#+begin_note`, any type
+(GitHub renders NOTE, TIP, IMPORTANT, WARNING and CAUTION), Markdown
+writing it upper case, org lower case. The marker line is a paragraph
+of its own (`> [!NOTE]`, `>`, then the body); md → org also reads the
+body on the next line, as GitHub writes it. A title on the marker line
+↔ the block's parameters, as written (`> [!TIP] Stretch first` ↔
+`#+begin_tip Stretch first`). A type of other characters than letters,
+digits, `_` and `-`, or not starting with a letter, stays org text, as
+do `query` blocks (a query is no Markdown) and the names of org's own
+blocks, which are no special blocks (`center`, `comment`, `example`,
+`export`, `quote`, `src`, `verse`): Obsidian's `> [!example]` callout
+stays a quote, its marker unescaped. An org quote whose text starts
+with an alert's marker stays a quote, the marker escaped (`\[!NOTE]`).
+
 Images: org has no dedicated image syntax; links to image files map to
 md images, alt text ↔ link description. Image title attributes
 (`![alt](url "title")`) are dropped by design (reported via
@@ -134,7 +148,8 @@ paragraph whose values hold Markdown markup stays text.
 
 Verbatim passthrough (org text kept literally in Markdown, re-parsed
 natively on the return trip): generic drawers (`:LOGBOOK:` …),
-special / center / verse / comment blocks, fixed-width blocks,
+special blocks of no alert type (see above), center, verse and comment
+blocks, fixed-width blocks,
 mid-file keywords, babel calls, clocks, diary sexps, non-HTML export
 blocks and `@@backend:…@@` snippets. A block or drawer comes back whole even
 where its lines read as Markdown syntax (a blank line and an indented
@@ -440,7 +455,9 @@ writes a page's first block so if it is a heading); other content
 before the first bullet is page content. An org block in a Markdown block
 (`#+BEGIN_SRC`…`#+END_SRC`, which Logseq reads there too) goes to org as
 written, as org→md writes them, except that a quote block's Markdown
-content converts (Logseq's `<quote` command writes one). A plain `https://…` link ↔ a
+content converts (Logseq's `<quote` command writes one); a special
+block stays org text, which Logseq shows as a box (`#+BEGIN_TIP`), no
+GFM alert, which it shows as a quote. A plain `https://…` link ↔ a
 bare url (a bracketed `[[url]]` ↔ `<url>`). An email address stays text, written bare. A `#tag` at the start of a line
 stays unescaped (mldoc reads `\#` as plain text, not a tag). Task markers and `[#A]`
 priorities stay text; page references `[[page]]` and labeled forms
