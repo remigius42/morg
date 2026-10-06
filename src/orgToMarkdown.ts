@@ -77,8 +77,23 @@ function separateVerbatimInItem(
     : undefined
 }
 
+// two quotes in a list item (or definition) need a blank line between
+// them, or md reads them as one
+function separateQuotesInItem(
+  left: { type: string },
+  right: { type: string },
+  parent: { type: string }
+): number | undefined {
+  return ["listItem", "defListDescription"].includes(parent.type) &&
+    left.type === "blockquote" &&
+    right.type === "blockquote"
+    ? 1
+    : undefined
+}
+
 const JOINS = [
   separateTextAfterBlock,
+  separateQuotesInItem,
   separateEmptyItemFromText,
   separateVerbatimInItem
 ]

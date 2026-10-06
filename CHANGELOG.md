@@ -64,6 +64,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Two quotes next to each other in a list item or a definition stay
+  two: Markdown read them, written without a blank line between them,
+  as one.
 - A special block's parameters (`#+begin_tip Stretch first`) survive
   org → md: uniorg reads and writes none, so they were dropped without
   a warning; morg reads them from the block's begin line.

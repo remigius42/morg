@@ -533,6 +533,18 @@ describe("lists", () => {
     expect(once).toContain("child")
   })
 
+  it("keeps two quotes in an item or a definition apart", () => {
+    // without a blank line, md reads them as one quote
+    for (const org of [
+      "- a\n  #+begin_quote\n  x\n  #+end_quote\n  #+begin_quote\n  y\n  #+end_quote\n",
+      "- a :: b\n  #+begin_quote\n  x\n  #+end_quote\n  #+begin_quote\n  y\n  #+end_quote\n"
+    ]) {
+      const once = orgRoundTrip(org)
+      expect(once.match(/#\+begin_quote/g)).toHaveLength(2)
+      expect(orgRoundTrip(once)).toBe(once)
+    }
+  })
+
   it("keeps item text after a nested list out of the nested list", () => {
     // without the blank line, md reads `c` as a lazy continuation of `b`
     const markdown = "- a\n  - b\n\n  c\n"
