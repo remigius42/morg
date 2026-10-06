@@ -10,6 +10,8 @@
   Markdown and Org, including normalizations and drops
 - [Corpus checks](corpus.md): round-trip scripts over real note
   collections and what their counts mean
+- [Architecture](architecture.md): the two pipelines and where
+  dialects plug in
 - [Architecture decision records](adr/README.md): design decisions
 
 Project vocabulary lives in [CONTEXT.md](../CONTEXT.md). All of these

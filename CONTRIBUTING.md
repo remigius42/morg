@@ -129,7 +129,8 @@ for what you submit.
   notable changes in [CHANGELOG.md](CHANGELOG.md); keep both updated
   with behavior changes.
 - Core pipelines stay dialect-agnostic; anything Logseq- or
-  Obsidian-specific belongs in a preset (`src/presets/`).
+  Obsidian-specific belongs in a preset (`src/presets/`). The
+  pipelines are outlined in [docs/architecture.md](docs/architecture.md).
 
 ## Releasing
 

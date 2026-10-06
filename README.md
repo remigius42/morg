@@ -94,17 +94,7 @@ Every function and option is described in the
 
 ## Architecture
 
-Two pipelines, each with a two-phase transformation separating the
-dialect-agnostic core from dialect presets:
-
-```text
-md → org:  remark-parse → mdast→uniorg (core) → read md dialect → write org dialect → uniorg-stringify
-org → md:  uniorg-parse → read org dialect → write md dialect → uniorg→mdast (core) → remark-stringify
-```
-
-Formatting is controlled by shaping the AST (e.g. inserting newline text nodes),
-not by custom stringifier handlers. The default, battle-tested
-stringifiers do the rendering.
+The pipelines are outlined in [docs/architecture.md](docs/architecture.md).
 
 Project vocabulary lives in [CONTEXT.md](CONTEXT.md); design decisions in
 [docs/adr/](docs/adr/README.md); all docs are listed in the
