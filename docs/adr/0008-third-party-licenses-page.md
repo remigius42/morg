@@ -25,9 +25,11 @@ would install a CSS framework with the CLI.
 `scripts/write-licenses.mjs` runs license-checker-rseidelsohn before
 every Web UI build and writes two lists into `web/public/`, one per
 scope, production and development; `web/licenses.html` shows them as
-two tables, linked from the footer of every page. The development
-list is the superset that cannot miss a bundled package, whichever
-scope it is declared in. morg itself is left off, and so is the
+two tables, linked from the footer of every page. The two lists
+split the installed packages between them: production what
+`dependencies` reach, development what only development dependencies
+reach, Pico among them. Together they cannot miss a bundled package,
+whichever scope it is declared in. morg itself is left off, and so is the
 README license-checker substitutes for a missing license file: such a
 package shows its license identifier and copyright line only.
 
