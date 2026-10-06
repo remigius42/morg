@@ -87,7 +87,8 @@ file does not hold becomes a `file:` link (a known limitation, see
 
 Worg files are identical in none: org→md→org writes org's canonical
 form (keyword values single-spaced, a list's blank lines dropped, a
-table's cells without padding), which hand-written org rarely is.
+table's cells without padding, no blank line after an element but a
+paragraph), which hand-written org rarely is.
 
 ## Known non-convergences
 
