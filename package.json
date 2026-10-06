@@ -53,7 +53,7 @@
     "dev:web": "vite web",
     "preview:web": "vite preview web --port 4173 --strictPort",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "licenses:check": "license-checker-rseidelsohn --production --onlyAllow \"MIT;ISC;BSD-2-Clause;BSD-3-Clause;Apache-2.0;GPL-3.0-or-later;0BSD\"",
+    "licenses:check": "node scripts/check-licenses.mjs",
     "lint": "npm run lint:prettier && npm run lint:cspell && npm run lint:markdown && npm run lint:eslint && npm run lint:knip && npm run typecheck",
     "lint:knip": "knip",
     "lint:packaging": "attw --pack . --ignore-rules cjs-resolves-to-esm",
