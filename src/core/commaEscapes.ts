@@ -16,7 +16,7 @@ import type { Node } from "./render.js"
 const MARK = "\uE000"
 
 const ESCAPED_LINE_RE = /^([ \t]*)(?=,+(?:\*|#\+))/
-const BLOCK_START_RE = /^[ \t]*#\+begin_(src|export|example)(?:[ \t]|$)/i
+const BLOCK_START_RE = /^[ \t]*#\+begin_(src|export|example)(?=\s|$)/i
 
 /**
  * org→md: marks the comma-escaped lines of src, export and example

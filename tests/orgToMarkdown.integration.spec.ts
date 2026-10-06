@@ -71,6 +71,10 @@ describe("convertOrgToMarkdown", () => {
     expect(
       convertOrgToMarkdown("#+begin_export html\n  ,#+x\n#+end_export\n")
     ).toBe("  #+x\n")
+    // a CRLF begin line without parameters too
+    expect(
+      convertOrgToMarkdown("#+begin_example\r\n,* x\r\n#+end_example\r\n")
+    ).toBe("```\n* x\r\n```\n")
     // text lines are no code, and keep their comma
     expect(convertOrgToMarkdown("a\n  ,* b\n")).toBe("a\n,\\* b\n")
   })
