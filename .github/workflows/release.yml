@@ -33,9 +33,12 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
       # the tag push does not re-run CI, so the release re-verifies what it is
       # about to ship. The web UI and its e2e suite are not in the tarball and
-      # are covered by CI on `main`, hence only lint, unit tests and the build.
+      # are covered by CI on `main`, hence only lint, the license check, unit
+      # tests and the build.
       - name: Lint
         run: npm run lint
+      - name: Check licenses
+        run: npm run licenses:check
       - name: Test
         run: npm run test:unit:ci
       - name: Build
