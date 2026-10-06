@@ -36,7 +36,9 @@ quote (pandoc's `gfm` reads no alert with a title either); a Logseq
 page in Vanilla md is a list, so its alerts are list items. GitHub
 reads a marker after decoding its escapes, so it shows an org quote
 starting with `[!NOTE]` as an alert. A type comes back lower case
-(`#+begin_Note` → `#+begin_note`).
+(`#+begin_Note` → `#+begin_note`). A callout of a type of other
+characters than letters, digits and `_.:|-` (`> [!a/b]`) comes back
+with its marker escaped.
 
 Images: org has no dedicated image syntax; links to image files map to
 md images, alt text ↔ link description. Image title attributes
