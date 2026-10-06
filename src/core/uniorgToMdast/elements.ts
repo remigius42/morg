@@ -106,10 +106,27 @@ function sizedImage(
   ]
 }
 
+// org-only blocks with no md equivalent travel the same way as
+// drawers: verbatim org text, re-parsed natively on the return trip
+// (keywords here are mid-file ones; leading ones became frontmatter)
+const VERBATIM_TYPES = new Set<string>([
+  "special-block",
+  "center-block",
+  "verse-block",
+  "comment-block",
+  "keyword",
+  "babel-call",
+  "diary-sexp",
+  "clock"
+])
+
 function transformUniorgElement(
   ctx: TransformContext,
   node: GreaterElementType | ElementType | Text
 ): RootContent | RootContent[] | null {
+  if (VERBATIM_TYPES.has(node.type)) {
+    return keyValueParagraph([orgNodeToText(node)])
+  }
   switch (node.type) {
     case "section":
       return transformSection(ctx, node)
@@ -125,18 +142,6 @@ function transformUniorgElement(
       return keyValueParagraph([
         orgNodeToText(node).replace(/^([ \t]*):(?=[ \t]|$)/gm, "$1\\:")
       ])
-    case "special-block":
-    case "center-block":
-    case "verse-block":
-    case "comment-block":
-    case "keyword":
-    case "babel-call" as ElementType["type"]:
-    case "diary-sexp" as ElementType["type"]:
-    case "clock":
-      // org-only blocks with no md equivalent travel the same way as
-      // drawers: verbatim org text, re-parsed natively on the return trip
-      // (keywords here are mid-file ones; leading ones became frontmatter)
-      return keyValueParagraph([orgNodeToText(node)])
     case "property-drawer":
       return transformPropertyDrawer(ctx, node)
     case "paragraph":
