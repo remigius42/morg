@@ -20,7 +20,8 @@ ONLY=${ONLY:-obs lsq webmd worg}
 declare -A FLAGS=(
   [obs]="--preset obsidian"
   [lsq]="--preset logseq"
-  [webmd]=""
+  # the web docs write emphasis `_x_`
+  [webmd]="--emphasis _"
   [worg]=""
 )
 

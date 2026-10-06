@@ -43,8 +43,11 @@ contents; the diffs stay in the work directory, for reading locally.
 | ------- | ------------------------------------------------------------- | ------------------------------ |
 | `obs`   | an Obsidian vault (local, private)                            | md→org→md, `--preset obsidian` |
 | `lsq`   | a Logseq org graph (local, private)                           | org→md→org, `--preset logseq`  |
-| `webmd` | the Rust book, GitHub's and MDN's docs                        | md→org→md, no flags            |
+| `webmd` | the Rust book, GitHub's and MDN's docs                        | md→org→md, `--emphasis _`      |
 | `worg`  | [Worg](https://git.sr.ht/~bzg/worg), the org community's docs | org→md→org, no flags           |
+
+The web docs write emphasis `_x_`, which `--emphasis _` keeps, so a
+file's identity diff shows what changed rather than every emphasis.
 
 The local corpora never enter the repo, and neither do their file
 names: this page names files of the web corpora only. The web corpora
