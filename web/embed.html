@@ -1,24 +1,9 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="color-scheme" content="light dark" />
+    <!-- chrome:head -->
     <meta name="robots" content="noindex" />
     <title>morg converter</title>
-    <link rel="stylesheet" href="/src/theme.css" />
-    <script>
-      // applied before first paint to avoid a theme flash; mirrors
-      // resolveTheme() in src/theme.ts
-      try {
-        const theme =
-          new URLSearchParams(location.search).get("theme") ||
-          localStorage.getItem("morg-theme")
-        if (theme === "dark" || theme === "light") {
-          document.documentElement.dataset.theme = theme
-        }
-      } catch {}
-    </script>
   </head>
   <body>
     <main class="container-fluid">

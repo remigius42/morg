@@ -1,6 +1,7 @@
 import { createRequire } from "node:module"
 import { resolve } from "node:path"
 import { defineConfig, type Plugin } from "vite"
+import { siteChrome } from "./chrome.js"
 import { resolveVersion } from "./version.js"
 
 /**
@@ -33,6 +34,7 @@ function domFreeEntityDecoder(): Plugin {
 }
 
 export default defineConfig({
+  plugins: [siteChrome()],
   define: {
     __MORG_VERSION__: JSON.stringify(resolveVersion())
   },
