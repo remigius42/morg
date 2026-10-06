@@ -12,8 +12,8 @@ import {
 } from "./context.js"
 import { transformPhrasingChildren } from "./phrasing.js"
 import { tagSeparator } from "./lists.js"
-import { KEYWORD_NAME } from "../frontmatterBlock.js"
 import { mayBeLineSyntax, readsAsPassthrough } from "../lineSyntax.js"
+import { KEYWORD_LINE_RE } from "../passthroughSource.js"
 import { attrHtmlValue, isImagePath, parseImgTag } from "../sizedImages.js"
 
 export function transformMdastTable(
@@ -265,8 +265,6 @@ export function transformMdastHeading(
     children: transformPhrasingChildren(ctx, node.children)
   }
 }
-
-const KEYWORD_LINE_RE = new RegExp(String.raw`^#\+${KEYWORD_NAME}: `)
 
 export function keywordOnlyLines(node: {
   children: PhrasingContent[]

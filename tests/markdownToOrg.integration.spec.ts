@@ -764,6 +764,11 @@ describe("verbatim passthrough", () => {
     }
   })
 
+  it("should end a block at an indented end line, as org does", () => {
+    const org = "#+begin_note\n*b*\n  #+end_note\n"
+    expect(convertMarkdownToOrg(org)).toBe(org)
+  })
+
   it("should keep an org block whose lines read as md syntax whole", () => {
     // a blank line and an indented one would be md code, `# ` a heading
     const org = "#+begin_verse\n  a\n\n      b\n# c\n- d\n#+end_verse\n"

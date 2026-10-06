@@ -3,6 +3,7 @@ import { visit } from "unist-util-visit"
 import { KEYWORD_NAME } from "./frontmatterBlock.js"
 import { keyValueEntries, PROPERTIES_MARKER } from "./keyValueLines.js"
 import { readsAsPassthrough } from "./lineSyntax.js"
+import { blockEndRe } from "./orgBlocks.js"
 
 // the first line of an org block or drawer
 const BLOCK_START_RE = /^#\+begin_(\S+)/i
@@ -33,7 +34,7 @@ export function orgElementEnd(lines: string[], start: number): number {
 function endPattern(line: string): RegExp | null {
   const block = BLOCK_START_RE.exec(line)?.[1]
   if (block) {
-    return new RegExp(`^#\\+end_${block.replace(/\W/g, "\\$&")}\\s*$`, "i")
+    return blockEndRe(block)
   }
   return DRAWER_START_RE.test(line) ? /^:end:\s*$/i : null
 }
