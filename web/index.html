@@ -36,17 +36,19 @@
         preserved, and after one round trip further conversions are
         byte-for-byte stable in both directions. Markdown-only constructs
         survive the trip through Org as <code>morg_</code> properties; Org-only
-        constructs travel through Markdown as
-        <code>key:: value</code> conventions. Frontmatter travels inert in a
-        marked Org comment block, not as Org keywords, which can act in Emacs.
-        Dialect presets for Logseq and Obsidian are built in, one per side of a
-        conversion: Logseq Org to plain Markdown is as much a conversion as
-        Logseq Org to Logseq Markdown. The Logseq preset converts a page as
-        Logseq's outline of blocks, a headline in Org, a bullet in Logseq
-        Markdown and a list item in plain Markdown per block, and maps page
-        properties to the <code>#+key:</code> lines Logseq reads. Two dialects
-        of one format translate, Logseq Markdown to plain Markdown say, changing
-        only what the two write differently.
+        constructs travel through Markdown in its own syntax where it has one
+        (special blocks as GFM alerts, descriptive lists as definition lists),
+        else as <code>key:: value</code> conventions or as Org text, or as HTML
+        where you choose it. Frontmatter travels inert in a marked Org comment
+        block, not as Org keywords, which can act in Emacs. Dialect presets for
+        Logseq and Obsidian are built in, one per side of a conversion: Logseq
+        Org to plain Markdown is as much a conversion as Logseq Org to Logseq
+        Markdown. The Logseq preset converts a page as Logseq's outline of
+        blocks, a headline in Org, a bullet in Logseq Markdown and a list item
+        in plain Markdown per block, and maps page properties to the
+        <code>#+key:</code> lines Logseq reads. Two dialects of one format
+        translate, Logseq Markdown to plain Markdown say, changing only what the
+        two write differently.
       </p>
       <p>
         <a href="./convert.html" class="button-3d"
