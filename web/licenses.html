@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <meta
+      name="description"
+      content="Licenses of the third-party packages in morg's Web UI"
+    />
+    <title>morg: third-party licenses</title>
+    <link rel="canonical" href="https://morg.binarypoetry.ch/licenses.html" />
+    <link rel="stylesheet" href="/src/theme.css" />
+    <script>
+      // applied before first paint to avoid a theme flash; mirrors
+      // resolveTheme() in src/theme.ts
+      try {
+        const theme =
+          new URLSearchParams(location.search).get("theme") ||
+          localStorage.getItem("morg-theme")
+        if (theme === "dark" || theme === "light") {
+          document.documentElement.dataset.theme = theme
+        }
+      } catch {}
+    </script>
+  </head>
+  <body>
+    <header class="container">
+      <nav>
+        <ul>
+          <li><strong>morg</strong></li>
+        </ul>
+        <ul>
+          <li><a href="./convert.html">Converter</a></li>
+          <li>
+            <a href="https://www.npmjs.com/package/@remigius42/morg">npm</a>
+          </li>
+          <li><a href="https://github.com/remigius42/morg">GitHub</a></li>
+          <li>
+            <div class="theme-switch" role="group" aria-label="Color scheme">
+              <button
+                id="themeLight"
+                class="theme-toggle"
+                aria-label="Light theme"
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <circle cx="12" cy="12" r="5" />
+                  <line x1="12" y1="1" x2="12" y2="3" />
+                  <line x1="12" y1="21" x2="12" y2="23" />
+                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                  <line x1="1" y1="12" x2="3" y2="12" />
+                  <line x1="21" y1="12" x2="23" y2="12" />
+                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                </svg>
+              </button>
+              <button
+                id="themeDark"
+                class="theme-toggle"
+                aria-label="Dark theme"
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                </svg>
+              </button>
+            </div>
+          </li>
+        </ul>
+      </nav>
+    </header>
+    <main class="container">
+      <h1>Third-party licenses</h1>
+      <p>
+        morg and this Web UI are built on the packages below. The runtime
+        dependencies are installed with morg and bundled into the Web UI. Of the
+        development dependencies, only
+        <a href="https://picocss.com">Pico CSS</a> ships, in this page's
+        stylesheet; the rest build and test morg.
+      </p>
+      <h2>Runtime dependencies</h2>
+      <table class="licenses">
+        <thead>
+          <tr>
+            <th scope="col">Package</th>
+            <th scope="col">Version</th>
+            <th scope="col">License</th>
+          </tr>
+        </thead>
+        <tbody id="production"></tbody>
+      </table>
+      <h2>Development dependencies</h2>
+      <table class="licenses">
+        <thead>
+          <tr>
+            <th scope="col">Package</th>
+            <th scope="col">Version</th>
+            <th scope="col">License</th>
+          </tr>
+        </thead>
+        <tbody id="development"></tbody>
+      </table>
+    </main>
+    <footer class="container">
+      <small>
+        Copyright 2026
+        <a href="https://www.binarypoetry.ch">Andreas Remigius Schmidt</a> ·
+        <a href="https://github.com/remigius42/morg/blob/main/LICENSE"
+          >GPL-3.0-or-later</a
+        >
+        · <a href="https://www.buymeacoffee.com/remigius">Buy me a coffee</a> ·
+        <span id="version"></span>
+      </small>
+    </footer>
+    <script type="module" src="/src/site.ts"></script>
+    <script type="module" src="/src/licensesPage.ts"></script>
+  </body>
+</html>

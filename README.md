@@ -338,3 +338,7 @@ and the test-first workflow; participation is governed by the
 ## License
 
 [GPL-3.0-or-later](LICENSE) (required by the uniorg dependencies).
+The licenses of the third-party packages morg and the Web UI are built
+on are listed at
+[morg.binarypoetry.ch/licenses.html](https://morg.binarypoetry.ch/licenses.html)
+(see [ADR 0008](docs/adr/0008-third-party-licenses-page.md)).

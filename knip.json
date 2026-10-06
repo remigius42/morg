@@ -5,6 +5,7 @@
     "src/cli.ts",
     "web/src/main.ts",
     "web/src/site.ts",
+    "web/src/licensesPage.ts",
     "web/src/pipeline/worker.ts"
   ],
   "project": ["src/**/*.ts", "web/src/**/*.ts"],

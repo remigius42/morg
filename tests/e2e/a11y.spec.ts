@@ -12,6 +12,9 @@ createAccessibilityTests("/convert.html", page =>
 createAccessibilityTests("/embed.html", page =>
   converted(page.locator("#output"))
 )
+createAccessibilityTests("/licenses.html", page =>
+  expect(page.locator("#development tr").first()).toBeVisible()
+)
 
 /**
  * States the pages only reach after an interaction. They matter more than

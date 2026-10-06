@@ -45,7 +45,8 @@ export default defineConfig({
       input: {
         index: resolve(import.meta.dirname, "index.html"),
         convert: resolve(import.meta.dirname, "convert.html"),
-        embed: resolve(import.meta.dirname, "embed.html")
+        embed: resolve(import.meta.dirname, "embed.html"),
+        licenses: resolve(import.meta.dirname, "licenses.html")
       }
     }
   }

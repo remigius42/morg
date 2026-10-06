@@ -4,3 +4,5 @@ coverage/
 tests/e2e/reports/
 *.log
 TODO.md
+# written by scripts/write-licenses.mjs before every web build
+web/public/licenses-*.json

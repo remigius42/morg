@@ -16,5 +16,6 @@ ignorePaths:
   - tests/e2e/reports # playwright's own html/trace output
   - .claude/worktrees # other checkouts of this repo
   - package-lock.json
+  - web/public/licenses-*.json # third-party license texts, written by the web build
   - LICENSE
   - cspell.project-words.txt

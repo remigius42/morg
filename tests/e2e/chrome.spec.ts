@@ -15,7 +15,7 @@ test.describe("page chrome", () => {
   test("stamps every page with the build version", async ({ page }) => {
     // `git describe --tags --always --dirty`, injected at build time; the
     // fallback string is what a build with no git history leaves behind
-    for (const url of ["/", "/convert.html", "/embed.html"]) {
+    for (const url of ["/", "/convert.html", "/embed.html", "/licenses.html"]) {
       await page.goto(url)
       await expect(page.locator("#version")).not.toBeEmpty()
       await expect(page.locator("#version")).not.toHaveText("unknown")

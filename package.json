@@ -48,6 +48,7 @@
     "version": "node scripts/release-changelog.mjs && git add CHANGELOG.md",
     "postversion": "printf '\\nNext:\\n  git push origin v%s\\n  wait for the Release run to pass\\n  git push\\n' \"$npm_package_version\"",
     "build": "tsc -p tsconfig.build.json",
+    "prebuild:web": "node scripts/write-licenses.mjs",
     "build:web": "vite build web",
     "dev:web": "vite web",
     "preview:web": "vite preview web --port 4173 --strictPort",

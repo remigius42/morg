@@ -350,3 +350,31 @@ nav li:has(> .theme-switch) {
   width: auto;
   padding-block: calc(var(--pico-form-element-spacing-vertical) * 0.375);
 }
+
+/* web/licenses.html: fixed columns, so an unfolded license keeps its
+   line breaks and scrolls within its cell rather than widening the page */
+.licenses {
+  table-layout: fixed;
+}
+
+.licenses th:nth-child(1) {
+  width: 35%;
+}
+
+.licenses th:nth-child(2) {
+  width: 12%;
+}
+
+.licenses td {
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+.licenses details {
+  margin: 0;
+}
+
+.licenses pre {
+  padding: var(--pico-spacing);
+  font-size: 0.75em;
+}
