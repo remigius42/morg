@@ -28,6 +28,13 @@ blocks, which are no special blocks (`center`, `comment`, `example`,
 `export`, `quote`, `src`, `verse`): Obsidian's `> [!example]` callout
 stays a quote, its marker unescaped. An org quote whose text starts
 with an alert's marker stays a quote, the marker escaped (`\[!NOTE]`).
+Known limitations: GitHub renders only those five types, and shows an
+alert with a title, in a list item or in another quote as a plain
+quote (pandoc's `gfm` reads no alert with a title either); a Logseq
+page in Vanilla md is a list, so its alerts are list items. GitHub
+reads a marker after decoding its escapes, so it shows an org quote
+starting with `[!NOTE]` as an alert. A type comes back lower case
+(`#+begin_Note` → `#+begin_note`).
 
 Images: org has no dedicated image syntax; links to image files map to
 md images, alt text ↔ link description. Image title attributes

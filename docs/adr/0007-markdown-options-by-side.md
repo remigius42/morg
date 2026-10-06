@@ -164,6 +164,12 @@ description list, and, under `useHtml`, a `<dl>`.
 - **Rejected: an `"org"` value.** Org text is not a way to spell a
   construct in Markdown; it is what goes through when Markdown has
   none (§3).
+- **Rejected: a substitute spelling for GFM alerts.** A special block
+  is a GFM alert (`> [!NOTE]`) in every Markdown; where it is not
+  rendered (VS Code's built-in preview, plain CommonMark) it reads as a
+  quote with its marker visible. No `"markdown"`-style fallback such
+  as `> **Note**`: that is a common hand-written quote, which would
+  come back as a special block.
 - **Rejected: a restore switch for a recorded style.** It would make a
   recorded file's markers depend on the converting config, silently
   lost without it, to add little `style` cannot.
