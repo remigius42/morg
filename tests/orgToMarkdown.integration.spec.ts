@@ -177,6 +177,10 @@ describe("convertOrgToMarkdown", () => {
     expect(convertMarkdownToOrg(convertOrgToMarkdown(formulas))).toBe(
       "x\n\n| 1 |\n|-|\n#+TBLFM: $1=2\n#+TBLFM: $1=3\n"
     )
+    // an empty keyword too (a babel result marker)
+    expect(
+      convertMarkdownToOrg(convertOrgToMarkdown("x\n\n#+RESULTS:\n| a |\n"))
+    ).toBe("x\n\n#+RESULTS:\n| a |\n|-|\n")
     // after a block in a CRLF file too
     expect(
       convertOrgToMarkdown(

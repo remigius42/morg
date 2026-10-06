@@ -63,8 +63,10 @@ function elementSource(markdown: string, offset: number): string | null {
 // unescaped, a `: ` line is Markdown text
 const FIXED_WIDTH_RE = /^[ \t]*\\:(?=[ \t]|$)/
 
-/** A `#+KEY: value` line, which org→md writes as it is. */
-export const KEYWORD_LINE_RE = new RegExp(String.raw`^#\+${KEYWORD_NAME}: `)
+/** A `#+KEY: value` line, the value maybe empty, which org→md writes as it is. */
+export const KEYWORD_LINE_RE = new RegExp(
+  String.raw`^#\+${KEYWORD_NAME}:(?: |$)`
+)
 
 // keyword lines' org text: org→md writes an empty keyword's value
 // after a blank (`#+RESULTS: `), which org does not

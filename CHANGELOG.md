@@ -102,11 +102,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   of a block in a drawer or special block, which travels as org text.
 - Adjacent Markdown tables stay apart in org: md → org wrote them
   with no blank line between them, which org reads as one table.
-- An org table keeps its `#+NAME:`, `#+CAPTION:`, `#+RESULTS:` and
-  other affiliated keywords, and its `#+TBLFM:` formulas, as lines
-  around the Markdown table; both were lost without a warning (the
-  keywords by uniorg), in a CRLF file too. Several `#+TBLFM:` lines
-  stay apart: uniorg joined them into one.
+- An org table keeps its `#+NAME:`, `#+CAPTION:`, `#+RESULTS:` (an
+  empty one too) and other affiliated keywords, and its `#+TBLFM:`
+  formulas, as lines around the Markdown table; both were lost
+  without a warning (the keywords by uniorg), in a CRLF file too.
+  Several `#+TBLFM:` lines stay apart: uniorg joined them into one.
 - An org link to a `//` path keeps its `%` as written: org → md
   percent-encoded it, md → org read the scheme-relative url as it is,
   so `%25` gained a `25` each round trip.
