@@ -1,6 +1,6 @@
 import type { OrgData, Link, Paragraph, Text } from "uniorg"
 import type { Parent } from "unist"
-import { visit } from "unist-util-visit"
+import { SKIP, visit } from "unist-util-visit"
 import { toString } from "orgast-util-to-string"
 import { maskCode } from "../core/outsideCode.js"
 import { FUZZY_LINK_RE } from "./links.js"
@@ -52,8 +52,14 @@ export function obsidian(): Preset {
 // org→md: an alert is a callout, its type lower case as Obsidian
 // writes it
 function writeCallouts(uniorgAst: OrgData): OrgData {
+  writeCalloutsIn(uniorgAst)
+  return uniorgAst
+}
+
+// the inner ones first: the quote takes a copy of the block's children
+function writeCalloutsIn(tree: Parent): void {
   visit(
-    uniorgAst as Parent,
+    tree,
     "special-block",
     (
       node: ParameterizedBlock,
@@ -63,11 +69,11 @@ function writeCallouts(uniorgAst: OrgData): OrgData {
       if (!parent || index === undefined || !isAlertType(node.blockType)) {
         return undefined
       }
+      writeCalloutsIn(node)
       parent.children[index] = alertQuote(node, calloutMarker(node))
-      return undefined
+      return SKIP
     }
   )
-  return uniorgAst
 }
 
 // not an embed, whose `|300` is a size

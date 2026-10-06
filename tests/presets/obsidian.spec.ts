@@ -137,6 +137,13 @@ describe("obsidian callouts", () => {
     )
   })
 
+  it("nest as callouts", () => {
+    both(
+      "#+begin_note\n#+begin_tip -\nx\n#+end_tip\n#+end_note\n",
+      "> [!note]\n>\n> > [!tip]-\n> >\n> > x\n"
+    )
+  })
+
   it("fold only in Obsidian Markdown", () => {
     // no alert elsewhere: the marker's `]` is followed by no space
     expect(convertMarkdownToOrg("> [!tip]- T\n")).toBe(
