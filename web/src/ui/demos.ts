@@ -21,8 +21,8 @@ Some *bold*, /italic/ and ~code~ text[fn:1].
 Quotes stay quotes.
 #+end_quote
 
-#+begin_tip Special blocks
-become GFM alerts.
+#+begin_tip
+Special blocks become GFM alerts.
 #+end_tip
 
 - Lists nest
@@ -59,9 +59,9 @@ Some **bold**, *italic* and \`code\` text[^1].
 
 > Quotes stay quotes.
 
-> [!TIP] Special blocks
+> [!TIP]
 >
-> become GFM alerts.
+> Special blocks become GFM alerts.
 
 - Lists nest
   1. ordered
@@ -139,9 +139,9 @@ export const OBSIDIAN_MD_DEMO = `<!-- Paste your Obsidian note here, or convert 
 
 Wikilinks to [[Another note]] and [[Another note|with an alias]].
 
-> [!tip]- Callouts fold
+> [!tip]
 >
-> and become org special blocks.
+> Callouts become org special blocks.
 
 ![diagram|300](diagram.png)
 

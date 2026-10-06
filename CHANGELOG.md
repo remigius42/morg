@@ -79,7 +79,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   sets each construct's HTML reading and Spelling.
 - The Web UI's demos show a special block as a GFM alert and a link to
   a headline, and Obsidian Markdown has its own demo: wikilinks, a
-  folded callout, an image's size and a task.
+  callout, an image's size and a task.
 
 ### Fixed
 
