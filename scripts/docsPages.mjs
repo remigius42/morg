@@ -77,9 +77,10 @@ export async function renderPage(file, markdown, published) {
 }
 
 /**
- * The docs index: every published page by title, a folder's pages
- * nested under its own index page.
- * @param {{ file: string, title: string }[]} pages
+ * The docs index: every page by title, a folder's pages nested under
+ * its own index page.
+ * @param {{ file: string, title: string }[]} pages the pages to list,
+ *   the docs index itself not among them
  * @returns {string}
  */
 export function indexPage(pages) {
@@ -89,7 +90,7 @@ export function indexPage(pages) {
     `<li><a href="${href(file)}">${escape(title)}</a></li>`
   const inFolder = ({ file }) =>
     file.startsWith("docs/") && posix.dirname(file) !== "docs"
-  const top = pages.filter(p => !inFolder(p) && p.file !== "docs/README.md")
+  const top = pages.filter(p => !inFolder(p))
   const folders = Object.groupBy(pages.filter(inFolder), ({ file }) =>
     posix.dirname(file)
   )

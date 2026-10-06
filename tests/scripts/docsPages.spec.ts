@@ -144,7 +144,6 @@ describe("renderPage's code blocks", () => {
 describe("indexPage", () => {
   it("lists every page, a folder's nested under its index", () => {
     const html = indexPage([
-      { file: "docs/README.md", title: "Documentation" },
       { file: "docs/adr/0001-x.md", title: "0001 & X" },
       { file: "docs/adr/README.md", title: "ADRs" },
       { file: "docs/mappings.md", title: "Mappings" },
@@ -156,7 +155,5 @@ describe("indexPage", () => {
     expect(html).toContain(
       `<li><a href="adr/index.html">ADRs</a><ul>\n<li><a href="adr/0001-x.html">0001 &amp; X</a></li>`
     )
-    // the index is this page, not an entry on it
-    expect(html).not.toContain(`href="index.html"`)
   })
 })

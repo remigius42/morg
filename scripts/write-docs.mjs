@@ -24,13 +24,15 @@ const published = new Set(files)
 
 rmSync("web/docs", { recursive: true, force: true })
 const pages = []
-for (const file of files) {
+// docs/README.md is linked to, as the index, but not rendered: the
+// index is generated
+for (const file of files.filter(file => file !== "docs/README.md")) {
   const { title, html } = await renderPage(
     file,
     readFileSync(file, "utf8"),
     published
   )
-  if (file !== "docs/README.md") write(pagePath(file), html)
+  write(pagePath(file), html)
   pages.push({ file, title })
 }
 write("docs/index.html", indexPage(pages))
