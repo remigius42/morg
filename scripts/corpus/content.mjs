@@ -138,8 +138,15 @@ for (const file of files) {
     continue
   }
   const read = ext === "org" ? orgContent : markdownContent
-  const before = read(readFileSync(file, "utf8"))
-  const after = read(readFileSync(tripped, "utf8"))
+  let before, after
+  try {
+    before = read(readFileSync(file, "utf8"))
+    after = read(readFileSync(tripped, "utf8"))
+  } catch (error) {
+    // a file the parser throws on counts as changed, not the run
+    report.push(file, `  unreadable: ${error.message.split("\n")[0]}`)
+    continue
+  }
   const changes = {
     "lost words": missing(before.words, after.words),
     "gained words": missing(after.words, before.words),
