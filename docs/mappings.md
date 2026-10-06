@@ -54,7 +54,10 @@ name's is a fuzzy link (`[[name]]`), a heading's slug a heading link
 its heading in Emacs; any other anchor is a custom ID link
 (`[[#custom-id]]` ↔ `#custom-id`). Link text equal to the heading or
 name is no description. Known limitations: of two headings of one
-name, org finds the first (`#a-1` comes back as `[[*A]]`); a fuzzy
+name, org finds the first (`#a-1` comes back as `[[*A]]`); a
+`<<target>>` or `#+NAME:` equal to a heading's slug takes its anchor
+(`* Setup` and `#+NAME: setup`: `[[*Setup]]` comes back as
+`[[setup][Setup]]`, which org follows to the named element); a fuzzy
 link to a name the file does not hold stays a relative path, a `file:`
 link on the way back.
 
