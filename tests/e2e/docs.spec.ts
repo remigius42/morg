@@ -89,6 +89,21 @@ test.describe("docs pages", () => {
     await expect(outline).toBeHidden()
   })
 
+  test("mark the section being read in the outline", async ({ page }) => {
+    const outline = page.getByRole("navigation", { name: "On this page" })
+    const current = outline.locator(`[aria-current="location"]`)
+    await page.goto("/docs/adr/0009-docs-on-the-site.html")
+    await expect(current).toHaveText("Status")
+
+    await page
+      .getByRole("heading", { name: "Decision" })
+      .evaluate(heading => heading.scrollIntoView())
+    await expect(current).toHaveText("Decision")
+
+    await page.keyboard.press("End")
+    await expect(current).toHaveText("Consequences")
+  })
+
   test("color code by the chosen theme, not the OS's", async ({ page }) => {
     // light-plus's and synthwave-84's color for a TOML table name
     const name = page

@@ -1,5 +1,6 @@
 // Shared chrome entry for the non-embedded pages; the stylesheet is
 // linked in the HTML head so styles apply before first paint.
+import { followOutline } from "./docsOutline.js"
 import { followFrameHeight } from "./embedHeight.js"
 import { applyTheme, initThemeToggle } from "./theme.js"
 import { renderVersion } from "./version.js"
@@ -16,4 +17,10 @@ initThemeToggle(
 const frame = document.querySelector<HTMLIFrameElement>(".site-frame")
 if (frame) {
   followFrameHeight(frame)
+}
+
+// only a docs page with sections has an outline
+const outline = document.querySelector<HTMLElement>(".docs-outline")
+if (outline) {
+  followOutline(outline)
 }

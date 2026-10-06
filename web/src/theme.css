@@ -452,6 +452,10 @@ nav li:has(> .theme-switch) {
   color: var(--pico-muted-color);
 }
 
+.docs > nav a[aria-current] {
+  color: var(--pico-primary);
+}
+
 .docs-outline {
   width: 13rem;
 }
