@@ -26,7 +26,7 @@ digits, `_` and `-`, or not starting with a letter, stays org text, as
 do `query` blocks (a query is no Markdown) and the names of org's own
 blocks, which are no special blocks (`center`, `comment`, `example`,
 `export`, `quote`, `src`, `verse`): Obsidian's `> [!example]` callout
-stays a quote, its marker unescaped. An org quote whose text starts
+stays a quote, its marker (and fold, `[!example]-`) unescaped. An org quote whose text starts
 with an alert's marker stays a quote, the marker escaped (`\[!NOTE]`).
 Known limitations: GitHub renders only those five types, and shows an
 alert with a title, in a list item or in another quote as a plain

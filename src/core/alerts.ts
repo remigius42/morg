@@ -86,8 +86,9 @@ export function alertQuote(
   }
 }
 
-// a callout's marker in a quote's text, of a type that is no alert
-const CALLOUT_RE = /^\[!([\p{L}\p{N}_.:|-]+)\](?=[ \t\n]|$)/u
+// a callout's marker in a quote's text, of a type that is no alert,
+// and its fold
+const CALLOUT_RE = /^\[!([\p{L}\p{N}_.:|-]+)\][+-]?(?=[ \t\n]|$)/u
 
 /**
  * org→md: a quote whose text starts with the marker of a callout of no

@@ -1208,4 +1208,13 @@ describe("GFM alerts", () => {
     )
     expect(mdRoundTrip(markdown)).toBe(markdown)
   })
+
+  it("leave a folded callout of no alert type as written", () => {
+    for (const markdown of [
+      "> [!example]- Title\n> b\n",
+      "> [!quote]+\n> b\n"
+    ]) {
+      expect(mdRoundTrip(markdown)).toBe(markdown)
+    }
+  })
 })
