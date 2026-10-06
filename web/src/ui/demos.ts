@@ -21,6 +21,10 @@ Some *bold*, /italic/ and ~code~ text[fn:1].
 Quotes stay quotes.
 #+end_quote
 
+#+begin_tip Special blocks
+become GFM alerts.
+#+end_tip
+
 - Lists nest
   1. ordered
   2. too
@@ -35,6 +39,8 @@ console.log("fenced code survives")
 #+end_src
 
 - term :: a definition list entry
+
+Links to headlines: [[*morg demo][back to the top]].
 
 [fn:1] Footnotes survive the round trip.
 `
@@ -53,6 +59,10 @@ Some **bold**, *italic* and \`code\` text[^1].
 
 > Quotes stay quotes.
 
+> [!TIP] Special blocks
+>
+> become GFM alerts.
+
 - Lists nest
   1. ordered
   2. too
@@ -68,6 +78,8 @@ console.log("fenced code survives")
 
 term
 :   a definition list entry
+
+Links to headlines: [back to the top](#morg-demo).
 
 [^1]: Footnotes survive the round trip.
 `

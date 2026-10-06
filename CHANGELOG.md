@@ -77,6 +77,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   only those of the sides the conversion has (normalizing Org goes
   through Markdown, so its HTML options show too), and a compact table
   sets each construct's HTML reading and Spelling.
+- The Web UI's demos show a special block as a GFM alert and a link to
+  a headline.
 
 ### Fixed
 
