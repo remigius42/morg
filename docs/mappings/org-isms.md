@@ -59,6 +59,8 @@ Both are invisible in rendered output, so the mapping is lossless in
 both directions. A `-->` inside the comment body is written as
 `--&gt;` (and decoded on the way back), since it would otherwise close
 the HTML comment early and leak the rest of the line into the page.
+A comment that starts a list item goes on the line below the bullet
+(`-`, then `# …` indented): org reads `- # …` as text.
 
 ## Underline, scripts and descriptive lists
 

@@ -121,6 +121,16 @@ function verbatimParagraph(
     : ({ type: ORG_VERBATIM, value: `${org}\n` } as unknown as Text)
 }
 
+// org attaches keywords on the bullet's line to nothing: the element
+// they belong to starts on the next; a comment there reads as text
+function startsBelowBullet(child: unknown): boolean {
+  const first = child as { type?: string; affiliated?: object } | undefined
+  return (
+    first?.type === "comment" ||
+    (!!first?.affiliated && Object.keys(first.affiliated).length > 0)
+  )
+}
+
 function transformMdastListItem(
   ctx: TransformContext,
   item: MdastListItem,
@@ -168,10 +178,7 @@ function transformMdastListItem(
       ]
     })
     .filter(Boolean)
-  // org attaches keywords on the bullet's line to nothing: the element
-  // they belong to starts on the next
-  const first = children[0] as { affiliated?: object } | undefined
-  if (first?.affiliated && Object.keys(first.affiliated).length) {
+  if (startsBelowBullet(children[0])) {
     children.unshift({ type: "text", value: `${BULLET_LINE_END}\n` })
   }
   return {

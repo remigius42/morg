@@ -209,6 +209,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   a `logseq-query` code block there and back. It was a `query` code
   block, which Obsidian runs as its own search, and came back a source
   block (`#+begin_src query`).
+- An HTML comment that starts a list item (`- <!--d-->`) stays a
+  comment: md → org wrote it on the bullet's line (`- # d`), where org
+  reads text, and it came back visible (`- \# d`).
 
 ## [0.10.1] - 2026-10-04
 

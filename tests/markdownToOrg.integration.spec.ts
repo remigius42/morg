@@ -372,6 +372,14 @@ This is a paragraph.
     expect(convertMarkdownToOrg(markdown)).toBe("# a\n#   b\n")
   })
 
+  it("should start an item's leading comment below its bullet", () => {
+    // org reads `- # d` as text, a comment needs a line of its own
+    const org = convertMarkdownToOrg("- <!--d-->\n- x\n")
+
+    expect(org).toBe("-\n  # d\n- x\n")
+    expect(convertOrgToMarkdown(org)).toBe("- <!-- d -->\n- x\n")
+  })
+
   it("should restore an escaped comment terminator", () => {
     const markdown = "<!-- see --&gt; here -->\n"
 
