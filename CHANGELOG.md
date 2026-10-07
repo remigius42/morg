@@ -83,6 +83,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The Web UI's landing page keeps its text to the docs' reading width,
   about 75 characters a line, centered as the docs' text is, and lists what morg does in four points
   instead of one long paragraph; the detail is in the docs.
+- The Web UI and the docs draw arrows (`→`, `↔`) outside code in
+  DejaVu Sans, subset to them, centered on the lowercase letters:
+  Arial's sat low and small beside them. DejaVu's license is on the licenses page.
 - Logseq org and Logseq md write a block's begin and end lines in
   upper case (`#+BEGIN_SRC sh`, `#+END_QUOTE`), as Logseq does; org →
   md → org changed them to Emacs's lower case (`#+begin_src`), a

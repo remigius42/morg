@@ -3,6 +3,7 @@ autolink
 autolinks
 beamer
 binarypoetry
+Bitstream
 blockquotes
 canonicalizer
 cindex
@@ -11,6 +12,7 @@ Comeau
 commitlint
 convergently
 Dataview
+dejavu
 desynchronize
 desynchronizes
 dotless

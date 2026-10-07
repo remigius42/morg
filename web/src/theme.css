@@ -1,8 +1,25 @@
 /* Brand theme matching binarypoetry.ch: oklch hue 90° ramp, Arial. */
 @import url("@picocss/pico/css/pico.min.css");
 
+/* Arial's arrows sit low and small beside its letters; DejaVu Sans's,
+   written by scripts/write-arrow-font.mjs, sit on the middle of the
+   lowercase ones */
+@font-face {
+  font-family: morg-arrows;
+  src: url("./fonts/arrows-regular.woff2") format("woff2");
+  font-weight: 400;
+  unicode-range: U+2190-2194;
+}
+
+@font-face {
+  font-family: morg-arrows;
+  src: url("./fonts/arrows-bold.woff2") format("woff2");
+  font-weight: 700;
+  unicode-range: U+2190-2194;
+}
+
 :root {
-  --pico-font-family: arial, helvetica, sans-serif;
+  --pico-font-family: morg-arrows, arial, helvetica, sans-serif;
   --theme-color: oklch(37% 0.075 90deg);
   --theme-color-2: oklch(52% 0.075 90deg);
   --theme-color-soft: oklch(68% 0.075 90deg / 12%);

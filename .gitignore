@@ -8,3 +8,5 @@ TODO.md
 web/public/licenses-*.json
 # written by scripts/write-docs.mjs before every web build
 web/docs/
+# written by scripts/write-arrow-font.mjs before every web build
+web/src/fonts/

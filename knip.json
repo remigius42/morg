@@ -18,5 +18,7 @@
     // and the plugin's default entry only covers the specs
     "entry": ["tests/e2e/**/*.ts"]
   },
-  "ignoreDependencies": ["@picocss/pico"]
+  // reached from CSS (Pico) and through require.resolve (DejaVu's font
+  // files, scripts/write-arrow-font.mjs), neither of which knip traces
+  "ignoreDependencies": ["@picocss/pico", "dejavu-fonts-ttf"]
 }

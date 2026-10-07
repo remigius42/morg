@@ -36,7 +36,8 @@ package shows its license identifier and copyright line only.
 
 CI separately fails on a production dependency whose license is not
 GPL-3.0-compatible (`npm run licenses:check`). Development
-dependencies are not checked: they do not ship, Pico (MIT) aside, and
+dependencies are not checked: they do not ship, Pico (MIT) and DejaVu
+Sans's arrows (Bitstream Vera, public domain changes) aside, and
 several are MPL-2.0, BlueOak or Python-2.0.
 
 ## Consequences
