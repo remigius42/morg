@@ -366,6 +366,12 @@ describe("translateMarkdown", () => {
     ).toBe("a <!-- fix `foo()` later --> b[^1] `%%`\n\n[^1]: see `x`\n")
   })
 
+  it("keeps an Obsidian comment's --> in it", () => {
+    expect(
+      translateMarkdown("a %%x-->y%% b\n", { inputPreset: obsidian() })
+    ).toBe("a <!--x--&gt;y--> b\n")
+  })
+
   it("writes the bullets a style names", () => {
     expect(
       translateMarkdown("- a\n\t- b\n", {

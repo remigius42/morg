@@ -234,7 +234,9 @@ function toVanilla(markdown: string): string {
   const edits: Edit[] = []
   for (const { index, 0: comment } of masked.matchAll(COMMENT_RE)) {
     const end = index + comment.length
-    edits.push([index, end, `<!--${markdown.slice(index + 2, end - 2)}-->`])
+    // a `-->` in it would end it early; core reads `--&gt;` back
+    const body = markdown.slice(index + 2, end - 2).replaceAll("-->", "--&gt;")
+    edits.push([index, end, `<!--${body}-->`])
     // a footnote in a comment is part of it
     masked =
       masked.slice(0, index) + "\0".repeat(comment.length) + masked.slice(end)

@@ -180,6 +180,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Translated to Vanilla Markdown, a `CLOSED:` line is a `closed::` line
   and back; a `closed::`, `scheduled::` or `deadline::` line holding no
   timestamp stays a property.
+- Obsidian md → Vanilla md keeps a comment's `-->` in it
+  (`%%a-->b%%` → `<!--a--&gt;b-->`): it closed the HTML comment early,
+  showing the rest.
 
 ## [0.10.1] - 2026-10-04
 
