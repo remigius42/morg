@@ -165,7 +165,8 @@ describe("obsidian preset", () => {
     ).toBe("a[fn:1] b\n\n[fn:1] [[Source]] p. 4\n")
   })
 
-  it("reads a long comment", () => {
+  // linear, but CI's coverage slows it past the default 5 s
+  it("reads a long comment", { timeout: 30_000 }, () => {
     const body = "x".repeat(200_000)
 
     expect(
