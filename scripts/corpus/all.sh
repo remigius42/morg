@@ -9,6 +9,8 @@
 # MORG: the CLI (default: this checkout's dist/cli.js); LISTS: the
 # lists' prefix (default: /tmp/c); WORK: the output directories' prefix
 # (default: /tmp/morg-corpus); ONLY: the corpora to run (default: all).
+# Each output directory's `.ref` names the commit the CLI was built
+# from, which compare.sh checks the baseline's against main.
 set -euo pipefail
 
 root=$(cd "$(dirname "$0")/../.." && pwd)
@@ -16,6 +18,7 @@ export MORG=${MORG:-$root/dist/cli.js}
 LISTS=${LISTS:-/tmp/c}
 WORK=${WORK:-/tmp/morg-corpus}
 ONLY=${ONLY:-obs lsq webmd worg}
+ref=$(git -C "$(dirname "$MORG")/.." rev-parse --short HEAD)
 
 declare -A FLAGS=(
   [obs]="--preset obsidian"
@@ -31,5 +34,6 @@ for corpus in $ONLY; do
       WORK="$WORK-$corpus" xargs -0 "$root/scripts/corpus/roundtrip.sh" \
       < "$LISTS-$corpus" | tail -1
   )
+  echo "$ref" > "$WORK-$corpus/.ref"
   echo "$corpus: $counts"
 done

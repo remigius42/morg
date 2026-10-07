@@ -62,7 +62,10 @@ Before committing a change that affects parsing or writing:
 
 1. `npm run build`, then `scripts/corpus/all.sh`.
 2. The baseline run (once per baseline, after `setup.sh` or moving
-   `/tmp/morg-base` to a new `main`).
+   `/tmp/morg-base` to a new `main`), of only the corpora the commits
+   since the last one touch: `all.sh` records each run's commit in its
+   directory's `.ref`, and `compare.sh` warns where the baseline's is
+   not `main`.
 3. `scripts/corpus/compare.sh`: a file that converges on the baseline
    must converge on the change (no new non-convergences), a file
    identical there must stay identical, and a file that keeps its

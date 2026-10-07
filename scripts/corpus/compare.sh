@@ -8,12 +8,14 @@
 #
 # WORK, BASE: the two runs' directory prefixes (default:
 # /tmp/morg-corpus, /tmp/morg-corpus-base); ONLY: the corpora (default:
-# all).
+# all). Warns where the baseline's run is not of main (all.sh's `.ref`):
+# rerun only the corpora the commits in between touch.
 set -euo pipefail
 
 WORK=${WORK:-/tmp/morg-corpus}
 BASE=${BASE:-/tmp/morg-corpus-base}
 ONLY=${ONLY:-obs lsq webmd worg}
+main=$(git -C "$(dirname "$0")" rev-parse --short main)
 
 # the files a run flags as `kind`: convergence, identity or content
 flagged() {
@@ -26,6 +28,10 @@ flagged() {
 }
 
 for corpus in $ONLY; do
+  base=$(cat "$BASE-$corpus/.ref" 2> /dev/null || echo unknown)
+  if [ "$base" != "$main" ]; then
+    echo "warning: $corpus baseline is of $base, main is $main" >&2
+  fi
   for kind in convergence identity content; do
     new=$(comm -13 <(flagged "$BASE-$corpus" "$kind") \
       <(flagged "$WORK-$corpus" "$kind"))
