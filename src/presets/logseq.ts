@@ -4,8 +4,7 @@ import type {
   Paragraph,
   Text,
   Link,
-  SpecialBlock,
-  SrcBlock
+  SpecialBlock
 } from "uniorg"
 import type { Parent } from "unist"
 import { SKIP, visit } from "unist-util-visit"
@@ -27,6 +26,7 @@ import { orgNodeToText } from "../core/uniorgToMdast/shared.js"
 import type { Link as MdastLink, Root as MdastRoot } from "mdast"
 import { FUZZY_LINK_RE } from "./links.js"
 import type { Preset } from "./types.js"
+import { codeToQueryBlocks, queryBlocksToCode } from "./queryBlocks.js"
 import { writeSizeMaps } from "./logseqImageSizes.js"
 import {
   frontmatterLength,
@@ -83,7 +83,7 @@ function pagePreset(): Preset {
         org: rewriteLabeledPageRefs
       },
       write: uniorgAst => {
-        codeToQueryBlocks(uniorgAst)
+        codeToQueryBlocks(uniorgAst, QUERY_LANGUAGE)
         keepSpecialBlocks(uniorgAst)
         pageProperties(uniorgAst)
         return extractInlineSpecifics(uniorgAst)
@@ -114,7 +114,7 @@ function blockPreset(): Preset {
       },
       write: uniorgAst => {
         writeSizeMaps(uniorgAst)
-        codeToQueryBlocks(uniorgAst)
+        codeToQueryBlocks(uniorgAst, QUERY_LANGUAGE)
         keepSpecialBlocks(uniorgAst)
         bareUrlsToText(uniorgAst)
         return extractInlineSpecifics(uniorgAst)
@@ -557,7 +557,7 @@ function pageProperties(uniorgAst: OrgData): void {
 // Vanilla Markdown keeps as text (ADR 0006)
 function readOrgInline(uniorgAst: OrgData): OrgData {
   // first: a query's body is Logseq's query language, not org text
-  queryBlocksToCode(uniorgAst)
+  queryBlocksToCode(uniorgAst, QUERY_LANGUAGE)
   keepVerbatimText(uniorgAst)
   repairHighlights(uniorgAst)
   return uniorgAst
@@ -576,7 +576,7 @@ function vanillaReader(preset: Preset): Preset {
         ...read,
         org: uniorgAst => {
           const tree = read?.org?.(uniorgAst) ?? uniorgAst
-          codeToQueryBlocks(tree, "QUERY")
+          codeToQueryBlocks(tree, QUERY_LANGUAGE, "QUERY")
           return tree
         }
       }
@@ -626,67 +626,6 @@ function keepSpecialBlocks(uniorgAst: OrgData): void {
 // query language carries it (ADR 0006); Logseq Markdown writes the
 // block itself, as Logseq does
 const QUERY_LANGUAGE = "query"
-
-function queryBlocksToCode(uniorgAst: OrgData): void {
-  visit(
-    uniorgAst as Parent,
-    "special-block",
-    (
-      node: SpecialBlock,
-      index: number | undefined,
-      parent: Parent | undefined
-    ) => {
-      if (
-        node.blockType.toUpperCase() !== "QUERY" ||
-        !parent ||
-        index === undefined
-      ) {
-        return undefined
-      }
-      const lines = orgNodeToText({ ...node, affiliated: {} }).split("\n")
-      parent.children[index] = {
-        type: "src-block",
-        affiliated: node.affiliated,
-        language: QUERY_LANGUAGE,
-        // the block as written, for Logseq Markdown to write it back
-        blockType: node.blockType,
-        switches: null,
-        parameters: null,
-        value: `${lines.slice(1, -1).join("\n")}\n`
-      } as unknown as Parent["children"][number]
-      return undefined
-    }
-  )
-}
-
-// a query block read as a code block (queryBlocksToCode) goes back as
-// it was written; with a fallback type, so does any `query` code block,
-// as Vanilla Markdown carries a query block
-function codeToQueryBlocks(uniorgAst: OrgData, fallback?: string): void {
-  visit(
-    uniorgAst as Parent,
-    "src-block",
-    (node: SrcBlock, index: number | undefined, parent: Parent | undefined) => {
-      const type = (node as { blockType?: string }).blockType ?? fallback
-      if (
-        node.language !== QUERY_LANGUAGE ||
-        !type ||
-        !parent ||
-        index === undefined
-      ) {
-        return undefined
-      }
-      // a Markdown code block's value ends short of its last line break
-      const body = node.value.replace(/\n?$/, "\n")
-      const [block] =
-        tryParse(`#+begin_${type}\n${body}#+end_${type}\n`)?.children ?? []
-      if (block) {
-        parent.children[index] = block
-      }
-      return undefined
-    }
-  )
-}
 
 function extractInlineSpecifics(uniorgAst: OrgData): OrgData {
   keepVerbatimText(uniorgAst)

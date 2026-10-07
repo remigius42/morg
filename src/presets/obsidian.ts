@@ -1,12 +1,4 @@
-import type {
-  OrgData,
-  ExportSnippet,
-  Link,
-  Paragraph,
-  SpecialBlock,
-  SrcBlock,
-  Text
-} from "uniorg"
+import type { OrgData, ExportSnippet, Link, Paragraph, Text } from "uniorg"
 import type { Parent } from "unist"
 import { visit } from "unist-util-visit"
 import { toString } from "orgast-util-to-string"
@@ -21,8 +13,7 @@ import {
 } from "../core/sizedImages.js"
 import { applyEdits, type Edit } from "../core/edits.js"
 import { commentText } from "../core/mdastToUniorg/blocks.js"
-import { tryParse } from "../core/render.js"
-import { orgNodeToText } from "../core/uniorgToMdast/shared.js"
+import { codeToQueryBlocks, queryBlocksToCode } from "./queryBlocks.js"
 import type { Preset } from "./types.js"
 
 /**
@@ -69,64 +60,15 @@ export function obsidian(): Preset {
 const LOGSEQ_QUERY_LANGUAGE = "logseq-query"
 
 // org→md: a query block, or one the Logseq preset read as a `query`
-// code block, marked with the block's type as written
+// code block
 function writeLogseqQueries(uniorgAst: OrgData): OrgData {
-  visit(uniorgAst as Parent, "src-block", (node: SrcBlock) => {
-    if ((node as { blockType?: string }).blockType) {
-      node.language = LOGSEQ_QUERY_LANGUAGE
-    }
-  })
-  visit(
-    uniorgAst as Parent,
-    "special-block",
-    (
-      node: SpecialBlock,
-      index: number | undefined,
-      parent: Parent | undefined
-    ) => {
-      if (
-        node.blockType.toUpperCase() !== "QUERY" ||
-        !parent ||
-        index === undefined
-      ) {
-        return
-      }
-      const lines = orgNodeToText({ ...node, affiliated: {} }).split("\n")
-      parent.children[index] = {
-        type: "src-block",
-        affiliated: node.affiliated,
-        language: LOGSEQ_QUERY_LANGUAGE,
-        switches: null,
-        parameters: null,
-        value: `${lines.slice(1, -1).join("\n")}\n`
-      } as unknown as Parent["children"][number]
-    }
-  )
+  queryBlocksToCode(uniorgAst, LOGSEQ_QUERY_LANGUAGE)
   return uniorgAst
 }
 
 // md→org: a Logseq query's code block is the query block again
 function readLogseqQueries(uniorgAst: OrgData): OrgData {
-  visit(
-    uniorgAst as Parent,
-    "src-block",
-    (node: SrcBlock, index: number | undefined, parent: Parent | undefined) => {
-      if (
-        node.language !== LOGSEQ_QUERY_LANGUAGE ||
-        !parent ||
-        index === undefined
-      ) {
-        return
-      }
-      // a Markdown code block's value ends short of its last line break
-      const body = node.value.replace(/\n?$/, "\n")
-      const [block] =
-        tryParse(`#+BEGIN_QUERY\n${body}#+END_QUERY\n`)?.children ?? []
-      if (block) {
-        parent.children[index] = block
-      }
-    }
-  )
+  codeToQueryBlocks(uniorgAst, LOGSEQ_QUERY_LANGUAGE, "QUERY")
   return uniorgAst
 }
 
