@@ -26,6 +26,9 @@ Org → md writes them as an HTML comment and a footnote, which Obsidian
 reads, so they converge after one round trip. A `%%` outside text (a
 link's target, a callout's title) or in a wikilink stays as written,
 and a diary timestamp's `<%%(…)>` is org's, no comment.
+A Logseq query block (`#+BEGIN_QUERY`) is a `logseq-query` code block
+and back: Obsidian runs a `query` code block as its own search, which
+stays a source block in org (`#+begin_src query`).
 
 ## Obsidian md
 
@@ -43,3 +46,7 @@ delimiters count outside code, math, HTML and wikilinks only, a diary
 timestamp's `<%%(` none, but what they hold may be code. The way back has nothing else to do: Obsidian reads both.
 Wikilinks and embeds (`[[Page]]`, `![[image.png]]`) stay in Vanilla
 md, which cannot resolve a note's name to its file without the vault.
+A known limit: Vanilla md carries a Logseq query as a `query` code
+block, Obsidian's search, so translating within Markdown leaves it so
+(not `logseq-query`), and Obsidian's own search goes to Logseq md as a
+query block.

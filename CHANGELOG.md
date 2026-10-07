@@ -202,6 +202,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   survive in a quote, a center or a special block, where they were
   dropped without a warning, and on a table that leads the file, where
   they went to the frontmatter and came back apart from the table.
+- A Logseq query block (`#+BEGIN_QUERY`) survives Obsidian md: it is
+  a `logseq-query` code block there and back. It was a `query` code
+  block, which Obsidian runs as its own search, and came back a source
+  block (`#+begin_src query`).
 
 ## [0.10.1] - 2026-10-04
 

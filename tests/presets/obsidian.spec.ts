@@ -222,6 +222,49 @@ describe("obsidian preset", () => {
     expect(convertMarkdownToOrg(markdown, { preset: obsidian() })).toBe(org)
   })
 
+  it("carries a Logseq query in its own code block", () => {
+    // Obsidian runs a `query` code block as its search
+    const org = "* a\n#+BEGIN_QUERY\n{:q 1}\n#+END_QUERY\n"
+    const markdown = convertOrgToMarkdown(org, {
+      inputPreset: logseq(),
+      outputPreset: obsidian()
+    })
+    expect(markdown).toBe("- a\n\n  ```logseq-query\n  {:q 1}\n  ```\n")
+    expect(
+      convertMarkdownToOrg(markdown, {
+        inputPreset: obsidian(),
+        outputPreset: logseq()
+      })
+    ).toBe("* a\n\n#+begin_QUERY\n{:q 1}\n#+end_QUERY\n")
+    // without Logseq too
+    const vanilla = "#+begin_query\n{:q 1}\n#+end_query\n"
+    expect(convertOrgToMarkdown(vanilla, { preset: obsidian() })).toBe(
+      "```logseq-query\n{:q 1}\n```\n"
+    )
+    // Obsidian's own query stays code
+    expect(
+      convertMarkdownToOrg("```query\ntag:#a\n```\n", {
+        inputPreset: obsidian(),
+        outputPreset: logseq()
+      })
+    ).toBe("* #+begin_src query\ntag:#a\n#+end_src\n")
+    expect(
+      convertOrgToMarkdown("#+begin_src query\ntag:#a\n#+end_src\n", {
+        preset: obsidian()
+      })
+    ).toBe("```query\ntag:#a\n```\n")
+  })
+
+  it("keeps a named Logseq query's name and body apart", () => {
+    const org = "#+NAME: q\n#+begin_query\n{:q 1}\n#+end_query\n"
+    const markdown = convertOrgToMarkdown(org, { preset: obsidian() })
+
+    expect(markdown).toBe("#+NAME: q\n\n```logseq-query\n{:q 1}\n```\n")
+    expect(convertMarkdownToOrg(markdown, { preset: obsidian() })).toBe(
+      "#+NAME: q\n#+begin_QUERY\n{:q 1}\n#+end_QUERY\n"
+    )
+  })
+
   it("comments and inline footnotes converge after one round trip", () => {
     const roundTrip = (md: string): string =>
       convertOrgToMarkdown(convertMarkdownToOrg(md, { preset: obsidian() }), {
