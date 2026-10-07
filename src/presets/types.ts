@@ -59,12 +59,14 @@ export type FragmentConverter = (
 ) => string
 
 /**
- * A preset's Markdown dialect. `read` runs in md→org: `mdast` on the
- * parse, before the generic transform, with the source at hand; `org`
- * after it. `write` runs in org→md before the generic transform.
+ * A preset's Markdown dialect. `read` runs in md→org: `source` on the
+ * text, before the parse; `mdast` on the parse, before the generic
+ * transform, with the source at hand; `org` after it. `write` runs in
+ * org→md before the generic transform.
  */
 export interface MarkdownDialect {
   read?: {
+    source?: (markdown: string) => string
     mdast?: (mdast: MdastRoot, markdown: string) => void
     org?: (uniorgAst: OrgData) => OrgData
   }

@@ -49,10 +49,13 @@ export function convertMarkdownToOrg(
   markdown: string,
   options: MarkdownToOrgOptions = {}
 ): string {
+  const sides = resolveSides(options, "markdown", "org")
+  // the input's syntax Markdown has none for, read on the whole page
+  // before a preset takes over and converts it block by block
   return convertMarkdownSides(
-    markdown,
+    sides.input?.markdown?.read?.source?.(markdown) ?? markdown,
     options,
-    resolveSides(options, "markdown", "org")
+    sides
   )
 }
 

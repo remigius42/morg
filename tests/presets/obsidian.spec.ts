@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest"
 import { convertMarkdownToOrg } from "../../src/markdownToOrg.js"
 import { convertOrgToMarkdown } from "../../src/orgToMarkdown.js"
 import { obsidian } from "../../src/presets/obsidian.js"
+import { logseq } from "../../src/presets/logseq.js"
 
 describe("obsidian preset", () => {
   it("should convert org fuzzy links to wikilinks", () => {
@@ -112,6 +113,123 @@ describe("obsidian preset", () => {
         preset: obsidian()
       })
     ).toBe("A [[file:img.png][a|300]] b\n\n- [[file:d.png][c|3]]\n")
+  })
+
+  it("reads a comment as an org comment, inline as an html snippet", () => {
+    const markdown = "%%alone%%\n\na %%hidden%% b `%%code%%`\n\n%%\nblock\n%%\n"
+
+    expect(convertMarkdownToOrg(markdown, { preset: obsidian() })).toBe(
+      "# alone\na @@html:<!--hidden-->@@ b ~%%code%%~\n\n# block\n"
+    )
+  })
+
+  it("reads a comment starting a line's text as an html snippet", () => {
+    expect(
+      convertMarkdownToOrg(
+        "%%c%% seen\n\n- %%d%%\n\nx[^1]\n\n[^1]: %%e%% note\n",
+        { preset: obsidian() }
+      )
+    ).toBe(
+      "@@html:<!--c-->@@ seen\n\n- @@html:<!--d-->@@\nx[fn:1]\n\n[fn:1] @@html:<!--e-->@@ note\n"
+    )
+  })
+
+  it("reads an inline comment's lines as one, its --> escaped", () => {
+    expect(
+      convertMarkdownToOrg("a %%x\n\n* y-->z%% b\n", { preset: obsidian() })
+    ).toBe("a @@html:<!--x * y--&gt;z-->@@ b\n")
+  })
+
+  it("keeps a comment outside text as written", () => {
+    expect(
+      convertMarkdownToOrg(
+        "[a](http://x.org/%%u%%) [[P %%w%%]]\n\n> [!note] T %%c%%\n",
+        {
+          preset: obsidian()
+        }
+      )
+    ).toBe(
+      "[[http://x.org/%%u%%][a]] [[P %%w%%]]\n\n#+begin_note T %%c%%\n#+end_note\n"
+    )
+  })
+
+  it("reads a comment alone in a footnote definition as a snippet", () => {
+    expect(
+      convertMarkdownToOrg("x[^1]\n\n[^1]: %%e%%\n", { preset: obsidian() })
+    ).toBe("x[fn:1]\n\n[fn:1] @@html:<!--e-->@@\n")
+  })
+
+  it("reads an inline footnote starting with a wikilink", () => {
+    expect(
+      convertMarkdownToOrg("a^[[[Source]] p. 4] b\n", { preset: obsidian() })
+    ).toBe("a[fn:1] b\n\n[fn:1] [[Source]] p. 4\n")
+  })
+
+  it("reads a long comment", () => {
+    const body = "x".repeat(200_000)
+
+    expect(
+      convertMarkdownToOrg(`a %%${body}%% b\n`, { preset: obsidian() })
+    ).toBe(`a @@html:<!--${body}-->@@ b\n`)
+  })
+
+  it("writes an html snippet of comments and text as it is", () => {
+    const org = "x @@html:<!--a-->b<!--c-->@@ y\n"
+
+    expect(convertOrgToMarkdown(org, { preset: obsidian() })).toBe(
+      "x <!--a-->b<!--c--> y\n"
+    )
+  })
+
+  it("keeps a diary timestamp's %% no comment", () => {
+    const org =
+      "* a\nSCHEDULED: <%%(diary-float t 4 2)>\n* b\nSCHEDULED: <%%(diary-float t 4 3)>\n"
+    const markdown = convertOrgToMarkdown(org, { preset: obsidian() })
+
+    expect(convertMarkdownToOrg(markdown, { preset: obsidian() })).toBe(org)
+  })
+
+  it("reads an inline footnote as a footnote, numbered on", () => {
+    const markdown = "a^[note *x*] b[^1] `^[code]`\n\n[^1]: one\n"
+
+    expect(convertMarkdownToOrg(markdown, { preset: obsidian() })).toBe(
+      "a[fn:2] b[fn:1] ~^[code]~\n\n[fn:1] one\n[fn:2] note /x/\n"
+    )
+  })
+
+  it("reads a comment in an inline footnote into its definition", () => {
+    expect(
+      convertMarkdownToOrg("x^[a %%c%% b] y\n", { preset: obsidian() })
+    ).toBe("x[fn:1] y\n\n[fn:1] a @@html:<!--c-->@@ b\n")
+  })
+
+  it("numbers inline footnotes on the page, not per Logseq block", () => {
+    const org = convertMarkdownToOrg(
+      "# H\n\na^[one] %%c%%\n\n# I\n\nb^[two]\n",
+      { inputPreset: obsidian(), outputPreset: logseq() }
+    )
+
+    expect(org).toContain("a[fn:1] @@html:<!--c-->@@\n")
+    expect(org).toContain("b[fn:2]\n\n[fn:2] two\n")
+  })
+
+  it("writes an html snippet's comment as Obsidian's", () => {
+    // `<!--` starting the item's line would open an HTML block
+    const org = "- @@html:<!--c-->@@ seen @@html:<!--x--&gt;%%-->@@\n"
+    const markdown = "- %%c%% seen <!--x--&gt;%%-->\n"
+
+    expect(convertOrgToMarkdown(org, { preset: obsidian() })).toBe(markdown)
+    expect(convertMarkdownToOrg(markdown, { preset: obsidian() })).toBe(org)
+  })
+
+  it("comments and inline footnotes converge after one round trip", () => {
+    const roundTrip = (md: string): string =>
+      convertOrgToMarkdown(convertMarkdownToOrg(md, { preset: obsidian() }), {
+        preset: obsidian()
+      })
+    const once = roundTrip("a %%c%% b^[n]\n\n%%\nblock\n%%\n")
+    expect(roundTrip(once)).toBe(once)
+    expect(once).toBe("a %%c%% b[^1]\n\n<!-- block -->\n\n[^1]: n\n")
   })
 })
 

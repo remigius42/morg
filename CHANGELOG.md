@@ -83,6 +83,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Obsidian md → org reads a `%%comment%%` as an org comment (`# …`)
+  alone in its paragraph, else as an html snippet
+  (`@@html:<!--comment-->@@`), and an inline footnote `^[note]` as a
+  footnote, numbered on from the page's own; both were plain text,
+  and the footnote came back escaped (`^\[note]`), no footnote in
+  Obsidian. Org → md writes an inline comment as Obsidian's own
+  (`%%comment%%`), others as an HTML comment, and a footnote. Md → org
+  and Obsidian md → Vanilla md read no comment in a wikilink or a diary
+  timestamp's `<%%(`.
 - Two quotes next to each other in a list item or a definition stay
   two: Markdown read them, written without a blank line between them,
   as one.

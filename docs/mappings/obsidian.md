@@ -16,7 +16,16 @@ a callout, its type lower case (`> [!note]`), as Obsidian writes it; a
 fold after the marker ↔ the parameters' leading token
 (`> [!tip]- Stretch first` ↔ `#+begin_tip - Stretch first`). A known
 limit: a title starting with a lone `-` or `+` (`> [!tip] - T`) comes
-back folded.
+back folded. md → org reads a `%%comment%%` as an org comment
+(`# comment`) alone in its paragraph outside a list item or a
+footnote's definition, else as an
+html snippet (`@@html:<!--comment-->@@`), its lines one; and an inline
+footnote `^[note]` as a footnote, numbered on from the page's own, its
+definition at the end, as [Obsidian md](#obsidian-md) translates them.
+Org → md writes them as an HTML comment and a footnote, which Obsidian
+reads, so they converge after one round trip. A `%%` outside text (a
+link's target, a callout's title) or in a wikilink stays as written,
+and a diary timestamp's `<%%(…)>` is org's, no comment.
 
 ## Obsidian md
 
@@ -30,7 +39,7 @@ where Obsidian can spell it (a width in pixels, and a height). Obsidian md →
 Vanilla md or Logseq md writes a `%%comment%%` as an HTML comment
 (`<!--comment-->`) and an inline footnote `^[note]` as a footnote,
 numbered on from the page's own, its definition at the end; their
-delimiters count outside code, math and HTML only, but what they hold
-may be code. The way back has nothing else to do: Obsidian reads both.
+delimiters count outside code, math, HTML and wikilinks only, a diary
+timestamp's `<%%(` none, but what they hold may be code. The way back has nothing else to do: Obsidian reads both.
 Wikilinks and embeds (`[[Page]]`, `![[image.png]]`) stay in Vanilla
 md, which cannot resolve a note's name to its file without the vault.

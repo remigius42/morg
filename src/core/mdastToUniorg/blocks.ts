@@ -78,6 +78,18 @@ function dedentLines(text: string): string {
     : text
 }
 
+/**
+ * A comment's text, its body's lines: a multi-line comment's own line
+ * breaks frame its lines, so an empty first or last line is the
+ * comment's, not padding.
+ * @param body What the comment's delimiters hold.
+ * @returns The org comment's value.
+ */
+export function commentText(body: string): string {
+  const lines = /^[ \t]*\n([\s\S]*)\n[ \t]*$/.exec(body)
+  return lines ? dedentLines(lines[1] ?? "") : body.trim()
+}
+
 export function transformMdastHtml(
   ctx: TransformContext,
   node: Extract<RootContent, { type: "html" }>
@@ -86,17 +98,10 @@ export function transformMdastHtml(
   // org comments (not an md-ism)
   const comment = /^<!--([\s\S]*?)-->\s*$/.exec(node.value)
   if (comment) {
-    const body = comment[1] ?? ""
-    // a multi-line comment's own line breaks frame its lines, so an
-    // empty first or last line is the comment's, not padding
-    const lines = /^[ \t]*\n([\s\S]*)\n[ \t]*$/.exec(body)
     return {
       type: "comment",
       // inverse of the escaping applied when the comment was emitted
-      value: (lines ? dedentLines(lines[1] ?? "") : body.trim()).replaceAll(
-        "--&gt;",
-        "-->"
-      )
+      value: commentText(comment[1] ?? "").replaceAll("--&gt;", "-->")
     } as unknown as ElementType
   }
   if (htmlInterpreted(ctx, "images")) {

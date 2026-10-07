@@ -1,4 +1,4 @@
-import type { OrgData, Link, Paragraph, Text } from "uniorg"
+import type { OrgData, ExportSnippet, Link, Paragraph, Text } from "uniorg"
 import type { Parent } from "unist"
 import { visit } from "unist-util-visit"
 import { toString } from "orgast-util-to-string"
@@ -12,6 +12,7 @@ import {
   type ImageSize
 } from "../core/sizedImages.js"
 import { applyEdits, type Edit } from "../core/edits.js"
+import { commentText } from "../core/mdastToUniorg/blocks.js"
 import type { Preset } from "./types.js"
 
 /**
@@ -22,8 +23,17 @@ export function obsidian(): Preset {
   return {
     name: "obsidian",
     markdown: {
-      read: { org: tree => readImageSizes(rewriteAliasedWikilinks(tree)) },
-      write: tree => fuzzyLinksToWikilinks(writeImageSizes(tree)),
+      read: {
+        // a comment travels the parse as a placeholder, a page without
+        // one or a note parsed once
+        source: markdown =>
+          NOTES_RE.test(markdown)
+            ? applyEdits(markdown, notesToVanilla(markdown, placeholder)[0])
+            : markdown,
+        org: tree => readImageSizes(rewriteAliasedWikilinks(readComments(tree)))
+      },
+      write: tree =>
+        writeComments(fuzzyLinksToWikilinks(writeImageSizes(tree))),
       callouts: true,
       links: {
         read: text => text.replace(ALIASED_PAGE_LINK_RE, "[[$1][$2]]"),
@@ -223,23 +233,43 @@ function fromVanilla(markdown: string): string {
 }
 
 const COMMENT_RE = /%%([\s\S]*?)%%/g
+const NOTES_RE = /%%|\^\[/
+// not an inline footnote's `[` before one: `^[[[Page]] p. 4]`
+const WIKILINK_RE = /\[\[[^\][\n]*\]\]/g
 const FOOTNOTE_LABEL_RE = /\[\^(\d+)\]/g
 
-// Obsidian Markdown → Vanilla Markdown: a comment is an HTML comment,
-// an inline footnote a footnote, numbered on from the page's own, its
-// definition at the end; their delimiters count outside code only, what
-// they hold may be code
+// Obsidian Markdown → Vanilla Markdown: its comments and inline
+// footnotes, and its image sizes
 function toVanilla(markdown: string): string {
+  const [edits, masked] = notesToVanilla(markdown, htmlComment)
+  return applyEdits(markdown, [...edits, ...sizesToVanilla(masked)])
+}
+
+// a `-->` in it would end it early; core reads `--&gt;` back
+function htmlComment(body: string): string {
+  return `<!--${body.replaceAll("-->", "--&gt;")}-->`
+}
+
+// a comment is what `comment` writes of its body, an inline footnote a
+// footnote, numbered on from the page's own, its definition at the
+// end; their delimiters count outside code only, what they hold may be
+// code; a diary timestamp's `<%%(` is org's, and a wikilink a page's
+// name, no comment. The edits,
+// and the page masked, its comments too
+function notesToVanilla(
+  markdown: string,
+  comment: (body: string) => string
+): [Edit[], string] {
   let masked = maskCode(markdown)
+    .replaceAll("<%%(", "<\0\0(")
+    .replace(WIKILINK_RE, link => "\0".repeat(link.length))
   let edits: Edit[] = []
-  for (const { index, 0: comment } of masked.matchAll(COMMENT_RE)) {
-    const end = index + comment.length
-    // a `-->` in it would end it early; core reads `--&gt;` back
-    const body = markdown.slice(index + 2, end - 2).replaceAll("-->", "--&gt;")
-    edits.push([index, end, `<!--${body}-->`])
+  for (const { index, 0: whole } of masked.matchAll(COMMENT_RE)) {
+    const end = index + whole.length
+    edits.push([index, end, comment(markdown.slice(index + 2, end - 2))])
     // a footnote in a comment is part of it
     masked =
-      masked.slice(0, index) + "\0".repeat(comment.length) + masked.slice(end)
+      masked.slice(0, index) + "\0".repeat(whole.length) + masked.slice(end)
   }
   let next =
     Math.max(
@@ -260,11 +290,146 @@ function toVanilla(markdown: string): string {
     definitions.push(`[^${next}]: ${note}`)
     edits.push([start, end + 1, `[^${next++}]`])
   }
-  edits.push(...sizesToVanilla(masked))
-  const result = applyEdits(markdown, edits)
-  return definitions.length
-    ? `${result.replace(/\n*$/, "")}\n\n${definitions.join("\n")}\n`
-    : result
+  if (definitions.length) {
+    const trailing = /\n*$/.exec(markdown)!
+    edits.push([
+      trailing.index,
+      markdown.length,
+      `\n\n${definitions.join("\n")}\n`
+    ])
+  }
+  return [edits, masked]
+}
+
+// md→org: a comment's body in characters Markdown reads as no syntax,
+// its UTF-16 code units in hex between two private-use characters;
+// `readComments` turns it into an org comment or html snippet
+const PLACEHOLDER_RE = /\uE000([\da-f]*)\uE001/g
+const ALONE_RE = /^\s*\uE000([\da-f]*)\uE001\s*$/
+
+function placeholder(body: string): string {
+  let hex = ""
+  for (let i = 0; i < body.length; i++) {
+    hex += body.charCodeAt(i).toString(16).padStart(4, "0")
+  }
+  return `\uE000${hex}\uE001`
+}
+
+// a unit at a time: spread, a long comment's would overflow the stack
+function placeholderBody(hex: string): string {
+  let body = ""
+  for (let i = 0; i < hex.length; i += 4) {
+    body += String.fromCharCode(parseInt(hex.slice(i, i + 4), 16))
+  }
+  return body
+}
+
+// a comment alone in its paragraph is an org comment where org reads
+// a line of its own as one (not on an item's bullet or a footnote's
+// label); elsewhere an html snippet, its lines one, as an org object
+// spans no blank line or headline
+const COMMENT_PARENTS = new Set([
+  "org-data",
+  "section",
+  "quote-block",
+  "special-block"
+])
+
+function readComments(uniorgAst: OrgData): OrgData {
+  visit(
+    uniorgAst as Parent,
+    "paragraph",
+    (node: Paragraph, index: number, parent: Parent) => {
+      const [only] = node.children
+      const alone =
+        node.children.length === 1 &&
+        only?.type === "text" &&
+        ALONE_RE.exec(only.value)
+      if (alone && COMMENT_PARENTS.has(parent.type)) {
+        parent.children[index] = {
+          type: "comment",
+          value: commentText(placeholderBody(alone[1] ?? ""))
+        } as unknown as Parent["children"][number]
+      }
+      return undefined
+    }
+  )
+  visit(
+    uniorgAst as Parent,
+    "text",
+    (node: Text, index: number, parent: Parent) => {
+      if (!node.value.includes("\uE000")) {
+        return undefined
+      }
+      const nodes = node.value
+        .split(PLACEHOLDER_RE)
+        .map((part, i) =>
+          i % 2
+            ? {
+                type: "export-snippet",
+                backEnd: "html",
+                value: htmlComment(
+                  placeholderBody(part).replace(/\s*\n\s*/g, " ")
+                )
+              }
+            : { type: "text", value: part }
+        )
+        .filter(child => child.value)
+      parent.children.splice(
+        index,
+        1,
+        ...(nodes as unknown as Parent["children"])
+      )
+      return index + nodes.length
+    }
+  )
+  return restorePlaceholders(uniorgAst)
+}
+
+// one comment, the snippet's whole value
+const HTML_COMMENT_RE = /^<!--((?:(?!-->)[\s\S])*)-->$/
+
+// org→md: an html snippet holding a comment is Obsidian's own, which
+// Markdown reads as no HTML block where it starts a line
+function writeComments(uniorgAst: OrgData): OrgData {
+  visit(
+    uniorgAst as Parent,
+    "export-snippet",
+    (node: Parent & ExportSnippet) => {
+      const body = HTML_COMMENT_RE.exec(node.value)?.[1]?.replaceAll(
+        "--&gt;",
+        "-->"
+      )
+      if (
+        node.backEnd === "html" &&
+        body !== undefined &&
+        !body.includes("%%")
+      ) {
+        Object.assign(node, { type: "verbatim-inline", value: `%%${body}%%` })
+      }
+    }
+  )
+  return uniorgAst
+}
+
+// a comment outside text (a link's target, a callout's title) is the
+// `%%comment%%` it was
+function restorePlaceholders<T extends object>(node: T): T {
+  for (const [key, value] of Object.entries(node)) {
+    if (typeof value === "string" && value.includes("\uE000")) {
+      Reflect.set(
+        node,
+        key,
+        value.replace(
+          PLACEHOLDER_RE,
+          (_, hex: string) => `%%${placeholderBody(hex)}%%`
+        )
+      )
+    } else if (value && typeof value === "object") {
+      restorePlaceholders(value as object)
+    }
+  }
+  return node
 }
 
 // each `^[note]`, its brackets balanced: where it starts, and its `]`
