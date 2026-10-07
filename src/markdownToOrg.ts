@@ -112,7 +112,8 @@ function convertMarkdownDocument(
   restoreOrgisms(uniorgAst, canonicalKeys)
 
   // Phase 2c: formatting-as-structure. Adjacent lists need two blank
-  // lines between them, adjacent tables one, or org's parser merges them
+  // lines between them, adjacent tables one, or org's parser merges them;
+  // a footnote definition two before what follows, or org reads it in
   separateAdjacentElements(uniorgAst)
 
   // Phase 2d: record the source's own style markers, so the return trip
@@ -358,16 +359,29 @@ const SEPARATORS: Record<string, string> = {
   table: "\n"
 }
 
+// org ends a footnote definition at two blank lines, the next definition
+// or a headline; uniorg-stringify trims the definition's own blank line
+const ENDS_DEFINITION = new Set(["footnote-definition", "headline"])
+
+function separatorAfter(
+  node: { type: string },
+  next: { type: string } | undefined
+): string | undefined {
+  if (node.type === "footnote-definition") {
+    return next && !ENDS_DEFINITION.has(next.type) ? "\n\n" : undefined
+  }
+  return next?.type === node.type ? SEPARATORS[node.type] : undefined
+}
+
 function separateAdjacentElements(uniorgAst: Parent): void {
   visit(
     uniorgAst,
     (node: { type: string }, index, parent: Parent | undefined) => {
-      const value = SEPARATORS[node.type]
-      if (
-        value === undefined ||
-        index === undefined ||
-        parent?.children[index + 1]?.type !== node.type
-      ) {
+      if (index === undefined || !parent) {
+        return undefined
+      }
+      const value = separatorAfter(node, parent.children[index + 1])
+      if (value === undefined) {
         return undefined
       }
       const separator: Text = { type: "text", value }

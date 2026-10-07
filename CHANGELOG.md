@@ -195,6 +195,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Obsidian md → Vanilla md writes a comment in an inline footnote
   into the footnote's definition (`^[a %%c%% b]`); the two overlapped,
   garbling the text after the reference.
+- Text after a Markdown footnote definition stays apart from it in
+  org: md → org wrote no blank line between them, and org ends a
+  definition only at two, so it read the text into the footnote.
 
 ## [0.10.1] - 2026-10-04
 

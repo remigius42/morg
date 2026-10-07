@@ -149,3 +149,6 @@ Footnotes convert between GFM (`[^label]` / `[^label]: …`) and org
 footnotes (`[fn:: text]`, `[fn:label: text]`) normalize to a standard
 reference plus a definition hoisted to the document end (anonymous
 ones get generated numeric labels).
+Org ends a definition only at the next one, a headline or two blank
+lines, so md → org writes two blank lines between a definition and
+what follows it, unless that is a definition or a headline.

@@ -731,6 +731,29 @@ This is a paragraph.
       "A claim.[fn:1]\n\n[fn:1] The evidence.\n"
     )
   })
+
+  it("should end a footnote definition before what follows it", () => {
+    // org ends a definition at two blank lines or the next definition
+    expect(convertMarkdownToOrg("[^1]: n\n[^2]: m\n\nx[^1][^2]\n")).toBe(
+      "[fn:1] n\n[fn:2] m\n\n\nx[fn:1][fn:2]\n"
+    )
+    expect(convertMarkdownToOrg("[^1]: n\n\n    m\n\n- x[^1]\n")).toBe(
+      "[fn:1] n\n\nm\n\n\n- x[fn:1]\n"
+    )
+  })
+
+  it("should keep a footnote definition's paragraphs on a round trip", () => {
+    const org = "[fn:1] n\n\nm\n\n\nx[fn:1]\n"
+
+    expect(convertMarkdownToOrg(convertOrgToMarkdown(org))).toBe(org)
+  })
+
+  it("should keep a footnote definition above a headline on a round trip", () => {
+    // a headline ends a definition, as the next one does
+    const org = "x[fn:1]\n\n* Footnotes\n[fn:1] n\n* h\n"
+
+    expect(convertMarkdownToOrg(convertOrgToMarkdown(org))).toBe(org)
+  })
 })
 
 describe("verbatim passthrough", () => {
