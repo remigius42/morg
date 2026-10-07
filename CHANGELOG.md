@@ -183,6 +183,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Obsidian md → Vanilla md keeps a comment's `-->` in it
   (`%%a-->b%%` → `<!--a--&gt;b-->`): it closed the HTML comment early,
   showing the rest.
+- Obsidian md → Vanilla md writes a comment in an inline footnote
+  into the footnote's definition (`^[a %%c%% b]`); the two overlapped,
+  garbling the text after the reference.
 
 ## [0.10.1] - 2026-10-04
 

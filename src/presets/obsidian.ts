@@ -231,7 +231,7 @@ const FOOTNOTE_LABEL_RE = /\[\^(\d+)\]/g
 // they hold may be code
 function toVanilla(markdown: string): string {
   let masked = maskCode(markdown)
-  const edits: Edit[] = []
+  let edits: Edit[] = []
   for (const { index, 0: comment } of masked.matchAll(COMMENT_RE)) {
     const end = index + comment.length
     // a `-->` in it would end it early; core reads `--&gt;` back
@@ -248,7 +248,16 @@ function toVanilla(markdown: string): string {
     ) + 1
   const definitions: string[] = []
   for (const [start, end] of inlineFootnotes(masked)) {
-    definitions.push(`[^${next}]: ${markdown.slice(start + 2, end)}`)
+    // a comment in the note goes with it, into its definition
+    const inside = ([at]: Edit): boolean => at > start && at < end
+    const note = applyEdits(
+      markdown.slice(start + 2, end),
+      edits
+        .filter(inside)
+        .map(([from, to, text]) => [from - start - 2, to - start - 2, text])
+    )
+    edits = edits.filter(edit => !inside(edit))
+    definitions.push(`[^${next}]: ${note}`)
     edits.push([start, end + 1, `[^${next++}]`])
   }
   edits.push(...sizesToVanilla(masked))

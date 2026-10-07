@@ -372,6 +372,12 @@ describe("translateMarkdown", () => {
     ).toBe("a <!--x--&gt;y--> b\n")
   })
 
+  it("writes a comment in an inline footnote into its definition", () => {
+    expect(
+      translateMarkdown("x^[a %%c%% b] y\n", { inputPreset: obsidian() })
+    ).toBe("x[^1] y\n\n[^1]: a <!--c--> b\n")
+  })
+
   it("writes the bullets a style names", () => {
     expect(
       translateMarkdown("- a\n\t- b\n", {
