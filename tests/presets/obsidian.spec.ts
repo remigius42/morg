@@ -235,7 +235,7 @@ describe("obsidian preset", () => {
         inputPreset: obsidian(),
         outputPreset: logseq()
       })
-    ).toBe("* a\n\n#+begin_QUERY\n{:q 1}\n#+end_QUERY\n")
+    ).toBe("* a\n\n#+BEGIN_QUERY\n{:q 1}\n#+END_QUERY\n")
     // without Logseq too
     const vanilla = "#+begin_query\n{:q 1}\n#+end_query\n"
     expect(convertOrgToMarkdown(vanilla, { preset: obsidian() })).toBe(
@@ -247,7 +247,7 @@ describe("obsidian preset", () => {
         inputPreset: obsidian(),
         outputPreset: logseq()
       })
-    ).toBe("* #+begin_src query\ntag:#a\n#+end_src\n")
+    ).toBe("* #+BEGIN_SRC query\ntag:#a\n#+END_SRC\n")
     expect(
       convertOrgToMarkdown("#+begin_src query\ntag:#a\n#+end_src\n", {
         preset: obsidian()

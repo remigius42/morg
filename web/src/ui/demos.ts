@@ -106,10 +106,10 @@ run on below its first
 ** :PROPERTIES:
 :query-table: false
 :END:
-#+begin_query
+#+BEGIN_QUERY
 {:title "Tasks"
  :query (task TODO)}
-#+end_query
+#+END_QUERY
 `
 
 export const LOGSEQ_MD_DEMO = `<!-- Paste your Logseq Markdown page here, or convert this demo -->
@@ -125,10 +125,10 @@ export const LOGSEQ_MD_DEMO = `<!-- Paste your Logseq Markdown page here, or con
 \t- A block's lines
 \t  run on below its first
 \t- query-table:: false
-\t  #+begin_query
+\t  #+BEGIN_QUERY
 \t  {:title "Tasks"
 \t   :query (task TODO)}
-\t  #+end_query
+\t  #+END_QUERY
 `
 
 // the Obsidian preset's demo: Obsidian writes no org, so its org side

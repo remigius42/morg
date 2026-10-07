@@ -280,7 +280,7 @@ describe("Vanilla md → Logseq org", () => {
 
   it("reads a query code block as a query block", () => {
     expect(toOrg('- tasks\n\n  ```query\n  {:title "x"}\n  ```\n')).toBe(
-      '* tasks\n\n#+begin_QUERY\n{:title "x"}\n#+end_QUERY\n'
+      '* tasks\n\n#+BEGIN_QUERY\n{:title "x"}\n#+END_QUERY\n'
     )
   })
 
@@ -330,7 +330,7 @@ describe("a code block in the query language", () => {
       convertMarkdownToOrg("- a\n  ```query\n  x\n  ```\n", {
         preset: logseq()
       })
-    ).toBe("* a\n\n#+begin_src query\nx\n#+end_src\n")
+    ).toBe("* a\n\n#+BEGIN_SRC query\nx\n#+END_SRC\n")
     expect(
       convertOrgToMarkdown("* a\n#+begin_src query\nx\n#+end_src\n", {
         preset: logseq()

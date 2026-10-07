@@ -465,6 +465,8 @@ function writeOutline(
 // a table or a rule, which Logseq reads on a headline's line
 const TITLE_ELEMENT_RE = /^(\||-{5,}\s*$)/
 const COMMENT_LINE_RE = /^#(?: |$)/
+const BLOCK_LINE_RE = /^([ \t]*)#\+((?:begin|end)_\S+)/i
+const FENCE_MARKER_RE = /^\s*(`{3,}|~{3,})/
 
 // a block's title is a headline's, inline text but for a table or a
 // rule; converted with the lines below it, it must not read as a list,
@@ -485,6 +487,37 @@ function commentBelowTitle(block: Block): Block {
   return !block.metaFirst && COMMENT_LINE_RE.test(block.content[0] ?? "")
     ? { ...block, content: ["", ...block.content] }
     : block
+}
+
+// Logseq writes a block's begin and end lines in upper case
+// (`#+BEGIN_SRC sh`), Emacs in lower case; in org, a line in a block's
+// content that looks like one is comma-escaped, in Markdown fenced
+function upperBlockLines(lines: string[], fences = false): string[] {
+  let fence = ""
+  return lines.map(line => {
+    const marker = fences ? (FENCE_MARKER_RE.exec(line)?.[1] ?? "") : ""
+    if (marker && (!fence || closesFence(line, marker, fence))) {
+      fence = fence ? "" : marker
+      return line
+    }
+    return fence
+      ? line
+      : line.replace(
+          BLOCK_LINE_RE,
+          (_, indent: string, name: string) =>
+            `${indent}#+${name.toUpperCase()}`
+        )
+  })
+}
+
+// a closing fence: the opening one's character, at least as many, and
+// nothing after them
+function closesFence(line: string, marker: string, fence: string): boolean {
+  return (
+    marker[0] === fence[0] &&
+    marker.length >= fence.length &&
+    line.trim() === marker
+  )
 }
 
 // a title written from Markdown text keeps it text with an escape that
@@ -654,16 +687,20 @@ export function orgOutlineToMarkdown(
   // read as Logseq org, a block's title is inline text (ADR 0006)
   const inline = context.side !== "output"
   const pageLines = vanilla ? (presets.vanillaPage?.(page) ?? page) : page
+  const logseqBlockLines = (lines: string[]): string[] =>
+    vanilla ? lines : upperBlockLines(lines, true)
   const convertCarried: FragmentConverter = (fragment, preset) =>
     convert(fragment, preset, vanilla ? presets.vanillaInline : undefined)
   const outline = {
     page: convertPage(pageLines, convertCarried, presets.page),
     blocks: blocks.map(block => ({
       ...block,
-      content: convertContent(
-        withBracedScripts(inline ? inlineTitle(block) : block.content),
-        convertCarried,
-        presets.block
+      content: logseqBlockLines(
+        convertContent(
+          withBracedScripts(inline ? inlineTitle(block) : block.content),
+          convertCarried,
+          presets.block
+        )
       )
     }))
   }
@@ -714,7 +751,11 @@ export function markdownOutlineToOrg(
             presets.block
           ).filter(line => line !== BRACED_SCRIPTS_LINE)
         })
-        return context.side === "input" ? converted : dropTitleEscape(converted)
+        if (context.side === "input") {
+          return converted
+        }
+        const titled = dropTitleEscape(converted)
+        return { ...titled, content: upperBlockLines(titled.content) }
       })
     },
     block => writeOrgBlock(block, context.side === "input")

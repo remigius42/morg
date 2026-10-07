@@ -93,6 +93,10 @@ them. Exceptions:
 - A special block (`#+BEGIN_TIP`) stays org text, which Logseq shows as
   a box, not a GFM alert, which it shows as a quote.
 
+A block's begin and end lines are written in upper case on either
+side (`#+BEGIN_SRC sh`), as Logseq writes them; Vanilla org keeps
+Emacs's lower case (`#+begin_src`).
+
 ## Links and inline syntax
 
 - A plain `https://…` link ↔ a bare url; a bracketed `[[url]]` ↔

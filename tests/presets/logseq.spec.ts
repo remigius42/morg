@@ -41,11 +41,27 @@ describe("logseq outline", () => {
   })
 
   it("converts a code block that starts on the headline line", () => {
-    const org = "* #+begin_src sh\necho hi\n#+end_src\n"
+    // in upper case, as Logseq writes a block
+    const org = "* #+BEGIN_SRC sh\necho hi\n#+END_SRC\n"
 
     both(org, "- ```sh\n  echo hi\n  ```\n")
-    expect(toMarkdown("* #+BEGIN_SRC sh\necho hi\n#+END_SRC\n")).toBe(
+    expect(toMarkdown("* #+begin_src sh\necho hi\n#+end_src\n")).toBe(
       "- ```sh\n  echo hi\n  ```\n"
+    )
+  })
+
+  it("keeps code that holds block lines as written", () => {
+    // escaped in org, fenced in Markdown; a fence line is no fence in org
+    both(
+      "* #+BEGIN_SRC org\n,#+begin_quote\n,#+end_quote\n#+END_SRC\n",
+      "- ```org\n  #+begin_quote\n  #+end_quote\n  ```\n"
+    )
+    expect(
+      toMarkdown(
+        "* a\n#+BEGIN_SRC md\n```\n#+END_SRC\n#+BEGIN_TIP\nt\n#+END_TIP\n"
+      )
+    ).toBe(
+      "- a\n  \n  ````md\n  ```\n  ````\n  \n  #+BEGIN_TIP\n  t\n  #+END_TIP\n"
     )
   })
 
@@ -54,7 +70,7 @@ describe("logseq outline", () => {
       "* #+BEGIN_SRC\nread_flash x_y\n#+END_SRC\n"
     )
     expect(toOrg("- a\n  ```\n  #+BEGIN_X\n  #+END_X\n  ```\n")).toBe(
-      "* a\n\n#+begin_example\n,#+BEGIN_X\n,#+END_X\n#+end_example\n"
+      "* a\n\n#+BEGIN_EXAMPLE\n,#+BEGIN_X\n,#+END_X\n#+END_EXAMPLE\n"
     )
   })
 
@@ -75,28 +91,24 @@ describe("logseq outline", () => {
 
   it("keeps the text of a block org writes as its org text", () => {
     both(
-      "* #+begin_tip\nsee https://x.ch, a@b.ch and [#A]\n#+end_tip\n",
-      "- #+begin_tip\n  see https://x.ch, a@b.ch and [#A]\n  #+end_tip\n"
+      "* #+BEGIN_TIP\nsee https://x.ch, a@b.ch and [#A]\n#+END_TIP\n",
+      "- #+BEGIN_TIP\n  see https://x.ch, a@b.ch and [#A]\n  #+END_TIP\n"
     )
   })
 
   it("writes a special block as org does, no GFM alert", () => {
     // Logseq shows `#+BEGIN_TIP` as a box, `> [!TIP]` as a quote
     both(
-      "* x\n#+begin_tip Stretch first\nb\n#+end_tip\n",
-      "- x\n  \n  #+begin_tip Stretch first\n  b\n  #+end_tip\n"
+      "* x\n#+BEGIN_TIP Stretch first\nb\n#+END_TIP\n",
+      "- x\n  \n  #+BEGIN_TIP Stretch first\n  b\n  #+END_TIP\n"
     )
   })
 
   it("keeps a md block's other org blocks as written, in both directions", () => {
     const markdown = "- #+BEGIN_TIP\n  *emphasis* and **strong**\n  #+END_TIP\n"
-    const org = toOrg(markdown)
 
-    expect(org).toBe("* #+BEGIN_TIP\n*emphasis* and **strong**\n#+END_TIP\n")
-    // org's own case for the begin and end lines, the content as it is
-    const once = toOrg(toMarkdown(org))
-    expect(once).toBe("* #+begin_TIP\n*emphasis* and **strong**\n#+end_TIP\n")
-    expect(toOrg(toMarkdown(once))).toBe(once)
+    // the content as it is
+    both("* #+BEGIN_TIP\n*emphasis* and **strong**\n#+END_TIP\n", markdown)
   })
 
   it("keeps a block's title inline, as Logseq reads it", () => {
@@ -174,7 +186,7 @@ describe("logseq outline", () => {
 
   it("keeps a heading line inside a fence in its block", () => {
     expect(toOrg("# a\n```sh\n# comment\n```\n")).toBe(
-      "* a\n:PROPERTIES:\n:heading: 1\n:END:\n\n#+begin_src sh\n# comment\n#+end_src\n"
+      "* a\n:PROPERTIES:\n:heading: 1\n:END:\n\n#+BEGIN_SRC sh\n# comment\n#+END_SRC\n"
     )
   })
 
@@ -216,7 +228,7 @@ describe("logseq outline", () => {
 
   it("ends a fence a bullet line opened", () => {
     expect(toOrg("- ```sh\n  echo\n  ```\n## B\n\t- y\n")).toBe(
-      "* #+begin_src sh\necho\n#+end_src\n* B\n:PROPERTIES:\n:heading: 2\n:END:\n** y\n"
+      "* #+BEGIN_SRC sh\necho\n#+END_SRC\n* B\n:PROPERTIES:\n:heading: 2\n:END:\n** y\n"
     )
   })
 
