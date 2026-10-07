@@ -393,7 +393,8 @@ describe("Logseq md ↔ Vanilla org", () => {
   it.each([
     ["- ```py\n  x\n  ```\n", "* \n#+begin_src py\nx\n#+end_src\n"],
     ["- - a\n  - b\n", "* \n- a\n- b\n"],
-    ["- key:: v\n  text\n", "* \n:PROPERTIES:\n:key: v\n:END:\ntext\n"]
+    ["- key:: v\n  text\n", "* \n:PROPERTIES:\n:key: v\n:END:\ntext\n"],
+    ["- <!-- d -->\n", "* \n# d\n"]
   ])(
     "writes a block's content below its headline where Emacs would read it as the title: %j",
     (markdown, org) => {

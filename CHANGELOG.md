@@ -212,6 +212,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - An HTML comment that starts a list item (`- <!--d-->`) stays a
   comment: md → org wrote it on the bullet's line (`- # d`), where org
   reads text, and it came back visible (`- \# d`).
+- A Logseq block that starts with a comment (`- <!--d-->`, Obsidian
+  `- %%d%%`) keeps it a comment in Logseq org, below an empty title:
+  the title is text, so `* # d` showed it, and it came back visible.
 
 ## [0.10.1] - 2026-10-04
 

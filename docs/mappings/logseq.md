@@ -64,7 +64,9 @@ as Logseq parses it.
 A code block, table or rule that starts on the headline line converts
 as a whole. Otherwise a block's title is inline text: a title that
 looks like org line syntax (`: a`, `** a`, `- a`, `1. a`, `# a`) stays
-text, escaped in Markdown (`\*\* a`, `1\. a`) as mldoc reads it.
+text, escaped in Markdown (`\*\* a`, `1\. a`) as mldoc reads it. A
+block that starts with a comment has it below an empty title
+(`*` then `# …`), where it stays a comment.
 
 Known limitation: Logseq reads an org title `: a` (or `:a: b`) as an
 empty title and a fixed-width line. morg reads it as text, as Emacs

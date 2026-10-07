@@ -464,6 +464,7 @@ function writeOutline(
 
 // a table or a rule, which Logseq reads on a headline's line
 const TITLE_ELEMENT_RE = /^(\||-{5,}\s*$)/
+const COMMENT_LINE_RE = /^#(?: |$)/
 
 // a block's title is a headline's, inline text but for a table or a
 // rule; converted with the lines below it, it must not read as a list,
@@ -476,6 +477,14 @@ function inlineTitle(block: Block): string[] {
     readsAsLineSyntax(title)
     ? [`${ZERO_WIDTH_SPACE}${title}`, ...rest]
     : block.content
+}
+
+// a title is text, so a comment that starts a block goes below an empty
+// one; text that reads as one still has its escape here
+function commentBelowTitle(block: Block): Block {
+  return !block.metaFirst && COMMENT_LINE_RE.test(block.content[0] ?? "")
+    ? { ...block, content: ["", ...block.content] }
+    : block
 }
 
 // a title written from Markdown text keeps it text with an escape that
@@ -697,14 +706,14 @@ export function markdownOutlineToOrg(
     {
       page: convertPage(page, convertCarried, presets.page),
       blocks: blocks.map(block => {
-        const converted = {
+        const converted = commentBelowTitle({
           ...block,
           content: convertMarkdownContent(
             block.content,
             convertCarried,
             presets.block
           ).filter(line => line !== BRACED_SCRIPTS_LINE)
-        }
+        })
         return context.side === "input" ? converted : dropTitleEscape(converted)
       })
     },

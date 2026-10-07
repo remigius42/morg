@@ -103,6 +103,12 @@ describe("logseq outline", () => {
     both("* : a ~b~\n", "- : a `b`\n")
     both("* ** a\n", "- \\*\\* a\n")
     both("* - a\n", "- \\- a\n")
+    both("* # a\n", "- \\# a\n")
+  })
+
+  it("writes a block's leading comment below an empty title", () => {
+    // a title is text: `* # d` would show the comment (ADR 0006)
+    both("*\n# d\n* x\n", "- <!-- d -->\n- x\n")
   })
 
   it("converts a table or a rule that starts on the headline line", () => {
