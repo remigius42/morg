@@ -428,6 +428,8 @@ nav li:has(> .theme-switch) {
   align-self: flex-start;
   max-height: calc(100vh - 2 * var(--pico-spacing));
   overflow-y: auto;
+  /* keeps the text clear of a scrollbar drawn over its edge */
+  padding-inline-end: 1rem;
   font-size: 0.875em;
 }
 
