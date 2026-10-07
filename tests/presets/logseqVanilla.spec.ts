@@ -147,6 +147,12 @@ describe("Logseq org → Vanilla md", () => {
     )
   })
 
+  it("keeps a named query's name and body apart", () => {
+    expect(
+      toMarkdown("* tasks\n#+NAME: q\n#+BEGIN_QUERY\n{:q 1}\n#+END_QUERY\n")
+    ).toBe("- tasks\n\n  #+NAME: q\n\n  ```query\n  {:q 1}\n  ```\n")
+  })
+
   it("writes page properties into a frontmatter block, unfolded", () => {
     const long = `https://example.com/${"x".repeat(80)}`
     expect(

@@ -643,7 +643,7 @@ function queryBlocksToCode(uniorgAst: OrgData): void {
       ) {
         return undefined
       }
-      const lines = orgNodeToText(node).split("\n")
+      const lines = orgNodeToText({ ...node, affiliated: {} }).split("\n")
       parent.children[index] = {
         type: "src-block",
         affiliated: node.affiliated,
