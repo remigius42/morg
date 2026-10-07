@@ -73,20 +73,19 @@ Before committing a change that affects parsing or writing:
 
 ## Status
 
-As of 2026-10-06, branch `fix/worg-convergence`:
+As of 2026-10-07, branch `fix/known-limits-0.11`:
 
 | Corpus  | Converging | Identical | Same content |
 | ------- | ---------- | --------- | ------------ |
 | `obs`   | 24/24      | 0         | 23           |
-| `lsq`   | 406/406    | 320       | 403          |
+| `lsq`   | 407/407    | 321       | 407          |
 | `webmd` | 1268/1268  | 384       | 1268         |
-| `worg`  | 284/293    | 0         | 210          |
+| `worg`  | 285/293    | 0         | 293          |
 
-Of the 83 worg files whose content differs, 51 differ in links only: a
-fuzzy link naming a heading comes back as a heading link (`[[X]]` →
-`[[*X]]`, the same heading in Emacs), and a fuzzy link to a name the
-file does not hold becomes a `file:` link (a known limitation, see
-[Links](mappings/core.md#links)).
+The one Obsidian file whose content differs has a heading starting
+`TODO`: org reads it as the task keyword, which comes back as a
+`todo:: TODO` line below the heading (ADR 0002), gaining the word
+`todo`.
 
 Worg files are identical in none: org→md→org writes org's canonical
 form (keyword values single-spaced, a list's blank lines dropped, a
@@ -95,7 +94,7 @@ paragraph), which hand-written org rarely is.
 
 ## Known non-convergences
 
-Each of the nine left in `worg` traces to a construct rare enough that
+Each of the eight left in `worg` traces to a construct rare enough that
 a fix would cost more than it saves (special cases in shared code, a
 risk to files that converge now). Each converges in a later round or
 differs in whitespace only, unless noted.
@@ -105,12 +104,6 @@ differs in whitespace only, unless noted.
   which org reads as inline math. Written back as `$…$` next to the
   literal `$`s around it, org reads the dollars differently, and each
   round trip adds a `$`. Prose rarely puts `$` right against math.
-- **`$$` in a special block** (`org-contrib/babel/languages/ob-doc-maxima`):
-  a `#+begin_maximablock` holds a line starting `$$` without closing it
-  on that line. The block travels verbatim, but Markdown reads that line
-  as the start of display math that runs to the end of the file, so the
-  rest of the file is read as math, then as text: headings and code
-  gain escapes each round trip.
 - **A newline between HTML snippets** (`org-contrib/org-drill`,
   `org-contrib/org-protocol`): an `@@html:…@@` snippet spanning lines
   comes back as one snippet per line, and the line break between two
