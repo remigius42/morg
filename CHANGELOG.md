@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-10-07
+
 ### Added
 
 - GFM alerts ↔ org special blocks: `> [!NOTE]` ↔ `#+begin_note`, a
@@ -19,7 +21,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Obsidian md writes an alert as a callout, its type lower case
   (`> [!note]`), and keeps a callout's fold as the block's parameters'
   leading token (`> [!tip]- T` ↔ `#+begin_tip - T`).
-
 - The docs are on the site: docs/ and CONTEXT.md render as pages under
   `/docs/`, listed on a generated index linked from every page's nav
   (ADR 0009); a link between docs stays on the site, and code is
@@ -66,10 +67,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   definition lists (`term` / `:   definition`) rather than as their
   org text (`- term :: definition`), and read back from them. A
   Markdown list item holding `::` stays a list item, and a
-  fixed-width line's `:` is escaped (`\: text`), as a line below text that starts with
-  a colon now starts a definition. A descriptive list nested in a list
-  item does not survive a round trip as one (a known limitation of
-  the Markdown parser): it comes back as the item's text.
+  fixed-width line's `:` is escaped (`\: text`), as a line below text
+  that starts with a colon now starts a definition. A descriptive list
+  nested in a list item does not survive a round trip as one (a known
+  limitation of the Markdown parser): it comes back as the item's text.
 - Translating Markdown honours the Markdown options, as normalizing
   does: a block holding a construct they concern is converted on its
   own, in the Spelling they name; the rest stays as written.
@@ -81,11 +82,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   a headline, and Obsidian Markdown has its own demo: wikilinks, a
   callout, an image's size and a task.
 - The Web UI's landing page keeps its text to the docs' reading width,
-  about 75 characters a line, centered as the docs' text is, and lists what morg does in four points
-  instead of one long paragraph; the detail is in the docs.
+  about 90 characters a line, centered as the docs' text is, and lists
+  what morg does in four points instead of one long paragraph; the
+  detail is in the docs.
 - The Web UI and the docs draw arrows (`→`, `↔`) outside code in
   DejaVu Sans, subset to them, centered on the lowercase letters:
-  Arial's sat low and small beside them. DejaVu's license is on the licenses page.
+  Arial's sat low and small beside them. DejaVu's license is on the
+  licenses page.
 - Logseq org and Logseq md write a block's begin and end lines in
   upper case (`#+BEGIN_SRC sh`, `#+END_QUOTE`), as Logseq does; org →
   md → org changed them to Emacs's lower case (`#+begin_src`), a
@@ -989,7 +992,8 @@ review and fuzzing; each of these silently changed text.
   normalize modes, `morg.toml` paste and a preloaded demo, iframable
   embed page with `?theme` override, light/dark switcher
 
-[unreleased]: https://github.com/remigius42/morg/compare/v0.10.1...HEAD
+[unreleased]: https://github.com/remigius42/morg/compare/v0.11.0...HEAD
+[0.11.0]: https://github.com/remigius42/morg/compare/v0.10.1...v0.11.0
 [0.10.1]: https://github.com/remigius42/morg/compare/v0.10.0...v0.10.1
 [0.10.0]: https://github.com/remigius42/morg/compare/v0.9.2...v0.10.0
 [0.9.2]: https://github.com/remigius42/morg/compare/v0.9.1...v0.9.2
