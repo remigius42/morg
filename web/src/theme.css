@@ -399,10 +399,11 @@ nav li:has(> .theme-switch) {
   font-weight: var(--shiki-dark-font-weight);
 }
 
-/* the landing page's text at the docs' reading width, left under the
-   header's logo */
+/* the landing page's text at the docs' reading width, centered as the
+   docs' text is */
 .landing > * {
   max-width: 43rem;
+  margin-inline: auto;
 }
 
 /* Docs pages (scripts/docsPages.mjs): VitePress's reading width, its

@@ -81,7 +81,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   a headline, and Obsidian Markdown has its own demo: wikilinks, a
   callout, an image's size and a task.
 - The Web UI's landing page keeps its text to the docs' reading width,
-  about 75 characters a line, and lists what morg does in four points
+  about 75 characters a line, centered as the docs' text is, and lists what morg does in four points
   instead of one long paragraph; the detail is in the docs.
 - Logseq org and Logseq md write a block's begin and end lines in
   upper case (`#+BEGIN_SRC sh`, `#+END_QUOTE`), as Logseq does; org →
