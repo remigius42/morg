@@ -80,7 +80,7 @@
     }
   },
   "head": {
-    "reason": "escape passes check how org reads the output; org\u2192md guards `_.` lines and drops the escapes",
+    "reason": "escape passes check how org reads the output; org\u2192md guards `_.` lines and drops the escapes; Obsidian md reads %% comments and ^[] notes",
     "md-org": {
       "normalizedTime": 0.95,
       "uniorgParses": 68
@@ -90,11 +90,11 @@
       "uniorgParses": 68
     },
     "md-org scriptless": {
-      "normalizedTime": 0.99,
+      "normalizedTime": 1.15,
       "uniorgParses": 167
     },
     "md-org scriptless obsidian": {
-      "normalizedTime": 1.02,
+      "normalizedTime": 1.2,
       "uniorgParses": 167
     },
     "org-md": {
