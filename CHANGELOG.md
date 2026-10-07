@@ -198,6 +198,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Text after a Markdown footnote definition stays apart from it in
   org: md → org wrote no blank line between them, and org ends a
   definition only at two, so it read the text into the footnote.
+- A table's `#+NAME:`, `#+CAPTION:` and other affiliated keywords
+  survive in a quote, a center or a special block, where they were
+  dropped without a warning, and on a table that leads the file, where
+  they went to the frontmatter and came back apart from the table.
 
 ## [0.10.1] - 2026-10-04
 

@@ -1,3 +1,4 @@
+import type { OrgData } from "uniorg"
 import { blockEndRe } from "./orgBlocks.js"
 
 // ====================================================================
@@ -19,6 +20,7 @@ const AFFILIATED_RE =
 const TABLE_RE = /^[ \t]*\|/
 const FORMULA_RE = /^[ \t]*#\+TBLFM:/i
 const BLOCK_START_RE = /^[ \t]*#\+begin_(\S+)/i
+const VERBATIM_BLOCK_RE = /^(?:comment|example|export|src|verse)$/i
 
 // whether a line and the next are a keyword and its table, or a table
 // and its formula
@@ -31,27 +33,69 @@ function bordersTable(line: string, next: string): boolean {
 
 /**
  * org→md: sets the affiliated keywords above an org table, and the
- * formulas below it, apart from it before parsing, outside blocks.
+ * formulas below it, apart from it before parsing, outside verbatim
+ * blocks.
+ * @returns The org text, and where each table whose keywords it set
+ *   apart starts in it (a set-apart formula's start too).
  */
-export function separateTableKeywords(org: string): string {
+export function separateTableKeywords(org: string): {
+  org: string
+  tables: Set<number>
+} {
+  const tables = new Set<number>()
   if (!org.includes("#+")) {
-    return org
+    return { org, tables }
   }
   const lines = org.split("\n")
   const out: string[] = []
+  let offset = 0
   let end: RegExp | null = null
   for (const [i, line] of lines.entries()) {
     out.push(line)
+    offset += line.length + 1
     if (end) {
       end = end.test(line) ? null : end
       continue
     }
     const block = BLOCK_START_RE.exec(line)?.[1]
-    if (block) {
+    const next = lines[i + 1] ?? ""
+    // a verbatim block's lines stay; a greater block's content is org
+    if (block && VERBATIM_BLOCK_RE.test(block)) {
       end = blockEndRe(block)
-    } else if (bordersTable(line, lines[i + 1] ?? "")) {
+    } else if (bordersTable(line, next)) {
+      // a table's start, or a formula's no table starts at
       out.push("")
+      tables.add(++offset)
     }
   }
-  return out.join("\n")
+  return { org: out.join("\n"), tables }
+}
+
+const tablesWithKeywords = new WeakSet<object>()
+
+/**
+ * org→md: marks the top-level tables whose keywords
+ * separateTableKeywords set apart.
+ * @param uniorgAst The document parsed from its org text.
+ * @param tables Where each such table starts in that text.
+ */
+export function markTablesWithKeywords(
+  uniorgAst: OrgData,
+  tables: Set<number>
+): void {
+  for (const node of uniorgAst.children) {
+    if (
+      node.type === "table" &&
+      "contentsBegin" in node &&
+      tables.has(node.contentsBegin)
+    ) {
+      tablesWithKeywords.add(node)
+    }
+  }
+}
+
+// whether a table had keywords directly above it, set apart by
+// separateTableKeywords, not by a blank line of the author's
+export function hasKeywordsAbove(node: object | undefined): boolean {
+  return !!node && tablesWithKeywords.has(node)
 }

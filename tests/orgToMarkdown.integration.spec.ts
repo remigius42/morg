@@ -187,6 +187,18 @@ describe("convertOrgToMarkdown", () => {
         "x\r\n\r\n#+begin_src\r\n,* a\r\n#+end_src\r\n\r\n#+NAME: t\r\n| a |\r\n"
       )
     ).toContain("#+NAME: t")
+    // at the file's start, not as frontmatter, which detaches them
+    for (const start of [
+      "#+NAME: t\n#+CAPTION: c\n| a |\n|-|\n",
+      "#+TITLE: x\n#+NAME: t\n| a |\n|-|\n"
+    ]) {
+      expect(convertMarkdownToOrg(convertOrgToMarkdown(start))).toBe(start)
+    }
+    // in a greater block
+    for (const block of ["quote", "center", "note"]) {
+      const org = `#+begin_${block}\n#+NAME: t\n| a |\n|-|\n#+end_${block}\n`
+      expect(convertMarkdownToOrg(convertOrgToMarkdown(org))).toBe(org)
+    }
     // not in a block
     expect(
       convertOrgToMarkdown("#+begin_example\n#+NAME: t\n| a |\n#+end_example\n")

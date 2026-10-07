@@ -7,6 +7,7 @@ import {
   type UniorgToMdastOptions
 } from "./shared.js"
 import {
+  isAffiliatedKey,
   isModeLineComment,
   takeFileHeader,
   takeRenderedFileHeader
@@ -14,6 +15,7 @@ import {
 import { collectFootnoteLabels } from "./footnotes.js"
 import { orgAnchors } from "../internalLinks.js"
 import { transformNodes } from "./elements.js"
+import { hasKeywordsAbove } from "../tableKeywords.js"
 
 export type { UniorgToMdastOptions } from "./shared.js"
 
@@ -145,13 +147,25 @@ function inertModeLineGuard(
   return []
 }
 
+// the keywords a table below has (set apart from it, see tableKeywords)
+// stay lines above it
 function leadingKeywords(nodes: OrgData["children"]): [string, string][] {
-  const keywords: [string, string][] = []
-  while (nodes[keywords.length]?.type === "keyword") {
-    const keyword = nodes[keywords.length] as unknown as Keyword
-    keywords.push([keyword.key, keyword.value])
+  let end = 0
+  while (nodes[end]?.type === "keyword") {
+    end++
   }
-  return keywords
+  const table = hasKeywordsAbove(nodes[end])
+  while (
+    table &&
+    end > 0 &&
+    isAffiliatedKey((nodes[end - 1] as unknown as Keyword).key)
+  ) {
+    end--
+  }
+  return (nodes.slice(0, end) as unknown as Keyword[]).map(keyword => [
+    keyword.key,
+    keyword.value
+  ])
 }
 
 // morg's own entries as YAML text, or undefined without any

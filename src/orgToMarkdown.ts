@@ -15,7 +15,10 @@ import { unescapeBackslashCommands } from "./core/backslashCommands.js"
 import { unescapeTablePipes } from "./core/tablePipes.js"
 import { parseOrg } from "./core/bracedScripts.js"
 import { guardCommaEscapes, unescapeCommaEscapes } from "./core/commaEscapes.js"
-import { separateTableKeywords } from "./core/tableKeywords.js"
+import {
+  markTablesWithKeywords,
+  separateTableKeywords
+} from "./core/tableKeywords.js"
 import { readSpecialBlockParameters } from "./core/specialBlocks.js"
 import {
   dropUnderscoreBulletGuards,
@@ -137,10 +140,11 @@ function convertOrgSides(
 // keywords (see tableKeywords) and a special block's parameters (see
 // specialBlocks)
 function parseGuardedOrg(org: string): { uniorgAst: OrgData; guarded: string } {
-  const guarded = separateTableKeywords(
+  const { org: guarded, tables } = separateTableKeywords(
     guardCommaEscapes(guardUnderscoreBullets(org))
   )
   const uniorgAst = parseOrg(guarded)
+  markTablesWithKeywords(uniorgAst, tables)
   dropUnderscoreBulletGuards(uniorgAst)
   unescapeCommaEscapes(uniorgAst, org)
   readSpecialBlockParameters(uniorgAst, guarded)

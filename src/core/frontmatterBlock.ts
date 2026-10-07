@@ -68,7 +68,7 @@ const AFFILIATED_RE = new RegExp(
   "i"
 )
 
-function isAffiliatedKey(key: string): boolean {
+export function isAffiliatedKey(key: string): boolean {
   return AFFILIATED_RE.test(key)
 }
 
