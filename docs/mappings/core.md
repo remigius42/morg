@@ -143,6 +143,10 @@ LaTeX math maps natively (via remark-math): inline fragments (`$x$`,
 `\(x\)`) ↔ `$x$`, display fragments (`$$…$$`, `\[…\]`) and
 `\begin{…}` environments ↔ `$$…$$` math blocks, delimiters MathJax,
 KaTeX, Obsidian and GitHub all understand.
+Org reads `$x$` only next to suitable characters (no `$` before;
+punctuation, a space or the line end after; no space just inside), so
+inline math org would not read in place goes to org as `\(x\)`:
+`$\alpha$|` → `\(\alpha\)|`.
 
 Footnotes convert between GFM (`[^label]` / `[^label]: …`) and org
 (`[fn:label]` / `[fn:label] …`) in both directions; org inline

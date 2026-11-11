@@ -986,6 +986,35 @@ describe("a literal backslash before a letter", () => {
   })
 })
 
+describe("inline math org would not read as $…$", () => {
+  // org reads `$x$` only next to a `$`-free char before and punctuation,
+  // a space or the line end after; elsewhere md→org writes `\(x\)`
+  // (found by the Property Test)
+  for (const [org, markdown, back] of [
+    ["\\a|", "$\\a$|\n", "\\(\\a\\)|\n"],
+    ["\\a1", "$\\a$1\n", "\\(\\a\\)1\n"],
+    ["\\a> ", "$\\a$>&#x20;\n", "\\(\\a\\)>\n"],
+    ["$\\a", "\\$$\\a$\n", "$\\(\\a\\)\n"]
+  ] as const) {
+    it(`converges for org ${JSON.stringify(org)}`, () => {
+      expect(convertOrgToMarkdown(org)).toBe(markdown)
+      expect(convertMarkdownToOrg(markdown)).toBe(back)
+      expect(orgRoundTrip(back)).toBe(back)
+    })
+  }
+
+  it("keeps $…$ where org reads it", () => {
+    const markdown = "$x$, ($y$) and $z$\n"
+    expect(convertMarkdownToOrg(markdown)).toBe(markdown)
+  })
+
+  it("writes \\(…\\) for content org reads no $…$ around", () => {
+    const markdown = "a $x.$ b\n"
+    expect(convertMarkdownToOrg(markdown)).toBe("a \\(x.\\) b\n")
+    expect(mdRoundTrip(markdown)).toBe(markdown)
+  })
+})
+
 describe("org line syntax in code", () => {
   it("is comma-escaped in an example block, and only there", () => {
     const markdown = "```\n* x\n  #+end_example\n```\n"

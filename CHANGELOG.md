@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- md → org: inline math org would not read as `$x$` where it stands
+  (before `|`, a digit or `=`, after a `$`, or with a space just
+  inside) is written `\(x\)`, so it stays math and the round trip
+  converges instead of growing `$` signs.
+
 ## [0.11.0] - 2026-10-07
 
 ### Added

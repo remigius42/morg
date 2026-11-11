@@ -12,6 +12,7 @@ import { transformMdastToUniorgDraft } from "./core/mdastToUniorg/index.js"
 import { BULLET_LINE_END } from "./core/mdastToUniorg/context.js"
 import { detectMarkdownStyle, STYLE_KEYWORD } from "./core/markdownStyle.js"
 import { escapeOrgMarkup } from "./core/markupBoundary.js"
+import { delimitInlineMath } from "./core/inlineMath.js"
 import { renderFileHeader } from "./core/frontmatterBlock.js"
 import { escapeLineSyntax } from "./core/lineSyntax.js"
 import { escapeFootnoteReferences } from "./core/footnoteReferences.js"
@@ -133,13 +134,15 @@ function convertMarkdownDocument(
   // read as line syntax, literal markers org would read as markup, and
   // markup touching a word character, need a zero-width space escape;
   // a pipe in a table cell an entity; a literal backslash before a
-  // letter first, the entity being none
+  // letter first, the entity being none; last, inline math org would not
+  // read as `$x$` next to its (escaped) neighbors
   escapeBackslashCommands(uniorgAst)
   escapeTablePipes(uniorgAst, options.onWarning)
   escapeFootnoteReferences(uniorgAst)
   escapeDescriptiveTags(uniorgAst)
   escapeLineSyntax(uniorgAst)
   escapeOrgMarkup(uniorgAst)
+  delimitInlineMath(uniorgAst)
 
   // Phase 3c: md text has no sub/superscripts; keep org from reading
   // bare underscores and carets as such. Checked on the text as
