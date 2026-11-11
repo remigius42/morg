@@ -72,7 +72,8 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "test:e2e:chromium": "playwright test --project=chromium",
-    "test:e2e:report": "playwright show-report tests/e2e/reports/html"
+    "test:e2e:report": "playwright show-report tests/e2e/reports/html",
+    "test:property": "MORG_PROPERTY_RUNS=${MORG_PROPERTY_RUNS:-1000} vitest run tests/convergence.property.spec.ts"
   },
   "dependencies": {
     "@types/mdast": "^4.0.4",
@@ -98,6 +99,7 @@
     "@commitlint/cli": "^21.2.2",
     "@commitlint/config-conventional": "^21.2.2",
     "@eslint/js": "^10.0.1",
+    "@fast-check/vitest": "^0.5.0",
     "@picocss/pico": "^2.1.1",
     "@playwright/test": "^1.63.0",
     "@shikijs/rehype": "^4.5.0",

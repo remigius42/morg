@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- An opt-in property test (`npm run test:property`, fast-check):
+  checks Convergence on generated input for core and Logseq, in both
+  directions, and shrinks a failure to a minimal counterexample.
+  Local-only for now; it joins CI once the counterexamples it found are
+  fixed or excluded.
+
 ### Fixed
 
 - md → org: inline math org would not read as `$x$` where it stands

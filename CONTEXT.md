@@ -70,6 +70,13 @@ exists for what neither of those can answer: whether the conversion
 worker really runs, whether a real file, clipboard or download behaves,
 and what axe makes of the accessibility tree.
 
+## Property Test
+
+A vitest spec that checks Convergence against generated input rather
+than fixtures, and shrinks any failure to a minimal counterexample.
+Opt-in and local: it finds inputs nobody wrote a fixture for; a
+counterexample it finds becomes an ordinary example test once fixed.
+
 ## Source Layout
 
 The `src/` root is the public library surface: everything `index.ts`
