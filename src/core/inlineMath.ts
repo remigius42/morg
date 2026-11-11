@@ -54,7 +54,9 @@ export function delimitInlineMath(tree: Parent): void {
       fragment.value = PLACEHOLDER
       const line = renderChildren(children).join("")
       fragment.value = value
+      // org→md trims blank math to `$$`, a math block fence
       if (
+        fragment.contents.trim() &&
         !readsAsDollar(fragment.contents, line, line.indexOf(PLACEHOLDER)) &&
         !fragment.contents.includes("\\)")
       ) {

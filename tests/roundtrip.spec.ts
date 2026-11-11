@@ -1013,6 +1013,12 @@ describe("inline math org would not read as $…$", () => {
     expect(convertMarkdownToOrg(markdown)).toBe("a \\(x.\\) b\n")
     expect(mdRoundTrip(markdown)).toBe(markdown)
   })
+
+  it("keeps blank math as $…$", () => {
+    // org→md trims `\( \)` to `$$`, a math block fence
+    const once = mdRoundTrip("$ $\n")
+    expect(mdRoundTrip(once)).toBe(once)
+  })
 })
 
 describe("org line syntax in code", () => {
