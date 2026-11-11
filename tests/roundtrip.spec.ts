@@ -1167,6 +1167,42 @@ describe("relative links", () => {
     const markdown = "[t](a%20b.md#My%20H), [f](f.md) and ![a](i.png)\n"
     expect(mdRoundTrip(markdown)).toBe(markdown)
   })
+
+  // one md spelling for a path, a fuzzy link's or a file link's (found
+  // by the Property Test)
+  it("show their path as the text, the url encoded", () => {
+    expect(convertOrgToMarkdown("[[a b]] and [[file:a b.md]]\n")).toBe(
+      "[a b](a%20b) and [a b.md](a%20b.md)\n"
+    )
+    expect(convertMarkdownToOrg("[a b.md](a%20b.md)\n")).toBe(
+      "[[file:a b.md]]\n"
+    )
+  })
+
+  it("keep a `//` path, a url to md, without a description", () => {
+    expect(orgRoundTrip("[[//a%41]]\n")).toBe("[[//a%41]]\n")
+  })
+
+  it("leave a url of a scheme org does not know as it is", () => {
+    // uniorg reads `vscode:` as a fuzzy link (found by the web corpus)
+    const markdown = "[t](vscode://a.b/c?url=https://x.y)\n"
+    expect(mdRoundTrip(markdown)).toBe(markdown)
+  })
+
+  for (const markdown of [
+    "[[a b]]",
+    "[[> ]]",
+    "[[<]]",
+    "[[a# ]]",
+    "[[1. ]]",
+    // md→org reads a url opening with `(` as no path (a Logseq ref)
+    "[[(* ]]"
+  ]) {
+    it(`converge from md ${JSON.stringify(markdown)}`, () => {
+      const once = mdRoundTrip(markdown)
+      expect(mdRoundTrip(once)).toBe(once)
+    })
+  }
 })
 
 describe("normalizations", () => {

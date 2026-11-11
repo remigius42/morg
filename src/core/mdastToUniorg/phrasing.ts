@@ -8,7 +8,7 @@ import {
 } from "./context.js"
 import type { Parent } from "unist"
 import { visit } from "unist-util-visit"
-import { escapeOrgPath } from "../orgPath.js"
+import { decodeUrlPart, escapeOrgPath, isRelativePath } from "../orgPath.js"
 import {
   orgParser,
   renderChildren,
@@ -197,21 +197,6 @@ function orgSafeUrl(url: string): string {
 // file. A #anchor becomes org's search option, which finds a
 // <<target>> or a headline of that name. `[[page]]` / `((uuid))` urls
 // are dialect references (logseq), not paths
-const SCHEME_RE = /^[a-z][a-z0-9+.-]*:/i
-
-function isRelativePath(url: string): boolean {
-  return url !== "" && !SCHEME_RE.test(url) && !/^(#|\/\/|\[|\()/.test(url)
-}
-
-// md urls are percent-encoded, org paths are not; a malformed escape
-// stays as written
-function decodeUrlPart(part: string): string {
-  try {
-    return decodeURIComponent(part)
-  } catch {
-    return part
-  }
-}
 
 function orgLinkTarget(url: string): {
   rawLink: string
@@ -254,22 +239,33 @@ function internalLink(
   return isLinkable(title) ? { path: `*${title}`, text: anchor.text } : null
 }
 
+// text equal to the url (autolinks), to a relative path's decoded url,
+// or to the heading an internal link names, is no description; a plain
+// [[url]] keeps the org side canonical
+function repeatsUrl(
+  linkNode: Extract<PhrasingContent, { type: "link" }>,
+  internalText: string | undefined
+): boolean {
+  const [only, ...rest] = linkNode.children
+  if (rest.length || only?.type !== "text") {
+    return false
+  }
+  const { url } = linkNode
+  return internalText !== undefined
+    ? only.value === internalText
+    : only.value === url ||
+        (isRelativePath(url) && only.value === decodeUrlPart(url))
+}
+
 function transformMdastLink(
   ctx: TransformContext,
   linkNode: Extract<PhrasingContent, { type: "link" }>
 ): ObjectType {
-  const [only] = linkNode.children
   // an anchor of the document is a link within it
   const internal = internalLink(ctx, linkNode.url)
-  // text equal to the url (autolinks), or to the heading an internal
-  // link names, is no description; a plain [[url]] keeps the org side
-  // canonical
-  const linkChildren =
-    linkNode.children.length === 1 &&
-    only?.type === "text" &&
-    only.value === (internal?.text ?? linkNode.url)
-      ? []
-      : transformPhrasingChildren(ctx, linkNode.children)
+  const linkChildren = repeatsUrl(linkNode, internal?.text)
+    ? []
+    : transformPhrasingChildren(ctx, linkNode.children)
   // rawLink should just be the URL, uniorg-stringify adds the brackets
   const { rawLink, linkType } = internal
     ? { rawLink: internal.path, linkType: "fuzzy" }

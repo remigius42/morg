@@ -59,7 +59,9 @@ decoded and the `#anchor` as org's search option
 `<<target>>` or a headline of that name; a GitHub-style slug anchor
 (`#some-heading`) round-trips, but finds no headline. org → md
 reverses it, org's `./path` links included, percent-encoding `%`,
-`#` and spaces.
+`#`, spaces, `<` and `>`. A link without a description shows its path
+as written (`[[file:a b.md]]` ↔ `[a b.md](a%20b.md)`), which md → org
+reads as no description again.
 In the org path, `[`, `]` and a colon before another colon or the
 path's end are percent-encoded (`%5B`, `%5D`, `%3A`), since org reads
 brackets as link syntax and `::` as the search option; a literal `%`

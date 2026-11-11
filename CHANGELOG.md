@@ -27,6 +27,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   first headline, md `* a` or `+ a` before the first `-` bullet) is
   written with `*` bullets in Markdown, so it stays page content instead
   of turning into blocks on the way back.
+- org → md: a link without a description to a path, a `file:` link or
+  a fuzzy link no heading of the file answers, shows the path as
+  written and percent-encodes the url, `<` and `>` included
+  (`[[a b]]` → `[a b](a%20b)`, was `[a b](<a b>)`; `[[file:a b]]` →
+  `[a b](a%20b)`, was `[a%20b](a%20b)`). Such links with a space or a
+  `<` in the path now converge.
 
 ## [0.11.0] - 2026-10-07
 

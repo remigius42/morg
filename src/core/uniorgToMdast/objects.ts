@@ -8,7 +8,12 @@ import {
   type TransformContext
 } from "./shared.js"
 import { transformFootnoteReference } from "./footnotes.js"
-import { unescapeOrgPath } from "../orgPath.js"
+import {
+  decodeUrlPart,
+  hasScheme,
+  isRelativePath,
+  unescapeOrgPath
+} from "../orgPath.js"
 import { IMAGE_EXTENSION_RE } from "../sizedImages.js"
 import type { Anchor } from "../internalLinks.js"
 
@@ -107,14 +112,14 @@ function encodeUrlPart(part: string): string {
     .replaceAll("%", "%25")
     .replaceAll("#", "%23")
     .replaceAll(" ", "%20")
+    .replaceAll("<", "%3C")
+    .replaceAll(">", "%3E")
 }
 
 // a path starting like `a:` would read as a url scheme in markdown
 function encodeUrlPath(path: string): string {
   const encoded = encodeUrlPart(path)
-  return /^[a-z][a-z0-9+.-]*:/i.test(encoded)
-    ? encoded.replaceAll(":", "%3A")
-    : encoded
+  return hasScheme(encoded) ? encoded.replaceAll(":", "%3A") : encoded
 }
 
 // an org file: link (or a ./ path) is a relative markdown link, the
@@ -125,6 +130,12 @@ function markdownUrl(
 ): string {
   if (internal) {
     return `#${encodeUrlPart(internal.anchor)}`
+  }
+  // a fuzzy link no heading or name of the file answers reads back as a
+  // relative path, so it is encoded as one; not a url of a scheme
+  // uniorg does not know (`vscode://`, fuzzy to it too)
+  if (node.linkType === "fuzzy" && isRelativePath(node.rawLink)) {
+    return encodeUrlPath(node.rawLink)
   }
   // a `//` path is a scheme-relative url in Markdown, which md→org
   // takes as it is
@@ -181,10 +192,13 @@ function transformUniorgLink(
   }
   const repeatsTarget = repeatsLinkTarget(node, internal)
   if (!node.children.length || repeatsTarget) {
+    // a path shows as written, its url encoded; md→org reads the pair
+    // as no description
+    const text = isRelativePath(url) ? decodeUrlPart(url) : url
     return {
       type: "link",
       url,
-      children: [{ type: "text", value: internal?.text ?? url }]
+      children: [{ type: "text", value: internal?.text ?? text }]
     }
   }
   const children = transformUniorgObjects(ctx, node.children)

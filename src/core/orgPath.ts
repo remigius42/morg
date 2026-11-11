@@ -26,3 +26,32 @@ export function unescapeOrgPath(part: string): string {
     more ? `%${more.slice(2)}${code}` : (ESCAPED[code] ?? code)
   )
 }
+
+const SCHEME_RE = /^[a-z][a-z0-9+.-]*:/i
+
+/**
+ * Whether a markdown url reads as a relative path: no scheme, and no
+ * #anchor, `//` url or dialect reference (`[[page]]`, `((uuid))`).
+ */
+export function isRelativePath(url: string): boolean {
+  return url !== "" && !SCHEME_RE.test(url) && !/^(#|\/\/|\[|\()/.test(url)
+}
+
+/**
+ * A percent-decoded markdown url part; a malformed escape stays as
+ * written.
+ */
+export function decodeUrlPart(part: string): string {
+  try {
+    return decodeURIComponent(part)
+  } catch {
+    return part
+  }
+}
+
+/**
+ * Whether a markdown url starts like a url scheme (`a:`).
+ */
+export function hasScheme(url: string): boolean {
+  return SCHEME_RE.test(url)
+}
