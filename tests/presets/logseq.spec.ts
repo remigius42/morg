@@ -260,6 +260,19 @@ describe("logseq outline", () => {
       '- Some ^^bright words^^ here.\n- [:div {:class "note"} "hi"]\n'
     )
   })
+
+  // a `-` list would read back as blocks (found by the Property Test)
+  it("writes a list before the first block with `*` bullets", () => {
+    both("- a\n  - b\n\n* block\n", "* a\n  * b\n\n- block\n")
+  })
+
+  it("keeps a page that is only a list a list", () => {
+    for (const markdown of ["* a\n", "+ a\n", "*\n"]) {
+      const org = toOrg(markdown)
+      expect(toOrg(toMarkdown(org))).toBe(org)
+    }
+    expect(toMarkdown("- a\n")).toBe("* a\n\n")
+  })
 })
 
 describe("logseq page properties", () => {

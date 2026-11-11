@@ -58,6 +58,9 @@ as Logseq parses it.
 - A heading outside the bullets is a top-level block: Logseq writes a
   page's first block so if it is a heading. Other content before the
   first bullet is page content.
+- A list in the page content takes `*` bullets in Markdown: Logseq
+  reads `*` and `+` as list bullets there, `-` always as a block. Org
+  `- a` before the first headline ↔ `* a` before the first `-` bullet.
 
 ## Block titles
 

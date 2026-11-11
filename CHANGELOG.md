@@ -23,6 +23,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (before `|`, a digit or `=`, after a `$`, or with a space just
   inside) is written `\(x\)`, so it stays math and the round trip
   converges instead of growing `$` signs.
+- Logseq: a list before a page's first block (org `- a` before the
+  first headline, md `* a` or `+ a` before the first `-` bullet) is
+  written with `*` bullets in Markdown, so it stays page content instead
+  of turning into blocks on the way back.
 
 ## [0.11.0] - 2026-10-07
 

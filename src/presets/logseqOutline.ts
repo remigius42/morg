@@ -3,6 +3,7 @@ import { mayBeLineSyntax, readsAsLineSyntax } from "../core/lineSyntax.js"
 import { positionParser, tryParse } from "../core/render.js"
 import { ZERO_WIDTH_SPACE } from "../core/markupBoundary.js"
 import { mapOutsideCode } from "../core/outsideCode.js"
+import { restyleMarkdown } from "../core/restyle.js"
 import {
   isDrawerStart,
   isOrgBlockStart,
@@ -691,8 +692,12 @@ export function orgOutlineToMarkdown(
     vanilla ? lines : upperBlockLines(lines, true)
   const convertCarried: FragmentConverter = (fragment, preset) =>
     convert(fragment, preset, vanilla ? presets.vanillaInline : undefined)
+  const pageMarkdown = convertPage(pageLines, convertCarried, presets.page)
   const outline = {
-    page: convertPage(pageLines, convertCarried, presets.page),
+    // a `-` list before the first block would read back as blocks
+    page: vanilla
+      ? pageMarkdown
+      : pageMarkdown.map(md => restyleMarkdown(md, { bullet: "*" })),
     blocks: blocks.map(block => ({
       ...block,
       content: logseqBlockLines(
