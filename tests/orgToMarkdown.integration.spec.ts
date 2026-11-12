@@ -526,6 +526,14 @@ describe("convertOrgToMarkdown", () => {
     expect(convertOrgToMarkdown(org)).toBe("Inline $x^2$ and $y$ here.\n")
   })
 
+  it("should read no $…$ math ending in a blank, `,` or `.`, as org", () => {
+    const org = "costs $5 and $\\alpha$ here, $a $b $c$, $x,$ y, ~$1.$~\n"
+
+    expect(convertOrgToMarkdown(org)).toBe(
+      "costs \\$5 and $\\alpha$ here, \\$a \\$b $c$, \\$x,\\$ y, `$1.$`\n"
+    )
+  })
+
   it("should convert display math and environments to math blocks", () => {
     const org =
       "$$\na + b\n$$\n\n\\begin{equation}\nE = mc^2\n\\end{equation}\n"

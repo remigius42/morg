@@ -21,6 +21,7 @@ import {
 } from "./core/tableKeywords.js"
 import { readSpecialBlockParameters } from "./core/specialBlocks.js"
 import { restoreCookieBlanks } from "./core/statisticsCookies.js"
+import { parseDollarMath } from "./core/dollarMath.js"
 import {
   dropUnderscoreBulletGuards,
   guardUnderscoreBullets
@@ -140,12 +141,12 @@ function convertOrgSides(
 // and comma-escaped code lines (see commaEscapes), and drops a table's
 // keywords (see tableKeywords), a special block's parameters (see
 // specialBlocks) and the blank after a statistics cookie (see
-// statisticsCookies)
+// statisticsCookies), and reads `$x $` as math (see dollarMath)
 function parseGuardedOrg(org: string): { uniorgAst: OrgData; guarded: string } {
   const { org: guarded, tables } = separateTableKeywords(
     guardCommaEscapes(guardUnderscoreBullets(org))
   )
-  const uniorgAst = parseOrg(guarded)
+  const uniorgAst = parseDollarMath(guarded, parseOrg)
   markTablesWithKeywords(uniorgAst, tables)
   dropUnderscoreBulletGuards(uniorgAst)
   unescapeCommaEscapes(uniorgAst, org)

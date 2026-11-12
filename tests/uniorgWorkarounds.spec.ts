@@ -30,4 +30,15 @@ describe("uniorg-parse bugs morg works around", () => {
       children: [{ type: "statistics-cookie", postBlank: 1 }, { value: "b\n" }]
     })
   })
+
+  it("reads `$x $` as math (src/core/dollarMath.ts)", () => {
+    const tree = unified().use(uniorgParse).parse("a $x $ b\n")
+    expect(tree.children[0]).toMatchObject({
+      children: [
+        { value: "a " },
+        { type: "latex-fragment", value: "$x $" },
+        { value: " b\n" }
+      ]
+    })
+  })
 })
