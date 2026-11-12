@@ -1391,7 +1391,7 @@ describe("adjacent comments", () => {
 
 describe("a statistics cookie", () => {
   it("keeps the blank after it (found by the Property Test)", () => {
-    for (const org of ["[[/] ]]\n", "a [1/2] b\n"]) {
+    for (const org of ["[[/] ]]\n", "a [1/2] b\n", "a [1/2]\u00A0b\n"]) {
       expect(orgRoundTrip(org)).toBe(org)
     }
   })

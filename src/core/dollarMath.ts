@@ -18,12 +18,26 @@ import { positionParser } from "./render.js"
 
 type Fragment = Node & { value: string; contents: string }
 
-// content org reads no `$x$` around
-const BAD_END_RE = /[ \t\n,.]$/
+// what ends content org reads no `$x$` around (uniorg checks the
+// closing `$` against it instead)
+const BAD_END = String.raw`[ \t\n,.]`
+const BAD_END_RE = new RegExp(`${BAD_END}$`)
+const BAD_CLOSE_RE = new RegExp(`${BAD_END}\\$`, "g")
 
 function isMisread(node: Node): boolean {
   const { value, contents } = node as Fragment
   return /^\$(?!\$)/.test(value) && BAD_END_RE.test(contents)
+}
+
+// a misread needs a `$`, and after it a blank, `,` or `.` right before
+// a `$`: else no walk
+function mayMisread(org: string): boolean {
+  const first = org.indexOf("$")
+  if (first === -1) {
+    return false
+  }
+  BAD_CLOSE_RE.lastIndex = first + 1
+  return BAD_CLOSE_RE.test(org)
 }
 
 function hasMisread(tree: Node): boolean {
@@ -71,7 +85,7 @@ export function parseDollarMath(
   parse: (org: string) => OrgData
 ): OrgData {
   let tree = parse(org)
-  if (!hasMisread(tree)) {
+  if (!mayMisread(org) || !hasMisread(tree)) {
     return tree
   }
   const mark = freeMark(org)

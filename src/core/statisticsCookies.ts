@@ -9,6 +9,10 @@ import { visit } from "unist-util-visit"
 type Cookie = Node & { end: number; postBlank?: number }
 type Text = Node & { value: string }
 
+// uniorg-parse 3.2.2's cookie (`parseStatisticsCookie`), a blank after
+// it, which it swallows with `\s*`
+const COOKIE_BLANK_RE = /\[\d*(?:%|\/\d*)\]\s/
+
 /**
  * org→md: uniorg-parse's statistics cookie swallows the blank after it
  * (`[1/2] b` reads as `[1/2]` then `b`), which puts it back in front of
@@ -17,6 +21,10 @@ type Text = Node & { value: string }
  * @param source The org text it was parsed from.
  */
 export function restoreCookieBlanks(tree: Parent, source: string): void {
+  // uniorg's cookie pattern, a blank after it: else no walk
+  if (!COOKIE_BLANK_RE.test(source)) {
+    return
+  }
   visit(tree, (node: Node, index, parent: Parent | undefined) => {
     if (node.type !== "statistics-cookie" || !parent || index === undefined) {
       return undefined

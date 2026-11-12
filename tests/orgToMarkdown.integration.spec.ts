@@ -569,6 +569,10 @@ describe("convertOrgToMarkdown", () => {
     expect(convertOrgToMarkdown(org)).toBe(
       "costs \\$5 and $\\alpha$ here, \\$a \\$b $c$, \\$x,\\$ y, `$1.$`\n"
     )
+    // a line break before the closing `$`, and a misread opening at a
+    // later `$` than the first (the text check before the walk)
+    expect(convertOrgToMarkdown("x $a\n$ y\n")).toBe("x \\$a\n\\$ y\n")
+    expect(convertOrgToMarkdown("p $q $r. $\n")).toBe("p \\$q \\$r. \\$\n")
     // a private-use glyph like the guard's mark stays, the guard too
     expect(convertOrgToMarkdown("\uE002\uE100 $5 and $\\alpha$\n")).toBe(
       "\uE002\uE100 \\$5 and $\\alpha$\n"
