@@ -11,71 +11,68 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- An opt-in property test (`npm run test:property`, fast-check):
-  checks Convergence on generated input for core and Logseq, in both
+- A property test (`npm run test:property`, fast-check) checks
+  Convergence on generated input, for core and Logseq, in both
   directions, and shrinks a failure to a minimal counterexample. CI
-  runs it with a fixed seed and 2000 runs per round trip
+  runs it with a fixed seed and 2000 inputs per round trip
   (`npm run test:property:ci`).
 
 ### Fixed
 
-- md → org: inline math org would not read as `$x$` where it stands
-  (before `|`, a digit or `=`, after a `$`, or with a space just
-  inside) is written `\(x\)`, so it stays math and the round trip
-  converges instead of growing `$` signs.
-- Logseq: a list before a page's first block (org `- a` before the
-  first headline, md `* a` or `+ a` before the first `-` bullet) is
-  written with `*` bullets in Markdown, so it stays page content instead
-  of turning into blocks on the way back.
-- org → md: a link without a description to a path, a `file:` link or
-  a fuzzy link no heading of the file answers, shows the path as
-  written and percent-encodes the url, `<` and `>` included
+- org → md no longer crashes on a line holding just a line break
+  (`\\`, often used for spacing); md → org → md crashed the same way
+  on md `a\n\\\nb`.
+- org → md reads `$x$` math as org does: math whose content ends in a
+  blank, `,` or `.` is text (`$5 and $\alpha$` → `\$5 and $\alpha$`,
+  was `$5 and$α\$`).
+- md → org writes inline math as `\(x\)` wherever org would not read
+  `$x$` in its place: next to `|`, a digit or `=`, with a space just
+  inside, or after a literal `$` that would pair with it
+  (`\$a$\alpha$` → `$a\(\alpha\)`, was `$a$\alpha$`, which org reads
+  as the math `$a$`). Blank math stays `$ $`.
+- org → md keeps the blank after a statistics cookie (`* H [1/2] x` →
+  `# H \[1/2] x`, was `# H \[1/2]x`), and a line break after one.
+- org → md keeps stars after a list bullet as the item's text
+  (`- * a` → `- \* a`, also after a checkbox or counter, and after a
+  description's `::`); it wrote a heading (`- # a`), which md → org
+  then turned into `- a`.
+- An icon font's glyph (a private use character) in org text is no
+  longer dropped by org → md, and no longer stops it from fixing the
+  cases above, or a comma-escaped code line's indentation.
+- org → md writes a link without a description to a path, a `file:`
+  link or a fuzzy link no heading of the file answers, with the path
+  as written and the url percent-encoded, `<` and `>` included
   (`[[a b]]` → `[a b](a%20b)`, was `[a b](<a b>)`; `[[file:a b]]` →
   `[a b](a%20b)`, was `[a%20b](a%20b)`). Such links with a space or a
   `<` in the path now converge.
-- md → org: adjacent html comments stay separate org comments, a blank
-  line apart (`<!-- a -->\n\n<!-- b -->` → `# a\n\n# b`, was one
+- md → org keeps adjacent html comments separate org comments, a blank
+  line apart (`<!-- a -->\n\n<!-- b -->` → `# a\n\n# b`, was the one
   comment `# a\n# b`); Obsidian `%% %%` comments and a comment after
   the mode line too. Comments with no blank line between them in md
   get one.
-- org → md: the blank after a statistics cookie stays (`* H [1/2] x` →
-  `# H \[1/2] x`, was `# H \[1/2]x`; a line break after one too).
-- org → md: `$x$` math whose content ends in a blank, `,` or `.` is
-  text, as in org (`costs $5 and $\alpha$` → `costs \$5 and $\alpha$`,
-  was `costs $5 and$α\$`); a workaround for uniorg-parse reading it as
-  math.
-- org → md: stars after a list bullet are the item's text, as in org
-  (`- * a` → `- \* a`, was a heading `- # a`, which md → org then
-  turned into `- a`); a workaround for uniorg-parse reading a headline
-  there.
-- md → org: a line of stars alone gets a zero-width space (U+200B) in
-  front, as `* a` does: Logseq reads it as a block, so a quote's `*`
-  line ended the quote.
-- org → md: a line of just a line break (`\\`) no longer crashes the
-  conversion (uniorg-parse threw "no progress"); md `a\n\\\nb` crashed
-  its md → org → md round trip the same way.
-- org → md: a private use character in the text (an icon font's glyph)
-  is no longer dropped where the stars-after-a-bullet workaround runs,
-  and no longer switches that or the comma-escape and `$x $` math
-  workarounds off.
-- Logseq: a block title of a lone `#` stays text (org `* #` → md
-  `- \#`, was `- #`, an empty heading to Logseq). md → org reads a
-  heading's title as inline text, as Logseq does: one opening like a
-  heading, quote, list item or fence (`- # # a`, `- # > q`) no longer
-  turns into that block. Spaces between the bullet and the heading
-  marker (`-  # a`) read as a heading, as in Logseq.
-- Logseq: md → org trims a page property's value, as org reads a
-  keyword's, from a `key::` line or the frontmatter: `title::  a`
-  becomes `#+title: a`, no longer `#+title:  a`.
-- md → org: inline math after a literal `$` is written `\(x\)` where
-  org would pair the two (`\$a$\alpha$` → `$a\(\alpha\)`, was
-  `$a$\alpha$`, which org reads as the math `$a$`).
+- md → org escapes a line of stars alone (`\*`) with a zero-width
+  space, as it does `* a`: Logseq reads such a line as a block, so a
+  quote's `*` line ended the quote.
+- Logseq: a list before a page's first block (org `- a` before the
+  first headline, md `* a` or `+ a` before the first `-` bullet) is
+  written with `*` bullets in md, so it stays page content instead of
+  turning into blocks on the way back.
+- Logseq: a block titled `#` stays text (org `* #` → md `- \#`, was
+  `- #`, an empty heading to Logseq).
+- Logseq: md → org reads a heading's title as inline text, as Logseq
+  does: one opening like a heading, quote, list item or fence
+  (`- # # a`, `- # > q`) no longer turns into that block. Spaces
+  between the bullet and the heading marker (`-  # a`) read as a
+  heading, as in Logseq.
 - Logseq: org → md writes a heading block's content that opens with a
   quote or a code block on the line below the bullet line, no longer
   on it (`- # > a`), where Logseq reads it as a heading titled `> a`.
 - Logseq: md → org reads a block title that looks like an org keyword
   (`- #+foo: a\~b`) as text, as Logseq does, its md escapes undone
   (`* #+foo: a~b`); it passed through as org text, escapes and all.
+- Logseq: md → org trims a page property's value, as org reads a
+  keyword's, from a `key::` line or the frontmatter: `title::  a`
+  becomes `#+title: a`, no longer `#+title:  a`.
 
 ## [0.11.0] - 2026-10-07
 
