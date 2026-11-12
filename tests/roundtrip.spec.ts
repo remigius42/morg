@@ -916,6 +916,11 @@ describe("org line syntax in paragraph text", () => {
     expect(mdRoundTrip(once)).toBe(once)
   })
 
+  it("keeps a private use glyph the star item guard uses", () => {
+    // an icon font's glyph is text (found by review)
+    expect(convertOrgToMarkdown("- * a \uE003\n")).toBe("- \\* a \uE003\n")
+  })
+
   it("stays text after a list bullet, where uniorg reads a headline", () => {
     // org reads `- * a` as an item `* a` (found by the Property Test)
     for (const markdown of ["- \\* a\n", "1. \\*\\* b\n   c\n"]) {

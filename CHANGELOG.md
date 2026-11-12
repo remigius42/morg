@@ -54,6 +54,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - org → md: a line of just a line break (`\\`) no longer crashes the
   conversion (uniorg-parse threw "no progress"); md `a\n\\\nb` crashed
   its md → org → md round trip the same way.
+- org → md: a private use character in the text (an icon font's glyph)
+  is no longer dropped where the stars-after-a-bullet workaround runs,
+  and no longer switches that workaround off.
 
 ## [0.11.0] - 2026-10-07
 
