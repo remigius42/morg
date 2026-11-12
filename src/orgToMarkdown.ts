@@ -150,7 +150,7 @@ function parseGuardedOrg(org: string): { uniorgAst: OrgData; guarded: string } {
   const { org: guarded, tables } = separateTableKeywords(commaEscapes.org)
   const uniorgAst = parseDollarMath(guarded, parseOrg)
   markTablesWithKeywords(uniorgAst, tables)
-  dropUnderscoreBulletGuards(uniorgAst)
+  dropUnderscoreBulletGuards(uniorgAst, guarded)
   dropStarItemGuards(uniorgAst, starItems.mark)
   unescapeCommaEscapes(uniorgAst, commaEscapes.mark)
   readSpecialBlockParameters(uniorgAst, guarded)

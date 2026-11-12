@@ -31,8 +31,14 @@ const GUARD_RE = new RegExp(
 /**
  * org→md: drops the guards again, also where uniorg reads no text (a
  * src block's code). A zero-width space the author put there goes too.
+ * @param tree The parsed org.
+ * @param org The org text uniorg parsed: without a zero-width space,
+ * there is nothing to drop, and no walk.
  */
-export function dropUnderscoreBulletGuards(tree: Parent): void {
+export function dropUnderscoreBulletGuards(tree: Parent, org: string): void {
+  if (!org.includes(ZERO_WIDTH_SPACE)) {
+    return
+  }
   visit(tree, (node: Node) => {
     if (typeof node.value === "string") {
       node.value = node.value.replace(GUARD_RE, "$1$2")
