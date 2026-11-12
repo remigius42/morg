@@ -64,6 +64,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   heading, quote, list item or fence (`- # # a`, `- # > q`) no longer
   turns into that block. Spaces between the bullet and the heading
   marker (`-  # a`) read as a heading, as in Logseq.
+- Logseq: md → org trims a page property's value, as org reads a
+  keyword's, from a `key::` line or the frontmatter: `title::  a`
+  becomes `#+title: a`, no longer `#+title:  a`.
 
 ## [0.11.0] - 2026-10-07
 

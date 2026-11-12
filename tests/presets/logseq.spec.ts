@@ -334,6 +334,16 @@ describe("logseq page properties", () => {
       '#+title: My Page\n#+tags: a, b\n#+draft: true\n#+begin_comment morg_frontmatter\nauthor:\n  name: X\ndesc: |\n  one\n  two\nodd: ["a, b"]\n#+end_comment\n\n* first block\n'
     )
   })
+  it("trims a page property value, as org reads a keyword's", () => {
+    // found by the Property Test: blanks around it came back one
+    expect(toOrg("title::  My Page \n\n- b\n")).toBe(
+      "#+title: My Page\n\n* b\n"
+    )
+    // a frontmatter entry's too (found by review)
+    expect(toOrg("---\ntitle: '  a '\n---\n\n- b\n")).toBe(
+      "#+title: a\n\n* b\n"
+    )
+  })
   it("keeps page property values verbatim, urls and markup included", () => {
     const markdown =
       "source:: https://example.com/a_b\nalias:: snake_case, *bold*, `code`\n\n- b\n"

@@ -327,7 +327,12 @@ function takePageProperties(uniorgAst: OrgData): OrgData {
   children.splice(
     at === -1 ? children.length : at,
     0,
-    ...keywords.map(([key, value]) => ({ type: "keyword", key, value }))
+    // trimmed, as org reads a keyword's value (uniorg all whitespace)
+    ...keywords.map(([key, value]) => ({
+      type: "keyword",
+      key,
+      value: value.trim()
+    }))
   )
   return uniorgAst
 }
