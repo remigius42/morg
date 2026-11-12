@@ -393,7 +393,11 @@ function writeMarkdownBlock(block: Block): string {
   const meta = block.meta.flatMap(item =>
     "lines" in item ? logbook(item.lines, "*") : [propertyLine(item)]
   )
-  const [title = "", ...more] = arrange(block.metaFirst, meta, block.content)
+  const [first = "", ...rest] = arrange(block.metaFirst, meta, block.content)
+  // a heading's title is inline text to Logseq: content opening with a
+  // block (a quote, a fence) goes below its bullet line
+  const below = block.heading > 0 && MD_BLOCK_START_RE.test(first)
+  const [title, more] = below ? ["", [first, ...rest]] : [first, rest]
   const head = ["#".repeat(block.heading), bulletTitle(title)]
     .filter(Boolean)
     .join(" ")

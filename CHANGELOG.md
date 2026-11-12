@@ -70,6 +70,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - md → org: inline math after a literal `$` is written `\(x\)` where
   org would pair the two (`\$a$\alpha$` → `$a\(\alpha\)`, was
   `$a$\alpha$`, which org reads as the math `$a$`).
+- Logseq: org → md writes a heading block's content that opens with a
+  quote or a code block on the line below the bullet line, no longer
+  on it (`- # > a`), where Logseq reads it as a heading titled `> a`.
 
 ## [0.11.0] - 2026-10-07
 

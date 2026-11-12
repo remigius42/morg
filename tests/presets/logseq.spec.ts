@@ -279,6 +279,20 @@ describe("logseq outline", () => {
     both("* #tag a #[[b c]]\n", "- #tag a #[[b c]]\n")
   })
 
+  it("writes a heading block's quote or fence below its bullet line", () => {
+    // `- # > a` would be a heading titled `> a` (found by the Property
+    // Test: `#\n>`)
+    both(
+      "* #+BEGIN_QUOTE\n:PROPERTIES:\n:heading: 1\n:END:\na\n#+END_QUOTE\n",
+      "- #\n  > a\n"
+    )
+    expect(
+      toMarkdown(
+        "* #+BEGIN_EXAMPLE\n:PROPERTIES:\n:heading: 2\n:END:\nx\n#+END_EXAMPLE\n"
+      )
+    ).toBe("- ##\n  ```\n  x\n  ```\n")
+  })
+
   it("reads a heading's title as Logseq does, inline text", () => {
     // a block's start opening it is text (found by review)
     for (const [title, org] of [
