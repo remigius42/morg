@@ -33,6 +33,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`[[a b]]` → `[a b](a%20b)`, was `[a b](<a b>)`; `[[file:a b]]` →
   `[a b](a%20b)`, was `[a%20b](a%20b)`). Such links with a space or a
   `<` in the path now converge.
+- md → org: adjacent html comments stay separate org comments, a blank
+  line apart (`<!-- a -->\n\n<!-- b -->` → `# a\n\n# b`, was one
+  comment `# a\n# b`); Obsidian `%% %%` comments and a comment after
+  the mode line too. Comments with no blank line between them in md
+  get one.
 
 ## [0.11.0] - 2026-10-07
 

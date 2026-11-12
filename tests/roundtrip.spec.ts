@@ -4,6 +4,7 @@ import { describe, it, expect } from "vitest"
 import { parse as parseYaml } from "yaml"
 import { convertMarkdownToOrg } from "../src/markdownToOrg.js"
 import { convertOrgToMarkdown } from "../src/orgToMarkdown.js"
+import { obsidian } from "../src/presets/obsidian.js"
 
 // The core correctness guarantee (see ADR 0001): one round trip may
 // normalize formatting, but its output must be a fixed point.
@@ -1302,5 +1303,32 @@ describe("GFM alerts", () => {
     ]) {
       expect(mdRoundTrip(markdown)).toBe(markdown)
     }
+  })
+})
+
+describe("adjacent comments", () => {
+  it("stay apart", () => {
+    const markdown = "<!-- a -->\n\n<!-- b -->\n"
+    expect(convertMarkdownToOrg(markdown)).toBe("# a\n\n# b\n")
+    expect(mdRoundTrip(markdown)).toBe(markdown)
+  })
+
+  it("converge after the mode line (found by the Worg corpus)", () => {
+    const once = orgRoundTrip("# -*- x -*-\n\n#+TITLE: t\n\n# a\n")
+    expect(orgRoundTrip(once)).toBe(once)
+  })
+
+  it("stay apart from the mode line and in Obsidian", () => {
+    expect(
+      convertMarkdownToOrg("<!-- -*- x -*- -->\n\n<!-- a -->\n\n<!-- b -->\n")
+    ).toBe("# -*- x -*-\n\n# a\n\n# b\n")
+    expect(
+      convertMarkdownToOrg("%% a %%\n\n%% b %%\n", { preset: obsidian() })
+    ).toBe("# a\n\n# b\n")
+  })
+
+  it("converge when blank (found by the Property Test)", () => {
+    const once = orgRoundTrip("# \n\n# ")
+    expect(orgRoundTrip(once)).toBe(once)
   })
 })

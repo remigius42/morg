@@ -356,7 +356,7 @@ This is a paragraph.
     const markdown = "<!-- a note -->\n\n<!--\nfirst\nsecond\n-->\n\nText.\n"
 
     expect(convertMarkdownToOrg(markdown)).toBe(
-      "# a note\n# first\n# second\nText.\n"
+      "# a note\n\n# first\n# second\nText.\n"
     )
   })
 

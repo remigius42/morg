@@ -112,11 +112,6 @@ function convertMarkdownDocument(
   )
   restoreOrgisms(uniorgAst, canonicalKeys)
 
-  // Phase 2c: formatting-as-structure. Adjacent lists need two blank
-  // lines between them, adjacent tables one, or org's parser merges them;
-  // a footnote definition two before what follows, or org reads it in
-  separateAdjacentElements(uniorgAst)
-
   // Phase 2d: record the source's own style markers, so the return trip
   // can reproduce them instead of morg's canonical ones (ADR 0004)
   if (options.recordMarkdownStyle) {
@@ -154,6 +149,13 @@ function convertMarkdownDocument(
   // drawer first, keywords apart from what follows, the frontmatter as
   // a marked comment block; raw text, past every pass that rewrites text
   renderFileHeader(uniorgAst)
+
+  // Phase 3e: formatting-as-structure. Adjacent lists need two blank
+  // lines between them, adjacent tables and comments one, or org's
+  // parser merges them; a footnote definition two before what follows,
+  // or org reads it in. Last, as the preset makes elements (comments)
+  // and the header moves them (the mode line)
+  separateAdjacentElements(uniorgAst)
 
   // Phase 4: Render uniorg-ast to Org-mode string
   const orgContent = String(stringifier.stringify(uniorgAst))
@@ -359,7 +361,8 @@ function restoreOrgisms(
 // the blank lines that keep two adjacent elements of a type apart
 const SEPARATORS: Record<string, string> = {
   "plain-list": "\n\n",
-  table: "\n"
+  table: "\n",
+  comment: "\n"
 }
 
 // org ends a footnote definition at two blank lines, the next definition
