@@ -18,6 +18,18 @@ export MORG=${MORG:-$root/dist/cli.js}
 LISTS=${LISTS:-/tmp/c}
 WORK=${WORK:-/tmp/morg-corpus}
 ONLY=${ONLY:-obs lsq webmd worg}
+# a missing CLI or file list runs nothing (as after a reboot cleared
+# /tmp): an error up front, not an empty run
+if [ ! -f "$MORG" ]; then
+  echo "error: no CLI at $MORG (npm run build, or scripts/corpus/setup.sh)" >&2
+  exit 1
+fi
+for corpus in $ONLY; do
+  if [ ! -s "$LISTS-$corpus" ]; then
+    echo "error: no file list $LISTS-$corpus (scripts/corpus/setup.sh)" >&2
+    exit 1
+  fi
+done
 ref=$(git -C "$(dirname "$MORG")/.." rev-parse --short HEAD)
 
 declare -A FLAGS=(

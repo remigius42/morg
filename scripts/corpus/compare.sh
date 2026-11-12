@@ -27,6 +27,17 @@ flagged() {
   fi | sed 's/\.\(org\|md\)$//' | sort
 }
 
+# a run that is missing compares nothing: an error, not "0 new" (as
+# after a reboot cleared /tmp)
+for corpus in $ONLY; do
+  for run in "$BASE-$corpus" "$WORK-$corpus"; do
+    if [ ! -f "$run/content.txt" ]; then
+      echo "error: no run in $run (scripts/corpus/all.sh)" >&2
+      exit 1
+    fi
+  done
+done
+
 for corpus in $ONLY; do
   base=$(cat "$BASE-$corpus/.ref" 2> /dev/null || echo unknown)
   if [ "$base" != "$main" ]; then
