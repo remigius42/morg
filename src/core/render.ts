@@ -1,6 +1,6 @@
 import type { Parent } from "unist"
 import { unified } from "unified"
-import uniorgParse from "uniorg-parse"
+import { orgParse } from "./lineBreakLines.js"
 import { uniorgStringify } from "uniorg-stringify"
 
 // how the escape passes see a node's inline content: as the org text it
@@ -16,9 +16,9 @@ export type Node = Parent["children"][number] & { value?: string }
 export const ORG_VERBATIM = "org-verbatim"
 
 // built once: constructing a processor per parse dominates the cost
-export const orgParser = unified().use(uniorgParse).freeze()
+export const orgParser = unified().use(orgParse).freeze()
 export const positionParser = unified()
-  .use(uniorgParse, { trackPosition: true })
+  .use(orgParse, { trackPosition: true })
   .freeze()
 const stringifier = unified().use(uniorgStringify).freeze()
 

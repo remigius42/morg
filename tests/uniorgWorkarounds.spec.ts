@@ -48,4 +48,10 @@ describe("uniorg-parse bugs morg works around", () => {
       children: [{ children: [{ children: [{ type: "headline" }] }] }]
     })
   })
+
+  it("throws on a line of just a line break (src/core/lineBreakLines.ts)", () => {
+    expect(() => unified().use(uniorgParse).parse("a\n\\\\\n")).toThrow(
+      /no progress/
+    )
+  })
 })

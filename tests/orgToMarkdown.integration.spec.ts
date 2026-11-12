@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest"
 import { convertOrgToMarkdown } from "../src/orgToMarkdown.js"
 import { convertMarkdownToOrg } from "../src/markdownToOrg.js"
+import { logseq } from "../src/presets/logseq.js"
 import type { OrgData } from "uniorg"
 import type { Preset } from "../src/presets/types.js"
 
@@ -381,6 +382,38 @@ describe("convertOrgToMarkdown", () => {
     const org = "line one\\\\\nline two\n"
 
     expect(convertOrgToMarkdown(org)).toBe("line one\\\nline two\n")
+  })
+
+  it("should read a line break alone on its line (uniorg throws)", () => {
+    const org = "a\n\\\\\nb\n\n#+begin_src\nx\n\\\\\n#+end_src\n"
+
+    expect(convertOrgToMarkdown(org)).toBe("a\n\\\nb\n\n```\nx\n\\\\\n```\n")
+    // md→org→md, found by the Property Test
+    const markdown = "a\n\\\nb\n"
+    expect(convertOrgToMarkdown(convertMarkdownToOrg(markdown))).toBe(markdown)
+  })
+
+  it("should read a line break alone on its line in every parse", () => {
+    // found by review: each parse morg makes, not only the document's
+    // a Logseq block's braced scripts check
+    expect(
+      convertOrgToMarkdown("* x\na_b\n\\\\\nd\n", { preset: logseq() })
+    ).toBe("- x\n  a\\_b\n  \\\n  d\n")
+    // md→org's markup escape (`/c/` stays text)
+    const markdown = "a\\\n\\\nb /c/ d\n"
+    expect(convertOrgToMarkdown(convertMarkdownToOrg(markdown))).toBe(markdown)
+    // offsets past the line: a special block's parameters
+    expect(
+      convertOrgToMarkdown("a\n\\\\\n\n#+begin_tip Title\nx\n#+end_tip\n")
+    ).toContain("> [!TIP] Title\n")
+    // at the text's start, or a paragraph's, a line break too (not two
+    // backslashes), and no empty text before it
+    expect(convertOrgToMarkdown("\\\\\nb\n")).toBe("\\\nb\n")
+    expect(convertOrgToMarkdown("x\n\n\\\\\nb\n")).toBe("x\n\n\\\nb\n")
+    // a private use glyph in the text stays, the guard too
+    expect(convertOrgToMarkdown("a\n\\\\\nb \uE100\n")).toBe(
+      "a\n\\\nb \uE100\n"
+    )
   })
 
   it("should keep underline, superscript and subscript verbatim", () => {

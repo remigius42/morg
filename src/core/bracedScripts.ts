@@ -1,7 +1,7 @@
 import type { OrgData } from "uniorg"
 import type { Parent } from "unist"
 import { unified } from "unified"
-import uniorgParse from "uniorg-parse"
+import { orgParse } from "./lineBreakLines.js"
 import { EXIT, visit } from "unist-util-visit"
 import {
   isInline,
@@ -23,7 +23,7 @@ type Keyword = OrgData["children"][number] & { key: string; value: string }
 
 // built once: constructing a processor per parse dominates the cost
 const bracedScriptsParser = unified()
-  .use(uniorgParse, { useSubSuperscripts: "{}" })
+  .use(orgParse, { useSubSuperscripts: "{}" })
   .freeze()
 
 function isScript(node: Node): boolean {
@@ -141,7 +141,7 @@ function scriptsSetting(options: string): string | undefined {
 // form, `nil` turns them off, `t` (org's default) keeps them on
 const scriptsParsers: Record<string, { parse(org: string): unknown }> = {
   "{}": bracedScriptsParser,
-  nil: unified().use(uniorgParse, { useSubSuperscripts: false }).freeze()
+  nil: unified().use(orgParse, { useSubSuperscripts: false }).freeze()
 }
 
 // the settings the document may use, which the parser has to know up

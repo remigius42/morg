@@ -51,6 +51,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - md → org: a line of stars alone gets a zero-width space (U+200B) in
   front, as `* a` does: Logseq reads it as a block, so a quote's `*`
   line ended the quote.
+- org → md: a line of just a line break (`\\`) no longer crashes the
+  conversion (uniorg-parse threw "no progress"); md `a\n\\\nb` crashed
+  its md → org → md round trip the same way.
 
 ## [0.11.0] - 2026-10-07
 
