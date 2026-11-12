@@ -279,10 +279,33 @@ function dedent(line: string, level: number): string {
       : ""
 }
 
-// `## title`: the heading level and the title
+// a line md reads as a block of its own: a heading, a quote, a list
+// item, a fence
+const MD_BLOCK_START_RE =
+  /^ *(?:#{1,6}(?=[ \t]|$)|>|[-+*](?=[ \t]|$)|\d{1,9}[.)](?=[ \t]|$)|`{3}|~{3})/
+
+// `## title`: the heading level and the title. Logseq reads the title
+// as inline text, the core as a document of its own, where a block's
+// start opening it would read as that block, so it is escaped
 function mdHeading(line: string): [number, string] {
-  const match = MD_HEADING_RE.exec(line)
-  return match ? [match[1]?.length ?? 0, match[2] ?? ""] : [0, line]
+  // mldoc takes spaces after the bullet before the heading's `#`
+  const match = MD_HEADING_RE.exec(line.replace(/^ +(?=#)/, ""))
+  if (!match) {
+    return [0, line]
+  }
+  const title = match[2] ?? ""
+  return [
+    match[1]?.length ?? 0,
+    MD_BLOCK_START_RE.test(title) ? escapeBlockStart(title) : title
+  ]
+}
+
+// a backslash escapes punctuation only: an ordered list's after its
+// number (`1\.`)
+function escapeBlockStart(title: string): string {
+  return /^ *\d/.test(title)
+    ? title.replace(/^( *\d+)/, "$1\\")
+    : title.replace(/^ */, "$&\\")
 }
 
 function readMarkdownBlock({ level, lines: source }: Lines): Block {

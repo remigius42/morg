@@ -266,6 +266,38 @@ describe("logseq outline", () => {
     both("- a\n  - b\n\n* block\n", "* a\n  * b\n\n- block\n")
   })
 
+  // a lone `#` is an empty heading to md, a heading's title text to
+  // Logseq (found by the Property Test)
+  it("keeps a block title of `#` text", () => {
+    both("* #\n", "- \\#\n")
+    both("* # a #\n", "- \\# a #\n")
+    // after a heading marker, Logseq reads `#` and `# a` as the title
+    both("* #\n:PROPERTIES:\n:heading: 1\n:END:\n", "- # \\#\n")
+    both("* # a\n:PROPERTIES:\n:heading: 2\n:END:\n", "- ## \\# a\n")
+    expect(toOrg("- # #\n")).toBe("* #\n:PROPERTIES:\n:heading: 1\n:END:\n")
+    // a tag's `#`, before a page ref too, stays as Logseq writes it
+    both("* #tag a #[[b c]]\n", "- #tag a #[[b c]]\n")
+  })
+
+  it("reads a heading's title as Logseq does, inline text", () => {
+    // a block's start opening it is text (found by review)
+    for (const [title, org] of [
+      ["> q", "> q"],
+      ["- a", "- a"],
+      ["1. a", "1. a"],
+      [" # a", "# a"]
+    ]) {
+      expect(toOrg(`- # ${title}\n`)).toBe(
+        `* ${org}\n:PROPERTIES:\n:heading: 1\n:END:\n`
+      )
+    }
+    // mldoc takes spaces between the bullet and the marker
+    for (const markdown of ["-  # a\n", "-     # a\n"]) {
+      expect(toOrg(markdown)).toBe("* a\n:PROPERTIES:\n:heading: 1\n:END:\n")
+    }
+    expect(toOrg("-  #\n")).toBe("*\n:PROPERTIES:\n:heading: 1\n:END:\n")
+  })
+
   it("keeps a page that is only a list a list", () => {
     for (const markdown of ["* a\n", "+ a\n", "*\n"]) {
       const org = toOrg(markdown)

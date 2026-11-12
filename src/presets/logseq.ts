@@ -637,10 +637,16 @@ function extractInlineSpecifics(uniorgAst: OrgData): OrgData {
 // text Logseq md writes as it is, which remark would escape: a task's
 // priority ([#A]), an email address, and a tag's # (`#tag` starting a
 // line, which mldoc reads as escaped plain text once written `\#`);
-// verbatim-inline keeps it
+// verbatim-inline keeps it. A `#` ending the text is a tag's only before
+// more inline content (`#[[page]]`): alone, it is an empty heading to md
 const VERBATIM_TEXT_RE = new RegExp(
   `(\\[#[A-Z]\\]|${EMAIL_RE.source}|(?<!\\S)#(?=[^\\s#]|$))`
 )
+
+// a `#` ending a text before a page ref is a tag's (`#[[page]]`)
+function continuesTag(next: unknown): boolean {
+  return (next as { type?: string } | undefined)?.type === "link"
+}
 
 function keepVerbatimText(uniorgAst: OrgData): void {
   visit(
@@ -658,6 +664,11 @@ function keepVerbatimText(uniorgAst: OrgData): void {
           value
         }))
         .filter(part => part.value)
+      // a `#` ending the text with no page ref after it stays text
+      const end = nodes.at(-1)
+      if (end?.value === "#" && !continuesTag(parent.children[index + 1])) {
+        end.type = "text"
+      }
       parent.children.splice(
         index,
         1,

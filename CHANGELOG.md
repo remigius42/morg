@@ -58,6 +58,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   is no longer dropped where the stars-after-a-bullet workaround runs,
   and no longer switches that or the comma-escape and `$x $` math
   workarounds off.
+- Logseq: a block title of a lone `#` stays text (org `* #` → md
+  `- \#`, was `- #`, an empty heading to Logseq). md → org reads a
+  heading's title as inline text, as Logseq does: one opening like a
+  heading, quote, list item or fence (`- # # a`, `- # > q`) no longer
+  turns into that block. Spaces between the bullet and the heading
+  marker (`-  # a`) read as a heading, as in Logseq.
 
 ## [0.11.0] - 2026-10-07
 
