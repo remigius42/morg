@@ -21,6 +21,8 @@ import {
 const MAY_BE_LINE_SYNTAX_RE =
   /^(?:[-+]|\*+)(?:\s|$)|^(?:-{5}|\+-|#(?:\s|$|\+)|[|:]|\[fn:|\\begin\{|%%\()|^[\p{L}\p{N}_]+[.):]/u
 
+const BARE_STARS_RE = /^\*+$/
+
 /**
  * Whether a line, indented or not, may start org line syntax: false
  * where org surely reads it as text.
@@ -32,13 +34,19 @@ export function mayBeLineSyntax(line: string): boolean {
 }
 
 /**
- * Whether org reads a line as anything but a plain paragraph.
+ * Whether org, or Logseq's org, reads a line as anything but a plain
+ * paragraph line.
  * @param line The line, without its line break.
  * @returns Whether it reads as org line syntax.
  */
 export function readsAsLineSyntax(line: string): boolean {
   if (!MAY_BE_LINE_SYNTAX_RE.test(line)) {
     return false
+  }
+  // stars alone: a paragraph of its own to uniorg (it splits the one
+  // around it), a block to Logseq (mldoc)
+  if (BARE_STARS_RE.test(line)) {
+    return true
   }
   // with its newline: a bullet ending the line (`1.`) needs one
   const tree = tryParse(`${line}\n`)

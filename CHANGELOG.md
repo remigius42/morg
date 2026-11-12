@@ -48,6 +48,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`- * a` → `- \* a`, was a heading `- # a`, which md → org then
   turned into `- a`); a workaround for uniorg-parse reading a headline
   there.
+- md → org: a line of stars alone gets a zero-width space (U+200B) in
+  front, as `* a` does: Logseq reads it as a block, so a quote's `*`
+  line ended the quote.
 
 ## [0.11.0] - 2026-10-07
 

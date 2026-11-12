@@ -5,6 +5,7 @@ import { parse as parseYaml } from "yaml"
 import { convertMarkdownToOrg } from "../src/markdownToOrg.js"
 import { convertOrgToMarkdown } from "../src/orgToMarkdown.js"
 import { obsidian } from "../src/presets/obsidian.js"
+import { logseq } from "../src/presets/logseq.js"
 
 // The core correctness guarantee (see ADR 0001): one round trip may
 // normalize formatting, but its output must be a fixed point.
@@ -880,6 +881,23 @@ describe("org line syntax in paragraph text", () => {
   it("stays text through a round trip", () => {
     const markdown = "\\* a\n1\\. b\n\\- c\n\\# d\n\\| e |\n"
     expect(mdRoundTrip(markdown)).toBe(markdown)
+  })
+
+  it("stays text when stars are the whole line, a block to Logseq", () => {
+    // mldoc reads `*` and a line break as a heading (found by the
+    // Property Test: a quote's `*` line ended the quote)
+    const markdown = "> a\n> \\*\n"
+    expect(convertMarkdownToOrg(markdown)).toBe(
+      "#+begin_quote\na\n\u200B*\n#+end_quote\n"
+    )
+    expect(mdRoundTrip(markdown)).toBe(markdown)
+    const options = { preset: logseq() }
+    const org = convertMarkdownToOrg(markdown, options)
+    expect(convertOrgToMarkdown(org, options)).toBe(`${markdown}\n`)
+    // a paragraph of its own to uniorg, too
+    for (const text of ["a\n\\*\n", "a\n\\*\\*\nb\n"]) {
+      expect(mdRoundTrip(text)).toBe(text)
+    }
   })
 
   it("stays text when a bullet ends the line", () => {
