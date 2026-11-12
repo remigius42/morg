@@ -20,6 +20,7 @@ import {
   separateTableKeywords
 } from "./core/tableKeywords.js"
 import { readSpecialBlockParameters } from "./core/specialBlocks.js"
+import { restoreCookieBlanks } from "./core/statisticsCookies.js"
 import {
   dropUnderscoreBulletGuards,
   guardUnderscoreBullets
@@ -137,8 +138,9 @@ function convertOrgSides(
 // md text has no scripts, so ^:{} is implied there and consumed here
 // (see markdownToOrg); uniorg misreads `_.` lines (see underscoreBullets)
 // and comma-escaped code lines (see commaEscapes), and drops a table's
-// keywords (see tableKeywords) and a special block's parameters (see
-// specialBlocks)
+// keywords (see tableKeywords), a special block's parameters (see
+// specialBlocks) and the blank after a statistics cookie (see
+// statisticsCookies)
 function parseGuardedOrg(org: string): { uniorgAst: OrgData; guarded: string } {
   const { org: guarded, tables } = separateTableKeywords(
     guardCommaEscapes(guardUnderscoreBullets(org))
@@ -148,6 +150,7 @@ function parseGuardedOrg(org: string): { uniorgAst: OrgData; guarded: string } {
   dropUnderscoreBulletGuards(uniorgAst)
   unescapeCommaEscapes(uniorgAst, org)
   readSpecialBlockParameters(uniorgAst, guarded)
+  restoreCookieBlanks(uniorgAst, guarded)
   return { uniorgAst, guarded }
 }
 

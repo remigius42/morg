@@ -331,6 +331,15 @@ describe("convertOrgToMarkdown", () => {
     )
   })
 
+  it("should keep the blank after a statistics cookie", () => {
+    // uniorg-parse reads it as the cookie's (found by the Property Test)
+    const org = "* H [1/2] x\n- *a [1/3]  b* [50%]\n  c\n"
+
+    expect(convertOrgToMarkdown(org)).toBe(
+      "# H \\[1/2] x\n\n- **a \\[1/3]  b** \\[50%]\n  c\n"
+    )
+  })
+
   it("should convert org comments to html comments", () => {
     const org = "# a note\n\n# first\n# second\n\nText.\n"
 

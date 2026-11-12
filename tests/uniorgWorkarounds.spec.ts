@@ -23,4 +23,11 @@ describe("uniorg-parse bugs morg works around", () => {
     expect(tree.children[0]).toMatchObject({ type: "table" })
     expect(tree.children[0]).not.toHaveProperty("affiliated")
   })
+
+  it("reads the blank after a statistics cookie as its own (src/core/statisticsCookies.ts)", () => {
+    const tree = unified().use(uniorgParse).parse("[1/2] b\n")
+    expect(tree.children[0]).toMatchObject({
+      children: [{ type: "statistics-cookie", postBlank: 1 }, { value: "b\n" }]
+    })
+  })
 })

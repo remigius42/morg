@@ -38,6 +38,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   comment `# a\n# b`); Obsidian `%% %%` comments and a comment after
   the mode line too. Comments with no blank line between them in md
   get one.
+- org → md: the blank after a statistics cookie stays (`* H [1/2] x` →
+  `# H \[1/2] x`, was `# H \[1/2]x`; a line break after one too).
 
 ## [0.11.0] - 2026-10-07
 
