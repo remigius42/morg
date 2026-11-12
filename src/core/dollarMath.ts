@@ -1,6 +1,7 @@
 import type { OrgData } from "uniorg"
 import type { Node } from "unist"
 import { EXIT, visit } from "unist-util-visit"
+import { freeMark } from "./marks.js"
 import { positionParser } from "./render.js"
 
 // ====================================================================
@@ -13,9 +14,7 @@ import { positionParser } from "./render.js"
 // `parseLatexFragment` tests the closing `$` instead of the character
 // before it, so it reads `$5 and $` as math. A mark in place of such an
 // opening `$` keeps uniorg from reading it; the `$` goes back after the
-// parse
-const MARK = "\uE002"
-const MARK_RE = new RegExp(MARK, "g")
+// parse. The mark is a private use character the text does not hold
 
 type Fragment = Node & { value: string; contents: string }
 
@@ -49,12 +48,12 @@ function misreadOffsets(org: string): number[] {
   return offsets
 }
 
-function restoreDollars(tree: OrgData): void {
+function restoreDollars(tree: OrgData, mark: string): void {
   visit(tree, (node: Node) => {
     const record = node as unknown as Record<string, unknown>
     for (const [key, value] of Object.entries(record)) {
-      if (typeof value === "string" && value.includes(MARK)) {
-        record[key] = value.replace(MARK_RE, "$")
+      if (typeof value === "string" && value.includes(mark)) {
+        record[key] = value.replaceAll(mark, "$")
       }
     }
   })
@@ -72,13 +71,12 @@ export function parseDollarMath(
   parse: (org: string) => OrgData
 ): OrgData {
   let tree = parse(org)
-  // the mark in the input is text, which the restore would take for its
-  // own
-  if (org.includes(MARK)) {
+  if (!hasMisread(tree)) {
     return tree
   }
+  const mark = freeMark(org)
   let marked = org
-  while (hasMisread(tree)) {
+  do {
     const found = misreadOffsets(marked)
     // the positioned parse reads it otherwise (another `^:` setting)
     if (!found.length) {
@@ -86,13 +84,13 @@ export function parseDollarMath(
     }
     const chars = marked.split("")
     for (const at of found) {
-      chars[at] = MARK
+      chars[at] = mark
     }
     marked = chars.join("")
     tree = parse(marked)
-  }
+  } while (hasMisread(tree))
   if (marked !== org) {
-    restoreDollars(tree)
+    restoreDollars(tree, mark)
   }
   return tree
 }

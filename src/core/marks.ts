@@ -4,7 +4,8 @@
 /**
  * A private use character a text does not hold, to mark it with.
  * @param org The text.
- * @param from The first character to try; each guard its own range.
+ * @param from The first character to try. A guard that runs after
+ * another sees the other's marks in the text, so they never collide.
  */
 export function freeMark(org: string, from = 0xe100): string {
   let code = from

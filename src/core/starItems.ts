@@ -12,7 +12,6 @@ import { freeMark } from "./marks.js"
 // headline at a line's start only and the item's text as `* a`. A mark
 // in front of the stars keeps uniorg from it; the mark, a character the
 // text does not hold, goes again after the parse, wherever uniorg put it
-const FIRST_MARK = 0xe200
 
 // uniorg's `fullListItemRe` up to the item's text: bullet (a `*` one
 // indented), counter, checkbox
@@ -52,7 +51,7 @@ export function guardStarItems(org: string): { org: string; mark?: string } {
   if (!org.includes("*")) {
     return { org }
   }
-  const mark = freeMark(org, FIRST_MARK)
+  const mark = freeMark(org)
   const marked = org.replace(ITEM_RE, (_, item: string, text: string) => {
     const tag = splitTag(text)
     return tag

@@ -1,6 +1,7 @@
 import type { Parent } from "unist"
 import { visit } from "unist-util-visit"
 import { blockEndRe } from "./orgBlocks.js"
+import { freeMark } from "./marks.js"
 import type { Node } from "./render.js"
 
 // ====================================================================
@@ -12,8 +13,8 @@ import type { Node } from "./render.js"
 // indentation (`  ,* x`), and reading it back drops that comma only.
 // uniorg's `unescapeCodeInString` drops the indentation with it. A mark
 // between the indentation and the comma keeps uniorg from unescaping
-// the line; morg unescapes it after the parse, as org does
-const MARK = "\uE000"
+// the line; morg unescapes it after the parse, as org does. The mark is
+// a private use character the text does not hold
 
 const ESCAPED_LINE_RE = /^([ \t]*)(?=,+(?:\*|#\+))/
 const BLOCK_START_RE = /^[ \t]*#\+begin_(src|export|example)(?=\s|$)/i
@@ -21,13 +22,15 @@ const BLOCK_START_RE = /^[ \t]*#\+begin_(src|export|example)(?=\s|$)/i
 /**
  * org→md: marks the comma-escaped lines of src, export and example
  * blocks before parsing.
+ * @param org The org text.
+ * @returns The marked text, and the mark if it holds any.
  */
-export function guardCommaEscapes(org: string): string {
-  // the mark in the input is text (a Nerd Font glyph), which the
-  // unescape would take for its own
-  if (!org.includes(",") || org.includes(MARK)) {
-    return org
+export function guardCommaEscapes(org: string): { org: string; mark?: string } {
+  if (!org.includes(",")) {
+    return { org }
   }
+  // picked at the first escaped line: most texts have none
+  let mark: string | undefined
   const lines = org.split("\n")
   let end: RegExp | null = null
   for (const [i, line] of lines.entries()) {
@@ -35,36 +38,40 @@ export function guardCommaEscapes(org: string): string {
       if (end.test(line)) {
         end = null
       } else {
-        lines[i] = line.replace(ESCAPED_LINE_RE, `$1${MARK}`)
+        if (ESCAPED_LINE_RE.test(line)) {
+          mark ??= freeMark(org)
+          lines[i] = line.replace(ESCAPED_LINE_RE, `$1${mark}`)
+        }
       }
       continue
     }
     const block = BLOCK_START_RE.exec(line)?.[1]
     end = block ? blockEndRe(block) : null
   }
-  return lines.join("\n")
+  return mark ? { org: lines.join("\n"), mark } : { org }
 }
 
 const CODE_BLOCKS = new Set(["src-block", "export-block", "example-block"])
-const MARKED_RE = new RegExp(`^([ \\t]*)${MARK}`, "gm")
-const UNESCAPE_RE = new RegExp(`^([ \\t]*)${MARK},`, "gm")
 
 /**
  * org→md: unescapes the marked lines of src, export and example blocks
  * (which uniorg leaves escaped), keeping their indentation; drops a mark
- * anywhere else uniorg put the line; none if the org text held the
- * mark itself, as guardCommaEscapes then set none.
+ * anywhere else uniorg put the line.
+ * @param tree The parsed org.
+ * @param mark The mark guardCommaEscapes used, if any.
  */
-export function unescapeCommaEscapes(tree: Parent, org: string): void {
-  if (org.includes(MARK)) {
+export function unescapeCommaEscapes(tree: Parent, mark?: string): void {
+  if (!mark) {
     return
   }
+  const marked = new RegExp(`^([ \\t]*)${mark}`, "gm")
+  const unescape = new RegExp(`^([ \\t]*)${mark},`, "gm")
   visit(tree, (node: Node) => {
-    if (typeof node.value !== "string" || !node.value.includes(MARK)) {
+    if (typeof node.value !== "string" || !node.value.includes(mark)) {
       return
     }
     const code = CODE_BLOCKS.has(node.type)
-    node.value = node.value.replace(code ? UNESCAPE_RE : MARKED_RE, "$1")
+    node.value = node.value.replace(code ? unescape : marked, "$1")
   })
 }
 

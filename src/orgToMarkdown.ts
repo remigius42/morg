@@ -146,14 +146,13 @@ function convertOrgSides(
 // (see dollarMath)
 function parseGuardedOrg(org: string): { uniorgAst: OrgData; guarded: string } {
   const starItems = guardStarItems(guardUnderscoreBullets(org))
-  const { org: guarded, tables } = separateTableKeywords(
-    guardCommaEscapes(starItems.org)
-  )
+  const commaEscapes = guardCommaEscapes(starItems.org)
+  const { org: guarded, tables } = separateTableKeywords(commaEscapes.org)
   const uniorgAst = parseDollarMath(guarded, parseOrg)
   markTablesWithKeywords(uniorgAst, tables)
   dropUnderscoreBulletGuards(uniorgAst)
   dropStarItemGuards(uniorgAst, starItems.mark)
-  unescapeCommaEscapes(uniorgAst, org)
+  unescapeCommaEscapes(uniorgAst, commaEscapes.mark)
   readSpecialBlockParameters(uniorgAst, guarded)
   restoreCookieBlanks(uniorgAst, guarded)
   return { uniorgAst, guarded }

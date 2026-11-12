@@ -78,6 +78,10 @@ describe("convertOrgToMarkdown", () => {
     ).toBe("```\n* x\r\n```\n")
     // a private-use glyph like the guard's mark stays (a Nerd Font icon)
     expect(convertOrgToMarkdown("\uE000 a, b\n")).toBe("\uE000 a, b\n")
+    // and the guard stays on next to it
+    expect(
+      convertOrgToMarkdown("\uE000\uE100\n\n#+begin_src\n  ,* x\n#+end_src\n")
+    ).toBe("\uE000\uE100\n\n```\n  * x\n```\n")
     // text lines are no code, and keep their comma
     expect(convertOrgToMarkdown("a\n  ,* b\n")).toBe("a\n,\\* b\n")
   })
@@ -564,6 +568,10 @@ describe("convertOrgToMarkdown", () => {
 
     expect(convertOrgToMarkdown(org)).toBe(
       "costs \\$5 and $\\alpha$ here, \\$a \\$b $c$, \\$x,\\$ y, `$1.$`\n"
+    )
+    // a private-use glyph like the guard's mark stays, the guard too
+    expect(convertOrgToMarkdown("\uE002\uE100 $5 and $\\alpha$\n")).toBe(
+      "\uE002\uE100 \\$5 and $\\alpha$\n"
     )
   })
 
