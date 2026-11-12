@@ -30,6 +30,11 @@ jobs:
         run: npm run licenses:check
       - name: Test
         run: npm run test:unit:ci
+      # seed and run count fixed once, before looking (TODO.md): the same
+      # inputs every run, so a failure is a bug to fix, never a reason to
+      # re-seed; it replays locally with the same script
+      - name: Property test
+        run: npm run test:property:ci
       # forked PRs and Dependabot PRs cannot read the token secret, and
       # `secrets` is unavailable in a step `if`, hence this probe. Only the
       # derived yes/empty leaves the step, never the token itself. Pushes to

@@ -74,8 +74,9 @@ and what axe makes of the accessibility tree.
 
 A vitest spec that checks Convergence against generated input rather
 than fixtures, and shrinks any failure to a minimal counterexample.
-Opt-in and local: it finds inputs nobody wrote a fixture for; a
-counterexample it finds becomes an ordinary example test once fixed.
+Opt-in locally, where it draws new inputs each run; CI runs a fixed
+sample. It finds inputs nobody wrote a fixture for; a counterexample it
+finds becomes an ordinary example test once fixed.
 
 ## Source Layout
 

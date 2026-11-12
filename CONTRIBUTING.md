@@ -16,6 +16,7 @@ npm install
 npm run test:unit   # vitest watch mode (test:unit:ci for one-shot)
 npm run test:e2e    # playwright against the built Web UI
 npm run test:property  # opt-in Property Test (MORG_PROPERTY_RUNS, default 1000)
+npm run test:property:ci  # as CI runs it: seed 1, 2000 runs
 npm run lint        # prettier, cspell, markdownlint, eslint, knip, typecheck
 npm run licenses:check  # production dependencies' licenses, GPL-compatible
 npm run build       # tsc → dist/
@@ -105,10 +106,14 @@ for what you submit.
   fixture in `tests/fixtures/`, and behavior is developed red-green
   (failing test first).
 - The Property Test (`tests/convergence.property.spec.ts`, core and
-  Logseq) checks Convergence on generated input; it is local-only and
-  skipped in `test:unit`. A counterexample it finds, once fixed, becomes
-  an example test in `tests/roundtrip.spec.ts`; replay one with the
-  seed and path fast-check prints.
+  Logseq) checks Convergence on generated input; it is skipped in
+  `test:unit`. CI runs it with seed 1 and 2000 runs per round trip
+  (`test:property:ci`), chosen before looking: a CI failure is a bug to
+  fix, never a reason to change the seed. Locally, `test:property` draws
+  new inputs each run and also finds known, unfixed counterexamples
+  (mostly contrived ones). A counterexample it finds, once fixed,
+  becomes an example test in `tests/roundtrip.spec.ts` (or a preset's
+  spec); replay one with the seed and path fast-check prints.
 - Specs mirror the tree they cover, so a module's tests are where you
   would look for them: `tests/core/`, `tests/presets/` and
   `tests/web/{ui,pipeline}/` against `src/core/`, `src/presets/` and

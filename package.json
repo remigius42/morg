@@ -73,7 +73,8 @@
     "test:e2e": "playwright test",
     "test:e2e:chromium": "playwright test --project=chromium",
     "test:e2e:report": "playwright show-report tests/e2e/reports/html",
-    "test:property": "MORG_PROPERTY_RUNS=${MORG_PROPERTY_RUNS:-1000} vitest run tests/convergence.property.spec.ts"
+    "test:property": "MORG_PROPERTY_RUNS=${MORG_PROPERTY_RUNS:-1000} vitest run tests/convergence.property.spec.ts",
+    "test:property:ci": "MORG_PROPERTY_RUNS=2000 MORG_PROPERTY_SEED=1 vitest run tests/convergence.property.spec.ts"
   },
   "dependencies": {
     "@types/mdast": "^4.0.4",

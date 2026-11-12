@@ -13,9 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - An opt-in property test (`npm run test:property`, fast-check):
   checks Convergence on generated input for core and Logseq, in both
-  directions, and shrinks a failure to a minimal counterexample.
-  Local-only for now; it joins CI once the counterexamples it found are
-  fixed or excluded.
+  directions, and shrinks a failure to a minimal counterexample. CI
+  runs it with a fixed seed and 2000 runs per round trip
+  (`npm run test:property:ci`).
 
 ### Fixed
 

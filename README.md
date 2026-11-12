@@ -47,7 +47,7 @@ Pre-1.0: options may still change between minor versions; breaking
 changes are marked in the [changelog](CHANGELOG.md). Changes are
 checked by round trips of real Logseq graphs and of public Markdown
 and Org documentation (the Rust book, GitHub's and MDN's docs, Worg),
-and locally by a property test on generated input.
+and by a property test on generated input.
 Most of the code is written by an AI coding agent under human
 direction, test-first and CI-gated; see the [contributing
 guide](CONTRIBUTING.md#development-process).

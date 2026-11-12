@@ -8,9 +8,14 @@ import type {
   OrgToMarkdownOptions
 } from "../src/options.js"
 
-// Property Test (CONTEXT.md): Convergence on generated input. Opt-in,
-// local: MORG_PROPERTY_RUNS sets the run count (`npm run test:property`).
+// Property Test (CONTEXT.md): Convergence on generated input. Opt-in:
+// MORG_PROPERTY_RUNS sets the run count (`npm run test:property`), and
+// MORG_PROPERTY_SEED a fixed seed, as CI runs it (`test:property:ci`)
 const runs = Number(process.env.MORG_PROPERTY_RUNS)
+const seed = process.env.MORG_PROPERTY_SEED
+const parameters = seed
+  ? { numRuns: runs, seed: Number(seed) }
+  : { numRuns: runs }
 
 // syntax-heavy tokens, so the input reaches markup, links, keywords and
 // properties far more often than random characters would
@@ -28,6 +33,9 @@ const CONFIGS: [string, MarkdownToOrgOptions & OrgToMarkdownOptions][] = [
   ["logseq", { preset: logseq() }]
 ]
 
+// thousands of round trips take longer than vitest's 5 s default
+const TIMEOUT = 300_000
+
 describe.runIf(runs > 0)("Convergence on generated input", () => {
   for (const [name, options] of CONFIGS) {
     const mdRoundTrip = (md: string): string =>
@@ -35,14 +43,22 @@ describe.runIf(runs > 0)("Convergence on generated input", () => {
     const orgRoundTrip = (org: string): string =>
       convertMarkdownToOrg(convertOrgToMarkdown(org, options), options)
 
-    test.prop([input], { numRuns: runs })(`${name}: md round trip`, md => {
-      const once = mdRoundTrip(md)
-      expect(mdRoundTrip(once)).toBe(once)
-    })
+    test.prop([input], parameters)(
+      `${name}: md round trip`,
+      md => {
+        const once = mdRoundTrip(md)
+        expect(mdRoundTrip(once)).toBe(once)
+      },
+      TIMEOUT
+    )
 
-    test.prop([input], { numRuns: runs })(`${name}: org round trip`, org => {
-      const once = orgRoundTrip(org)
-      expect(orgRoundTrip(once)).toBe(once)
-    })
+    test.prop([input], parameters)(
+      `${name}: org round trip`,
+      org => {
+        const once = orgRoundTrip(org)
+        expect(orgRoundTrip(once)).toBe(once)
+      },
+      TIMEOUT
+    )
   }
 })
