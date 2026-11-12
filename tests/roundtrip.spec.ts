@@ -898,6 +898,30 @@ describe("org line syntax in paragraph text", () => {
     expect(mdRoundTrip(once)).toBe(once)
   })
 
+  it("stays text after a list bullet, where uniorg reads a headline", () => {
+    // org reads `- * a` as an item `* a` (found by the Property Test)
+    for (const markdown of ["- \\* a\n", "1. \\*\\* b\n   c\n"]) {
+      expect(mdRoundTrip(markdown)).toBe(markdown)
+    }
+    expect(
+      convertOrgToMarkdown("- x\n  + * a\n#+begin_src\n- * b\n#+end_src\n")
+    ).toBe("- x\n  - \\* a\n\n```\n- * b\n```\n")
+    // past a checkbox, a counter, a letter bullet, in a term (found by
+    // review)
+    for (const [org, markdown] of [
+      ["- [ ] * a\n", "- [ ] \\* a\n"],
+      ["- [@3] * a\n", "- \\* a\n"],
+      ["a. * a\n", "- \\* a\n"],
+      ["- * a :: b\n", "\\* a\n:   b\n"],
+      ["- * :: b\n", "\\*\n:   b\n"],
+      ["- a :: * b\n", "a\n:   \\* b\n"],
+      ["- *\n- [x] * a\n", "- \\*\n- [x] \\* a\n"],
+      ["- a :: b :: * c\n", "a\n:   b :: \\* c\n"]
+    ] as const) {
+      expect(convertOrgToMarkdown(org)).toBe(markdown)
+    }
+  })
+
   it("stays text when it spans several lines", () => {
     const markdown = "\\#+begin_src\nx\n\\#+end_src\n"
     // `n_s` is a bare underscore once no src block

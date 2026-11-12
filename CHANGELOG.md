@@ -44,6 +44,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   text, as in org (`costs $5 and $\alpha$` → `costs \$5 and $\alpha$`,
   was `costs $5 and$α\$`); a workaround for uniorg-parse reading it as
   math.
+- org → md: stars after a list bullet are the item's text, as in org
+  (`- * a` → `- \* a`, was a heading `- # a`, which md → org then
+  turned into `- a`); a workaround for uniorg-parse reading a headline
+  there.
 
 ## [0.11.0] - 2026-10-07
 

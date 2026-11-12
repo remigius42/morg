@@ -41,4 +41,11 @@ describe("uniorg-parse bugs morg works around", () => {
       ]
     })
   })
+
+  it("reads stars after a list bullet as a headline (src/core/starItems.ts)", () => {
+    const tree = unified().use(uniorgParse).parse("- * a\n")
+    expect(tree.children[0]).toMatchObject({
+      children: [{ children: [{ children: [{ type: "headline" }] }] }]
+    })
+  })
 })

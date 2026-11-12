@@ -22,6 +22,7 @@ import {
 import { readSpecialBlockParameters } from "./core/specialBlocks.js"
 import { restoreCookieBlanks } from "./core/statisticsCookies.js"
 import { parseDollarMath } from "./core/dollarMath.js"
+import { dropStarItemGuards, guardStarItems } from "./core/starItems.js"
 import {
   dropUnderscoreBulletGuards,
   guardUnderscoreBullets
@@ -137,18 +138,20 @@ function convertOrgSides(
 }
 
 // md text has no scripts, so ^:{} is implied there and consumed here
-// (see markdownToOrg); uniorg misreads `_.` lines (see underscoreBullets)
-// and comma-escaped code lines (see commaEscapes), and drops a table's
-// keywords (see tableKeywords), a special block's parameters (see
-// specialBlocks) and the blank after a statistics cookie (see
-// statisticsCookies), and reads `$x $` as math (see dollarMath)
+// (see markdownToOrg); uniorg misreads `_.` lines (see underscoreBullets),
+// stars after a list bullet (see starItems) and comma-escaped code lines
+// (see commaEscapes), and drops a table's keywords (see tableKeywords),
+// a special block's parameters (see specialBlocks) and the blank after
+// a statistics cookie (see statisticsCookies), and reads `$x $` as math
+// (see dollarMath)
 function parseGuardedOrg(org: string): { uniorgAst: OrgData; guarded: string } {
   const { org: guarded, tables } = separateTableKeywords(
-    guardCommaEscapes(guardUnderscoreBullets(org))
+    guardCommaEscapes(guardStarItems(guardUnderscoreBullets(org)))
   )
   const uniorgAst = parseDollarMath(guarded, parseOrg)
   markTablesWithKeywords(uniorgAst, tables)
   dropUnderscoreBulletGuards(uniorgAst)
+  dropStarItemGuards(uniorgAst, guarded)
   unescapeCommaEscapes(uniorgAst, org)
   readSpecialBlockParameters(uniorgAst, guarded)
   restoreCookieBlanks(uniorgAst, guarded)
