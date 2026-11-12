@@ -312,7 +312,12 @@ function readMarkdownBlock({ level, lines: source }: Lines): Block {
   const [first = "", ...rest] = source
   const lines = [first, ...rest.map(line => dedent(line, level))]
   const metaFirst = MD_PROPERTY_RE.test(first)
-  const [heading, titleLine] = metaFirst ? [0, ""] : mdHeading(first)
+  const [heading, title] = metaFirst ? [0, ""] : mdHeading(first)
+  // a title is inline text (ADR 0006): a keyword-like `#+x:` one would
+  // pass through as org text, md escapes and all; a block's start
+  // (`#+BEGIN_QUOTE`) is the block's content
+  const titleLine =
+    title.startsWith("#+") && !isOrgBlockStart(title) ? `\\${title}` : title
   const { meta: groups, body } = takeMeta(
     metaFirst ? lines : lines.slice(1),
     line => MD_PROPERTY_RE.test(line)

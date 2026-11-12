@@ -293,6 +293,11 @@ describe("logseq outline", () => {
     ).toBe("- ##\n  ```\n  x\n  ```\n")
   })
 
+  it("reads a keyword-like block title as text, md escapes undone", () => {
+    // it would pass through as org text (found by the Property Test)
+    both("* #+foo: a~b\n", "- #+foo: a\\~b\n")
+  })
+
   it("reads a heading's title as Logseq does, inline text", () => {
     // a block's start opening it is text (found by review)
     for (const [title, org] of [

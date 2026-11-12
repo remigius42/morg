@@ -73,6 +73,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Logseq: org → md writes a heading block's content that opens with a
   quote or a code block on the line below the bullet line, no longer
   on it (`- # > a`), where Logseq reads it as a heading titled `> a`.
+- Logseq: md → org reads a block title that looks like an org keyword
+  (`- #+foo: a\~b`) as text, as Logseq does, its md escapes undone
+  (`* #+foo: a~b`); it passed through as org text, escapes and all.
 
 ## [0.11.0] - 2026-10-07
 
