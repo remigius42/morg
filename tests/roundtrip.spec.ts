@@ -1056,6 +1056,15 @@ describe("inline math org would not read as $…$", () => {
     expect(convertMarkdownToOrg(markdown)).toBe(markdown)
   })
 
+  it("writes \\(…\\) where a literal $ before would pair with it", () => {
+    // found by the Property Test (org `$a\a`)
+    const markdown = "\\$a$\\alpha$\n"
+    expect(convertMarkdownToOrg(markdown)).toBe("$a\\(\\alpha\\)\n")
+    expect(mdRoundTrip(markdown)).toBe(markdown)
+    const once = orgRoundTrip("$a\\a\n")
+    expect(orgRoundTrip(once)).toBe(once)
+  })
+
   it("writes \\(…\\) for content org reads no $…$ around", () => {
     const markdown = "a $x.$ b\n"
     expect(convertMarkdownToOrg(markdown)).toBe("a \\(x.\\) b\n")

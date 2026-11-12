@@ -67,6 +67,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Logseq: md → org trims a page property's value, as org reads a
   keyword's, from a `key::` line or the frontmatter: `title::  a`
   becomes `#+title: a`, no longer `#+title:  a`.
+- md → org: inline math after a literal `$` is written `\(x\)` where
+  org would pair the two (`\$a$\alpha$` → `$a\(\alpha\)`, was
+  `$a$\alpha$`, which org reads as the math `$a$`).
 
 ## [0.11.0] - 2026-10-07
 

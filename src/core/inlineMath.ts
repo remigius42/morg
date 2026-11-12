@@ -1,6 +1,12 @@
 import type { Parent } from "unist"
 import { visit } from "unist-util-visit"
-import { isInline, renderChildren, type Node } from "./render.js"
+import {
+  isInline,
+  positionParser,
+  renderChildren,
+  tryParse,
+  type Node
+} from "./render.js"
 
 type Fragment = Node & { contents: string }
 
@@ -19,6 +25,19 @@ function readsAsDollar(contents: string, line: string, at: number): boolean {
     CONTENT_RE.test(contents) &&
     AFTER_RE.test(line.slice(at + 1))
   )
+}
+
+// whether org reads the fragment in its place, as written: a literal
+// `$` earlier in the text can pair with its opening one (`$a$\a$`)
+function readsInPlace(text: string, at: number, value: string): boolean {
+  let found = false
+  const tree = tryParse(text, positionParser)
+  if (tree) {
+    visit(tree, "latex-fragment", (node: Node) => {
+      found ||= node.position?.start.offset === at && node.value === value
+    })
+  }
+  return found
 }
 
 function isDollarFragment(node: Node): node is Fragment {
@@ -40,7 +59,8 @@ function fragmentsIn(children: Node[]): Fragment[] {
 
 /**
  * md→org: writes inline math as `\(x\)` where org would not read `$x$`
- * in its place (`$\a$|`, `$$\a$`), which would stay text.
+ * in its place (`$\a$|`, `$$\a$`, `$a$\a$`), which would stay text or
+ * pair with another `$`.
  */
 export function delimitInlineMath(tree: Parent): void {
   visit(tree, (node: Node | Parent) => {
@@ -54,10 +74,14 @@ export function delimitInlineMath(tree: Parent): void {
       fragment.value = PLACEHOLDER
       const line = renderChildren(children).join("")
       fragment.value = value
+      const at = line.indexOf(PLACEHOLDER)
+      const reads =
+        readsAsDollar(fragment.contents, line, at) &&
+        readsInPlace(line.replace(PLACEHOLDER, value ?? ""), at, value ?? "")
       // org→md trims blank math to `$$`, a math block fence
       if (
         fragment.contents.trim() &&
-        !readsAsDollar(fragment.contents, line, line.indexOf(PLACEHOLDER)) &&
+        !reads &&
         !fragment.contents.includes("\\)")
       ) {
         fragment.value = `\\(${fragment.contents}\\)`
